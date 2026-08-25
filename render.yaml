@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: noctivus26-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: REGISTRATION_OPEN
+        value: "true"
+      - key: MONGODB_URI
+        sync: false
+      - key: FRONTEND_ORIGINS
+        sync: false
+      - key: ORGANIZER_SECRET
+        generateValue: true
