@@ -181,7 +181,7 @@ If Sheets mirroring becomes a hard requirement, add it as a downstream mirror fr
 - Check duplicate registrations by normalized email and event with a MongoDB compound unique index plus app-level prechecks.
 - Production startup fails if `ALLOW_MEMORY_DB=true` or `MONGODB_URI` is missing.
 - Production startup also fails if `ADMIN_SESSION_SECRET` is missing.
-- Production runs configurable Uvicorn worker processes through `WEB_CONCURRENCY` (default `2`); development uses one reload-enabled worker.
+- Production runs configurable Uvicorn worker processes through `WEB_CONCURRENCY`; Render currently sets it to `1` for a free/starter-tier host, while development uses one reload-enabled worker.
 - Responses larger than 1 KB use gzip compression, which reduces admin payload size on mobile connections.
 - Public limits are `30 registrations/minute/IP` and `60 UTR checks/minute/IP` to reduce false throttling behind shared campus networks.
 - Confirmation and invitation emails remain asynchronous and retry up to three times with exponential backoff when Resend fails.

@@ -53,7 +53,7 @@ For local registration testing, set `ALLOW_MEMORY_DB=true` and `REGISTRATION_OPE
 
 Never commit `.env` files or expose the admin session secret in the React frontend.
 
-Production uses two Uvicorn workers by default. Set `WEB_CONCURRENCY` to match the backend host; local development keeps one reload-enabled worker. Public registration and UTR-check limits are per source IP to protect shared networks without blocking normal event traffic.
+Render is configured with one Uvicorn worker for a free/starter-tier host. Set `WEB_CONCURRENCY` to `2` or higher only when the backend instance has multiple CPU cores. Local development keeps one reload-enabled worker. Public registration and UTR-check limits are per source IP to protect shared networks without blocking normal event traffic.
 
 For local development, the backend automatically loads `atlas-credentials.env` from the project root when present. That file is ignored by Git. A different location can be supplied through `ATLAS_CREDENTIALS_FILE`.
 

@@ -15,5 +15,7 @@ services:
         sync: false
       - key: FRONTEND_ORIGINS
         sync: false
+      - key: WEB_CONCURRENCY
+        value: "1"
       - key: ADMIN_SESSION_SECRET
         generateValue: true
