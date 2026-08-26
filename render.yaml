@@ -17,5 +17,9 @@ services:
         sync: false
       - key: WEB_CONCURRENCY
         value: "1"
+      - key: REDIS_URL
+        sync: false
+      - key: EVENT_CAPACITIES
+        sync: false
       - key: ADMIN_SESSION_SECRET
         generateValue: true

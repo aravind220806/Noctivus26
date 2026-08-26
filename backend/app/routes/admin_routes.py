@@ -90,7 +90,7 @@ async def verify_registration(registration_id: str, request: Request, admin=Depe
     if not registration:
         raise HTTPException(status_code=404, detail="Registration not found.")
     if update["paymentStatus"] == "confirmed" and body.get("sendEmail") is not False:
-        queue_email(lambda: send_confirmation(registration))
+        await queue_email("confirmation", registration)
     return {"registration": serialize_registration(registration)}
 
 
@@ -105,7 +105,7 @@ async def invitations_send(request: Request, admin=Depends(require_admin_tab("In
     if not selected:
         raise HTTPException(status_code=404, detail="No matching registrations found.")
     for registration in selected:
-        queue_email(lambda registration=registration: send_invitation(registration, pass_data))
+        await queue_email("invitation", registration, pass_data)
         await update_registration(registration["registrationId"], {"invitation": {"sentAt": datetime.now(timezone.utc), "sentBy": admin["email"], "passTitle": pass_data["title"], "passFields": pass_data["fields"]}})
     return {"sent": len(selected)}
 

@@ -13,7 +13,7 @@ The payment flow is UPI plus manual UTR verification. There is no Razorpay or ot
 - Motor async MongoDB driver
 - MongoDB Atlas or local MongoDB
 - SlowAPI for IP-based rate limiting
-- Resend for optional email delivery
+- Resend for optional email delivery, with MongoDB-backed email jobs
 - Google OAuth credential verification for admin login
 - React/Vite frontend in `frontend/`
 
@@ -158,6 +158,7 @@ The in-memory store is only for local development. Production startup fails when
 - Invitation email fields are HTML-escaped and image data is size-limited.
 - Resend calls check HTTP status and retry up to three times with exponential backoff.
 - Email delivery stays asynchronous so registration and admin responses do not wait on Resend.
+- MongoDB-backed email jobs survive process restarts and are retried by the API worker; local development uses the in-process fallback.
 
 ## Performance and Load Handling
 
@@ -170,6 +171,8 @@ The API is primarily I/O-bound. MongoDB calls use the async Motor driver, and em
 - MongoDB pool defaults are `minPoolSize=2` and `maxPoolSize=20`.
 - Responses larger than 1 KB use gzip compression.
 - Rate limiting is currently in-memory and per process. For multiple workers or multiple instances, use shared Redis-backed limiter storage before relying on it as a distributed control.
+- Set `REDIS_URL` to share rate-limit state across workers or instances. Without it, the limiter intentionally uses local process memory.
+- Event capacities are configured as `event-id:number` pairs in `EVENT_CAPACITIES`; existing MongoDB registrations are counted when the service starts.
 
 ## Environment Variables
 
@@ -254,10 +257,7 @@ The container runs `python run.py` and reads `PORT` and `WEB_CONCURRENCY` from t
 ## Current Gaps and Next Work
 
 - Google Sheets mirror is not implemented.
-- Email retries are in-process; a durable queue would be needed for guaranteed delivery across restarts.
-- Rate-limit state is not shared between workers; configure Redis for multi-worker or multi-instance distributed limiting.
-- Registration capacity is not currently enforced server-side.
-- Production MongoDB connectivity and a 300-user load test still need to be run against the deployed environment.
+- Production MongoDB connectivity still needs to be tested with the real deployment credentials.
 - Owner sessions cannot be individually revoked; rotating `ADMIN_SESSION_SECRET` invalidates all sessions.
 
 ## Verification

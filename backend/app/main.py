@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import asyncio
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,19 +13,30 @@ from app.core.rate_limit import limiter
 from app.db.mongo import close_mongo, connect_mongo
 from app.routes.admin_routes import router as admin_router
 from app.routes.public_routes import router as public_router
+from app.services.email_service import email_worker
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    email_stop = asyncio.Event()
+    email_task = None
     try:
         await connect_mongo()
         if settings.mongodb_uri:
             print("Connected to MongoDB")
+        email_task = asyncio.create_task(email_worker(email_stop))
     except Exception as error:
         print(f"MongoDB connection failed: {error}")
         if settings.node_env == "production":
             raise
     yield
+    email_stop.set()
+    if email_task:
+        email_task.cancel()
+        try:
+            await email_task
+        except asyncio.CancelledError:
+            pass
     await close_mongo()
 
 

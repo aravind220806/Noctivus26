@@ -50,12 +50,16 @@ async def create_registration(payload: dict | None) -> tuple[int, dict]:
     record = {"registrationId": create_registration_id(), **result["value"], "paymentStatus": "pending", "paymentSubmittedAt": now, "createdAt": now, "updatedAt": now}
 
     if mongo.mongo_ready():
+        if not await mongo.reserve_event_capacity(event_ids):
+            return 409, {"message": "One of the selected events has reached capacity."}
         duplicate = await mongo.db.registrations.find_one({"normalized.email": result["value"]["normalized"]["email"], "eventRegistrations.eventId": {"$in": event_ids}}, {"_id": 1})
         if duplicate:
+            await mongo.release_event_capacity(event_ids)
             return 409, {"message": "This email is already registered for one of the selected events."}
         try:
             await mongo.db.registrations.insert_one(record)
         except DuplicateKeyError as error:
+            await mongo.release_event_capacity(event_ids)
             message = str(error)
             if "normalized.email" in message or "eventRegistrations.eventId" in message:
                 return 409, {"message": "This email is already registered for one of the selected events."}
@@ -63,6 +67,12 @@ async def create_registration(payload: dict | None) -> tuple[int, dict]:
     else:
         if settings.node_env == "production" or not settings.allow_memory_db:
             return 503, {"message": "Registration service is not connected to its database."}
+        for event_id in event_ids:
+            capacity = settings.event_capacities.get(event_id)
+            if capacity is not None:
+                used = sum(1 for item in memory_registrations if any(event.get("eventId") == event_id for event in item.get("eventRegistrations", [])))
+                if used >= capacity:
+                    return 409, {"message": "One of the selected events has reached capacity."}
         duplicate_event = any(item.get("normalized", {}).get("email") == result["value"]["normalized"]["email"] and any(event.get("eventId") in event_ids for event in item.get("eventRegistrations", [])) for item in memory_registrations)
         if duplicate_event:
             return 409, {"message": "This email is already registered for one of the selected events."}

@@ -5,7 +5,7 @@ NPM ?= npm
 BACKEND_DIR := backend
 FRONTEND_DIR := frontend
 
-.PHONY: help install install-backend install-frontend dev dev-api dev-frontend build test clean
+.PHONY: help install install-backend install-frontend dev dev-api dev-frontend build test load-test clean
 
 help:
 	@printf '%s\n' 'Available targets:'
@@ -15,6 +15,7 @@ help:
 	@printf '%s\n' '  make dev-frontend     Start the React/Vite development server'
 	@printf '%s\n' '  make build            Build the frontend for production'
 	@printf '%s\n' '  make test             Compile-check the Python backend'
+	@printf '%s\n' '  make load-test        Send 300 concurrent health requests to the local API'
 	@printf '%s\n' '  make clean            Remove generated frontend and Python cache files'
 
 install: install-backend install-frontend
@@ -38,6 +39,9 @@ build:
 
 test:
 	$(PYTHON) -m compileall $(BACKEND_DIR)/app $(BACKEND_DIR)/run.py
+
+load-test:
+	$(PYTHON) scripts/load_test.py
 
 clean:
 	find $(BACKEND_DIR) -type d -name '__pycache__' -prune -exec rm -rf {} +
