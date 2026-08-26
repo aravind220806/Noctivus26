@@ -2597,3 +2597,174 @@ footer {
 @media (max-width: 700px) {
   .hero__logo { width: clamp(126px, 38vw, 180px); }
 }
+
+/* Rounded event cards: polished, tactile, and less template-like. */
+.events-grid {
+  gap: clamp(18px, 2vw, 26px);
+}
+
+.event-card,
+.event-card--wide {
+  position: relative;
+  min-height: 360px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 221, 242, .18);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 18% 12%, color-mix(in srgb, var(--accent) 24%, transparent), transparent 34%),
+    linear-gradient(145deg, rgba(10, 32, 48, .96), rgba(7, 21, 34, .98));
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, .34),
+    inset 0 1px 0 rgba(255, 255, 255, .08);
+  transform: translateZ(0);
+  transition: transform .24s ease, border-color .24s ease, box-shadow .24s ease, background .24s ease;
+}
+
+.event-card::before {
+  position: absolute;
+  content: '';
+  inset: 0;
+  height: auto;
+  opacity: .92;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 20%, transparent), transparent 42%),
+    radial-gradient(circle at 86% 12%, rgba(167, 255, 24, .12), transparent 30%);
+  pointer-events: none;
+}
+
+.event-card::after {
+  position: absolute;
+  content: '';
+  left: 22px;
+  right: 22px;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(242, 250, 252, .32), transparent);
+  pointer-events: none;
+}
+
+.event-card__button {
+  min-height: 358px;
+  padding: clamp(24px, 3vw, 34px);
+}
+
+.event-card__top {
+  position: relative;
+  z-index: 1;
+}
+
+.event-category {
+  padding: 8px 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 34%, transparent);
+  border-radius: 999px;
+  color: color-mix(in srgb, var(--accent) 84%, #F2FAFC);
+  background: rgba(5, 8, 10, .38);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08);
+  backdrop-filter: blur(12px);
+}
+
+.event-card__body,
+.event-card:not(.event-card--wide) .event-card__body {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+  margin-top: auto;
+}
+
+.event-card__body h3 {
+  max-width: 12ch;
+  color: #F2FAFC;
+  font-size: clamp(38px, 4.3vw, 62px);
+  line-height: .94;
+  letter-spacing: .01em;
+  text-shadow: 0 0 28px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.event-card__body p {
+  max-width: 430px;
+  min-height: auto;
+  margin-top: 16px;
+  color: #B9CBD3;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.event-card__footer {
+  position: relative;
+  z-index: 1;
+  margin-top: 28px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(145, 168, 181, .18);
+  color: #C9D9E1;
+}
+
+.event-card__footer strong {
+  color: #F2FAFC;
+}
+
+.event-card__arrow {
+  width: auto;
+  min-width: 46px;
+  height: 46px;
+  padding: 0 14px;
+  border-color: color-mix(in srgb, var(--accent) 32%, transparent);
+  border-radius: 999px;
+  color: #05080A;
+  background: color-mix(in srgb, var(--accent) 92%, #F2FAFC);
+  box-shadow: 0 14px 30px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.event-card__arrow-label {
+  display: inline;
+  color: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .02em;
+}
+
+.event-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 50%, rgba(242, 250, 252, .18));
+  background:
+    radial-gradient(circle at 18% 12%, color-mix(in srgb, var(--accent) 30%, transparent), transparent 36%),
+    linear-gradient(145deg, #0D2A3E, #071522);
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, .42),
+    0 0 34px color-mix(in srgb, var(--accent) 15%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, .1);
+}
+
+.event-card:hover .event-card__arrow {
+  transform: translateX(3px);
+  background: #A7FF18;
+  box-shadow: 0 18px 34px rgba(167, 255, 24, .2);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .event-card:hover {
+    transform: translateY(-8px);
+  }
+}
+
+@media (max-width: 700px) {
+  .events-grid { gap: 16px; }
+  .event-card,
+  .event-card--wide {
+    min-height: 320px;
+    border-radius: 22px;
+  }
+  .event-card__button {
+    min-height: 318px;
+    padding: 22px;
+  }
+  .event-card__body h3 {
+    max-width: 100%;
+    font-size: clamp(34px, 11vw, 48px);
+  }
+  .event-card__footer {
+    gap: 12px;
+  }
+  .event-card__arrow {
+    width: 100%;
+    justify-content: center;
+  }
+}
