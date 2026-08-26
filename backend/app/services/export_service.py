@@ -2,13 +2,21 @@ import csv
 import io
 
 
+def _safe_csv_value(value):
+    if not isinstance(value, str):
+        return value
+    if value.lstrip().startswith(("=", "+", "-", "@")):
+        return "'" + value
+    return value
+
+
 def registrations_to_csv(registrations: list[dict]) -> str:
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(["Registration ID", "Name", "Email", "Phone", "College", "Food", "Events", "Status", "UTR", "Expected Amount", "Claimed Amount", "Submitted At", "Verified At"])
     for registration in registrations:
         participant = registration.get("participant") or {}
-        writer.writerow([
+        writer.writerow(_safe_csv_value(value) for value in [
             registration.get("registrationId"),
             participant.get("name"),
             participant.get("email"),
@@ -24,4 +32,3 @@ def registrations_to_csv(registrations: list[dict]) -> str:
             registration.get("verifiedAt"),
         ])
     return output.getvalue()
-

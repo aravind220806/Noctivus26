@@ -46,7 +46,7 @@ For local registration testing, set `ALLOW_MEMORY_DB=true` and `REGISTRATION_OPE
 
 1. Replace the placeholder content and event data in `frontend/src/data/site.js` with the approved date, contacts, schedule, fees, rules, and links.
 2. Set the real `VITE_UPI_ID`, `VITE_UPI_PAYEE`, and deployed `VITE_API_URL` in the frontend host.
-3. Set `MONGODB_URI`, `FRONTEND_ORIGINS`, and a long random `ORGANIZER_SECRET` in the backend host.
+3. Set `MONGODB_URI`, `FRONTEND_ORIGINS`, `ORGANIZER_SECRET`, and a separate long random `ADMIN_SESSION_SECRET` in the backend host. Production refuses to start without both database and admin-session secrets.
 4. Keep `REGISTRATION_OPEN=false` during setup. Change it to `true` only after a real payment and database test.
 5. Configure `RESEND_API_KEY` and `CONFIRM_FROM` if confirmation emails are required.
 6. Replace the brochure, transport, and coordinator placeholders after organizers approve them.

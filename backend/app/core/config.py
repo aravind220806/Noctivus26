@@ -30,7 +30,10 @@ class Settings:
     mongo_server_selection_timeout_ms = int(env("MONGODB_SERVER_SELECTION_TIMEOUT_MS", "8000"))
     frontend_origins = csv_env("FRONTEND_ORIGINS") or ["http://localhost:5173"]
     organizer_secret = env("ORGANIZER_SECRET")
-    admin_session_secret = env("ADMIN_SESSION_SECRET") or organizer_secret or "development-admin-session-secret"
+    # Keep the development fallback convenient, but never allow a public default in production.
+    admin_session_secret = env("ADMIN_SESSION_SECRET") or (
+        organizer_secret if environment != "production" else ""
+    ) or "development-admin-session-secret"
     google_client_id = env("GOOGLE_CLIENT_ID")
     admin_emails = [email.lower() for email in csv_env("ADMIN_EMAILS")]
     allow_memory_db = env("ALLOW_MEMORY_DB").lower() == "true"
@@ -46,6 +49,9 @@ if settings.environment == "production" and settings.allow_memory_db:
 
 if settings.environment == "production" and not settings.mongodb_uri:
     raise RuntimeError("MONGODB_URI is required in production.")
+
+if settings.environment == "production" and not env("ADMIN_SESSION_SECRET"):
+    raise RuntimeError("ADMIN_SESSION_SECRET is required in production.")
 
 
 def jsonable(value: Any) -> Any:

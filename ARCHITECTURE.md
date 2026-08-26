@@ -182,6 +182,7 @@ If Sheets mirroring becomes a hard requirement, add it as a downstream mirror fr
 - Enforce unique `normalizedUtr` in MongoDB with a sparse unique index.
 - Check duplicate registrations by normalized email and event with a MongoDB compound unique index plus app-level prechecks.
 - Production startup fails if `ALLOW_MEMORY_DB=true` or `MONGODB_URI` is missing.
+- Production startup also fails if `ADMIN_SESSION_SECRET` is missing; it must be a separate secret from `ORGANIZER_SECRET`.
 - Keep `VITE_UPI_ID` public, but keep `MONGODB_URI`, `ORGANIZER_SECRET`, `ADMIN_SESSION_SECRET`, `GOOGLE_CLIENT_ID`, and `RESEND_API_KEY` server-side.
 - CORS is locked to `FRONTEND_ORIGINS` and limited to `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, and `OPTIONS`.
 - Admin tokens are HMAC-signed and expire after 8 hours; admin access is re-resolved server-side on protected requests.
