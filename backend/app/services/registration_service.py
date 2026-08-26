@@ -55,7 +55,10 @@ async def create_registration(payload: dict | None) -> tuple[int, dict]:
             return 409, {"message": "This email is already registered for one of the selected events."}
         try:
             await mongo.db.registrations.insert_one(record)
-        except DuplicateKeyError:
+        except DuplicateKeyError as error:
+            message = str(error)
+            if "normalized.email" in message or "eventRegistrations.eventId" in message:
+                return 409, {"message": "This email is already registered for one of the selected events."}
             return 409, {"message": "This UTR has already been submitted."}
     else:
         if settings.node_env == "production" or not settings.allow_memory_db:

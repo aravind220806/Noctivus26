@@ -3,8 +3,11 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from slowapi.errors import RateLimitExceeded
+from slowapi import _rate_limit_exceeded_handler
 
 from app.core.config import settings
+from app.core.rate_limit import limiter
 from app.db.mongo import close_mongo, connect_mongo
 from app.routes.admin_routes import router as admin_router
 from app.routes.organizer_routes import router as organizer_router
@@ -26,11 +29,13 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="Noctivus API", lifespan=lifespan)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.frontend_origins,
     allow_credentials=False,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 

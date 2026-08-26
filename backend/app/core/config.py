@@ -21,7 +21,8 @@ def csv_env(name: str) -> list[str]:
 
 class Settings:
     port = int(env("PORT", "4000"))
-    node_env = env("NODE_ENV", "development")
+    environment = (env("ENVIRONMENT") or env("NODE_ENV", "development")).lower()
+    node_env = environment
     mongodb_uri = env("MONGODB_URI")
     mongo_db_name = env("MONGODB_DB", "noctivus")
     mongo_max_pool_size = int(env("MONGODB_MAX_POOL_SIZE", "20"))
@@ -32,17 +33,22 @@ class Settings:
     admin_session_secret = env("ADMIN_SESSION_SECRET") or organizer_secret or "development-admin-session-secret"
     google_client_id = env("GOOGLE_CLIENT_ID")
     admin_emails = [email.lower() for email in csv_env("ADMIN_EMAILS")]
-    allow_memory_db = env("ALLOW_MEMORY_DB") == "true"
-    registration_open = env("REGISTRATION_OPEN") == "true"
+    allow_memory_db = env("ALLOW_MEMORY_DB").lower() == "true"
+    registration_open = env("REGISTRATION_OPEN").lower() == "true"
     resend_api_key = env("RESEND_API_KEY")
     confirm_from = env("CONFIRM_FROM")
 
 
 settings = Settings()
 
+if settings.environment == "production" and settings.allow_memory_db:
+    raise RuntimeError("ALLOW_MEMORY_DB cannot be true in production.")
+
+if settings.environment == "production" and not settings.mongodb_uri:
+    raise RuntimeError("MONGODB_URI is required in production.")
+
 
 def jsonable(value: Any) -> Any:
     if hasattr(value, "isoformat"):
         return value.isoformat()
     return value
-

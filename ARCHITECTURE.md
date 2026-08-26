@@ -177,11 +177,14 @@ If Sheets mirroring becomes a hard requirement, add it as a downstream mirror fr
 
 - Never treat UPI QR generation as proof of payment.
 - Never auto-confirm from the frontend. Confirmation must come from organizer reconciliation.
+- Public registration endpoints are IP rate-limited with `slowapi`: `/api/register` is limited to `5/minute`, and `/api/utr/check` is limited to `10/minute`.
 - Validate `claimedAmount` server-side against event fees.
-- Enforce unique `normalizedUtr`.
-- Check duplicate registrations by normalized email and event.
+- Enforce unique `normalizedUtr` in MongoDB with a sparse unique index.
+- Check duplicate registrations by normalized email and event with a MongoDB compound unique index plus app-level prechecks.
+- Production startup fails if `ALLOW_MEMORY_DB=true` or `MONGODB_URI` is missing.
 - Keep `VITE_UPI_ID` public, but keep `MONGODB_URI`, `ORGANIZER_SECRET`, `ADMIN_SESSION_SECRET`, `GOOGLE_CLIENT_ID`, and `RESEND_API_KEY` server-side.
-- Lock CORS to the real frontend origins in production.
+- CORS is locked to `FRONTEND_ORIGINS` and limited to `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, and `OPTIONS`.
+- Admin tokens are HMAC-signed and expire after 8 hours; admin access is re-resolved server-side on protected requests.
 - Keep `REGISTRATION_OPEN=false` until real payment and DB tests pass.
 - Do not commit `.env` files or service credentials.
 
@@ -192,7 +195,9 @@ The backend mostly matches this architecture:
 - FastAPI/MongoDB registration API exists.
 - UPI/UTR payment verification flow exists.
 - Server-side fee validation exists.
-- Duplicate UTR and duplicate email/event checks exist.
+- Duplicate UTR and duplicate email/event checks exist at app and DB-index level.
+- Public API rate limiting exists.
+- Production memory DB guard exists.
 - Admin dashboard endpoints exist.
 - Google admin login exists.
 - CSV export exists.
