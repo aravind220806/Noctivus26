@@ -1,6 +1,8 @@
 # Noctivus '26
 
-A fast, mobile-first symposium website with a React/Vite frontend and an Express/MongoDB registration API.
+A fast, mobile-first symposium website with a React/Vite frontend and a MongoDB registration API. The repo now includes the existing Node/Express backend and a Python/FastAPI backend port.
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the current system architecture. The implemented payment flow is UPI QR/deep-link plus manual UTR verification, not Razorpay.
 
 ## What is included
 
@@ -32,6 +34,22 @@ npm run dev
 Open `http://localhost:5173`.
 
 For local registration testing, set `ALLOW_MEMORY_DB=true` and `REGISTRATION_OPEN=true` in `backend/.env`. Memory records disappear whenever the backend restarts.
+
+To run the Python/FastAPI backend instead:
+
+```bash
+cd backend
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -r requirements.txt
+python3 run.py
+```
+
+From the project root, after installing Python dependencies, you can also run:
+
+```bash
+npm run dev:api:py
+```
 
 ## Required before launch
 

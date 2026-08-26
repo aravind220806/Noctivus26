@@ -6,8 +6,10 @@
   "scripts": {
     "dev": "npm run dev --workspace frontend",
     "dev:api": "npm run dev --workspace backend",
+    "dev:api:py": "cd backend && python3 run.py",
     "build": "npm run build --workspace frontend",
     "start": "npm run start --workspace backend",
+    "start:py": "cd backend && python3 run.py",
     "test": "npm run test --workspace backend"
   }
 }

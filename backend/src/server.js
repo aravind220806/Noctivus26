@@ -12,7 +12,11 @@ const port = Number(process.env.PORT || 4000);
 
 if (process.env.MONGODB_URI) {
   try {
-    await mongoose.connect(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 8000 });
+    await mongoose.connect(process.env.MONGODB_URI, {
+      maxPoolSize: Number(process.env.MONGODB_MAX_POOL_SIZE || 20),
+      minPoolSize: Number(process.env.MONGODB_MIN_POOL_SIZE || 2),
+      serverSelectionTimeoutMS: Number(process.env.MONGODB_SERVER_SELECTION_TIMEOUT_MS || 8000),
+    });
     console.log('Connected to MongoDB');
   } catch (error) {
     console.error('MongoDB connection failed:', error.message);
