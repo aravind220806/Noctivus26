@@ -2768,3 +2768,201 @@ footer {
     justify-content: center;
   }
 }
+
+/* Event modal: photographic, rounded, and grounded in the actual Noctivus identity. */
+.event-modal {
+  width: min(1040px, calc(100vw - 32px));
+  max-height: min(720px, calc(100vh - 34px));
+  grid-template-columns: minmax(280px, .9fr) minmax(0, 1.1fr);
+  overflow: hidden;
+  border: 1px solid rgba(0, 221, 242, .22);
+  border-radius: 30px;
+  color: var(--text);
+  background:
+    linear-gradient(145deg, rgba(10, 32, 48, .98), rgba(7, 21, 34, .99));
+  box-shadow:
+    0 34px 110px rgba(0, 0, 0, .48),
+    inset 0 1px 0 rgba(255, 255, 255, .08);
+}
+
+.event-modal__close {
+  top: 20px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  color: #DFF8FC;
+  border-color: rgba(0, 221, 242, .28);
+  background: rgba(7, 21, 34, .72);
+  backdrop-filter: blur(14px);
+}
+
+.event-modal__visual {
+  position: relative;
+  min-height: 640px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(5, 8, 10, .3), rgba(5, 8, 10, .86)),
+    linear-gradient(90deg, rgba(5, 8, 10, .2), rgba(5, 8, 10, .58)),
+    url('/images/noctivus-students.webp') center / cover;
+}
+
+.event-modal__visual::before {
+  position: absolute;
+  content: '';
+  inset: 0;
+  display: block;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 24px;
+  margin: 18px;
+  background:
+    radial-gradient(circle at 52% 48%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 34%),
+    linear-gradient(180deg, transparent, rgba(7, 21, 34, .42));
+  pointer-events: none;
+}
+
+.event-modal__visual::after {
+  display: none;
+}
+
+.event-modal__visual > span,
+.event-modal__visual > small {
+  position: relative;
+  z-index: 1;
+  width: fit-content;
+  padding: 8px 11px;
+  border: 1px solid rgba(0, 221, 242, .24);
+  border-radius: 999px;
+  color: #DFF8FC;
+  background: rgba(5, 8, 10, .5);
+  backdrop-filter: blur(12px);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.event-modal__emblem {
+  position: relative;
+  z-index: 1;
+  width: min(190px, 52%);
+  height: auto;
+  align-self: center;
+  padding: 18px;
+  border: 1px solid rgba(0, 221, 242, .24);
+  border-radius: 28px;
+  background:
+    linear-gradient(145deg, rgba(10, 32, 48, .72), rgba(7, 21, 34, .88));
+  box-shadow:
+    0 22px 48px rgba(0, 0, 0, .38),
+    0 0 42px color-mix(in srgb, var(--accent) 22%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, .1);
+  backdrop-filter: blur(16px);
+  object-fit: contain;
+}
+
+.event-modal__content {
+  padding: clamp(42px, 5vw, 68px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.event-modal__content .kicker {
+  color: var(--cyan);
+}
+
+.event-modal__content h2 {
+  max-width: 10ch;
+  margin: 14px 0 20px;
+  color: var(--text);
+  font-size: clamp(50px, 6vw, 76px);
+  line-height: .92;
+  letter-spacing: .01em;
+  text-transform: uppercase;
+}
+
+.event-modal__lead {
+  max-width: 560px;
+  color: #B9CBD3;
+  font-size: 18px;
+  line-height: 1.7;
+}
+
+.event-modal .rules {
+  margin-top: 30px;
+  padding: 22px;
+  border: 1px solid rgba(0, 221, 242, .16);
+  border-radius: 18px;
+  background: rgba(5, 8, 10, .28);
+}
+
+.event-modal .rules h3 {
+  margin: 0 0 12px;
+  color: #F2FAFC;
+  font-size: 12px;
+  letter-spacing: .1em;
+}
+
+.event-modal .rules p {
+  margin: 0;
+  color: #C9D9E1;
+  line-height: 1.65;
+}
+
+.event-modal__action {
+  margin-top: 30px;
+  padding-top: 26px;
+  border-top: 1px solid rgba(145, 168, 181, .18);
+}
+
+.event-modal__action small {
+  color: var(--muted);
+}
+
+.event-modal__action strong {
+  color: var(--text);
+  font-size: clamp(34px, 4vw, 48px);
+}
+
+@media (max-width: 820px) {
+  .event-modal {
+    width: min(100%, calc(100vw - 18px));
+    max-height: 92svh;
+    grid-template-columns: 1fr;
+    border-radius: 24px 24px 0 0;
+  }
+
+  .event-modal__visual {
+    min-height: 250px;
+    padding: 22px;
+  }
+
+  .event-modal__emblem {
+    width: 118px;
+    padding: 12px;
+    border-radius: 20px;
+  }
+
+  .event-modal__content {
+    padding: 32px 22px 26px;
+  }
+
+  .event-modal__content h2 {
+    max-width: 100%;
+    font-size: clamp(38px, 12vw, 54px);
+  }
+
+  .event-modal__action {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .event-modal__action .button {
+    width: 100%;
+  }
+}
