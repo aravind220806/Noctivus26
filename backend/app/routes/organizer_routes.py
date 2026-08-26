@@ -22,6 +22,5 @@ async def legacy_verify(registration_id: str, request: Request, authorization: s
     if not registration:
         raise HTTPException(status_code=404, detail="Registration not found.")
     if update["paymentStatus"] == "confirmed":
-        queue_email(send_confirmation(registration))
+        queue_email(lambda: send_confirmation(registration))
     return {"registrationId": registration.get("registrationId"), "status": registration.get("paymentStatus")}
-

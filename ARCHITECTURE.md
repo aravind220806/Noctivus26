@@ -183,6 +183,10 @@ If Sheets mirroring becomes a hard requirement, add it as a downstream mirror fr
 - Check duplicate registrations by normalized email and event with a MongoDB compound unique index plus app-level prechecks.
 - Production startup fails if `ALLOW_MEMORY_DB=true` or `MONGODB_URI` is missing.
 - Production startup also fails if `ADMIN_SESSION_SECRET` is missing; it must be a separate secret from `ORGANIZER_SECRET`.
+- Production runs configurable Uvicorn worker processes through `WEB_CONCURRENCY` (default `2`); development uses one reload-enabled worker.
+- Responses larger than 1 KB use gzip compression, which reduces admin payload size on mobile connections.
+- Public limits are `30 registrations/minute/IP` and `60 UTR checks/minute/IP` to reduce false throttling behind shared campus networks.
+- Confirmation and invitation emails remain asynchronous and retry up to three times with exponential backoff when Resend fails.
 - Keep `VITE_UPI_ID` public, but keep `MONGODB_URI`, `ORGANIZER_SECRET`, `ADMIN_SESSION_SECRET`, `GOOGLE_CLIENT_ID`, and `RESEND_API_KEY` server-side.
 - CORS is locked to `FRONTEND_ORIGINS` and limited to `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, and `OPTIONS`.
 - Admin tokens are HMAC-signed and expire after 8 hours; admin access is re-resolved server-side on protected requests.
@@ -197,7 +201,7 @@ The backend mostly matches this architecture:
 - UPI/UTR payment verification flow exists.
 - Server-side fee validation exists.
 - Duplicate UTR and duplicate email/event checks exist at app and DB-index level.
-- Public API rate limiting exists.
+- Public API rate limiting exists with rush-friendly per-IP limits.
 - Production memory DB guard exists.
 - Admin dashboard endpoints exist.
 - Google admin login exists.
@@ -211,4 +215,4 @@ Known gaps or mismatches:
 - Google Sheets mirror is not implemented.
 - Registration UI currently submits one selected event at a time, although backend validation supports multiple events.
 - Capacity enforcement is not implemented in `/api/register`.
-- Background workers/retry queues are not implemented.
+- A durable background queue is not implemented; email retries are bounded in-process and can be lost if a worker restarts.

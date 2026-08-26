@@ -18,7 +18,7 @@ async def events():
 
 
 @router.post("/utr/check")
-@limiter.limit("10/minute")
+@limiter.limit("60/minute")
 async def utr_check(request: Request, response: Response):
     payload = await request.json()
     status_code, body = await check_utr_availability((payload or {}).get("utrNumber"))
@@ -27,7 +27,7 @@ async def utr_check(request: Request, response: Response):
 
 
 @router.post("/register")
-@limiter.limit("5/minute")
+@limiter.limit("30/minute")
 async def register(request: Request, response: Response):
     status_code, body = await create_registration(await request.json())
     response.status_code = status_code

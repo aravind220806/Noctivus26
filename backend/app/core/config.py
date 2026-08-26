@@ -28,6 +28,7 @@ class Settings:
     mongo_max_pool_size = int(env("MONGODB_MAX_POOL_SIZE", "20"))
     mongo_min_pool_size = int(env("MONGODB_MIN_POOL_SIZE", "2"))
     mongo_server_selection_timeout_ms = int(env("MONGODB_SERVER_SELECTION_TIMEOUT_MS", "8000"))
+    web_concurrency = max(1, int(env("WEB_CONCURRENCY", "2" if environment == "production" else "1")))
     frontend_origins = csv_env("FRONTEND_ORIGINS") or ["http://localhost:5173"]
     organizer_secret = env("ORGANIZER_SECRET")
     # Keep the development fallback convenient, but never allow a public default in production.

@@ -1,5 +1,6 @@
 import asyncio
 import html
+from collections.abc import Callable, Awaitable
 
 import httpx
 
@@ -19,15 +20,23 @@ def normalize_pass_template(pass_data: dict | None) -> dict:
     return {"title": str(data.get("title") or "Noctivus 26 Event Pass")[:80], "imageDataUrl": image_data_url[:900000], "fields": fields[:10]}
 
 
-def queue_email(coro):
-    asyncio.create_task(_safe_email(coro))
+MAX_EMAIL_ATTEMPTS = 3
 
 
-async def _safe_email(coro):
-    try:
-        await coro
-    except Exception as error:
-        print(f"Email delivery failed: {error}")
+def queue_email(email_factory: Callable[[], Awaitable[None]]) -> None:
+    asyncio.create_task(_safe_email(email_factory))
+
+
+async def _safe_email(email_factory: Callable[[], Awaitable[None]]) -> None:
+    for attempt in range(MAX_EMAIL_ATTEMPTS):
+        try:
+            await email_factory()
+            return
+        except Exception as error:
+            if attempt == MAX_EMAIL_ATTEMPTS - 1:
+                print(f"Email delivery failed after {MAX_EMAIL_ATTEMPTS} attempts: {error}")
+                return
+            await asyncio.sleep(0.5 * (2**attempt))
 
 
 async def send_invitation(registration: dict, pass_data: dict) -> None:
@@ -48,11 +57,12 @@ async def send_confirmation(registration: dict) -> None:
 
 async def _send_email(to_email: str, subject: str, body: str) -> None:
     async with httpx.AsyncClient(timeout=15) as client:
-        await client.post(
+        response = await client.post(
             "https://api.resend.com/emails",
             headers={"Authorization": f"Bearer {settings.resend_api_key}", "Content-Type": "application/json"},
             json={"from": settings.confirm_from, "to": to_email, "subject": subject, "html": body},
         )
+        response.raise_for_status()
 
 
 def invitation_html(registration: dict, pass_data: dict, event_names: str) -> str:
@@ -67,4 +77,3 @@ def invitation_html(registration: dict, pass_data: dict, event_names: str) -> st
     rows = "".join(f"<tr><th style=\"text-align:left;padding:10px;border-bottom:1px solid #ddd\">{html.escape(str(label or ''))}</th><td style=\"padding:10px;border-bottom:1px solid #ddd\">{html.escape(str(value or ''))}</td></tr>" for label, value in fields)
     image = f"<img src=\"{pass_data['imageDataUrl']}\" alt=\"\" style=\"width:100%;max-height:280px;object-fit:cover;border-radius:10px\">" if pass_data["imageDataUrl"] else ""
     return f"<div style=\"font-family:Arial,sans-serif;max-width:620px;margin:auto;color:#111\"><h1>{html.escape(pass_data['title'])}</h1>{image}<p>Your Noctivus '26 event pass is ready.</p><table style=\"width:100%;border-collapse:collapse\">{rows}</table></div>"
-
