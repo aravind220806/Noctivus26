@@ -1,6 +1,6 @@
 # Noctivus '26
 
-A fast, mobile-first symposium website with a React/Vite frontend and a MongoDB registration API. The repo now includes the existing Node/Express backend and a Python/FastAPI backend port.
+A fast, mobile-first symposium website with a React/Vite frontend and a Python/FastAPI MongoDB registration API.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the current system architecture. The implemented payment flow is UPI QR/deep-link plus manual UTR verification, not Razorpay.
 
@@ -22,6 +22,11 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the current system architecture. The 
 npm install
 cp frontend/.env.example frontend/.env
 cp backend/.env.example backend/.env
+cd backend
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -r requirements.txt
+cd ..
 npm run dev:api
 ```
 
@@ -35,21 +40,7 @@ Open `http://localhost:5173`.
 
 For local registration testing, set `ALLOW_MEMORY_DB=true` and `REGISTRATION_OPEN=true` in `backend/.env`. Memory records disappear whenever the backend restarts.
 
-To run the Python/FastAPI backend instead:
-
-```bash
-cd backend
-python3 -m venv .venv
-. .venv/bin/activate
-pip install -r requirements.txt
-python3 run.py
-```
-
-From the project root, after installing Python dependencies, you can also run:
-
-```bash
-npm run dev:api:py
-```
+`npm run dev:api` starts the Python/FastAPI backend.
 
 ## Required before launch
 
@@ -78,4 +69,4 @@ The QR library is loaded as a separate chunk only when the payment step opens. T
 - `GET /api/health`
 - `GET /api/events`
 - `POST /api/register`
-- `PATCH /api/registrations/:id` with `Authorization: Bearer <ORGANIZER_SECRET>`
+- `PATCH /api/registrations/{id}` with `Authorization: Bearer <ORGANIZER_SECRET>`

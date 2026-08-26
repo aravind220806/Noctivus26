@@ -1,6 +1,6 @@
 # Noctivus '26 Website Architecture
 
-Stack: React/Vite frontend + MongoDB backend API + UPI payment QR/deep link + admin verification. The original backend is Node.js/Express. A Python/FastAPI backend port now exists under `backend/app`.
+Stack: React/Vite frontend + Python/FastAPI backend API + MongoDB + UPI payment QR/deep link + admin verification.
 
 This project does not use Razorpay. Payment is handled through UPI, and payment truth is confirmed manually by organizers against the bank or UPI statement using the submitted UTR/reference number.
 
@@ -28,9 +28,7 @@ This project does not use Razorpay. Payment is handled through UPI, and payment 
 
 ## 2. Backend
 
-The backend is no longer trapped in one file. The Node/Express implementation is modular, and a matching Python/FastAPI implementation has been added.
-
-### Python/FastAPI Backend
+The backend is Python/FastAPI and is split across routes, services, database helpers, middleware, and configuration files.
 
 - `backend/run.py` - starts Uvicorn on the configured API port.
 - `backend/requirements.txt` - Python dependencies.
@@ -61,31 +59,6 @@ python3 -m venv .venv
 pip install -r requirements.txt
 python3 run.py
 ```
-
-### Current Modules
-
-- `backend/src/server.js` - loads environment variables, configures MongoDB connection pooling, starts the API.
-- `backend/src/app.js` - Express app bootstrap, CORS/security middleware, and router mounting.
-- `backend/src/routes/`
-  - `publicRoutes.js` - health, event listing, UTR availability, registration submission.
-  - `adminRoutes.js` - Google admin login, admin dashboard data, verification, invitations, export, analysis, access management.
-  - `organizerRoutes.js` - legacy organizer-secret registration status update endpoint.
-- `backend/src/services/`
-  - `registrationService.js` - registration create/read/update logic and memory fallback.
-  - `adminAccessService.js` - owner/delegated admin access persistence.
-  - `googleAuthService.js` - Google token verification.
-  - `emailService.js` - Resend confirmation/pass email helpers and async email queueing.
-  - `exportService.js` - CSV generation.
-  - `analysisService.js` - dashboard overview and local analysis text.
-- `backend/src/middleware/`
-  - `adminAuth.js` - signed admin session tokens and tab guards.
-  - `errorHandler.js` - centralized error response handler.
-- `backend/src/config/admin.js` - admin tab and owner configuration helpers.
-- `backend/src/db/` - memory fallback store and Mongo projection constants.
-- `backend/src/events.js` - event catalog returned by `/api/events`.
-- `backend/src/model.js` - Mongoose schemas for registrations and admin access.
-- `backend/src/validation.js` - registration normalization and server-side validation.
-- `backend/test/validation.test.js` - validation tests.
 
 ### Current API Surface
 
@@ -140,7 +113,7 @@ There is no gateway webhook in this architecture. The bank/UPI statement is the 
 
 ## 5. Database
 
-MongoDB is the source of truth. The backend uses Mongoose models.
+MongoDB is the source of truth. The backend uses the async Motor driver.
 
 ### `Registration`
 
@@ -216,7 +189,7 @@ If Sheets mirroring becomes a hard requirement, add it as a downstream mirror fr
 
 The backend mostly matches this architecture:
 
-- Express/MongoDB registration API exists.
+- FastAPI/MongoDB registration API exists.
 - UPI/UTR payment verification flow exists.
 - Server-side fee validation exists.
 - Duplicate UTR and duplicate email/event checks exist.
@@ -228,7 +201,7 @@ The backend mostly matches this architecture:
 
 Known gaps or mismatches:
 
-- The original FastAPI/Razorpay/Sheets draft does not match this repo.
+- The original Razorpay/Sheets draft does not match this repo.
 - Google Sheets mirror is not implemented.
 - Registration UI currently submits one selected event at a time, although backend validation supports multiple events.
 - Capacity enforcement is not implemented in `/api/register`.
