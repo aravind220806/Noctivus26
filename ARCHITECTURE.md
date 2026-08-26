@@ -36,7 +36,6 @@ The backend is Python/FastAPI and is split across routes, services, database hel
 - `backend/app/routes/`
   - `public_routes.py` - health, event listing, UTR availability, registration submission.
   - `admin_routes.py` - Google admin login, dashboard, verification, invitations, export, analysis, access management.
-  - `organizer_routes.py` - legacy organizer-secret registration status update endpoint.
 - `backend/app/services/`
   - `registration_service.py` - registration create/read/update logic and memory fallback.
   - `admin_access_service.py` - owner/delegated admin access persistence.
@@ -77,7 +76,6 @@ python3 run.py
 - `POST /api/admin/invitations/send` - send invitation/pass emails through Resend when configured.
 - `GET /api/admin/export` - export registrations as CSV.
 - `POST /api/admin/analysis/ai` - local/offline registration analysis.
-- `PATCH /api/registrations/:id` - legacy organizer-secret status update endpoint.
 
 ## 3. Frontend
 
@@ -164,7 +162,7 @@ updatedAt
 
 ## 6. Google Sheets
 
-Google Sheets sync is not implemented in the current backend. The implemented organizer workflow is the admin dashboard plus CSV export.
+Google Sheets sync is not implemented in the current backend. The implemented verification workflow is the admin dashboard plus CSV export.
 
 If Sheets mirroring becomes a hard requirement, add it as a downstream mirror from MongoDB, not as the primary store:
 
@@ -182,12 +180,12 @@ If Sheets mirroring becomes a hard requirement, add it as a downstream mirror fr
 - Enforce unique `normalizedUtr` in MongoDB with a sparse unique index.
 - Check duplicate registrations by normalized email and event with a MongoDB compound unique index plus app-level prechecks.
 - Production startup fails if `ALLOW_MEMORY_DB=true` or `MONGODB_URI` is missing.
-- Production startup also fails if `ADMIN_SESSION_SECRET` is missing; it must be a separate secret from `ORGANIZER_SECRET`.
+- Production startup also fails if `ADMIN_SESSION_SECRET` is missing.
 - Production runs configurable Uvicorn worker processes through `WEB_CONCURRENCY` (default `2`); development uses one reload-enabled worker.
 - Responses larger than 1 KB use gzip compression, which reduces admin payload size on mobile connections.
 - Public limits are `30 registrations/minute/IP` and `60 UTR checks/minute/IP` to reduce false throttling behind shared campus networks.
 - Confirmation and invitation emails remain asynchronous and retry up to three times with exponential backoff when Resend fails.
-- Keep `VITE_UPI_ID` public, but keep `MONGODB_URI`, `ORGANIZER_SECRET`, `ADMIN_SESSION_SECRET`, `GOOGLE_CLIENT_ID`, and `RESEND_API_KEY` server-side.
+- Keep `VITE_UPI_ID` public, but keep `MONGODB_URI`, `ADMIN_SESSION_SECRET`, `GOOGLE_CLIENT_ID`, and `RESEND_API_KEY` server-side.
 - CORS is locked to `FRONTEND_ORIGINS` and limited to `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, and `OPTIONS`.
 - Admin tokens are HMAC-signed and expire after 8 hours; admin access is re-resolved server-side on protected requests.
 - Keep `REGISTRATION_OPEN=false` until real payment and DB tests pass.
@@ -202,6 +200,7 @@ The backend mostly matches this architecture:
 - Server-side fee validation exists.
 - Duplicate UTR and duplicate email/event checks exist at app and DB-index level.
 - Public API rate limiting exists with rush-friendly per-IP limits.
+- Google admin authentication is rate-limited to protect both the backend and Google's token verification endpoint.
 - Production memory DB guard exists.
 - Admin dashboard endpoints exist.
 - Google admin login exists.

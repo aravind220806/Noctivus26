@@ -4,6 +4,7 @@ import re
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
 from app.core.config import settings
+from app.core.rate_limit import limiter
 from app.middleware.admin_auth import require_admin, require_admin_tab, require_any_admin_tab, sign_admin_token
 from app.services.admin_access_service import ADMIN_TABS, deactivate_admin_access, is_owner_admin, list_admin_access, normalize_admin_tabs, resolve_admin_access, upsert_admin_access
 from app.services.analysis_service import build_overview, create_ai_analysis
@@ -16,6 +17,7 @@ router = APIRouter()
 
 
 @router.post("/auth/google")
+@limiter.limit("10/minute")
 async def google_auth(request: Request):
     body = await request.json()
     credential = str(body.get("credential") or "")

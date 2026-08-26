@@ -30,11 +30,8 @@ class Settings:
     mongo_server_selection_timeout_ms = int(env("MONGODB_SERVER_SELECTION_TIMEOUT_MS", "8000"))
     web_concurrency = max(1, int(env("WEB_CONCURRENCY", "2" if environment == "production" else "1")))
     frontend_origins = csv_env("FRONTEND_ORIGINS") or ["http://localhost:5173"]
-    organizer_secret = env("ORGANIZER_SECRET")
     # Keep the development fallback convenient, but never allow a public default in production.
-    admin_session_secret = env("ADMIN_SESSION_SECRET") or (
-        organizer_secret if environment != "production" else ""
-    ) or "development-admin-session-secret"
+    admin_session_secret = env("ADMIN_SESSION_SECRET") or "development-admin-session-secret"
     google_client_id = env("GOOGLE_CLIENT_ID")
     admin_emails = [email.lower() for email in csv_env("ADMIN_EMAILS")]
     allow_memory_db = env("ALLOW_MEMORY_DB").lower() == "true"

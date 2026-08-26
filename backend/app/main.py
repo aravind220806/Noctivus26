@@ -11,7 +11,6 @@ from app.core.config import settings
 from app.core.rate_limit import limiter
 from app.db.mongo import close_mongo, connect_mongo
 from app.routes.admin_routes import router as admin_router
-from app.routes.organizer_routes import router as organizer_router
 from app.routes.public_routes import router as public_router
 
 
@@ -43,7 +42,6 @@ app.add_middleware(
 
 app.include_router(public_router, prefix="/api")
 app.include_router(admin_router, prefix="/api/admin")
-app.include_router(organizer_router, prefix="/api")
 
 
 @app.exception_handler(Exception)

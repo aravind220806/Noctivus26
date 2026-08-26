@@ -15,7 +15,5 @@ services:
         sync: false
       - key: FRONTEND_ORIGINS
         sync: false
-      - key: ORGANIZER_SECRET
-        generateValue: true
       - key: ADMIN_SESSION_SECRET
         generateValue: true

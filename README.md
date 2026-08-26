@@ -13,7 +13,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the current system architecture. The 
 - Multi-step solo/team registration flow
 - Dynamic UPI deep link and lazy-loaded QR generation
 - Server-authoritative fee validation, UTR validation, duplicate checks, and pending verification
-- Protected organizer status endpoint and optional confirmation email through Resend
+- Protected admin verification and optional confirmation email through Resend
 - MongoDB persistence with an explicit in-memory development fallback
 
 ## Run locally
@@ -46,12 +46,12 @@ For local registration testing, set `ALLOW_MEMORY_DB=true` and `REGISTRATION_OPE
 
 1. Replace the placeholder content and event data in `frontend/src/data/site.js` with the approved date, contacts, schedule, fees, rules, and links.
 2. Set the real `VITE_UPI_ID`, `VITE_UPI_PAYEE`, and deployed `VITE_API_URL` in the frontend host.
-3. Set `MONGODB_URI`, `FRONTEND_ORIGINS`, `ORGANIZER_SECRET`, and a separate long random `ADMIN_SESSION_SECRET` in the backend host. Production refuses to start without both database and admin-session secrets.
+3. Set `MONGODB_URI`, `FRONTEND_ORIGINS`, and a long random `ADMIN_SESSION_SECRET` in the backend host. Production refuses to start without the database and admin-session secrets.
 4. Keep `REGISTRATION_OPEN=false` during setup. Change it to `true` only after a real payment and database test.
 5. Configure `RESEND_API_KEY` and `CONFIRM_FROM` if confirmation emails are required.
 6. Replace the brochure, transport, and coordinator placeholders after organizers approve them.
 
-Never commit `.env` files or expose the organizer secret in the React frontend.
+Never commit `.env` files or expose the admin session secret in the React frontend.
 
 Production uses two Uvicorn workers by default. Set `WEB_CONCURRENCY` to match the backend host; local development keeps one reload-enabled worker. Public registration and UTR-check limits are per source IP to protect shared networks without blocking normal event traffic.
 
@@ -71,4 +71,3 @@ The QR library is loaded as a separate chunk only when the payment step opens. T
 - `GET /api/health`
 - `GET /api/events`
 - `POST /api/register`
-- `PATCH /api/registrations/{id}` with `Authorization: Bearer <ORGANIZER_SECRET>`
