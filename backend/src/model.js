@@ -22,7 +22,23 @@ const registrationSchema = new mongoose.Schema({
   verifiedAt: Date,
   verifiedBy: String,
   verificationNotes: String,
+  invitation: {
+    sentAt: Date,
+    sentBy: String,
+    passTitle: String,
+    passFields: mongoose.Schema.Types.Mixed,
+  },
   consent: { privacyAccepted: Boolean, rulesAccepted: Boolean, acceptedAt: Date },
-}, { timestamps: true });
+}, { timestamps: true, versionKey: false });
+
+const adminAccessSchema = new mongoose.Schema({
+  email: { type: String, required: true, unique: true, index: true },
+  name: String,
+  tabs: [{ type: String }],
+  active: { type: Boolean, default: true, index: true },
+  createdBy: String,
+  updatedBy: String,
+}, { timestamps: true, versionKey: false });
 
 export const Registration = mongoose.model('Registration', registrationSchema);
+export const AdminAccess = mongoose.model('AdminAccess', adminAccessSchema);

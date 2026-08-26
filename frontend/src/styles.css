@@ -2286,3 +2286,314 @@ main > .section { content-visibility: auto; contain-intrinsic-size: auto 900px; 
 .utr-field--available input { border-color: rgba(87, 201, 145, .75); }
 .utr-field--duplicate input,
 .utr-field--error input { border-color: rgba(255, 106, 122, .8); }
+
+/* Noctivus official dark palette. */
+:root {
+  --bg: #05080A;
+  --surface: #0A2030;
+  --surface-2: #071522;
+  --text: #F2FAFC;
+  --muted: #91A8B5;
+  --line: rgba(145, 168, 181, .2);
+  --cyan: #00DDF2;
+  --teal: #00E6B8;
+  --lime: #A7FF18;
+  --emerald: #38F27D;
+  --blue: #00DDF2;
+  --violet: #6E7CFF;
+  --amber: #FFC857;
+  --coral: #FF786A;
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+::selection {
+  color: #05080A;
+  background: var(--cyan);
+}
+
+.scroll-progress,
+.nav-links a::after,
+.step-track span.active {
+  background: var(--cyan);
+}
+
+.nav-dock {
+  color: var(--text);
+  border-bottom-color: rgba(0, 221, 242, .16);
+  background: rgba(5, 8, 10, .9);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, .32);
+}
+
+.brand,
+.nav-menu,
+.section-title h2,
+.stat strong,
+.event-card__body h3,
+.feature-panel h3,
+.feature-panel--transport h3,
+.feature-panel--community h3,
+.timeline-row h3,
+.timeline-row time,
+.qualifier-card h3,
+.event-modal__content h2,
+.registration-modal__header h2,
+.rules h3 {
+  color: var(--text);
+}
+
+.brand-mark,
+.nav-register,
+.nav-mobile-register,
+.button-primary,
+.event-filters button[aria-pressed='true'],
+.venue-map__pin,
+.venue-map__marker > span {
+  color: #05080A;
+  background: var(--cyan);
+}
+
+.brand-dot,
+.nav-links a:hover,
+.nav-links a.active,
+.kicker,
+.hero__eyebrow,
+.panel-label,
+.faq-item button span,
+.contact-card small,
+.contact-card svg,
+.footer-brand span,
+.text-button,
+.receipt-card strong,
+.registration-table label {
+  color: var(--cyan);
+}
+
+.nav-links a,
+.section-title p,
+.about-copy p,
+.event-card__body p,
+.events-note,
+.timeline-row p,
+.qualifier-card p,
+.feature-panel p,
+.faq-answer p,
+.registration-closed p,
+.payment-instructions ol,
+.footer-grid > p,
+.footer-links a {
+  color: var(--muted);
+}
+
+.button-primary:hover:not(:disabled),
+.hero .button-primary:hover {
+  color: #05080A;
+  background: #38F27D;
+}
+
+.button-ghost,
+.button-secondary,
+.hero .button-ghost {
+  color: var(--text);
+  border-color: rgba(0, 221, 242, .28);
+  background: rgba(7, 21, 34, .62);
+}
+
+.button-ghost:hover,
+.button-secondary:hover:not(:disabled),
+.hero .button-ghost:hover {
+  color: var(--cyan);
+  border-color: var(--cyan);
+  background: rgba(0, 221, 242, .08);
+}
+
+.hero {
+  color: var(--text);
+  background:
+    radial-gradient(ellipse at 50% 8%, rgba(0, 221, 242, .2), transparent 40%),
+    radial-gradient(circle at 18% 68%, rgba(0, 230, 184, .12), transparent 34%),
+    radial-gradient(circle at 82% 70%, rgba(167, 255, 24, .09), transparent 30%),
+    linear-gradient(180deg, #071522 0%, #05080A 74%);
+  border-color: rgba(0, 221, 242, .16);
+}
+
+.hero::before {
+  background:
+    linear-gradient(rgba(0, 221, 242, .055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 221, 242, .055) 1px, transparent 1px);
+  background-size: 58px 58px;
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,.95), transparent 86%);
+}
+
+.hero::after {
+  background: linear-gradient(to bottom, transparent, #05080A 94%);
+}
+
+.hero__ambient {
+  background:
+    radial-gradient(ellipse at 50% 12%, rgba(0, 221, 242, .28), transparent 40%),
+    radial-gradient(circle at 18% 65%, rgba(0, 230, 184, .16), transparent 34%),
+    radial-gradient(circle at 84% 72%, rgba(167, 255, 24, .11), transparent 32%);
+}
+
+.hero__rays-canvas {
+  filter: brightness(1.75) contrast(1.08) saturate(1.1);
+}
+
+.hero__logo {
+  width: clamp(138px, 16vw, 238px);
+  filter:
+    drop-shadow(0 22px 46px rgba(0, 0, 0, .56))
+    drop-shadow(0 0 34px rgba(0, 221, 242, .22))
+    drop-shadow(0 0 56px rgba(167, 255, 24, .08));
+}
+
+.hero h1 {
+  color: var(--text);
+  text-shadow: 0 0 28px rgba(0, 221, 242, .16);
+}
+
+.hero h1 span {
+  color: var(--cyan);
+}
+
+.hero__tagline {
+  color: #C9D9E1;
+}
+
+.hero__facts {
+  color: var(--text);
+  border-block-color: rgba(0, 221, 242, .22);
+}
+
+.hero__facts small,
+.hero__scroll {
+  color: var(--muted);
+}
+
+.hero__scroll span,
+.schedule-reveal__signal,
+.live-dot {
+  background: var(--lime);
+  box-shadow: 0 0 18px rgba(167, 255, 24, .75);
+}
+
+.about,
+.schedule-section,
+.faq-section {
+  background: #071522;
+}
+
+.events-section,
+.experience-section,
+.contact-section {
+  background: var(--bg);
+}
+
+.about-showcase,
+.schedule-reveal,
+.footer-venue,
+.timeline,
+.qualifier-card,
+.event-modal,
+.registration-modal {
+  border-color: rgba(0, 221, 242, .18);
+  background: var(--surface-2);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, .34);
+}
+
+.event-card,
+.event-card--wide,
+.feature-panel,
+.feature-panel--brochure,
+.stats-grid,
+.payment-summary,
+.payment-layout,
+.receipt-card,
+.team-block,
+.event-option {
+  border-color: rgba(0, 221, 242, .16);
+  background: var(--surface);
+}
+
+.event-card:hover {
+  border-color: rgba(0, 221, 242, .42);
+  background: #0C2638;
+  box-shadow: 0 18px 46px rgba(0, 221, 242, .1);
+}
+
+.event-card::before {
+  background: linear-gradient(90deg, var(--cyan), var(--teal), var(--lime));
+}
+
+.event-category,
+.event-filters,
+.field input,
+.field select,
+.member-row input,
+.team-block select,
+.verify-actions input,
+.pass-field input {
+  color: var(--text);
+  border-color: rgba(0, 221, 242, .18);
+  background: rgba(7, 21, 34, .82);
+}
+
+.event-filters button {
+  color: var(--muted);
+}
+
+.event-card__arrow {
+  color: var(--cyan);
+  border-color: rgba(0, 221, 242, .24);
+  background: rgba(0, 221, 242, .08);
+}
+
+.schedule-reveal {
+  background:
+    radial-gradient(circle at 78% 42%, rgba(0, 221, 242, .2), transparent 28%),
+    radial-gradient(circle at 91% 70%, rgba(167, 255, 24, .12), transparent 28%),
+    linear-gradient(135deg, #0A2030, #071522 70%);
+}
+
+.schedule-reveal h3 span,
+.muted-title {
+  color: #6EA4B8;
+}
+
+.contact-layout {
+  color: var(--text);
+  background:
+    radial-gradient(circle at 88% 0%, rgba(167, 255, 24, .15), transparent 34%),
+    linear-gradient(135deg, #0A2030, #071522);
+}
+
+.contact-layout h2,
+.contact-layout .kicker,
+.contact-card a {
+  color: var(--text);
+}
+
+footer {
+  color: var(--text);
+  background: #030607;
+}
+
+.modal-shell {
+  background: rgba(5, 8, 10, .78);
+}
+
+.icon-button {
+  color: var(--text);
+  border-color: rgba(0, 221, 242, .22);
+  background: #0A2030;
+}
+
+@media (max-width: 700px) {
+  .hero__logo { width: clamp(126px, 38vw, 180px); }
+}

@@ -1,0 +1,584 @@
+.admin-loading,
+.admin-login,
+.admin-shell {
+  min-height: 100vh;
+  background: #080a09;
+  color: var(--text);
+}
+
+.admin-login {
+  display: grid;
+  place-items: center;
+  padding: 28px;
+}
+
+.admin-login section {
+  width: min(440px, 100%);
+  padding: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #101412;
+}
+
+.admin-login img {
+  width: 74px;
+  display: block;
+  margin-bottom: 20px;
+}
+
+.admin-login h1 {
+  margin: 8px 0 24px;
+  font-size: 42px;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.admin-login form {
+  display: grid;
+  gap: 14px;
+  margin-top: 26px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.admin-shell {
+  display: grid;
+  grid-template-columns: 270px 1fr;
+}
+
+.admin-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--line);
+  background: #0d100f;
+}
+
+.admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 750;
+}
+
+.admin-brand img {
+  width: 38px;
+}
+
+.admin-sidebar nav {
+  display: grid;
+  gap: 6px;
+  margin-top: 34px;
+}
+
+.admin-sidebar nav button,
+.admin-user button,
+.verify-actions button {
+  min-height: 40px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: #c8d0cc;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.admin-sidebar nav button {
+  padding: 0 12px;
+}
+
+.admin-sidebar nav button.active,
+.admin-sidebar nav button:hover {
+  color: #04100d;
+  background: var(--cyan);
+}
+
+.admin-user {
+  margin-top: auto;
+  display: grid;
+  gap: 9px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.admin-user img {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+}
+
+.admin-user button {
+  border-color: var(--line);
+  padding-inline: 12px;
+}
+
+.admin-main {
+  min-width: 0;
+  padding: 28px;
+}
+
+.admin-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.admin-topbar h1 {
+  margin: 6px 0 0;
+  font-size: 38px;
+  letter-spacing: 0;
+}
+
+.admin-message {
+  padding: 12px 14px;
+  border-left: 2px solid var(--cyan);
+  background: rgba(70,245,208,.08);
+}
+
+.admin-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.admin-metrics article,
+.admin-panel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #101412;
+}
+
+.admin-metrics article {
+  min-height: 116px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.admin-metrics span {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.admin-metrics strong {
+  font-size: 34px;
+  letter-spacing: 0;
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.admin-grid--wide {
+  grid-template-columns: 390px 1fr;
+}
+
+.admin-panel {
+  min-width: 0;
+  padding: 20px;
+}
+
+.admin-panel h2 {
+  margin: 0 0 16px;
+  font-size: 19px;
+  letter-spacing: 0;
+}
+
+.event-bars {
+  display: grid;
+  gap: 12px;
+}
+
+.event-bars > div {
+  display: grid;
+  grid-template-columns: minmax(120px, 190px) 1fr 34px;
+  gap: 12px;
+  align-items: center;
+  color: #dce4e0;
+  font-size: 13px;
+}
+
+.event-bars div div {
+  height: 9px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: #222926;
+}
+
+.event-bars i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--cyan);
+}
+
+.recent-list,
+.registration-table {
+  display: grid;
+  gap: 8px;
+}
+
+.recent-list > div,
+.registration-table article {
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 6px;
+  background: #0b0f0d;
+}
+
+.recent-list > div {
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 110px 1fr 1.2fr auto;
+  gap: 10px;
+  align-items: center;
+  font-size: 12px;
+}
+
+.recent-list small,
+.registration-table small {
+  color: var(--muted);
+}
+
+.admin-filters {
+  display: grid;
+  grid-template-columns: minmax(220px, 320px) minmax(180px, 220px);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.registration-table article {
+  min-height: 82px;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 160px 1fr 1.25fr 98px 110px minmax(220px, 330px);
+  gap: 12px;
+  align-items: center;
+}
+
+.registration-table label {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  color: var(--cyan);
+  font-size: 12px;
+}
+
+.registration-table article > div:not(.verify-actions) {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.status-pill {
+  width: fit-content;
+  padding: 5px 8px;
+  border-radius: 99px;
+  background: rgba(255,255,255,.08);
+  color: #dce4e0;
+  font-size: 11px;
+  text-transform: capitalize;
+}
+
+.status-pill--pending { color: #ffe1a6; background: rgba(255,200,87,.12); }
+.status-pill--confirmed { color: #bcffd8; background: rgba(99,230,150,.12); }
+.status-pill--mismatch { color: #ffc4bd; background: rgba(255,120,106,.12); }
+.status-pill--duplicate { color: #d7c2ff; background: rgba(185,146,255,.13); }
+
+.verify-actions {
+  display: grid;
+  grid-template-columns: 1fr repeat(3, auto);
+  gap: 6px;
+}
+
+.verify-actions input,
+.pass-field input {
+  height: 38px;
+  min-width: 0;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--text);
+  background: #0d1210;
+}
+
+.verify-actions button {
+  padding: 0 8px;
+  border-color: var(--line);
+  font-size: 11px;
+  text-align: center;
+}
+
+.verify-actions button:first-of-type {
+  color: #04100d;
+  border-color: var(--cyan);
+  background: var(--cyan);
+}
+
+.pass-builder {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.access-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.access-tabs {
+  margin: 0;
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.access-tabs legend {
+  padding-inline: 6px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.access-tabs label {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.access-tabs input {
+  accent-color: var(--cyan);
+}
+
+.access-list {
+  display: grid;
+  gap: 10px;
+}
+
+.access-list article {
+  padding: 14px;
+  display: grid;
+  grid-template-columns: minmax(180px, .8fr) minmax(220px, 1.3fr) auto;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 6px;
+  background: #0b0f0d;
+}
+
+.access-list article.inactive {
+  opacity: .55;
+}
+
+.access-list article > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.access-list small {
+  color: var(--muted);
+}
+
+.access-list__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.access-list__tabs span {
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.access-list__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.pass-field {
+  display: grid;
+  grid-template-columns: .8fr 1.2fr;
+  gap: 8px;
+}
+
+.analysis-panel .admin-metrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.analysis-panel pre {
+  margin: 18px 0 0;
+  padding: 16px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: #dbe4df;
+  background: #080b0a;
+  white-space: pre-wrap;
+}
+
+.export-panel {
+  max-width: 740px;
+}
+
+.admin-skeleton,
+.admin-loading {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  color: var(--muted);
+}
+
+@media (max-width: 1100px) {
+  .admin-shell { grid-template-columns: 1fr; }
+  .admin-sidebar {
+    position: static;
+    height: auto;
+  }
+  .admin-sidebar nav {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  .admin-user {
+    margin-top: 16px;
+  }
+  .admin-grid,
+  .admin-grid--wide {
+    grid-template-columns: 1fr;
+  }
+  .registration-table article {
+    grid-template-columns: 1fr 1fr;
+  }
+  .verify-actions {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 700px) {
+  .admin-main,
+  .admin-sidebar {
+    padding: 16px;
+  }
+  .admin-topbar,
+  .admin-filters {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+  .admin-sidebar nav,
+  .admin-metrics,
+  .analysis-panel .admin-metrics {
+    grid-template-columns: 1fr 1fr;
+  }
+  .event-bars > div,
+  .recent-list > div,
+  .registration-table article,
+  .access-list article,
+  .verify-actions,
+  .pass-field {
+    grid-template-columns: 1fr;
+  }
+
+  .access-list__actions {
+    justify-content: flex-start;
+  }
+}
+
+/* Noctivus official dark palette for admin surfaces. */
+.admin-loading,
+.admin-login,
+.admin-shell {
+  background: #05080A;
+  color: #F2FAFC;
+}
+
+.admin-login section,
+.admin-sidebar,
+.admin-metrics article,
+.admin-panel,
+.recent-list > div,
+.registration-table article,
+.access-list article {
+  border-color: rgba(0, 221, 242, .18);
+  background: #0A2030;
+}
+
+.admin-sidebar {
+  background: #071522;
+}
+
+.admin-brand,
+.admin-topbar h1,
+.admin-panel h2,
+.admin-metrics strong {
+  color: #F2FAFC;
+}
+
+.admin-user,
+.admin-metrics span,
+.recent-list small,
+.registration-table small,
+.access-list small,
+.access-list__tabs span,
+.event-bars > div {
+  color: #91A8B5;
+}
+
+.admin-sidebar nav button,
+.admin-user button,
+.verify-actions button {
+  color: #F2FAFC;
+}
+
+.admin-sidebar nav button.active,
+.admin-sidebar nav button:hover,
+.verify-actions button:first-of-type,
+.event-bars i {
+  color: #05080A;
+  background: #00DDF2;
+}
+
+.admin-message {
+  border-left-color: #00DDF2;
+  background: rgba(0, 221, 242, .08);
+}
+
+.event-bars div div,
+.analysis-panel pre,
+.verify-actions input,
+.pass-field input,
+.access-tabs {
+  color: #F2FAFC;
+  border-color: rgba(0, 221, 242, .18);
+  background: #071522;
+}
+
+.registration-table label {
+  color: #00DDF2;
+}
+
+.status-pill {
+  color: #F2FAFC;
+  background: rgba(145, 168, 181, .14);
+}
+
+.status-pill--confirmed {
+  color: #38F27D;
+  background: rgba(56, 242, 125, .12);
+}
