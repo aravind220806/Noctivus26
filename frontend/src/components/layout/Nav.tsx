@@ -80,7 +80,7 @@ export function Nav() {
     };
   }, []);
 
-  const showMobileNav = scrollDirection === "up";
+  const showMobileNav = visible || scrollDirection === "up" || !scrolled;
 
   return (
     <>
@@ -202,14 +202,19 @@ export function Nav() {
                 Register
               </a>
               <button
-                className="p-2 lg:hidden focus-visible:outline-none transition-colors duration-200 cursor-pointer"
-                style={{ color: "var(--text-primary, #f1f1eb)" }}
+                className="lg:hidden flex flex-col justify-center items-center w-10 h-10 rounded-lg border focus-visible:outline-none transition-colors duration-200 cursor-pointer"
+                style={{
+                  color: "var(--text-primary, #f1f1eb)",
+                  borderColor: "var(--border-color, rgba(241, 241, 235, 0.14))",
+                  backgroundColor: "rgba(255, 255, 255, 0.04)"
+                }}
                 onClick={() => setMenuOpen(true)}
                 aria-label="Open navigation menu"
                 aria-expanded={menuOpen}
               >
-                <span className="block w-5 h-[1.5px] bg-current mb-1.5" />
-                <span className="block w-5 h-[1.5px] bg-current" />
+                <span className="block w-5 h-[2px] bg-current rounded-full mb-1" />
+                <span className="block w-5 h-[2px] bg-current rounded-full mb-1" />
+                <span className="block w-5 h-[2px] bg-current rounded-full" />
               </button>
             </div>
           </div>
