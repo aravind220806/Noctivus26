@@ -87,13 +87,11 @@ export function Nav() {
       <header
         className={`fixed left-0 w-full z-50 px-4 sm:px-8 lg:px-12 transition-all duration-300 ease-out ${
           scrolled ? "top-2.5 sm:top-3.5" : "top-4 sm:top-5"
-        } ${
-          showMobileNav
-            ? "max-lg:!translate-y-0 max-lg:!opacity-100 max-lg:!pointer-events-auto"
-            : "max-lg:!-translate-y-[135%] max-lg:!opacity-0 max-lg:!pointer-events-none"
         }`}
         style={{
           transform: visible ? "translateY(0)" : "translateY(-135%)",
+          opacity: visible ? 1 : 0,
+          pointerEvents: visible ? "auto" : "none",
           transitionProperty: "transform, opacity, top, padding",
           transitionDuration: "280ms",
           transitionTimingFunction: "cubic-bezier(0.25, 1, 0.5, 1)",
