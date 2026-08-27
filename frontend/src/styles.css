@@ -3430,14 +3430,15 @@ footer {
 }
 
 .hero__logo {
-  width: clamp(100px, 10.5vw, 142px) !important;
+  width: clamp(148px, 16vw, 220px) !important;
   height: auto !important;
   margin: 0 auto !important;
   display: block !important;
+  object-fit: contain !important;
 }
 
 .hero h1 {
-  margin-top: 8px !important;
+  margin-top: 2px !important;
   font-size: clamp(44px, 5.8vw, 74px) !important;
   line-height: 1.05 !important;
   letter-spacing: -0.04em !important;
