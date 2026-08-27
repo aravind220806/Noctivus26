@@ -127,11 +127,12 @@ export function Nav() {
                 className="object-contain transition-transform duration-200 ease-out group-hover:-translate-y-[2px] shrink-0"
               />
               <span
-                className={`font-semibold tracking-wide transition-all duration-300 truncate ${
+                className={`font-bold tracking-wide transition-all duration-300 truncate ${
                   scrolled ? "text-base sm:text-xl lg:text-2xl" : "text-lg sm:text-2xl lg:text-[28px] xl:text-[32px]"
                 }`}
                 style={{
-                  fontFamily: "var(--font-samarkan-custom, var(--display-font))",
+                  fontFamily: "'Space Grotesk', 'Space Grotesk Bold', sans-serif",
+                  fontWeight: 700,
                   color: "var(--text-primary, #e2e8f0)",
                 }}
               >
@@ -245,9 +246,10 @@ export function Nav() {
                   className="object-contain"
                 />
                 <span
-                  className="text-xl sm:text-2xl font-medium"
+                  className="text-xl sm:text-2xl font-bold tracking-wide"
                   style={{
-                    fontFamily: "var(--font-samarkan-custom, var(--display-font))",
+                    fontFamily: "'Space Grotesk', 'Space Grotesk Bold', sans-serif",
+                    fontWeight: 700,
                     color: "var(--text-primary, #e2e8f0)",
                   }}
                 >
