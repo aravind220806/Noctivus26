@@ -4,14 +4,18 @@ import './LightRays.css';
 
 const DEFAULT_COLOR = '#ffffff';
 
-const hexToRgb = (hex) => {
+const hexToRgb = (hex: string): [number, number, number] => {
   const match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return match
     ? [parseInt(match[1], 16) / 255, parseInt(match[2], 16) / 255, parseInt(match[3], 16) / 255]
     : [1, 1, 1];
 };
 
-const getAnchorAndDir = (origin, width, height) => {
+const getAnchorAndDir = (
+  origin: string,
+  width: number,
+  height: number
+): { anchor: [number, number]; dir: [number, number] } => {
   const outside = 0.2;
   switch (origin) {
     case 'top-left': return { anchor: [0, -outside * height], dir: [0, 1] };
@@ -117,7 +121,22 @@ const fragmentShader = `
   }
 `;
 
-// Adapted from React Bits LightRays (MIT + Commons Clause).
+export interface LightRaysProps {
+  raysOrigin?: string;
+  raysColor?: string;
+  raysSpeed?: number;
+  lightSpread?: number;
+  rayLength?: number;
+  pulsating?: boolean;
+  fadeDistance?: number;
+  saturation?: number;
+  followMouse?: boolean;
+  mouseInfluence?: number;
+  noiseAmount?: number;
+  distortion?: number;
+  className?: string;
+}
+
 export default function LightRays({
   raysOrigin = 'top-center',
   raysColor = DEFAULT_COLOR,
@@ -132,10 +151,10 @@ export default function LightRays({
   noiseAmount = 0,
   distortion = 0,
   className = '',
-}) {
-  const containerRef = useRef(null);
-  const mouseRef = useRef({ x: 0.5, y: 0.5 });
-  const smoothMouseRef = useRef({ x: 0.5, y: 0.5 });
+}: LightRaysProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const mouseRef = useRef<{ x: number; y: number }>({ x: 0.5, y: 0.5 });
+  const smoothMouseRef = useRef<{ x: number; y: number }>({ x: 0.5, y: 0.5 });
 
   useEffect(() => {
     const container = containerRef.current;
@@ -189,7 +208,7 @@ export default function LightRays({
       uniforms.rayDir.value = dir;
     };
 
-    const updateMouse = (event) => {
+    const updateMouse = (event: PointerEvent | MouseEvent) => {
       const rect = container.getBoundingClientRect();
       mouseRef.current = {
         x: (event.clientX - rect.left) / rect.width,
@@ -199,11 +218,16 @@ export default function LightRays({
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let visible = true;
-    let frameId;
-    const observer = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; }, { threshold: 0.05 });
+    let frameId: number;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        visible = entry.isIntersecting;
+      },
+      { threshold: 0.05 }
+    );
     observer.observe(container);
 
-    const render = (time) => {
+    const render = (time: number) => {
       if (visible && !document.hidden) {
         uniforms.iTime.value = reducedMotion ? 0 : time * 0.001;
         if (followMouse && mouseInfluence > 0) {

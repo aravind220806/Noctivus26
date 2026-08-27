@@ -3,7 +3,7 @@ import { Camera, Geometry, Mesh, Program, Renderer } from 'ogl';
 
 const defaultColors = ['#ffffff'];
 
-function hexToRgb(hex) {
+function hexToRgb(hex: string): [number, number, number] {
   const value = hex.replace(/^#/, '');
   const normalized = value.length === 3 ? value.split('').map((character) => character + character).join('') : value;
   const integer = Number.parseInt(normalized.slice(0, 6), 16);
@@ -62,7 +62,22 @@ const fragment = `
   }
 `;
 
-// Adapted from React Bits Particles (MIT + Commons Clause).
+export interface ParticlesProps {
+  particleCount?: number;
+  particleSpread?: number;
+  speed?: number;
+  particleColors?: string[];
+  moveParticlesOnHover?: boolean;
+  particleHoverFactor?: number;
+  alphaParticles?: boolean;
+  particleBaseSize?: number;
+  sizeRandomness?: number;
+  cameraDistance?: number;
+  disableRotation?: boolean;
+  pixelRatio?: number;
+  className?: string;
+}
+
 export default function Particles({
   particleCount = 200,
   particleSpread = 10,
@@ -77,9 +92,9 @@ export default function Particles({
   disableRotation = false,
   pixelRatio = 1,
   className = '',
-}) {
-  const containerRef = useRef(null);
-  const mouseRef = useRef({ x: 0, y: 0 });
+}: ParticlesProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const mouseRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   useEffect(() => {
     const container = containerRef.current;
@@ -101,7 +116,7 @@ export default function Particles({
     resize();
     window.addEventListener('resize', resize, { passive: true });
 
-    const handleMouseMove = (event) => {
+    const handleMouseMove = (event: MouseEvent) => {
       const rect = container.getBoundingClientRect();
       mouseRef.current = {
         x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
@@ -116,7 +131,7 @@ export default function Particles({
     const palette = particleColors?.length ? particleColors : defaultColors;
 
     for (let index = 0; index < particleCount; index += 1) {
-      let x; let y; let z; let length;
+      let x: number; let y: number; let z: number; let length: number;
       do {
         x = Math.random() * 2 - 1;
         y = Math.random() * 2 - 1;
@@ -150,14 +165,14 @@ export default function Particles({
     const particles = new Mesh(gl, { mode: gl.POINTS, geometry, program });
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let visible = true;
-    let frameId;
+    let frameId: number;
     let lastTime = performance.now();
     let elapsed = 0;
 
     const observer = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; });
     observer.observe(container);
 
-    const update = (time) => {
+    const update = (time: number) => {
       const delta = time - lastTime;
       lastTime = time;
       if ((!visible || document.hidden) && !reducedMotion) {

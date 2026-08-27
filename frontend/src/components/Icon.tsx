@@ -1,4 +1,6 @@
-const paths = {
+import type { JSX } from 'react';
+
+const paths: Record<string, JSX.Element> = {
   arrow: <><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></>,
   down: <path d="m6 9 6 6 6-6"/>,
   close: <><path d="m6 6 12 12"/><path d="M18 6 6 18"/></>,
@@ -15,6 +17,29 @@ const paths = {
   shield: <><path d="M20 13c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V5l8-3 8 3v8Z"/><path d="m9 12 2 2 4-4"/></>,
 };
 
-export default function Icon({ name, size = 20, className = '' }) {
-  return <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
+export type IconName = keyof typeof paths;
+
+export interface IconProps {
+  name: IconName | string;
+  size?: number;
+  className?: string;
+}
+
+export default function Icon({ name, size = 20, className = '' }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {paths[name] || null}
+    </svg>
+  );
 }

@@ -18,7 +18,6 @@ export function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [visible, setVisible] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [scrollDirection, setScrollDirection] = useState<"up" | "down">("down");
 
   const lastScrollY = useRef(0);
 
@@ -30,12 +29,10 @@ export function Nav() {
       setScrolled(isPastHero);
 
       if (currentScrollY > lastScrollY.current + 5) {
-        setScrollDirection("down");
         if (currentScrollY > 140) {
           setVisible(false);
         }
       } else if (currentScrollY < lastScrollY.current - 5) {
-        setScrollDirection("up");
         setVisible(true);
       } else if (currentScrollY <= 90) {
         setVisible(true);
@@ -79,8 +76,6 @@ export function Nav() {
       });
     };
   }, []);
-
-  const showMobileNav = visible || scrollDirection === "up" || !scrolled;
 
   return (
     <>

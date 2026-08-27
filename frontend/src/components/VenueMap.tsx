@@ -2,8 +2,14 @@ import { useEffect, useRef } from 'react';
 import { AttributionControl, Map, Marker, NavigationControl, Popup } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-export default function VenueMap({ latitude, longitude, directionsUrl }) {
-  const containerRef = useRef(null);
+export interface VenueMapProps {
+  latitude: number;
+  longitude: number;
+  directionsUrl: string;
+}
+
+export default function VenueMap({ latitude, longitude, directionsUrl }: VenueMapProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return undefined;
@@ -54,7 +60,9 @@ export default function VenueMap({ latitude, longitude, directionsUrl }) {
     const popup = new Popup({ offset: 20, closeButton: false }).setDOMContent(popupContent);
     new Marker({ element: marker, anchor: 'bottom' }).setLngLat([longitude, latitude]).setPopup(popup).addTo(map);
 
-    return () => map.remove();
+    return () => {
+      map.remove();
+    };
   }, [latitude, longitude, directionsUrl]);
 
   return <div className="venue-map" ref={containerRef} aria-label="Interactive map showing Velammal Engineering College" />;

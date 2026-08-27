@@ -1,9 +1,15 @@
-import { useRef } from 'react';
+import { useRef, type PointerEvent, type ReactNode } from 'react';
 
-export default function SpotlightCard({ children, className = '', accent = 'cyan' }) {
-  const cardRef = useRef(null);
+export interface SpotlightCardProps {
+  children?: ReactNode;
+  className?: string;
+  accent?: string;
+}
 
-  const handlePointerMove = (event) => {
+export default function SpotlightCard({ children, className = '', accent = 'cyan' }: SpotlightCardProps) {
+  const cardRef = useRef<HTMLElement | null>(null);
+
+  const handlePointerMove = (event: PointerEvent<HTMLElement>) => {
     if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
     const card = cardRef.current;
     if (!card) return;

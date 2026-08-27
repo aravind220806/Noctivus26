@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { faqs, faqCategories, FaqItem } from '../data/faq';
+import { faqs, faqCategories } from '../data/faq';
 
 export const FaqAccordion: React.FC = () => {
   const [openId, setOpenId] = useState<string | null>('gen-1');

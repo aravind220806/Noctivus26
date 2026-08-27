@@ -1,4 +1,27 @@
-export const site = {
+import { events as canonicalEvents, type EventItem } from './events';
+
+export interface SiteConfig {
+  edition: string;
+  eyebrow: string;
+  tagline: string;
+  date: string;
+  eventStart: string;
+  venue: string;
+  address: string;
+  coordinates: {
+    latitude: number;
+    longitude: number;
+  };
+  registrationDeadline: string;
+  contactEmail: string;
+  contactPhone: string;
+  social: Record<string, string>;
+}
+
+export type SiteEvent = EventItem;
+export const events = canonicalEvents;
+
+export const site: SiteConfig = {
   edition: "NOCTIVUS '26",
   eyebrow: 'Department of CSE · Cyber Security presents',
   tagline: 'National-level technical symposium',
@@ -17,82 +40,9 @@ export const site = {
   },
 };
 
-export const events = [
-  {
-    id: 'ideathon',
-    code: '01',
-    name: 'Ideathon',
-    category: 'Technical',
-    accent: 'cyan',
-    fee: 200,
-    detailsPending: true,
-  },
-  {
-    id: 'cyber-heist-ctf',
-    code: '02',
-    name: 'Cyber Heist CTF',
-    category: 'Technical',
-    accent: 'blue',
-    fee: 200,
-    detailsPending: true,
-  },
-  {
-    id: 'iot-exploit',
-    code: '03',
-    name: 'IoT Exploit',
-    category: 'Technical',
-    accent: 'violet',
-    fee: 200,
-    detailsPending: true,
-  },
-  {
-    id: 'secure-x-vibecode',
-    code: '04',
-    name: 'Secure X VibeCode',
-    category: 'Technical',
-    accent: 'amber',
-    fee: 200,
-    detailsPending: true,
-  },
-  {
-    id: 'mind-cage',
-    code: '05',
-    name: 'Mind Cage',
-    category: 'Technical',
-    accent: 'lime',
-    fee: 200,
-    detailsPending: true,
-  },
-  {
-    id: 'mystery-hunt',
-    code: '06',
-    name: 'Mystery Hunt',
-    category: 'Non-technical',
-    accent: 'coral',
-    fee: 150,
-    detailsPending: true,
-  },
-  {
-    id: 'tune-trap',
-    code: '07',
-    name: 'Tune Trap',
-    category: 'Non-technical',
-    accent: 'blue',
-    fee: 150,
-    detailsPending: true,
-  },
-  {
-    id: 'auction-arena',
-    code: '08',
-    name: 'Auction Arena',
-    category: 'Non-technical',
-    accent: 'violet',
-    fee: 150,
-    detailsPending: true,
-  },
-];
 
-export const faqs = [
+
+export const faqs: [string, string][] = [
   ['Who can participate?', 'Students from any recognized college may participate. Carry a valid college ID on the event day.'],
   ['Can I join more than one event?', 'Yes, where schedules do not overlap. The final schedule will clearly mark conflicting events before registration opens.'],
   ['How does team registration work?', 'One captain enters the complete team and makes a single payment for that team registration.'],
