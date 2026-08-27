@@ -101,13 +101,13 @@ export function Nav() {
           <div
             className={`flex items-center justify-between border shadow-sm transition-all duration-300 ease-out ${
               scrolled
-                ? "h-[68px] px-5 lg:px-8 rounded-[18px] backdrop-blur-md"
-                : "h-[78px] px-6 lg:px-10 rounded-[22px]"
+                ? "h-[58px] sm:h-[68px] px-3.5 sm:px-5 lg:px-8 rounded-[16px] sm:rounded-[18px] backdrop-blur-md"
+                : "h-[66px] sm:h-[78px] px-4 sm:px-6 lg:px-10 rounded-[18px] sm:rounded-[22px]"
             }`}
             style={{
-              backgroundColor: "var(--color-white-value, rgba(11, 13, 12, 0.88))",
-              borderColor: "var(--border-color, rgba(241, 241, 235, 0.14))",
-              boxShadow: "var(--shadow-lg, 0 16px 40px rgba(0, 0, 0, 0.4))",
+              backgroundColor: "var(--color-white-value, rgba(16, 24, 21, 0.75))",
+              borderColor: "var(--border-color, rgba(45, 212, 191, 0.18))",
+              boxShadow: "var(--shadow-lg, 0 16px 40px rgba(0, 0, 0, 0.45))",
             }}
           >
             <a
@@ -116,7 +116,7 @@ export function Nav() {
                 e.preventDefault();
                 document.getElementById("home")?.scrollIntoView({ behavior: "smooth" });
               }}
-              className="flex items-center gap-2 group focus-visible:outline-none rounded-sm"
+              className="flex items-center gap-1.5 sm:gap-2 group focus-visible:outline-none rounded-sm min-w-0"
               aria-label="Noctivus '26 - home"
             >
               <img
@@ -125,22 +125,22 @@ export function Nav() {
                 width={1466}
                 height={1073}
                 style={{
-                  width: scrolled ? "42px" : "52px",
+                  width: scrolled ? "36px" : "44px",
                   height: "auto",
                   transition: "width 300ms ease-out",
                 }}
-                className="object-contain transition-transform duration-200 ease-out group-hover:-translate-y-[2px]"
+                className="object-contain transition-transform duration-200 ease-out group-hover:-translate-y-[2px] shrink-0"
               />
               <span
-                className={`font-medium tracking-wide transition-all duration-300 ${
-                  scrolled ? "text-lg sm:text-xl lg:text-2xl" : "text-xl sm:text-2xl lg:text-3xl"
+                className={`font-medium tracking-wide transition-all duration-300 truncate ${
+                  scrolled ? "text-base sm:text-lg lg:text-2xl" : "text-lg sm:text-xl lg:text-3xl"
                 }`}
                 style={{
                   fontFamily: "var(--font-samarkan-custom, var(--display-font))",
-                  color: "var(--text-primary, #f1f1eb)",
+                  color: "var(--text-primary, #e2e8f0)",
                 }}
               >
-                NOCTIVUS <span style={{ color: "var(--color-teal-value, #8fe3cf)" }}>'26</span>
+                NOCTIVUS <span style={{ color: "var(--color-teal-value, #2dd4bf)" }}>'26</span>
               </span>
             </a>
 
@@ -161,7 +161,7 @@ export function Nav() {
                       isActive ? "font-semibold" : "font-medium"
                     }`}
                     style={{
-                      color: isActive ? "var(--text-primary, #f1f1eb)" : "var(--text-secondary, #a2a7a2)",
+                      color: isActive ? "var(--text-primary, #e2e8f0)" : "var(--text-secondary, #94a3b8)",
                     }}
                   >
                     {label}
@@ -170,7 +170,7 @@ export function Nav() {
                       <motion.span
                         layoutId="navActiveIndicator"
                         className="absolute -bottom-1 left-0 right-0 h-[2px] rounded-full"
-                        style={{ backgroundColor: "var(--color-teal-value, #8fe3cf)" }}
+                        style={{ backgroundColor: "var(--color-teal-value, #2dd4bf)" }}
                         transition={{
                           type: "spring",
                           stiffness: 380,
@@ -184,7 +184,7 @@ export function Nav() {
               })}
             </nav>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
               <a
                 href="#events"
                 onClick={(e) => {
@@ -193,18 +193,18 @@ export function Nav() {
                 }}
                 className="hidden sm:inline-flex items-center justify-center px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg transition-colors"
                 style={{
-                  backgroundColor: "var(--color-teal-value, #8fe3cf)",
-                  color: "#04100d",
+                  backgroundColor: "var(--color-teal-value, #2dd4bf)",
+                  color: "#0a0f0d",
                 }}
               >
                 Register
               </a>
               <button
-                className="lg:hidden flex items-center justify-center w-10 h-10 rounded-xl border focus-visible:outline-none transition-colors duration-200 cursor-pointer"
+                className="lg:hidden flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl border focus-visible:outline-none transition-colors duration-200 cursor-pointer"
                 style={{
                   color: "var(--text-primary, #e2e8f0)",
-                  borderColor: "var(--border-color, rgba(45, 212, 191, 0.2))",
-                  backgroundColor: "rgba(16, 24, 21, 0.6)",
+                  borderColor: "var(--border-color, rgba(45, 212, 191, 0.25))",
+                  backgroundColor: "rgba(16, 24, 21, 0.7)",
                   backdropFilter: "blur(8px)",
                   boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)"
                 }}
