@@ -1,5 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { events, faqs, site } from './data/site.js';
+import { faqs, site } from './data/site.js';
+import { events } from './data/events.ts';
+import EventCard from './components/EventCard.tsx';
 import RegistrationModal from './components/RegistrationModal.jsx';
 import Icon from './components/Icon.jsx';
 import SplitFlapCountdown from './components/effects/SplitFlapCountdown.jsx';
@@ -220,15 +222,9 @@ function Events({ onSelect }) {
         <div className="event-filters" role="group" aria-label="Filter events">
           {filters.map((item) => <button type="button" aria-pressed={filter === item} onClick={() => setFilter(item)} key={item}>{item}</button>)}
         </div>
-        <div className="events-grid">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 mt-8">
           {visibleEvents.map((event, index) => (
-            <article className={`event-card accent-${event.accent}`} data-reveal style={{ '--reveal-order': index }} key={event.id}>
-              <button className="event-card__button" onClick={() => onSelect(event)} aria-label={`View ${event.name} details`}>
-                <div className="event-card__top"><span className="event-category">{event.category}</span></div>
-                <div className="event-card__body"><h3>{event.name}</h3><p>Complete event information will be announced soon.</p></div>
-                <div className="event-card__footer"><span><Icon name="clock" size={16}/> Registration open</span><strong>₹{event.fee}</strong><span className="event-card__arrow"><span className="event-card__arrow-label">View & register</span><Icon name="arrow"/></span></div>
-              </button>
-            </article>
+            <EventCard event={event} onSelect={onSelect} index={index} key={event.id} />
           ))}
         </div>
         <p className="events-note" data-reveal><span>*</span> Final rules, capacities, and event timings will be locked before registration opens.</p>

@@ -1,4 +1,13 @@
+@font-face {
+  font-family: 'Samarkan';
+  src: url('/fonts/Samarkan.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
+  --font-samarkan-custom: 'Samarkan', 'Space Grotesk', system-ui, sans-serif;
   --bg: #050707;
   --surface: #0a0d0c;
   --surface-2: #101514;
