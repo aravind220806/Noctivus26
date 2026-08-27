@@ -202,19 +202,23 @@ export function Nav() {
                 Register
               </a>
               <button
-                className="lg:hidden flex flex-col justify-center items-center w-10 h-10 rounded-lg border focus-visible:outline-none transition-colors duration-200 cursor-pointer"
+                className="lg:hidden flex items-center justify-center w-10 h-10 rounded-xl border focus-visible:outline-none transition-colors duration-200 cursor-pointer"
                 style={{
-                  color: "var(--text-primary, #f1f1eb)",
-                  borderColor: "var(--border-color, rgba(241, 241, 235, 0.14))",
-                  backgroundColor: "rgba(255, 255, 255, 0.04)"
+                  color: "var(--text-primary, #e2e8f0)",
+                  borderColor: "var(--border-color, rgba(45, 212, 191, 0.2))",
+                  backgroundColor: "rgba(16, 24, 21, 0.6)",
+                  backdropFilter: "blur(8px)",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)"
                 }}
                 onClick={() => setMenuOpen(true)}
                 aria-label="Open navigation menu"
                 aria-expanded={menuOpen}
               >
-                <span className="block w-5 h-[2px] bg-current rounded-full mb-1" />
-                <span className="block w-5 h-[2px] bg-current rounded-full mb-1" />
-                <span className="block w-5 h-[2px] bg-current rounded-full" />
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
               </button>
             </div>
           </div>
