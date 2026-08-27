@@ -1,7 +1,8 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { faqs, site } from './data/site.js';
+import { site } from './data/site.js';
 import { events } from './data/events.ts';
 import EventCard from './components/EventCard.tsx';
+import FaqAccordion from './components/FaqAccordion.tsx';
 import RegistrationModal from './components/RegistrationModal.jsx';
 import Icon from './components/Icon.jsx';
 import SplitFlapCountdown from './components/effects/SplitFlapCountdown.jsx';
@@ -265,12 +266,21 @@ function Experience() {
 }
 
 function Faq() {
-  const [open, setOpen] = useState(0);
   return (
     <section className="section faq-section" id="faq">
-      <div className="page-width faq-layout">
-        <SectionTitle kicker="FREQUENTLY ASKED QUESTIONS" title={<>What participants<br/><span className="muted-title">need to know.</span></>} />
-        <div className="faq-list" data-reveal>{faqs.map(([question, answer], index) => <div className={`faq-item ${open === index ? 'is-open' : ''}`} key={question}><button aria-expanded={open === index} onClick={() => setOpen(open === index ? -1 : index)}><strong>{question}</strong><i>{open === index ? '−' : '+'}</i></button><div className="faq-answer"><div><p>{answer}</p></div></div></div>)}</div>
+      <div className="page-width">
+        <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12" data-reveal>
+          <span className="kicker">FREQUENTLY ASKED QUESTIONS</span>
+          <h2 className="text-4xl sm:text-5xl font-bold tracking-tight mt-3 text-[#e2e8f0]">
+            FAQ
+          </h2>
+          <p className="text-sm sm:text-base text-[#94a3b8] mt-3">
+            Everything you need to know before Sept 26.
+          </p>
+        </div>
+        <div data-reveal>
+          <FaqAccordion />
+        </div>
       </div>
     </section>
   );
