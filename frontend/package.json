@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "maplibre-gl": "^6.6.0",
+    "motion": "^13.1.1",
     "ogl": "^1.0.11",
     "qrcode": "^1.5.4",
     "react": "^19.1.1",

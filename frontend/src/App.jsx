@@ -4,6 +4,7 @@ import RegistrationModal from './components/RegistrationModal.jsx';
 import Icon from './components/Icon.jsx';
 import SplitFlapCountdown from './components/effects/SplitFlapCountdown.jsx';
 import useReveal from './hooks/useReveal.js';
+import { Nav } from './components/layout/Nav.jsx';
 
 const LightRays = lazy(() => import('./components/effects/LightRays.jsx'));
 const VenueMap = lazy(() => import('./components/VenueMap.jsx'));
@@ -48,6 +49,7 @@ export default function App() {
     <>
       <a className="skip-link" href="#main">Skip to content</a>
       <div className="scroll-progress" style={{ '--scroll-progress': `${scrollProgress}%` }} aria-hidden="true" />
+      <Nav />
 
       <main id="main">
         <Hero onRegister={() => openRegistration()} />
@@ -153,7 +155,7 @@ function DeferredVenueMap() {
 
 function Hero({ onRegister }) {
   return (
-    <section className="hero" id="top">
+    <section className="hero" id="home">
       <AdaptiveLightRays />
       <div className="hero__grain" aria-hidden="true" />
       <div className="page-width hero__inner">
