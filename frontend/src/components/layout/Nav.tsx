@@ -230,15 +230,15 @@ export function Nav() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed inset-0 z-50 flex flex-col justify-between p-8 sm:p-12 transition-all duration-300"
-            style={{ backgroundColor: "var(--bg, #0b0d0c)", color: "var(--text-primary, #f1f1eb)" }}
+            className="fixed inset-0 z-50 flex flex-col justify-between p-6 sm:p-12 transition-all duration-300"
+            style={{ backgroundColor: "var(--bg, #0a0f0d)", color: "var(--text-primary, #e2e8f0)" }}
             role="dialog"
             aria-modal="true"
             aria-label="Mobile navigation"
           >
             <div
               className="flex items-center justify-between border-b pb-6"
-              style={{ borderColor: "var(--border-color, rgba(241, 241, 235, 0.14))" }}
+              style={{ borderColor: "var(--border-color, rgba(45, 212, 191, 0.18))" }}
             >
               <div className="flex items-center gap-2">
                 <img
@@ -246,17 +246,17 @@ export function Nav() {
                   alt="Noctivus '26"
                   width={1466}
                   height={1073}
-                  style={{ width: "42px", height: "auto" }}
+                  style={{ width: "36px", height: "auto" }}
                   className="object-contain"
                 />
                 <span
                   className="text-xl sm:text-2xl font-medium"
                   style={{
                     fontFamily: "var(--font-samarkan-custom, var(--display-font))",
-                    color: "var(--text-primary, #f1f1eb)",
+                    color: "var(--text-primary, #e2e8f0)",
                   }}
                 >
-                  NOCTIVUS <span style={{ color: "var(--color-teal-value, #8fe3cf)" }}>'26</span>
+                  NOCTIVUS <span style={{ color: "var(--color-teal-value, #2dd4bf)" }}>'26</span>
                 </span>
               </div>
               <button
@@ -264,8 +264,8 @@ export function Nav() {
                 aria-label="Close navigation menu"
                 className="w-10 h-10 flex items-center justify-center rounded-full border transition-colors duration-200 cursor-pointer"
                 style={{
-                  color: "var(--text-primary, #f1f1eb)",
-                  borderColor: "var(--border-color, rgba(241, 241, 235, 0.14))",
+                  color: "var(--text-primary, #e2e8f0)",
+                  borderColor: "var(--border-color, rgba(45, 212, 191, 0.18))",
                 }}
               >
                 ✕
@@ -278,7 +278,7 @@ export function Nav() {
                 const isActive = activeSection === targetId;
                 return (
                   <div key={href} className="flex items-center gap-4">
-                    <span className="text-xs font-sans font-semibold" style={{ color: "var(--color-teal-value, #8fe3cf)" }}>
+                    <span className="text-xs font-sans font-semibold" style={{ color: "var(--color-teal-value, #2dd4bf)" }}>
                       0{index + 1}
                     </span>
                     <a
@@ -291,7 +291,7 @@ export function Nav() {
                       className={`font-sans text-2xl sm:text-3xl font-medium tracking-wide transition-colors duration-200 ${
                         isActive ? "font-semibold" : ""
                       }`}
-                      style={{ color: isActive ? "var(--text-primary, #f1f1eb)" : "var(--text-secondary, #a2a7a2)" }}
+                      style={{ color: isActive ? "var(--text-primary, #e2e8f0)" : "var(--text-secondary, #94a3b8)" }}
                     >
                       {label}
                     </a>
@@ -302,11 +302,11 @@ export function Nav() {
 
             <div
               className="pt-6 border-t flex flex-col gap-4"
-              style={{ borderColor: "var(--border-color, rgba(241, 241, 235, 0.14))" }}
+              style={{ borderColor: "var(--border-color, rgba(45, 212, 191, 0.18))" }}
             >
               <div
                 className="flex items-center justify-between text-xs font-sans tracking-wide"
-                style={{ color: "var(--text-muted, #707872)" }}
+                style={{ color: "var(--text-muted, #94a3b8)" }}
               >
                 <span>© {new Date().getFullYear()} NOCTIVUS '26</span>
                 <span>Dept of CSE (Cyber Security)</span>
