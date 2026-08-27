@@ -3064,10 +3064,21 @@ footer {
 .mb-1\.5 { margin-bottom: 0.375rem; }
 .bg-current { background-color: currentColor; }
 
+.tracking-\[0\.05em\] { letter-spacing: 0.05em; }
+.text-\[14px\] { font-size: 14px; }
+.text-\[15px\] { font-size: 15px; }
+.text-\[30px\] { font-size: 30px; }
+.text-\[32px\] { font-size: 32px; }
+.py-2\.5 { padding-top: 0.625rem; padding-bottom: 0.625rem; }
+.py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+.px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+.rounded-xl { border-radius: 0.75rem; }
+
 @media (min-width: 640px) {
   .sm\:top-3\.5 { top: 0.875rem; }
   .sm\:top-5 { top: 1.25rem; }
   .sm\:px-8 { padding-left: 2rem; padding-right: 2rem; }
+  .sm\:py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
   .sm\:p-12 { padding: 3rem; }
   .sm\:text-xl { font-size: 1.25rem; line-height: 1.75rem; }
   .sm\:text-2xl { font-size: 1.5rem; line-height: 2rem; }
@@ -3077,13 +3088,24 @@ footer {
 
 @media (min-width: 1024px) {
   .lg\:px-12 { padding-left: 3rem; padding-right: 3rem; }
+  .lg\:px-14 { padding-left: 3.5rem; padding-right: 3.5rem; }
+  .lg\:px-16 { padding-left: 4rem; padding-right: 4rem; }
   .lg\:px-8 { padding-left: 2rem; padding-right: 2rem; }
   .lg\:px-10 { padding-left: 2.5rem; padding-right: 2.5rem; }
   .lg\:flex { display: flex !important; }
   .lg\:hidden { display: none !important; }
   .lg\:gap-10 { gap: 2.5rem; }
+  .lg\:gap-12 { gap: 3rem; }
   .lg\:text-2xl { font-size: 1.5rem; line-height: 2rem; }
   .lg\:text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+  .lg\:text-\[15px\] { font-size: 15px; }
+  .lg\:text-\[30px\] { font-size: 30px; }
+}
+
+@media (min-width: 1280px) {
+  .xl\:px-16 { padding-left: 4rem; padding-right: 4rem; }
+  .xl\:gap-12 { gap: 3rem; }
+  .xl\:text-\[32px\] { font-size: 32px; }
 }
 
 @media (max-width: 1023px) {
