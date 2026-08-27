@@ -239,7 +239,6 @@ function Hero({ onRegister }: { onRegister: () => void }) {
       <div className="hero__grain" aria-hidden="true" />
       <div className="page-width hero__inner">
         <div className="hero__main">
-          <span className="hero__eyebrow">{site.eyebrow}</span>
           <img
             className="hero__logo"
             src="/brand/noctivus-emblem.webp"
@@ -255,22 +254,10 @@ function Hero({ onRegister }: { onRegister: () => void }) {
             Eight events. One charged campus. A symposium built for ideas, instincts, and fearless
             problem-solving.
           </p>
-          <div className="hero__facts" aria-label="Event information">
-            <span>
-              <small>WHEN</small>
-              {site.date}
-            </span>
-            <span>
-              <small>WHERE</small>Velammal Engineering College · Chennai
-            </span>
-          </div>
           <SplitFlapCountdown target={site.eventStart} />
           <div className="hero__actions">
-            <a className="button button-primary button-large" href="#events">
-              Explore events <Icon name="arrow" />
-            </a>
             <button
-              className="button button-ghost button-large"
+              className="button button-primary button-large"
               type="button"
               onClick={onRegister}
             >
@@ -279,9 +266,6 @@ function Hero({ onRegister }: { onRegister: () => void }) {
           </div>
         </div>
       </div>
-      <a className="hero__scroll" href="#about">
-        <span /> Discover Noctivus
-      </a>
     </section>
   );
 }
