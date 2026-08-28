@@ -1,0 +1,23 @@
+{
+  "name": "noctivus26-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "html5-qrcode": "^2.3.8",
+    "maplibre-gl": "^6.6.0",
+    "ogl": "^1.0.11",
+    "qrcode": "^1.5.4",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.0.0",
+    "vite": "^7.1.2"
+  }
+}

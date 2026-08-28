@@ -1,0 +1,13 @@
+{
+  "name": "noctivus26",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": ["frontend"],
+  "scripts": {
+    "dev": "npm run dev --workspace frontend",
+    "dev:api": "cd backend && python3 run.py",
+    "build": "npm run build --workspace frontend",
+    "start": "cd backend && python3 run.py",
+    "test": "python3 -m compileall backend/app backend/run.py"
+  }
+}

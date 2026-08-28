@@ -1,0 +1,762 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
+import Icon from '../components/Icon.jsx';
+import './admin.css';
+
+const apiBase = import.meta.env.VITE_API_URL || '';
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+const tabs = ['Dashboard', 'Verify Members', 'Check-in', 'Events', 'Invitations', 'Announcements', 'AI Analysis', 'Export', 'Audit Log', 'Admin Access'];
+const statuses = ['pending', 'confirmed', 'mismatch', 'duplicate'];
+
+export default function AdminApp() {
+  const [session, setSession] = useState(() => JSON.parse(sessionStorage.getItem('noctivus-admin') || 'null'));
+  const [activeTab, setActiveTab] = useState('Dashboard');
+  const [overview, setOverview] = useState(null);
+  const [registrations, setRegistrations] = useState([]);
+  const [eventId, setEventId] = useState('');
+  const [status, setStatus] = useState('');
+  const [selected, setSelected] = useState([]);
+  const [message, setMessage] = useState('');
+
+  const authHeaders = useMemo(() => ({ Authorization: `Bearer ${session?.token}` }), [session]);
+  const isLoginRoute = window.location.pathname.startsWith('/login');
+  const allowedTabs = session?.user?.tabs || [];
+  const visibleTabs = tabs.filter((tab) => allowedTabs.includes(tab));
+  const can = (tab) => allowedTabs.includes(tab);
+
+  useEffect(() => {
+    if (session && visibleTabs.length && !visibleTabs.includes(activeTab)) setActiveTab(visibleTabs[0]);
+  }, [session, visibleTabs, activeTab]);
+
+  useEffect(() => {
+    if (!session) return undefined;
+    refresh();
+  }, [session, eventId, status]);
+
+  const saveSession = (data) => {
+    sessionStorage.setItem('noctivus-admin', JSON.stringify(data));
+    setSession(data);
+  };
+
+  const logout = () => {
+    sessionStorage.removeItem('noctivus-admin');
+    setSession(null);
+  };
+
+  const refresh = async () => {
+    setMessage('');
+    const needsOverview = ['Dashboard', 'Verify Members', 'Invitations', 'AI Analysis', 'Export'].some(can);
+    const needsRegistrations = ['Verify Members', 'Invitations', 'Export'].some(can);
+    const [overviewResponse, registrationsResponse] = await Promise.all([
+      needsOverview ? fetch(`${apiBase}/api/admin/overview`, { headers: authHeaders }) : Promise.resolve(null),
+      needsRegistrations ? fetch(`${apiBase}/api/admin/registrations?${new URLSearchParams({ ...(eventId && { eventId }), ...(status && { status }) })}`, { headers: authHeaders }) : Promise.resolve(null),
+    ]);
+    if (overviewResponse?.status === 401 || registrationsResponse?.status === 401) return logout();
+    if (overviewResponse?.ok) setOverview(await overviewResponse.json());
+    if (registrationsResponse?.ok) {
+      const registrationsData = await registrationsResponse.json();
+      setRegistrations(registrationsData.registrations || []);
+    }
+  };
+
+  if (!session && !isLoginRoute) {
+    window.location.replace('/login');
+    return <div className="admin-loading">Redirecting to login...</div>;
+  }
+
+  if (!session) return <Login onSession={saveSession} />;
+
+  if (isLoginRoute) {
+    window.location.replace('/admin');
+    return <div className="admin-loading">Opening admin panel...</div>;
+  }
+
+  return (
+    <main className="admin-shell">
+      <aside className="admin-sidebar">
+        <a className="admin-brand" href="/"><img src="/brand/noctivus-emblem.webp" alt="" /> <span>Noctivus Admin</span></a>
+        <nav>
+          <span className="admin-nav-label">Workspace</span>
+          {visibleTabs.filter((tab) => ['Dashboard', 'Verify Members', 'Check-in', 'Events'].includes(tab)).map((tab) => <button key={tab} className={activeTab === tab ? 'active' : ''} onClick={() => setActiveTab(tab)}><span className="admin-nav-dot" />{tab}</button>)}
+          <span className="admin-nav-label">Operations</span>
+          {visibleTabs.filter((tab) => !['Dashboard', 'Verify Members', 'Check-in', 'Events'].includes(tab)).map((tab) => <button key={tab} className={activeTab === tab ? 'active' : ''} onClick={() => setActiveTab(tab)}><span className="admin-nav-dot" />{tab}</button>)}
+        </nav>
+        <div className="admin-user">{session.user?.picture ? <img src={session.user.picture} alt="" /> : <span className="admin-avatar">{(session.user?.name || 'A').slice(0, 1).toUpperCase()}</span>}<div><strong>{session.user?.name || 'Administrator'}</strong><small>{session.user?.email}</small></div><button onClick={logout}>Sign out</button></div>
+      </aside>
+      <section className="admin-main">
+        <header className="admin-topbar">
+          <div><span className="kicker">ADMIN PANEL</span><h1>{activeTab}</h1></div>
+          <div className="admin-topbar-actions"><label className="admin-search"><span>⌕</span><input aria-label="Search admin records" placeholder="Search records..." /></label><button className="button button-secondary" onClick={refresh}><Icon name="external" size={16} /> Refresh</button></div>
+        </header>
+        {message && <p className="admin-message">{message}</p>}
+        {activeTab === 'Dashboard' && can('Dashboard') && <Dashboard overview={overview} />}
+        {activeTab === 'Verify Members' && can('Verify Members') && <Verify registrations={registrations} overview={overview} authHeaders={authHeaders} onChanged={refresh} eventId={eventId} setEventId={setEventId} status={status} setStatus={setStatus} selected={selected} setSelected={setSelected} />}
+        {activeTab === 'Check-in' && can('Check-in') && <CheckIn authHeaders={authHeaders} />}
+        {activeTab === 'Events' && can('Events') && <EventsTab authHeaders={authHeaders} />}
+        {activeTab === 'Audit Log' && can('Audit Log') && <AuditLog authHeaders={authHeaders} />}
+        {activeTab === 'Invitations' && can('Invitations') && <Invitations overview={overview} authHeaders={authHeaders} onSent={(count) => { setMessage(`${count} invitation emails queued.`); refresh(); }} />}
+        {activeTab === 'Announcements' && can('Announcements') && <Announcements authHeaders={authHeaders} />}
+        {activeTab === 'AI Analysis' && can('AI Analysis') && <Analysis overview={overview} authHeaders={authHeaders} />}
+        {activeTab === 'Export' && can('Export') && <Export overview={overview} authHeaders={authHeaders} eventId={eventId} setEventId={setEventId} status={status} setStatus={setStatus} />}
+        {activeTab === 'Admin Access' && can('Admin Access') && <AdminAccess authHeaders={authHeaders} onChanged={(text) => setMessage(text)} />}
+      </section>
+    </main>
+  );
+}
+
+function EventsTab({ authHeaders }) {
+  const [items, setItems] = useState([]);
+  const [message, setMessage] = useState('');
+  const load = async () => {
+    const response = await fetch(`${apiBase}/api/admin/events`, { headers: authHeaders });
+    const data = await response.json().catch(() => ({}));
+    if (response.ok) setItems(data.events || []);
+    else setMessage(data.detail || data.message || 'Unable to load events.');
+  };
+  useEffect(() => { load(); }, []);
+  const save = async (event, changes) => {
+    const response = await fetch(`${apiBase}/api/admin/events/${event.id}`, { method: 'PATCH', headers: { ...authHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify(changes) });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) return setMessage(data.detail || data.message || 'Unable to update event.');
+    setMessage(`${event.name} updated.`);
+    load();
+  };
+  return <section className="admin-panel events-admin-panel"><h2>Event lifecycle</h2>{message && <p className="admin-message">{message}</p>}<div className="admin-event-list">{items.map((event) => <article key={event.id}><div><strong>{event.name}</strong><small>{event.category} · {event.registrationCount || 0} registrations</small></div><span className={`status-pill status-pill--${event.effectiveStatus || event.status}`}>{event.effectiveStatus || event.status}</span><strong>Rs.{event.fee}</strong><button className="button button-secondary" onClick={() => save(event, { status: event.status === 'open' ? 'closed' : 'open' })}>{event.status === 'open' ? 'Close' : 'Open'}</button></article>)}</div></section>;
+}
+
+function CheckIn({ authHeaders }) {
+  const [registrationId, setRegistrationId] = useState('');
+  const [result, setResult] = useState(null);
+  const [summary, setSummary] = useState({ confirmed: 0, checkedIn: 0 });
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [walkIn, setWalkIn] = useState({ name: '', college: '', eventId: '' });
+  const scannerRef = useRef(null);
+  const load = async () => {
+    const response = await fetch(`${apiBase}/api/admin/check-in/summary`, { headers: authHeaders });
+    if (response.ok) setSummary(await response.json());
+  };
+  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    if (!cameraOpen) return undefined;
+    let active = true;
+    import('html5-qrcode').then(({ Html5Qrcode }) => {
+      if (!active) return;
+      const scanner = new Html5Qrcode('admin-qr-reader');
+      scannerRef.current = scanner;
+      return scanner.start({ facingMode: 'environment' }, { fps: 10, qrbox: { width: 220, height: 220 } }, (value) => {
+        setRegistrationId(value.trim());
+        setCameraOpen(false);
+      }, () => {}).catch((error) => setResult({ ok: false, message: error?.name === 'NotAllowedError' ? 'Camera permission was denied. Allow camera access, then try again.' : 'Camera could not start. Use HTTPS or localhost and enter the registration ID manually.' }));
+    }).catch(() => setResult({ ok: false, message: 'QR scanner could not load. Enter the registration ID manually.' }));
+    return () => { active = false; const scanner = scannerRef.current; scannerRef.current = null; if (scanner) scanner.stop().catch(() => {}).finally(() => scanner.clear().catch(() => {})); };
+  }, [cameraOpen]);
+  const scan = async (event) => {
+    event.preventDefault();
+    const response = await fetch(`${apiBase}/api/admin/check-in/${encodeURIComponent(registrationId.trim())}`, { method: 'POST', headers: authHeaders });
+    const data = await response.json().catch(() => ({}));
+    setResult({ ok: response.ok, status: data.status, message: data.detail || data.message || data.status });
+    setRegistrationId('');
+    if (response.ok && data.status === 'checked-in') load();
+  };
+  const createWalkIn = async (event) => { event.preventDefault(); const response = await fetch(`${apiBase}/api/admin/walk-ins`, { method: 'POST', headers: { ...authHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify({ participant: { name: walkIn.name, college: walkIn.college }, eventId: walkIn.eventId }) }); const data = await response.json().catch(() => ({})); setResult({ ok: response.ok, message: response.ok ? `Walk-in created: ${data.registration?.registrationId}` : data.detail || data.message || 'Unable to create walk-in.' }); if (response.ok) setWalkIn({ name: '', college: '', eventId: '' }); };
+  return <section className="admin-panel check-in-panel"><h2>Check-in desk</h2><p>Scan the registration QR or enter the registration ID printed on the participant receipt.</p>{cameraOpen && <div id="admin-qr-reader" className="check-in-camera" aria-label="QR scanner camera" />}<div className="check-in-actions"><button className="button button-secondary" type="button" onClick={() => setCameraOpen((open) => !open)}>{cameraOpen ? 'Close camera' : 'Open camera'}</button><small>Camera QR scanning loads only when opened</small></div><form onSubmit={scan} className="admin-form"><input value={registrationId} onChange={(event) => setRegistrationId(event.target.value)} placeholder="NOC26-XXXXXX" autoFocus /><button className="button button-primary" disabled={!registrationId.trim()}>Check in</button></form>{result && <p className={`admin-message ${result.ok ? 'admin-message--success' : ''}`}>{result.message}</p>}<div className="admin-metrics"><article><span>Checked in</span><strong>{summary.checkedIn}</strong></article><article><span>Confirmed</span><strong>{summary.confirmed}</strong></article></div><details className="walk-in-form"><summary>Manual walk-in registration</summary><form onSubmit={createWalkIn} className="admin-form"><input required value={walkIn.name} onChange={(event) => setWalkIn({ ...walkIn, name: event.target.value })} placeholder="Participant name" /><input required value={walkIn.college} onChange={(event) => setWalkIn({ ...walkIn, college: event.target.value })} placeholder="College" /><input required value={walkIn.eventId} onChange={(event) => setWalkIn({ ...walkIn, eventId: event.target.value })} placeholder="Event ID e.g. ideathon" /><button className="button button-primary">Create walk-in</button></form></details></section>;
+}
+
+function AuditLog({ authHeaders }) {
+  const [search, setSearch] = useState('');
+  const [actions, setActions] = useState([]);
+  const load = async () => {
+    const response = await fetch(`${apiBase}/api/admin/audit-log?${new URLSearchParams({ search })}`, { headers: authHeaders });
+    if (response.ok) setActions((await response.json()).actions || []);
+  };
+  useEffect(() => { load(); }, []);
+  return <section className="admin-panel"><h2>Audit log</h2><div className="admin-form"><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search actor, action, target" /><button className="button button-secondary" onClick={load}>Search</button></div><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Target</th></tr></thead><tbody>{actions.map((action, index) => <tr key={`${action.createdAt}-${index}`}><td>{action.createdAt ? new Date(action.createdAt).toLocaleString() : '—'}</td><td>{action.actor}</td><td>{action.action}</td><td>{action.target}</td></tr>)}</tbody></table></div></section>;
+}
+
+function Announcements({ authHeaders }) {
+  const [form, setForm] = useState({ subject: '', message: '', audience: 'confirmed', channel: 'email' });
+  const [result, setResult] = useState('');
+  const send = async (event) => {
+    event.preventDefault();
+    const response = await fetch(`${apiBase}/api/admin/announcements/send`, { method: 'POST', headers: { ...authHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
+    const data = await response.json().catch(() => ({}));
+    setResult(response.ok ? `${data.queued} email(s) queued.` : data.detail || data.message || 'Unable to send announcement.');
+  };
+  return <form className="admin-panel announcement-panel" onSubmit={send}><h2>Announcements</h2><label className="field"><span>Subject</span><input value={form.subject} onChange={(event) => setForm({ ...form, subject: event.target.value })} /></label><label className="field"><span>Message</span><textarea value={form.message} onChange={(event) => setForm({ ...form, message: event.target.value })} rows="8" /></label><label className="field"><span>Audience</span><select value={form.audience} onChange={(event) => setForm({ ...form, audience: event.target.value })}><option value="confirmed">All confirmed</option><option value="checked-in">Checked in</option></select></label><p className="admin-message">SMS is unavailable until a provider is configured.</p>{result && <p className="admin-message">{result}</p>}<button className="button button-primary" disabled={!form.subject || !form.message}>Queue email broadcast</button></form>;
+}
+
+function Login({ onSession }) {
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [buttonReady, setButtonReady] = useState(false);
+
+  useEffect(() => {
+    if (!googleClientId) {
+      setLoading(false);
+      setError('Google sign-in is not configured in this frontend. Restart Vite after setting VITE_GOOGLE_CLIENT_ID.');
+      return undefined;
+    }
+    const existing = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+    const script = existing || document.createElement('script');
+    let timedOut = false;
+    const timeout = window.setTimeout(() => {
+      timedOut = true;
+      setLoading(false);
+      setError('Google sign-in timed out. Check your network connection and allow accounts.google.com.');
+    }, 8000);
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    const initializeGoogle = () => {
+      if (timedOut) return;
+      try {
+        if (!window.google?.accounts?.id) throw new Error('Google sign-in is unavailable.');
+        window.google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: async ({ credential }) => {
+            setLoading(true);
+            try {
+              const response = await fetch(`${apiBase}/api/admin/auth/google`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ credential }) });
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) throw new Error(data.detail || data.message || `Google sign-in failed (${response.status}).`);
+              onSession(data);
+              window.location.replace('/admin');
+            } catch (loginError) {
+              const message = loginError instanceof TypeError
+                ? 'Admin API unavailable. Start the backend on localhost:4000 and try again.'
+                : loginError.message;
+              setError(message);
+            } finally { setLoading(false); }
+          },
+        });
+        const target = document.getElementById('google-admin-login');
+        if (!target) throw new Error('Google sign-in button could not be mounted.');
+        window.google.accounts.id.renderButton(target, { theme: 'filled_black', size: 'large', width: 320 });
+        setButtonReady(true);
+        window.clearTimeout(timeout);
+        setLoading(false);
+      } catch (initError) { window.clearTimeout(timeout); setLoading(false); setError(initError.message || 'Google sign-in could not initialize.'); }
+    };
+    script.onerror = () => { window.clearTimeout(timeout); setLoading(false); setError('Google sign-in could not load. Check your internet connection or allow accounts.google.com.'); };
+    if (window.google?.accounts?.id) initializeGoogle();
+    else {
+      script.addEventListener('load', initializeGoogle, { once: true });
+      if (!existing) document.head.appendChild(script);
+    }
+    return () => { window.clearTimeout(timeout); script.removeEventListener('load', initializeGoogle); };
+  }, [onSession]);
+
+  return (
+    <main className="admin-login">
+      <section>
+        <img src="/brand/noctivus-emblem.webp" alt="" />
+        <span className="kicker">SECURE ADMIN ACCESS</span>
+        <h1>Noctivus operations</h1>
+        {googleClientId ? <div id="google-admin-login" aria-busy={loading} /> : <p className="form-error" role="alert">Set VITE_GOOGLE_CLIENT_ID and GOOGLE_CLIENT_ID to enable Google login.</p>}
+        {loading && !buttonReady && <p className="admin-login__status">Connecting to Google sign-in…</p>}
+        {error && <p className="form-error">{error}</p>}
+      </section>
+    </main>
+  );
+}
+
+function Dashboard({ overview }) {
+  if (!overview) return <Skeleton />;
+  const storage = overview.storage;
+  const usedBytes = storage?.storageBytes || storage?.dataBytes || 0;
+  const usage = storage?.available && storage.limitBytes ? Math.min(100, Math.round((usedBytes / storage.limitBytes) * 100)) : null;
+  const formatBytes = (value) => value >= 1024 * 1024 ? `${(value / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(0, Math.round(value / 1024))} KB`;
+  return (
+    <>
+      <div className="admin-metrics">
+        <Metric label="Registrations" value={overview.total} />
+        <Metric label="Pending" value={overview.statuses.pending} />
+        <Metric label="Confirmed" value={overview.statuses.confirmed} />
+        <Metric label="Revenue" value={`Rs.${overview.confirmedRevenue}`} />
+      </div>
+      <div className="admin-grid">
+        <section className="admin-panel"><h2>Event demand</h2><EventBars events={overview.events} /></section>
+        <section className="admin-panel"><h2>Recent registrations</h2><RegistrationList registrations={overview.recent} compact /></section>
+      </div>
+      <section className="admin-panel storage-monitor"><div className="storage-monitor__heading"><div><span className="kicker">DATABASE STORAGE</span><h2>MongoDB capacity</h2></div><strong>{usage === null ? 'Unavailable' : `${usage}% used`}</strong></div>{usage === null ? <p>Storage metrics are unavailable for this database role. Registration and email data remain operational.</p> : <><div className={`storage-meter ${usage >= 85 ? 'storage-meter--warning' : ''}`}><i style={{ width: `${usage}%` }} /></div><div className="storage-monitor__values"><span>{formatBytes(usedBytes)} used</span><span>{formatBytes(storage.limitBytes)} limit</span><span>{formatBytes(storage.indexBytes)} indexes</span></div>{usage >= 85 && <p className="form-error">Storage is nearing the configured limit. Export old reports and review retained email jobs.</p>}</>}</section>
+    </>
+  );
+}
+
+function Verify({ registrations, overview, authHeaders, onChanged, eventId, setEventId, status, setStatus, selected, setSelected }) {
+  const [notes, setNotes] = useState({});
+  const [search, setSearch] = useState('');
+
+  const verify = async (registrationId, nextStatus) => {
+    const response = await fetch(`${apiBase}/api/admin/registrations/${registrationId}/verify`, {
+      method: 'PATCH',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: nextStatus, notes: notes[registrationId] || '', sendEmail: true }),
+    });
+    if (response.ok) onChanged();
+  };
+
+  return (
+    <>
+      <div className="admin-filters"><label className="field"><span>Search</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Name, email, phone, UTR" /></label><Filters overview={overview} eventId={eventId} setEventId={setEventId} status={status} setStatus={setStatus} /></div>
+      <div className="verify-bulk-actions"><button className="button button-secondary" disabled={!selected.length} onClick={async () => { await bulkVerify(authHeaders, selected, 'confirmed'); setSelected([]); onChanged(); }}>Confirm selected</button><button className="button button-secondary" disabled={!selected.length} onClick={async () => { await bulkVerify(authHeaders, selected, 'mismatch'); setSelected([]); onChanged(); }}>Reject selected</button></div>
+      <RegistrationTable registrations={registrations.filter((item) => { const term = search.toLowerCase(); return !term || `${item.participant?.name} ${item.participant?.email} ${item.participant?.phone} ${item.utrNumber}`.toLowerCase().includes(term); })} selected={selected} setSelected={setSelected} renderActions={(registration) => (
+        <div className="verify-actions">
+          <input placeholder="Verification notes" value={notes[registration.registrationId] || ''} onChange={(event) => setNotes((current) => ({ ...current, [registration.registrationId]: event.target.value }))} />
+          <button onClick={() => verify(registration.registrationId, 'confirmed')}>Approve</button>
+          <button onClick={() => verify(registration.registrationId, 'mismatch')}>Mismatch</button>
+          <button onClick={() => verify(registration.registrationId, 'duplicate')}>Duplicate</button>
+        </div>
+      )} />
+    </>
+  );
+}
+
+async function bulkVerify(authHeaders, registrationIds, status) {
+  await fetch(`${apiBase}/api/admin/registrations/bulk-verify`, { method: 'POST', headers: { ...authHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify({ registrationIds, status }) });
+}
+
+function Invitations({ overview, authHeaders, onSent }) {
+  const [eventId, setEventId] = useState('');
+  const [venue, setVenue] = useState('');
+  const [gate, setGate] = useState('VEC Gate 1');
+  const [date, setDate] = useState('26 SEP 2026');
+  const [time, setTime] = useState('09:00 AM');
+  const [confirmedRegistrations, setConfirmedRegistrations] = useState([]);
+  const [selectedRegistrantId, setSelectedRegistrantId] = useState('');
+  const [qrUrl, setQrUrl] = useState('');
+  const [error, setError] = useState('');
+  const [sending, setSending] = useState(false);
+
+  const selectedEvent = overview?.events?.find((event) => event.eventId === eventId);
+
+  useEffect(() => {
+    if (!eventId) {
+      setConfirmedRegistrations([]);
+      setSelectedRegistrantId('');
+      return undefined;
+    }
+    let active = true;
+    fetch(`${apiBase}/api/admin/registrations?${new URLSearchParams({ eventId, status: 'confirmed' })}`, { headers: authHeaders })
+      .then((res) => res.json())
+      .then((data) => {
+        if (!active) return;
+        const list = data.registrations || [];
+        setConfirmedRegistrations(list);
+        if (list.length > 0) {
+          setSelectedRegistrantId(list[0].registrationId);
+        } else {
+          setSelectedRegistrantId('');
+        }
+      })
+      .catch(() => {});
+    return () => { active = false; };
+  }, [eventId, authHeaders]);
+
+  const activeRegistrant = useMemo(() => {
+    return confirmedRegistrations.find((r) => r.registrationId === selectedRegistrantId) || confirmedRegistrations[0] || null;
+  }, [confirmedRegistrations, selectedRegistrantId]);
+
+  const displayPassenger = activeRegistrant?.participant?.name || (eventId ? 'No confirmed registrant selected' : 'Choose an event');
+  const displayCollege = activeRegistrant?.participant?.college || 'Your College';
+  const displayEmail = activeRegistrant?.participant?.email || 'user@example.com';
+  const displayFood = activeRegistrant?.participant?.foodPreference || 'N/A';
+  const displayRegId = activeRegistrant?.registrationId || 'NOC26-PREVIEW';
+
+  useEffect(() => {
+    let active = true;
+    if (!displayRegId) return undefined;
+    import('qrcode').then(({ toDataURL }) => toDataURL(displayRegId, {
+      width: 140,
+      margin: 1,
+      color: { dark: '#000000', light: '#ffffff' },
+    })).then((url) => active && setQrUrl(url)).catch(() => {});
+    return () => { active = false; };
+  }, [displayRegId]);
+
+  const send = async () => {
+    if (!eventId) {
+      setError('Please select an event.');
+      return;
+    }
+    if (!venue.trim()) {
+      setError('Venue is required for pass generation.');
+      return;
+    }
+    setError('');
+    setSending(true);
+    const response = await fetch(`${apiBase}/api/admin/invitations/send`, {
+      method: 'POST',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ eventId, audience: 'confirmed', pass: { title: 'Noctivus 26 Event Pass', venue, gate, date, time } }),
+    });
+    const data = await response.json().catch(() => ({}));
+    setSending(false);
+    if (response.ok) onSent(data.sent || 0);
+    else setError(data.detail || 'Unable to queue passes.');
+  };
+
+  return (
+    <div className="admin-grid admin-grid--wide invitation-automation">
+      <section className="admin-panel pass-builder">
+        <h2>Send Boarding Passes</h2>
+        <p className="admin-help">Select an event, customize the event-wise venue, and review the live boarding pass preview for confirmed participants.</p>
+        <label className="field"><span>Event Automation</span><select value={eventId} onChange={(event) => { setEventId(event.target.value); const ev = overview?.events?.find(e => e.eventId === event.target.value); if (ev?.venue) setVenue(ev.venue); }}><option value="">Choose an event</option>{overview?.events?.map((event) => <option key={event.eventId} value={event.eventId}>{event.eventName}</option>)}</select></label>
+        <label className="field"><span>Venue (Event-wise)</span><input value={venue} onChange={(event) => setVenue(event.target.value)} placeholder="e.g. Main Auditorium / CSE Lab 1" required /></label>
+        <label className="field"><span>Gate</span><input value={gate} onChange={(event) => setGate(event.target.value)} placeholder="VEC Gate 1" /></label>
+
+        {confirmedRegistrations.length > 0 && (
+          <label className="field"><span>Preview Registrant</span><select value={selectedRegistrantId} onChange={(event) => setSelectedRegistrantId(event.target.value)}>{confirmedRegistrations.map((r) => <option key={r.registrationId} value={r.registrationId}>{r.participant?.name} ({r.registrationId})</option>)}</select></label>
+        )}
+
+        <label className="field"><span>Recipient Type</span><select value="confirmed" disabled><option value="confirmed">Confirmed members only ({confirmedRegistrations.length})</option></select></label>
+        {error && <p className="form-error">{error}</p>}
+        <button className="button button-primary" disabled={!eventId || !venue.trim() || sending} onClick={send}>{sending ? 'Queueing passes...' : `Send passes to ${confirmedRegistrations.length || 'confirmed'} members`} <Icon name="mail" /></button>
+      </section>
+
+      <section className="admin-panel pass-sample">
+        <div className="pass-sample__heading"><div><span className="kicker">LIVE PREVIEW</span><h2>Boarding Pass Preview</h2></div><span className="status-pill status-pill--confirmed">Confirmed</span></div>
+        <div className="boarding-pass-card">
+          {/* Vertical Barcode Strip on Left */}
+          <div className="bp-card-barcode-strip">
+            <div className="bp-card-barcode-lines">||||| | |||| ||| |||||| ||| || |||||| | ||||| |||</div>
+            <div className="bp-card-barcode-text">NV26 - {displayRegId} - VIP</div>
+          </div>
+
+          {/* Main Boarding Pass Container */}
+          <div className="bp-card-main">
+            {/* Header Dark Bar */}
+            <div className="bp-card-topbar">
+              <div className="bp-card-brand">
+                <img src="/brand/noctivus-emblem.webp" alt="Emblem" />
+                <div>
+                  <div className="bp-card-brand-title">NOCTIVUS '26</div>
+                  <div className="bp-card-brand-sub">COLLEGE SYMPOSIUM</div>
+                </div>
+              </div>
+              <div className="bp-card-top-right">
+                <div className="bp-card-bp-label">BOARDING PASS</div>
+                <div className="bp-card-bp-sub">ECONOMY</div>
+                <span className="bp-card-plane-icon">✈</span>
+              </div>
+            </div>
+
+            {/* Light Body Section */}
+            <div className="bp-card-body">
+              {/* Row 1: 4 columns */}
+              <div className="bp-card-row bp-card-row-4">
+                <div className="bp-card-col">
+                  <span className="bp-card-lbl">PASSENGER NAME</span>
+                  <strong className="bp-card-val">{displayPassenger}</strong>
+                </div>
+                <div className="bp-card-col">
+                  <span className="bp-card-lbl">COLLEGE NAME</span>
+                  <strong className="bp-card-val">{displayCollege}</strong>
+                </div>
+                <div className="bp-card-col">
+                  <span className="bp-card-lbl">EVENT NAME</span>
+                  <strong className="bp-card-val">{selectedEvent?.eventName || 'Choose Event'}</strong>
+                </div>
+                <div className="bp-card-col">
+                  <span className="bp-card-lbl">EMAIL ID</span>
+                  <strong className="bp-card-val">{displayEmail}</strong>
+                </div>
+              </div>
+
+              {/* Row 2: 4 columns */}
+              <div className="bp-card-row bp-card-row-4">
+                <div className="bp-card-col">
+                  <span className="bp-card-lbl">DATE</span>
+                  <strong className="bp-card-val">{date}</strong>
+                </div>
+                <div className="bp-card-col">
+                  <span className="bp-card-lbl">TIME</span>
+                  <strong className="bp-card-val">{time}</strong>
+                </div>
+                <div className="bp-card-col">
+                  <span className="bp-card-lbl">GATE</span>
+                  <strong className="bp-card-val">{gate}</strong>
+                </div>
+                <div className="bp-card-col">
+                  <span className="bp-card-lbl">VENUE</span>
+                  <strong className="bp-card-val">{venue || '(FILLED BY ADMIN)'}</strong>
+                </div>
+              </div>
+
+              {/* Middle Section: Details Left + QR Code Right */}
+              <div className="bp-card-mid-split">
+                <div className="bp-card-mid-left">
+                  {/* Row 3: Flight, Seat, Zone, Terminal */}
+                  <div className="bp-card-row bp-card-row-4-sm">
+                    <div className="bp-card-col">
+                      <span className="bp-card-lbl">FLIGHT</span>
+                      <strong className="bp-card-val-sm">NV26</strong>
+                    </div>
+                    <div className="bp-card-col">
+                      <span className="bp-card-lbl">SEAT</span>
+                      <strong className="bp-card-val-sm">VIP</strong>
+                    </div>
+                    <div className="bp-card-col">
+                      <span className="bp-card-lbl">ZONE</span>
+                      <strong className="bp-card-val-sm">1</strong>
+                    </div>
+                    <div className="bp-card-col">
+                      <span className="bp-card-lbl">TERMINAL</span>
+                      <strong className="bp-card-val-sm">Main Hall</strong>
+                    </div>
+                  </div>
+
+                  {/* Route Container */}
+                  <div className="bp-card-route-box">
+                    <div className="bp-card-route-col">
+                      <span className="bp-card-lbl">FROM</span>
+                      <div className="bp-card-building-icon">🏢</div>
+                      <strong className="bp-card-route-name">{displayCollege}</strong>
+                      <small className="bp-card-route-sub">(USER COLLEGE)</small>
+                    </div>
+                    <div className="bp-card-route-line">
+                      <span className="bp-card-route-dots">•••••••••••••••••</span>
+                      <span className="bp-card-route-plane">✈</span>
+                      <span className="bp-card-route-dots">••••••••</span>
+                    </div>
+                    <div className="bp-card-route-col">
+                      <span className="bp-card-lbl">TO</span>
+                      <div className="bp-card-building-icon">🏢</div>
+                      <strong className="bp-card-route-name">VELAMMAL ENGINEERING COLLEGE</strong>
+                      <small className="bp-card-route-sub">CHENNAI, TAMIL NADU</small>
+                    </div>
+                  </div>
+
+                  {/* Food Preference */}
+                  <div className="bp-card-food-row">
+                    <span className="bp-card-lbl">FOOD PREFERENCE</span>
+                    <strong className="bp-card-val">{displayFood}</strong>
+                  </div>
+                </div>
+
+                {/* QR Code Container Right */}
+                <div className="bp-card-qr-wrapper">
+                  <div className="bp-card-qr-box">
+                    {qrUrl ? <img src={qrUrl} alt="QR Code" /> : <div className="bp-card-qr-empty">QR CODE</div>}
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer motto line */}
+              <div className="bp-card-footer-motto">
+                IGNITE • INNOVATE • INSPIRE
+              </div>
+            </div>
+          </div>
+
+          {/* Tear Perforation */}
+          <div className="bp-card-perforation" />
+
+          {/* Right Stub Section */}
+          <div className="bp-card-stub">
+            <div className="bp-card-stub-topbar">
+              <div className="bp-card-stub-title">BOARDING PASS</div>
+              <div className="bp-card-stub-sub">ECONOMY</div>
+            </div>
+            <div className="bp-card-stub-body">
+              <div className="bp-card-stub-field">
+                <span className="bp-card-lbl">PASSENGER NAME</span>
+                <strong className="bp-card-val-stub">{displayPassenger}</strong>
+              </div>
+
+              <div className="bp-card-stub-from-to">
+                <div>
+                  <span className="bp-card-lbl">FROM</span>
+                  <div className="bp-card-stub-loc">🏢 {displayCollege}</div>
+                </div>
+                <div className="bp-card-stub-arrow">✈</div>
+                <div>
+                  <span className="bp-card-lbl">TO</span>
+                  <div className="bp-card-stub-loc">🏢 VELAMMAL ENGINEERING COLLEGE</div>
+                  <small className="bp-card-stub-subloc">CHENNAI, TAMIL NADU</small>
+                </div>
+              </div>
+
+              <div className="bp-card-stub-row2">
+                <div>
+                  <span className="bp-card-lbl">DATE</span>
+                  <strong className="bp-card-val-sm">{date}</strong>
+                </div>
+                <div>
+                  <span className="bp-card-lbl">TIME</span>
+                  <strong className="bp-card-val-sm">{time}</strong>
+                </div>
+              </div>
+
+              <div className="bp-card-stub-row3">
+                <div>
+                  <span className="bp-card-lbl">FLIGHT</span>
+                  <strong className="bp-card-val-sm">NV26</strong>
+                </div>
+                <div>
+                  <span className="bp-card-lbl">SEAT</span>
+                  <strong className="bp-card-val-sm">VIP</strong>
+                </div>
+                <div>
+                  <span className="bp-card-lbl">GATE</span>
+                  <strong className="bp-card-val-sm">{gate}</strong>
+                </div>
+              </div>
+
+              <div className="bp-card-stub-barcode">
+                <div className="bp-card-stub-barcode-lines">|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||</div>
+                <div className="bp-card-stub-barcode-lbl">NV26 - {displayRegId} - VIP</div>
+              </div>
+            </div>
+
+            <div className="bp-card-stub-footer">
+              <img src="/brand/noctivus-emblem.webp" alt="" />
+              <div>
+                <strong>NOCTIVUS '26</strong>
+                <small>COLLEGE SYMPOSIUM</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function Analysis({ overview, authHeaders }) {
+  const [analysis, setAnalysis] = useState('');
+  const [loading, setLoading] = useState(false);
+  const run = async () => {
+    setLoading(true);
+    const response = await fetch(`${apiBase}/api/admin/analysis/ai`, { method: 'POST', headers: authHeaders });
+    const data = await response.json();
+    setAnalysis(typeof data.analysis === 'string' ? data.analysis : JSON.stringify(data.analysis, null, 2));
+    setLoading(false);
+  };
+  return <section className="admin-panel analysis-panel"><h2>Offline analysis</h2><Dashboard overview={overview} /><button className="button button-primary" onClick={run} disabled={loading}>{loading ? 'Analyzing...' : 'Analyze registrations offline'} <Icon name="shield" /></button>{analysis && <pre>{analysis}</pre>}</section>;
+}
+
+function Export({ overview, authHeaders, eventId, setEventId, status, setStatus }) {
+  const download = async () => {
+    const response = await fetch(`${apiBase}/api/admin/export?${new URLSearchParams({ ...(eventId && { eventId }), ...(status && { status }) })}`, { headers: authHeaders });
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `noctivus-${eventId || 'all'}-registrations.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+  return <section className="admin-panel export-panel"><h2>Export member details</h2><Filters overview={overview} eventId={eventId} setEventId={setEventId} status={status} setStatus={setStatus} /><button className="button button-primary" onClick={download}>Export CSV <Icon name="external" /></button></section>;
+}
+
+function AdminAccess({ authHeaders, onChanged }) {
+  const [users, setUsers] = useState([]);
+  const [availableTabs, setAvailableTabs] = useState([]);
+  const [form, setForm] = useState({ email: '', name: '', tabs: ['Dashboard'] });
+  const [loading, setLoading] = useState(false);
+
+  const load = async () => {
+    const response = await fetch(`${apiBase}/api/admin/access`, { headers: authHeaders });
+    const data = await response.json();
+    if (response.ok) {
+      setUsers(data.users || []);
+      setAvailableTabs(data.tabs || []);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const toggleTab = (tab) => {
+    setForm((current) => ({
+      ...current,
+      tabs: current.tabs.includes(tab) ? current.tabs.filter((item) => item !== tab) : [...current.tabs, tab],
+    }));
+  };
+
+  const edit = (user) => {
+    setForm({ email: user.email, name: user.name || '', tabs: user.tabs?.filter((tab) => tab !== 'Admin Access') || [] });
+  };
+
+  const save = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    const response = await fetch(`${apiBase}/api/admin/access/${encodeURIComponent(form.email.trim().toLowerCase())}`, {
+      method: 'PUT',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: form.name, tabs: form.tabs, active: true }),
+    });
+    const data = await response.json().catch(() => ({}));
+    setLoading(false);
+    if (!response.ok) return onChanged(data.message || 'Unable to update access.');
+    setForm({ email: '', name: '', tabs: ['Dashboard'] });
+    await load();
+    onChanged('Admin access updated.');
+  };
+
+  const deactivate = async (email) => {
+    const response = await fetch(`${apiBase}/api/admin/access/${encodeURIComponent(email)}`, { method: 'DELETE', headers: authHeaders });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) return onChanged(data.message || 'Unable to remove access.');
+    await load();
+    onChanged('Admin access removed.');
+  };
+
+  return (
+    <div className="admin-grid admin-grid--wide">
+      <form className="admin-panel access-form" onSubmit={save}>
+        <h2>Give access</h2>
+        <label className="field"><span>Google email</span><input type="email" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} placeholder="user@gmail.com" /></label>
+        <label className="field"><span>Name</span><input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="Optional" /></label>
+        <fieldset className="access-tabs">
+          <legend>Allowed tabs</legend>
+          {availableTabs.map((tab) => <label key={tab}><input type="checkbox" checked={form.tabs.includes(tab)} onChange={() => toggleTab(tab)} /><span>{tab}</span></label>)}
+        </fieldset>
+        <button className="button button-primary" type="submit" disabled={loading || !form.email || !form.tabs.length}>{loading ? 'Saving...' : 'Save access'} <Icon name="shield" /></button>
+      </form>
+      <section className="admin-panel access-list">
+        <h2>Current admin users</h2>
+        {users.map((user) => (
+          <article key={user.email} className={!user.active ? 'inactive' : ''}>
+            <div><strong>{user.name || user.email}</strong><small>{user.email}</small></div>
+            <div className="access-list__tabs">{user.tabs?.map((tab) => <span key={tab}>{tab}</span>)}</div>
+            <div className="access-list__actions">
+              {user.owner ? <span className="status-pill status-pill--confirmed">Owner</span> : <><button className="button button-secondary" onClick={() => edit(user)}>Edit</button><button className="button button-secondary" onClick={() => deactivate(user.email)}>Remove</button></>}
+            </div>
+          </article>
+        ))}
+      </section>
+    </div>
+  );
+}
+
+function Filters({ overview, eventId, setEventId, status, setStatus }) {
+  return <div className="admin-filters"><label className="field"><span>Event</span><select value={eventId} onChange={(event) => setEventId(event.target.value)}><option value="">All events</option>{overview?.events.map((event) => <option key={event.eventId} value={event.eventId}>{event.eventName}</option>)}</select></label><label className="field"><span>Status</span><select value={status} onChange={(event) => setStatus(event.target.value)}><option value="">All statuses</option>{statuses.map((item) => <option key={item} value={item}>{item}</option>)}</select></label></div>;
+}
+
+function RegistrationTable({ registrations, selected, setSelected, renderActions }) {
+  const toggle = (id) => setSelected((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
+  return <div className="registration-table">{registrations.map((registration) => <article key={registration.registrationId}><label><input type="checkbox" checked={selected.includes(registration.registrationId)} onChange={() => toggle(registration.registrationId)} /><span>{registration.registrationId}</span></label><div><strong>{registration.participant?.name}</strong><small>{registration.participant?.college}</small></div><div><strong>{registration.eventRegistrations?.map((event) => event.eventName).join(', ')}</strong><small>{registration.participant?.email}</small></div><Status value={registration.paymentStatus} /><div><strong>Rs.{registration.expectedAmount}</strong><small>UTR {registration.utrNumber}</small></div>{renderActions?.(registration)}</article>)}</div>;
+}
+
+function RegistrationList({ registrations }) {
+  return <div className="recent-list">{registrations.map((registration) => <div key={registration.registrationId}><span>{registration.registrationId}</span><strong>{registration.participant?.name}</strong><small>{registration.eventRegistrations?.map((event) => event.eventName).join(', ')}</small><Status value={registration.paymentStatus} /></div>)}</div>;
+}
+
+function EventBars({ events }) {
+  const max = Math.max(1, ...events.map((event) => event.registrations));
+  return <div className="event-bars">{events.map((event) => <div key={event.eventId}><span>{event.eventName}</span><div><i style={{ width: `${(event.registrations / max) * 100}%` }} /></div><strong>{event.registrations}</strong></div>)}</div>;
+}
+
+function Metric({ label, value }) {
+  return <article><span>{label}</span><strong>{value}</strong></article>;
+}
+
+function Status({ value }) {
+  return <span className={`status-pill status-pill--${value}`}>{value}</span>;
+}
+
+function Skeleton() {
+  return <div className="admin-skeleton">Loading operational data...</div>;
+}

@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+/atlas-credentials.env
+google_auth.json
+__pycache__/
+*.py[cod]
+*.log
+.DS_Store

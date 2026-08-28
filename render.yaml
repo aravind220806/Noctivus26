@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: noctivus26-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: python run.py
+    healthCheckPath: /api/health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: REGISTRATION_OPEN
+        value: "true"
+      - key: MONGODB_URI
+        sync: false
+      - key: FRONTEND_ORIGINS
+        sync: false
+      - key: WEB_CONCURRENCY
+        value: "1"
+      - key: REDIS_URL
+        sync: false
+      - key: EVENT_CAPACITIES
+        sync: false
+      - key: ADMIN_SESSION_SECRET
+        generateValue: true
