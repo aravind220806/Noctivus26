@@ -243,8 +243,8 @@ function Hero({ onRegister }: { onRegister: () => void }) {
             className="hero__logo"
             src="/brand/noctivus-emblem.webp"
             alt="Noctivus emblem"
-            width="480"
-            height="534"
+            width="1355"
+            height="1545"
             fetchPriority="high"
           />
           <h1>

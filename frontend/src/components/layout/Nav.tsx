@@ -117,10 +117,10 @@ export function Nav() {
               <img
                 src="/logo.png"
                 alt="Noctivus '26"
-                width={1466}
-                height={1073}
+                width={1355}
+                height={1545}
                 style={{
-                  width: scrolled ? "44px" : "58px",
+                  width: scrolled ? "52px" : "68px",
                   height: "auto",
                   transition: "width 300ms ease-out",
                 }}
@@ -240,9 +240,9 @@ export function Nav() {
                 <img
                   src="/logo.png"
                   alt="Noctivus '26"
-                  width={1466}
-                  height={1073}
-                  style={{ width: "36px", height: "auto" }}
+                  width={1355}
+                  height={1545}
+                  style={{ width: "44px", height: "auto" }}
                   className="object-contain"
                 />
                 <span
