@@ -124,16 +124,16 @@ function AdaptiveLightRays() {
       <div className="hero__rays" aria-hidden="true">
         <LightRays
           raysOrigin="top-center"
-          raysColor="#d3dcff"
-          raysSpeed={0.8}
-          lightSpread={0.88}
-          rayLength={1.8}
-          fadeDistance={1.4}
-          saturation={0.82}
+          raysColor="#00f2fe"
+          raysSpeed={0.9}
+          lightSpread={0.92}
+          rayLength={2.0}
+          fadeDistance={1.3}
+          saturation={1.35}
           followMouse
-          mouseInfluence={0.05}
-          noiseAmount={0.02}
-          distortion={0.025}
+          mouseInfluence={0.06}
+          noiseAmount={0.015}
+          distortion={0.03}
           className="hero__rays-canvas"
         />
       </div>

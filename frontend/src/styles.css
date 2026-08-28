@@ -3430,15 +3430,169 @@ footer {
 }
 
 .hero__logo {
-  width: clamp(100px, 10.5vw, 142px) !important;
+  position: relative;
+  z-index: 2;
+  width: clamp(140px, 18vw, 220px) !important;
   height: auto !important;
   margin: 0 auto !important;
   display: block !important;
+  object-fit: contain !important;
+  filter:
+    drop-shadow(0 0 14px rgba(0, 242, 254, 0.28))
+    drop-shadow(0 0 32px rgba(16, 185, 129, 0.18))
+    drop-shadow(0 10px 22px rgba(0, 0, 0, 0.65)) !important;
+  transition: filter 0.3s ease, transform 0.3s ease;
+}
+
+.hero__logo:hover {
+  filter:
+    drop-shadow(0 0 20px rgba(0, 242, 254, 0.42))
+    drop-shadow(0 0 45px rgba(16, 185, 129, 0.3))
+    drop-shadow(0 14px 28px rgba(0, 0, 0, 0.75)) !important;
+  transform: scale(1.015);
+}
+
+.hero__ambient {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 650px 380px at 50% 28%, rgba(0, 242, 254, 0.2), rgba(16, 185, 129, 0.11) 45%, transparent 75%),
+    radial-gradient(circle 320px at 50% 25%, rgba(0, 221, 242, 0.16), transparent 65%),
+    radial-gradient(circle 400px at 20% 60%, rgba(16, 185, 129, 0.08), transparent 45%),
+    radial-gradient(circle 400px at 80% 65%, rgba(0, 242, 254, 0.08), transparent 45%) !important;
+  pointer-events: none;
+}
+
+.hero__rays-canvas {
+  filter: brightness(1.6) contrast(1.1) saturate(1.1) drop-shadow(0 0 35px rgba(0, 242, 254, 0.28)) !important;
+}
+
+/* ─── Flip Clock Countdown ──────────────────────────────────────── */
+.fc-digits-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Outer card wrapper – establishes 3D perspective */
+.fc-digit {
+  position: relative;
+  width: 52px;
+  height: 72px;
+  border-radius: 8px;
+  perspective: 480px;
+  font-family: 'Space Grotesk', var(--mono-font), ui-monospace, monospace;
+  font-size: 42px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #e4ecff;
+  user-select: none;
+}
+
+/* Top half – static, shows top portion of current digit */
+.fc-half {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px 6px 0 0;
+}
+.fc-half--top {
+  top: 0;
+  background: linear-gradient(160deg, #1a2236 0%, #111827 100%);
+  border-radius: 6px 6px 0 0;
+  box-shadow: 0 -1px 0 rgba(255,255,255,0.06) inset;
+}
+.fc-half--bot {
+  bottom: 0;
+  top: auto;
+  background: linear-gradient(180deg, #0e1520 0%, #09111e 100%);
+  border-radius: 0 0 6px 6px;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset;
+  align-items: flex-start;
+}
+
+/* The character — positioned to show only its relevant half */
+.fc-char {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 72px;                 /* must match .fc-digit height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.fc-half--top   .fc-char { top: 0; }
+.fc-half--bot   .fc-char { bottom: 0; }
+.fc-flap--top   .fc-char { top: 0; }
+.fc-flap--bot   .fc-char { bottom: 0; }
+
+/* Center seam line */
+.fc-seam {
+  position: absolute;
+  top: calc(50% - 1px);
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: rgba(0,0,0,0.9);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.6);
+  z-index: 20;
+  pointer-events: none;
+}
+
+/* ── Animated flaps ────────────────────────── */
+.fc-flap {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backface-visibility: hidden;
+  z-index: 10;
+}
+
+/* Top flap: shows PREVIOUS digit top half → folds down */
+.fc-flap--top {
+  top: 0;
+  background: linear-gradient(160deg, #1a2236 0%, #111827 100%);
+  border-radius: 6px 6px 0 0;
+  transform-origin: center bottom;
+  animation: fc-fold 0.24s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+/* Bottom flap: shows CURRENT digit bottom half → unfolds from behind */
+.fc-flap--bot {
+  bottom: 0;
+  top: auto;
+  background: linear-gradient(180deg, #0e1520 0%, #09111e 100%);
+  border-radius: 0 0 6px 6px;
+  transform-origin: center top;
+  animation: fc-unfold 0.24s cubic-bezier(0, 0, 0.6, 1) 0.2s backwards;
+}
+
+@keyframes fc-fold {
+  0%   { transform: rotateX(0deg);   filter: brightness(1); }
+  100% { transform: rotateX(-90deg); filter: brightness(0.4); }
+}
+
+@keyframes fc-unfold {
+  0%   { transform: rotateX(90deg);  filter: brightness(0.4); }
+  100% { transform: rotateX(0deg);   filter: brightness(1); }
 }
 
 .hero h1 {
-  margin-top: 8px !important;
-  font-size: clamp(44px, 5.8vw, 74px) !important;
+  margin-top: 10px !important;
+  font-size: clamp(44px, 5.8vw, 76px) !important;
   line-height: 1.05 !important;
   letter-spacing: -0.04em !important;
   font-weight: 700 !important;
@@ -3459,4 +3613,44 @@ footer {
   margin-top: clamp(14px, 2vh, 20px) !important;
   display: flex !important;
   justify-content: center !important;
+}
+
+@media (max-width: 640px) {
+  .hero {
+    padding: clamp(76px, 11vh, 90px) 1rem 20px !important;
+  }
+  .hero__logo {
+    width: clamp(135px, 38vw, 175px) !important;
+    filter:
+      drop-shadow(0 0 12px rgba(0, 242, 254, 0.22))
+      drop-shadow(0 0 24px rgba(16, 185, 129, 0.15))
+      drop-shadow(0 8px 16px rgba(0, 0, 0, 0.65)) !important;
+  }
+  .fc-digit {
+    width: 30px;
+    height: 44px;
+    font-size: 24px;
+  }
+  .fc-char {
+    height: 44px;
+  }
+  .fc-digits-row {
+    gap: 3px;
+  }
+  .hero-countdown__units {
+    gap: 8px;
+  }
+  .hero-countdown {
+    padding: 12px 14px;
+  }
+  .hero h1 {
+    font-size: clamp(38px, 11.5vw, 54px) !important;
+    margin-top: 6px !important;
+  }
+  .hero__tagline {
+    font-size: 13.5px !important;
+    line-height: 1.45 !important;
+    max-width: 320px !important;
+    margin-top: 8px !important;
+  }
 }

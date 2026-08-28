@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
-import SplitFlapText from './SplitFlapText';
+import { Fragment, useEffect, useState } from 'react';
 
 export interface CountdownTime {
   total: number;
@@ -24,62 +23,111 @@ const calculate = (target: string | Date | number): CountdownTime => {
   };
 };
 
-export default function SplitFlapCountdown({ target }: SplitFlapCountdownProps) {
-  const [clock, setClock] = useState<{ previous: CountdownTime; current: CountdownTime }>(() => {
-    const initial = calculate(target);
-    return { previous: initial, current: initial };
+interface DigitState {
+  current: string;
+  previous: string;
+  flipKey: number;  // incremented each flip → Fragment key forces CSS anim restart
+}
+
+// Single-state FlipDigit: no RAF, no separate flipping boolean — glitch-free
+function FlipDigit({ digit }: { digit: string }) {
+  const [state, setState] = useState<DigitState>({
+    current: digit,
+    previous: digit,
+    flipKey: 0,
   });
 
+  // Atomically swap current/previous and bump the key when the digit prop changes
   useEffect(() => {
-    const update = () =>
-      setClock((value) => ({ previous: value.current, current: calculate(target) }));
+    setState(prev => {
+      if (digit === prev.current) return prev;           // no change → no re-render
+      return { current: digit, previous: prev.current, flipKey: prev.flipKey + 1 };
+    });
+  }, [digit]);
+
+  // After the animation (500ms = fold 240ms + unfold 240ms + 20ms buffer),
+  // reset previous = current so the flap elements unmount cleanly
+  useEffect(() => {
+    if (state.previous === state.current) return;
+    const t = window.setTimeout(() => {
+      setState(prev => ({ ...prev, previous: prev.current }));
+    }, 520);
+    return () => clearTimeout(t);
+  }, [state.flipKey]); // only re-run when a new flip starts
+
+  const isAnimating = state.previous !== state.current;
+
+  return (
+    <div className="fc-digit">
+      {/* Static back plates — always show the NEW (current) digit */}
+      <div className="fc-half fc-half--top">
+        <span className="fc-char">{state.current}</span>
+      </div>
+      <div className="fc-half fc-half--bot">
+        <span className="fc-char">{state.current}</span>
+      </div>
+
+      {/* Animated flaps — keyed so React remounts them every flip */}
+      {isAnimating && (
+        <Fragment key={state.flipKey}>
+          {/* Top flap: OLD digit, folds down 0° → -90° */}
+          <div className="fc-flap fc-flap--top">
+            <span className="fc-char">{state.previous}</span>
+          </div>
+          {/* Bottom flap: NEW digit, unfolds 90° → 0° with short delay */}
+          <div className="fc-flap fc-flap--bot">
+            <span className="fc-char">{state.current}</span>
+          </div>
+        </Fragment>
+      )}
+
+      <div className="fc-seam" />
+    </div>
+  );
+}
+
+function UnitGroup({ label, value, padTo }: { label: string; value: number; padTo: number }) {
+  const digits = String(value).padStart(padTo, '0').split('');
+  return (
+    <div className="hero-countdown__unit">
+      <div className="fc-digits-row">
+        {digits.map((d, i) => (
+          <FlipDigit key={`${label}-${i}`} digit={d} />
+        ))}
+      </div>
+      <small>{label}</small>
+    </div>
+  );
+}
+
+export default function SplitFlapCountdown({ target }: SplitFlapCountdownProps) {
+  const [clock, setClock] = useState<CountdownTime>(() => calculate(target));
+
+  useEffect(() => {
+    const update = () => setClock(calculate(target));
     const timer = window.setInterval(update, 1000);
     return () => window.clearInterval(timer);
   }, [target]);
 
-  const units: [string, string, string][] = useMemo(
-    () => [
-      ['DAYS', String(clock.previous.days).padStart(3, '0'), String(clock.current.days).padStart(3, '0')],
-      ['HOURS', String(clock.previous.hours).padStart(2, '0'), String(clock.current.hours).padStart(2, '0')],
-      ['MINUTES', String(clock.previous.minutes).padStart(2, '0'), String(clock.current.minutes).padStart(2, '0')],
-      ['SECONDS', String(clock.previous.seconds).padStart(2, '0'), String(clock.current.seconds).padStart(2, '0')],
-    ],
-    [clock]
-  );
-
-  if (clock.current.total === 0)
+  if (clock.total === 0)
     return <div className="countdown-live"><span /> The signal is live</div>;
 
   return (
     <div
       className="hero-countdown"
-      aria-label={`${clock.current.days} days, ${clock.current.hours} hours, ${clock.current.minutes} minutes, and ${clock.current.seconds} seconds until Noctivus`}
+      aria-label={`${clock.days} days, ${clock.hours} hours, ${clock.minutes} minutes, and ${clock.seconds} seconds until Noctivus`}
     >
       <span className="hero-countdown__eyebrow" aria-hidden="true">
         <i /> COUNTDOWN TO NOCTIVUS '26 <i />
       </span>
       <div className="hero-countdown__units" aria-hidden="true">
-        {units.map(([label, previous, value]) => (
-          <div className="hero-countdown__unit" key={label}>
-            <SplitFlapText
-              words={[previous, value]}
-              flipDuration={0.08}
-              stagger={0.035}
-              cycleDelay={400}
-              charset="numeric"
-              flipsPerChar={3}
-              tileColor="#101522"
-              textColor="#dce5ff"
-              tileRadius={5}
-              gap={4}
-              fontSize={40}
-              loop={false}
-              padTo={label === 'DAYS' ? 3 : 2}
-            />
-            <small>{label}</small>
-          </div>
-        ))}
+        <UnitGroup label="DAYS"    value={clock.days}    padTo={3} />
+        <UnitGroup label="HOURS"   value={clock.hours}   padTo={2} />
+        <UnitGroup label="MINUTES" value={clock.minutes} padTo={2} />
+        <UnitGroup label="SECONDS" value={clock.seconds} padTo={2} />
       </div>
     </div>
   );
 }
+
+
