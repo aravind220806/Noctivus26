@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000">
+  <rect width="800" height="1000" fill="#070a13"/>
+  <path d="M0 0h800v240H0z" fill="#0d2433"/>
+  <path d="M660 0 800 0 800 1000 520 1000z" fill="#14234d" opacity=".55"/>
+  <text x="64" y="92" fill="#7fa2ff" font-family="monospace" font-size="25" font-weight="700" letter-spacing="5">EVENT LINEUP</text>
+  <text x="64" y="185" fill="#f5f7fb" font-family="Arial Black, Arial, sans-serif" font-size="92" font-weight="900">8 EVENTS</text>
+  <g font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#e8efff">
+    <text x="78" y="340">Ideathon</text>
+    <text x="78" y="420">Cyber Heist CTF</text>
+    <text x="78" y="500">IoT Exploit</text>
+    <text x="78" y="580">Secure X VibeCode</text>
+    <text x="78" y="660">Mind Cage</text>
+    <text x="78" y="740">Mystery Hunt</text>
+    <text x="78" y="820">Tune Trap</text>
+    <text x="78" y="900">Auction Arena</text>
+  </g>
+  <g stroke="#36f5dd" stroke-width="3">
+    <path d="M54 328h10M54 408h10M54 488h10M54 568h10M54 648h10M54 728h10M54 808h10M54 888h10"/>
+  </g>
+</svg>

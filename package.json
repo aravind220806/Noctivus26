@@ -2,7 +2,9 @@
   "name": "noctivus26",
   "private": true,
   "version": "1.0.0",
-  "workspaces": ["frontend"],
+  "workspaces": [
+    "frontend"
+  ],
   "scripts": {
     "dev": "npm run dev --workspace frontend",
     "dev:api": "cd backend && python3 run.py",

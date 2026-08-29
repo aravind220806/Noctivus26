@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#06131c"/>
+      <stop offset="1" stop-color="#020407"/>
+    </linearGradient>
+    <radialGradient id="glow" cx=".5" cy=".32" r=".46">
+      <stop offset="0" stop-color="#36f5dd" stop-opacity=".45"/>
+      <stop offset="1" stop-color="#36f5dd" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="1000" fill="url(#bg)"/>
+  <rect width="800" height="1000" fill="url(#glow)"/>
+  <g fill="none" stroke="#36f5dd" stroke-opacity=".18">
+    <circle cx="400" cy="320" r="210"/>
+    <circle cx="400" cy="320" r="145"/>
+    <path d="M80 790h640M80 820h520M80 850h460"/>
+  </g>
+  <text x="72" y="92" fill="#36f5dd" font-family="monospace" font-size="28" font-weight="700" letter-spacing="6">NOCTIVUS '26</text>
+  <text x="70" y="380" fill="#f6fbff" font-family="Arial Black, Arial, sans-serif" font-size="116" font-weight="900">CYBER</text>
+  <text x="70" y="500" fill="#f6fbff" font-family="Arial Black, Arial, sans-serif" font-size="116" font-weight="900">SYMPOSIUM</text>
+  <text x="74" y="590" fill="#aebad1" font-family="Arial, sans-serif" font-size="30">26 September 2026</text>
+  <text x="74" y="638" fill="#aebad1" font-family="Arial, sans-serif" font-size="30">Velammal Engineering College</text>
+  <rect x="72" y="732" width="300" height="64" rx="8" fill="#36f5dd"/>
+  <text x="98" y="774" fill="#03110f" font-family="Arial, sans-serif" font-size="24" font-weight="800">VIEW EVENTS</text>
+</svg>

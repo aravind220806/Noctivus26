@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1200" viewBox="0 0 900 1200">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#b4d0c1"/>
+      <stop offset="1" stop-color="#5d7d75"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="1200" fill="url(#bg)"/>
+  <rect x="80" y="95" width="740" height="1010" rx="42" fill="#f7efe0"/>
+  <path d="M238 486c-74-34-126 0-148 82-21 79 21 154 93 151 50-2 87-43 103-97Z" fill="#7d533b"/>
+  <path d="M662 486c74-34 126 0 148 82 21 79-21 154-93 151-50-2-87-43-103-97Z" fill="#7d533b"/>
+  <path d="M450 328c178 0 298 132 298 328 0 213-131 356-298 356S152 869 152 656c0-196 120-328 298-328Z" fill="#bd8560"/>
+  <path d="M304 712c8 122 65 202 146 202s138-80 146-202c-42 34-88 52-146 52s-104-18-146-52Z" fill="#efe2d0"/>
+  <ellipse cx="340" cy="602" rx="31" ry="38" fill="#151a1e"/>
+  <ellipse cx="560" cy="602" rx="31" ry="38" fill="#151a1e"/>
+  <circle cx="350" cy="588" r="9" fill="#fff"/>
+  <circle cx="570" cy="588" r="9" fill="#fff"/>
+  <path d="M450 668c-35 0-58 18-58 43 0 30 28 48 58 48s58-18 58-48c0-25-23-43-58-43Z" fill="#38251f"/>
+  <path d="M450 758v36M450 794c-35 42-92 32-118-2M450 794c35 42 92 32 118-2" fill="none" stroke="#5c3c33" stroke-width="12" stroke-linecap="round"/>
+  <text x="450" y="1040" text-anchor="middle" fill="#1c2730" font-family="Arial, sans-serif" font-size="44" font-weight="800">DEMO DOG IMAGE</text>
+</svg>

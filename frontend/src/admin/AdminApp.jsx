@@ -85,7 +85,7 @@ export default function AdminApp() {
       <section className="admin-main">
         <header className="admin-topbar">
           <div><span className="kicker">ADMIN PANEL</span><h1>{activeTab}</h1></div>
-          <div className="admin-topbar-actions"><label className="admin-search"><span>⌕</span><input aria-label="Search admin records" placeholder="Search records..." /></label><button className="button button-secondary" onClick={refresh}><Icon name="external" size={16} /> Refresh</button></div>
+          <div className="admin-topbar-actions"><button className="button button-secondary" onClick={refresh}><Icon name="external" size={16} /> Refresh data</button></div>
         </header>
         {message && <p className="admin-message">{message}</p>}
         {activeTab === 'Dashboard' && can('Dashboard') && <Dashboard overview={overview} />}
@@ -105,11 +105,15 @@ export default function AdminApp() {
 
 function EventsTab({ authHeaders }) {
   const [items, setItems] = useState([]);
+  const [drafts, setDrafts] = useState({});
   const [message, setMessage] = useState('');
   const load = async () => {
     const response = await fetch(`${apiBase}/api/admin/events`, { headers: authHeaders });
     const data = await response.json().catch(() => ({}));
-    if (response.ok) setItems(data.events || []);
+    if (response.ok) {
+      setItems(data.events || []);
+      setDrafts(Object.fromEntries((data.events || []).map((event) => [event.id, { date: event.date || '', time: event.time || '', gate: event.gate || '', venue: event.venue || '', terminal: event.terminal || 'MAIN HALL', seatType: event.seatType || 'VIP', passActive: event.passActive !== false }])));
+    }
     else setMessage(data.detail || data.message || 'Unable to load events.');
   };
   useEffect(() => { load(); }, []);
@@ -120,7 +124,8 @@ function EventsTab({ authHeaders }) {
     setMessage(`${event.name} updated.`);
     load();
   };
-  return <section className="admin-panel events-admin-panel"><h2>Event lifecycle</h2>{message && <p className="admin-message">{message}</p>}<div className="admin-event-list">{items.map((event) => <article key={event.id}><div><strong>{event.name}</strong><small>{event.category} · {event.registrationCount || 0} registrations</small></div><span className={`status-pill status-pill--${event.effectiveStatus || event.status}`}>{event.effectiveStatus || event.status}</span><strong>Rs.{event.fee}</strong><button className="button button-secondary" onClick={() => save(event, { status: event.status === 'open' ? 'closed' : 'open' })}>{event.status === 'open' ? 'Close' : 'Open'}</button></article>)}</div></section>;
+  const changeDraft = (id, key, value) => setDrafts((current) => ({ ...current, [id]: { ...current[id], [key]: value } }));
+  return <section className="admin-panel events-admin-panel"><h2>Event lifecycle & pass details</h2><p className="admin-help">Set these fields once per event. Boarding passes pull them automatically and cannot be sent until event pass details are complete.</p>{message && <p className="admin-message">{message}</p>}<div className="admin-event-list">{items.map((event) => <article className="event-lifecycle-card" key={event.id}><div><strong>{event.name}</strong><small>{event.category} · {event.registrationCount || 0} registrations</small></div><span className={`status-pill status-pill--${event.effectiveStatus || event.status}`}>{event.effectiveStatus || event.status}</span><button className="button button-secondary" onClick={() => save(event, { status: event.status === 'open' ? 'closed' : 'open' })}>{event.status === 'open' ? 'Close' : 'Open'}</button><div className="event-pass-fields"><label className="field"><span>Date</span><input value={drafts[event.id]?.date || ''} onChange={(e) => changeDraft(event.id, 'date', e.target.value)} placeholder="26 Sep 2026" /></label><label className="field"><span>Time</span><input value={drafts[event.id]?.time || ''} onChange={(e) => changeDraft(event.id, 'time', e.target.value)} placeholder="09:00 AM" /></label><label className="field"><span>Gate</span><input value={drafts[event.id]?.gate || ''} onChange={(e) => changeDraft(event.id, 'gate', e.target.value)} placeholder="VEC Gate 1" /></label><label className="field"><span>Venue</span><input value={drafts[event.id]?.venue || ''} onChange={(e) => changeDraft(event.id, 'venue', e.target.value)} placeholder="CSE Lab 1" /></label><label className="field"><span>Terminal / Hall</span><input value={drafts[event.id]?.terminal || ''} onChange={(e) => changeDraft(event.id, 'terminal', e.target.value)} placeholder="MAIN HALL" /></label><label className="field"><span>Seat Type</span><input value={drafts[event.id]?.seatType || ''} onChange={(e) => changeDraft(event.id, 'seatType', e.target.value)} placeholder="VIP" /></label><label className="field field-checkbox"><input type="checkbox" checked={drafts[event.id]?.passActive !== false} onChange={(e) => changeDraft(event.id, 'passActive', e.target.checked)} /> <span>Pass active</span></label><button className="button button-primary" onClick={() => save(event, drafts[event.id])}>Save pass details</button></div></article>)}</div></section>;
 }
 
 function CheckIn({ authHeaders }) {
@@ -317,17 +322,28 @@ async function bulkVerify(authHeaders, registrationIds, status) {
 
 function Invitations({ overview, authHeaders, onSent }) {
   const [eventId, setEventId] = useState('');
-  const [venue, setVenue] = useState('');
-  const [gate, setGate] = useState('VEC Gate 1');
-  const [date, setDate] = useState('26 SEP 2026');
-  const [time, setTime] = useState('09:00 AM');
+  const [eventRecords, setEventRecords] = useState([]);
   const [confirmedRegistrations, setConfirmedRegistrations] = useState([]);
+  const [selectedRegistrationIds, setSelectedRegistrationIds] = useState([]);
   const [selectedRegistrantId, setSelectedRegistrantId] = useState('');
-  const [qrUrl, setQrUrl] = useState('');
+  const [passPreviewUrl, setPassPreviewUrl] = useState('');
+  const [previewMessage, setPreviewMessage] = useState('Select an event to preview a pass.');
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
 
-  const selectedEvent = overview?.events?.find((event) => event.eventId === eventId);
+  const selectedEvent = eventRecords.find((event) => event.id === eventId) || overview?.events?.find((event) => event.eventId === eventId);
+  const venue = selectedEvent?.venue || '';
+  const gate = selectedEvent?.gate || '';
+  const date = selectedEvent?.date || '';
+  const time = selectedEvent?.time || '';
+  const terminal = selectedEvent?.terminal || '';
+
+  useEffect(() => {
+    fetch(`${apiBase}/api/admin/events`, { headers: authHeaders })
+      .then((res) => res.json())
+      .then((data) => setEventRecords(data.events || []))
+      .catch(() => {});
+  }, [authHeaders]);
 
   useEffect(() => {
     if (!eventId) {
@@ -344,8 +360,10 @@ function Invitations({ overview, authHeaders, onSent }) {
         setConfirmedRegistrations(list);
         if (list.length > 0) {
           setSelectedRegistrantId(list[0].registrationId);
+          setSelectedRegistrationIds(list.map((row) => row.registrationId));
         } else {
           setSelectedRegistrantId('');
+          setSelectedRegistrationIds([]);
         }
       })
       .catch(() => {});
@@ -356,30 +374,61 @@ function Invitations({ overview, authHeaders, onSent }) {
     return confirmedRegistrations.find((r) => r.registrationId === selectedRegistrantId) || confirmedRegistrations[0] || null;
   }, [confirmedRegistrations, selectedRegistrantId]);
 
-  const displayPassenger = activeRegistrant?.participant?.name || (eventId ? 'No confirmed registrant selected' : 'Choose an event');
-  const displayCollege = activeRegistrant?.participant?.college || 'Your College';
-  const displayEmail = activeRegistrant?.participant?.email || 'user@example.com';
-  const displayFood = activeRegistrant?.participant?.foodPreference || 'N/A';
-  const displayRegId = activeRegistrant?.registrationId || 'NOC26-PREVIEW';
+  const displayPassenger = activeRegistrant?.participant?.name || 'selected member';
 
   useEffect(() => {
-    let active = true;
-    if (!displayRegId) return undefined;
-    import('qrcode').then(({ toDataURL }) => toDataURL(displayRegId, {
-      width: 140,
-      margin: 1,
-      color: { dark: '#000000', light: '#ffffff' },
-    })).then((url) => active && setQrUrl(url)).catch(() => {});
-    return () => { active = false; };
-  }, [displayRegId]);
+    if (!eventId) {
+      setPassPreviewUrl((current) => { if (current) URL.revokeObjectURL(current); return ''; });
+      setPreviewMessage('Select an event to preview a pass.');
+      return undefined;
+    }
+    if (selectedEvent?.passActive === false) {
+      setPassPreviewUrl((current) => { if (current) URL.revokeObjectURL(current); return ''; });
+      setPreviewMessage('Pass generation is disabled for this event.');
+      return undefined;
+    }
+    if (![venue, date, time, gate, terminal].every((value) => value.trim())) {
+      setPassPreviewUrl((current) => { if (current) URL.revokeObjectURL(current); return ''; });
+      setPreviewMessage('Event details incomplete - set date/time/gate/venue/terminal in the Events tab.');
+      return undefined;
+    }
+    const controller = new AbortController();
+    setPreviewMessage('Generating boarding pass...');
+    fetch(`${apiBase}/api/admin/invitations/preview`, {
+      method: 'POST',
+      headers: { ...authHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ eventId, registrationId: activeRegistrant?.registrationId || '' }),
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (response.ok) return response.blob();
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.detail || data.message || `Preview unavailable (${response.status}).`);
+      })
+      .then((blob) => {
+        const url = URL.createObjectURL(blob);
+        setPassPreviewUrl((current) => { if (current) URL.revokeObjectURL(current); return url; });
+        setPreviewMessage('');
+      })
+      .catch((previewError) => {
+        if (controller.signal.aborted) return;
+        setPassPreviewUrl((current) => { if (current) URL.revokeObjectURL(current); return ''; });
+        setPreviewMessage(previewError.message || 'Boarding pass preview unavailable.');
+      });
+    return () => controller.abort();
+  }, [eventId, activeRegistrant?.registrationId, venue, date, time, gate, terminal, selectedEvent?.passActive, authHeaders]);
 
   const send = async () => {
     if (!eventId) {
       setError('Please select an event.');
       return;
     }
-    if (!venue.trim()) {
-      setError('Venue is required for pass generation.');
+    if (selectedEvent?.passActive === false) {
+      setError('Pass generation is disabled for this event.');
+      return;
+    }
+    if (![venue, date, time, gate, terminal].every((value) => value.trim())) {
+      setError('This event is missing pass details. Fill date, time, gate, venue, and terminal on the Events tab first.');
       return;
     }
     setError('');
@@ -387,7 +436,7 @@ function Invitations({ overview, authHeaders, onSent }) {
     const response = await fetch(`${apiBase}/api/admin/invitations/send`, {
       method: 'POST',
       headers: { ...authHeaders, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ eventId, audience: 'confirmed', pass: { title: 'Noctivus 26 Event Pass', venue, gate, date, time } }),
+      body: JSON.stringify({ eventId, audience: 'confirmed', registrationIds: selectedRegistrationIds }),
     });
     const data = await response.json().catch(() => ({}));
     setSending(false);
@@ -399,223 +448,23 @@ function Invitations({ overview, authHeaders, onSent }) {
     <div className="admin-grid admin-grid--wide invitation-automation">
       <section className="admin-panel pass-builder">
         <h2>Send Boarding Passes</h2>
-        <p className="admin-help">Select an event, customize the event-wise venue, and review the live boarding pass preview for confirmed participants.</p>
-        <label className="field"><span>Event Automation</span><select value={eventId} onChange={(event) => { setEventId(event.target.value); const ev = overview?.events?.find(e => e.eventId === event.target.value); if (ev?.venue) setVenue(ev.venue); }}><option value="">Choose an event</option>{overview?.events?.map((event) => <option key={event.eventId} value={event.eventId}>{event.eventName}</option>)}</select></label>
-        <label className="field"><span>Venue (Event-wise)</span><input value={venue} onChange={(event) => setVenue(event.target.value)} placeholder="e.g. Main Auditorium / CSE Lab 1" required /></label>
-        <label className="field"><span>Gate</span><input value={gate} onChange={(event) => setGate(event.target.value)} placeholder="VEC Gate 1" /></label>
+        <p className="admin-help">Choose confirmed members and preview their pass. Date, time, gate, and venue are locked to the event details set on the Events tab.</p>
+        <label className="field"><span>Event</span><select value={eventId} onChange={(event) => setEventId(event.target.value)}><option value="">Choose an event</option>{eventRecords.map((event) => <option key={event.id} value={event.id}>{event.name}</option>)}</select></label>
+        {eventId && <div className="pass-event-details"><strong>{selectedEvent?.name}</strong><span>{date || 'Date missing'} · {time || 'Time missing'}</span><span>{gate || 'Gate missing'} · {venue || 'Venue missing'} · {terminal || 'Terminal missing'}</span></div>}
 
         {confirmedRegistrations.length > 0 && (
           <label className="field"><span>Preview Registrant</span><select value={selectedRegistrantId} onChange={(event) => setSelectedRegistrantId(event.target.value)}>{confirmedRegistrations.map((r) => <option key={r.registrationId} value={r.registrationId}>{r.participant?.name} ({r.registrationId})</option>)}</select></label>
         )}
 
-        <label className="field"><span>Recipient Type</span><select value="confirmed" disabled><option value="confirmed">Confirmed members only ({confirmedRegistrations.length})</option></select></label>
+        {confirmedRegistrations.length > 0 && <div className="invitation-members"><div><strong>Recipients</strong><button type="button" onClick={() => setSelectedRegistrationIds(selectedRegistrationIds.length === confirmedRegistrations.length ? [] : confirmedRegistrations.map((row) => row.registrationId))}>{selectedRegistrationIds.length === confirmedRegistrations.length ? 'Clear all' : 'Select all'}</button></div>{confirmedRegistrations.map((row) => <label key={row.registrationId}><input type="checkbox" checked={selectedRegistrationIds.includes(row.registrationId)} onChange={() => setSelectedRegistrationIds((current) => current.includes(row.registrationId) ? current.filter((id) => id !== row.registrationId) : [...current, row.registrationId])} /> <span>{row.participant?.name} <small>{row.registrationId}</small></span></label>)}</div>}
         {error && <p className="form-error">{error}</p>}
-        <button className="button button-primary" disabled={!eventId || !venue.trim() || sending} onClick={send}>{sending ? 'Queueing passes...' : `Send passes to ${confirmedRegistrations.length || 'confirmed'} members`} <Icon name="mail" /></button>
+        <button className="button button-primary" disabled={!eventId || selectedEvent?.passActive === false || ![venue, date, time, gate, terminal].every((value) => value.trim()) || !selectedRegistrationIds.length || sending} onClick={send}>{sending ? 'Queueing passes...' : `Generate & send ${selectedRegistrationIds.length} pass${selectedRegistrationIds.length === 1 ? '' : 'es'}`} <Icon name="mail" /></button>
       </section>
 
       <section className="admin-panel pass-sample">
-        <div className="pass-sample__heading"><div><span className="kicker">LIVE PREVIEW</span><h2>Boarding Pass Preview</h2></div><span className="status-pill status-pill--confirmed">Confirmed</span></div>
         <div className="boarding-pass-card">
-          {/* Vertical Barcode Strip on Left */}
-          <div className="bp-card-barcode-strip">
-            <div className="bp-card-barcode-lines">||||| | |||| ||| |||||| ||| || |||||| | ||||| |||</div>
-            <div className="bp-card-barcode-text">NV26 - {displayRegId} - VIP</div>
-          </div>
-
-          {/* Main Boarding Pass Container */}
-          <div className="bp-card-main">
-            {/* Header Dark Bar */}
-            <div className="bp-card-topbar">
-              <div className="bp-card-brand">
-                <img src="/brand/noctivus-emblem.webp" alt="Emblem" />
-                <div>
-                  <div className="bp-card-brand-title">NOCTIVUS '26</div>
-                  <div className="bp-card-brand-sub">COLLEGE SYMPOSIUM</div>
-                </div>
-              </div>
-              <div className="bp-card-top-right">
-                <div className="bp-card-bp-label">BOARDING PASS</div>
-                <div className="bp-card-bp-sub">ECONOMY</div>
-                <span className="bp-card-plane-icon">✈</span>
-              </div>
-            </div>
-
-            {/* Light Body Section */}
-            <div className="bp-card-body">
-              {/* Row 1: 4 columns */}
-              <div className="bp-card-row bp-card-row-4">
-                <div className="bp-card-col">
-                  <span className="bp-card-lbl">PASSENGER NAME</span>
-                  <strong className="bp-card-val">{displayPassenger}</strong>
-                </div>
-                <div className="bp-card-col">
-                  <span className="bp-card-lbl">COLLEGE NAME</span>
-                  <strong className="bp-card-val">{displayCollege}</strong>
-                </div>
-                <div className="bp-card-col">
-                  <span className="bp-card-lbl">EVENT NAME</span>
-                  <strong className="bp-card-val">{selectedEvent?.eventName || 'Choose Event'}</strong>
-                </div>
-                <div className="bp-card-col">
-                  <span className="bp-card-lbl">EMAIL ID</span>
-                  <strong className="bp-card-val">{displayEmail}</strong>
-                </div>
-              </div>
-
-              {/* Row 2: 4 columns */}
-              <div className="bp-card-row bp-card-row-4">
-                <div className="bp-card-col">
-                  <span className="bp-card-lbl">DATE</span>
-                  <strong className="bp-card-val">{date}</strong>
-                </div>
-                <div className="bp-card-col">
-                  <span className="bp-card-lbl">TIME</span>
-                  <strong className="bp-card-val">{time}</strong>
-                </div>
-                <div className="bp-card-col">
-                  <span className="bp-card-lbl">GATE</span>
-                  <strong className="bp-card-val">{gate}</strong>
-                </div>
-                <div className="bp-card-col">
-                  <span className="bp-card-lbl">VENUE</span>
-                  <strong className="bp-card-val">{venue || '(FILLED BY ADMIN)'}</strong>
-                </div>
-              </div>
-
-              {/* Middle Section: Details Left + QR Code Right */}
-              <div className="bp-card-mid-split">
-                <div className="bp-card-mid-left">
-                  {/* Row 3: Flight, Seat, Zone, Terminal */}
-                  <div className="bp-card-row bp-card-row-4-sm">
-                    <div className="bp-card-col">
-                      <span className="bp-card-lbl">FLIGHT</span>
-                      <strong className="bp-card-val-sm">NV26</strong>
-                    </div>
-                    <div className="bp-card-col">
-                      <span className="bp-card-lbl">SEAT</span>
-                      <strong className="bp-card-val-sm">VIP</strong>
-                    </div>
-                    <div className="bp-card-col">
-                      <span className="bp-card-lbl">ZONE</span>
-                      <strong className="bp-card-val-sm">1</strong>
-                    </div>
-                    <div className="bp-card-col">
-                      <span className="bp-card-lbl">TERMINAL</span>
-                      <strong className="bp-card-val-sm">Main Hall</strong>
-                    </div>
-                  </div>
-
-                  {/* Route Container */}
-                  <div className="bp-card-route-box">
-                    <div className="bp-card-route-col">
-                      <span className="bp-card-lbl">FROM</span>
-                      <div className="bp-card-building-icon">🏢</div>
-                      <strong className="bp-card-route-name">{displayCollege}</strong>
-                      <small className="bp-card-route-sub">(USER COLLEGE)</small>
-                    </div>
-                    <div className="bp-card-route-line">
-                      <span className="bp-card-route-dots">•••••••••••••••••</span>
-                      <span className="bp-card-route-plane">✈</span>
-                      <span className="bp-card-route-dots">••••••••</span>
-                    </div>
-                    <div className="bp-card-route-col">
-                      <span className="bp-card-lbl">TO</span>
-                      <div className="bp-card-building-icon">🏢</div>
-                      <strong className="bp-card-route-name">VELAMMAL ENGINEERING COLLEGE</strong>
-                      <small className="bp-card-route-sub">CHENNAI, TAMIL NADU</small>
-                    </div>
-                  </div>
-
-                  {/* Food Preference */}
-                  <div className="bp-card-food-row">
-                    <span className="bp-card-lbl">FOOD PREFERENCE</span>
-                    <strong className="bp-card-val">{displayFood}</strong>
-                  </div>
-                </div>
-
-                {/* QR Code Container Right */}
-                <div className="bp-card-qr-wrapper">
-                  <div className="bp-card-qr-box">
-                    {qrUrl ? <img src={qrUrl} alt="QR Code" /> : <div className="bp-card-qr-empty">QR CODE</div>}
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer motto line */}
-              <div className="bp-card-footer-motto">
-                IGNITE • INNOVATE • INSPIRE
-              </div>
-            </div>
-          </div>
-
-          {/* Tear Perforation */}
-          <div className="bp-card-perforation" />
-
-          {/* Right Stub Section */}
-          <div className="bp-card-stub">
-            <div className="bp-card-stub-topbar">
-              <div className="bp-card-stub-title">BOARDING PASS</div>
-              <div className="bp-card-stub-sub">ECONOMY</div>
-            </div>
-            <div className="bp-card-stub-body">
-              <div className="bp-card-stub-field">
-                <span className="bp-card-lbl">PASSENGER NAME</span>
-                <strong className="bp-card-val-stub">{displayPassenger}</strong>
-              </div>
-
-              <div className="bp-card-stub-from-to">
-                <div>
-                  <span className="bp-card-lbl">FROM</span>
-                  <div className="bp-card-stub-loc">🏢 {displayCollege}</div>
-                </div>
-                <div className="bp-card-stub-arrow">✈</div>
-                <div>
-                  <span className="bp-card-lbl">TO</span>
-                  <div className="bp-card-stub-loc">🏢 VELAMMAL ENGINEERING COLLEGE</div>
-                  <small className="bp-card-stub-subloc">CHENNAI, TAMIL NADU</small>
-                </div>
-              </div>
-
-              <div className="bp-card-stub-row2">
-                <div>
-                  <span className="bp-card-lbl">DATE</span>
-                  <strong className="bp-card-val-sm">{date}</strong>
-                </div>
-                <div>
-                  <span className="bp-card-lbl">TIME</span>
-                  <strong className="bp-card-val-sm">{time}</strong>
-                </div>
-              </div>
-
-              <div className="bp-card-stub-row3">
-                <div>
-                  <span className="bp-card-lbl">FLIGHT</span>
-                  <strong className="bp-card-val-sm">NV26</strong>
-                </div>
-                <div>
-                  <span className="bp-card-lbl">SEAT</span>
-                  <strong className="bp-card-val-sm">VIP</strong>
-                </div>
-                <div>
-                  <span className="bp-card-lbl">GATE</span>
-                  <strong className="bp-card-val-sm">{gate}</strong>
-                </div>
-              </div>
-
-              <div className="bp-card-stub-barcode">
-                <div className="bp-card-stub-barcode-lines">|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||</div>
-                <div className="bp-card-stub-barcode-lbl">NV26 - {displayRegId} - VIP</div>
-              </div>
-            </div>
-
-            <div className="bp-card-stub-footer">
-              <img src="/brand/noctivus-emblem.webp" alt="" />
-              <div>
-                <strong>NOCTIVUS '26</strong>
-                <small>COLLEGE SYMPOSIUM</small>
-              </div>
-            </div>
-          </div>
+          {passPreviewUrl && <img className="boarding-pass-render" src={passPreviewUrl} alt={`Generated boarding pass for ${displayPassenger}`} />}
+          {!passPreviewUrl && <div className="boarding-pass-empty">{previewMessage}</div>}
         </div>
       </section>
     </div>

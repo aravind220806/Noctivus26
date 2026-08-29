@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 export default function useReveal() {
   useEffect(() => {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    document.documentElement.classList.add('reveal-ready');
 
     const revealObserver = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
@@ -17,7 +18,9 @@ export default function useReveal() {
       if (node instanceof Element && node.matches('[data-reveal]')) revealNodes.push(node);
       if (node instanceof Element) revealNodes.push(...node.querySelectorAll('[data-reveal]'));
       revealNodes.forEach((revealNode) => {
-        if (reducedMotion) revealNode.classList.add('is-visible');
+        const rect = revealNode.getBoundingClientRect();
+        const alreadyVisible = rect.top < window.innerHeight && rect.bottom > 0;
+        if (reducedMotion || alreadyVisible) revealNode.classList.add('is-visible');
         else revealObserver.observe(revealNode);
       });
     };
@@ -30,6 +33,7 @@ export default function useReveal() {
     mutationObserver.observe(document.body, { childList: true, subtree: true });
 
     return () => {
+      document.documentElement.classList.remove('reveal-ready');
       revealObserver.disconnect();
       mutationObserver.disconnect();
     };

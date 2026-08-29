@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1200" viewBox="0 0 900 1200">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d7e7ef"/>
+      <stop offset="1" stop-color="#8fa8b8"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="1200" fill="url(#bg)"/>
+  <rect x="80" y="95" width="740" height="1010" rx="42" fill="#f8f3e8"/>
+  <path d="M250 430 300 270l116 112c23-5 46-8 70-8s47 3 70 8l116-112 50 160c54 64 82 141 82 229 0 204-143 351-318 351S168 863 168 659c0-88 28-165 82-229Z" fill="#d99d6c"/>
+  <path d="M304 286 318 408 392 382Z" fill="#f2c49d"/>
+  <path d="M668 286 654 408 580 382Z" fill="#f2c49d"/>
+  <ellipse cx="376" cy="608" rx="28" ry="35" fill="#182129"/>
+  <ellipse cx="596" cy="608" rx="28" ry="35" fill="#182129"/>
+  <circle cx="386" cy="594" r="8" fill="#fff"/>
+  <circle cx="606" cy="594" r="8" fill="#fff"/>
+  <path d="M486 670c-22 0-36-10-36-24 0-16 18-24 36-24s36 8 36 24c0 14-14 24-36 24Z" fill="#9a5e51"/>
+  <path d="M486 670v35M486 705c-28 35-70 24-90-2M486 705c28 35 70 24 90-2" fill="none" stroke="#7b4e48" stroke-width="10" stroke-linecap="round"/>
+  <path d="M308 706c-68-24-126-22-184 10M320 748c-75 4-132 30-174 76M652 706c68-24 126-22 184 10M640 748c75 4 132 30 174 76" fill="none" stroke="#b67b5a" stroke-width="9" stroke-linecap="round"/>
+  <text x="450" y="1040" text-anchor="middle" fill="#1c2730" font-family="Arial, sans-serif" font-size="44" font-weight="800">DEMO CAT IMAGE</text>
+</svg>

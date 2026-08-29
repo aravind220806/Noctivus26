@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1200" viewBox="0 0 900 1200">
+  <rect width="900" height="1200" fill="#d8dde2"/>
+  <rect x="80" y="95" width="740" height="1010" rx="42" fill="#fbf7ed"/>
+  <circle cx="322" cy="550" r="170" fill="#d99d6c"/>
+  <path d="M194 456 226 314l98 98 98-98 32 142Z" fill="#d99d6c"/>
+  <circle cx="270" cy="536" r="22" fill="#182129"/>
+  <circle cx="374" cy="536" r="22" fill="#182129"/>
+  <path d="M322 596c-22 0-36-10-36-24 0-16 18-24 36-24s36 8 36 24c0 14-14 24-36 24Z" fill="#9a5e51"/>
+  <circle cx="578" cy="570" r="185" fill="#bd8560"/>
+  <path d="M430 512c-60-24-98 12-110 75-11 62 26 113 82 101 35-8 56-43 66-84ZM726 512c60-24 98 12 110 75 11 62-26 113-82 101-35-8-56-43-66-84Z" fill="#7d533b"/>
+  <circle cx="520" cy="550" r="24" fill="#151a1e"/>
+  <circle cx="636" cy="550" r="24" fill="#151a1e"/>
+  <path d="M578 622c-32 0-52 16-52 38 0 27 25 43 52 43s52-16 52-43c0-22-20-38-52-38Z" fill="#38251f"/>
+  <path d="M454 790c65 46 188 46 252 0" fill="none" stroke="#5c3c33" stroke-width="14" stroke-linecap="round"/>
+  <text x="450" y="1040" text-anchor="middle" fill="#1c2730" font-family="Arial, sans-serif" font-size="44" font-weight="800">DEMO CAT + DOG</text>
+</svg>

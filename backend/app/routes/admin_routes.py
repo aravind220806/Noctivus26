@@ -1,6 +1,8 @@
 from datetime import datetime, timezone
+import hashlib
 import logging
 import re
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pymongo import ReturnDocument
@@ -11,6 +13,7 @@ from app.middleware.admin_auth import require_admin, require_admin_tab, require_
 from app.services.admin_access_service import ADMIN_TABS, deactivate_admin_access, is_owner_admin, list_admin_access, normalize_admin_tabs, resolve_admin_access, upsert_admin_access
 from app.services.analysis_service import build_overview, create_ai_analysis
 from app.services.event_service import list_events
+from app.services.boarding_pass_service import create_pass_token, render_pass_artwork_bytes
 from app.services.email_service import normalize_pass_template, queue_email, send_confirmation, send_invitation
 from app.services.export_service import registrations_to_csv
 from app.services.event_service import admin_events, update_event, get_event
@@ -56,7 +59,7 @@ async def me(admin=Depends(require_admin)):
 
 
 @router.get("/events")
-async def events(_admin=Depends(require_admin_tab("Events"))):
+async def events(_admin=Depends(require_any_admin_tab(["Events", "Invitations"]))):
     return {"events": await admin_events()}
 
 
@@ -81,11 +84,20 @@ async def audit_log(search: str = "", _admin=Depends(require_admin_tab("Audit Lo
 @router.post("/check-in/{registration_id}")
 @limiter.limit("120/minute")
 async def check_in(request: Request, registration_id: str, admin=Depends(require_admin_tab("Check-in"))):
+    scanned_id = registration_id
+    parsed = urlparse(registration_id)
+    if parsed.path:
+        candidate = parsed.path.rstrip("/").split("/")[-1]
+        if candidate and candidate != registration_id:
+            scanned_id = candidate
     current = None
     if mongo.mongo_ready():
-        current = await mongo.db.registrations.find_one({"registrationId": registration_id})
+        current = await mongo.db.registrations.find_one({"registrationId": scanned_id})
+        if not current:
+            current = await mongo.db.registrations.find_one({"invitation.qrHash": hashlib.sha256(scanned_id.encode("utf-8")).hexdigest(), "invitation.status": "active"})
     else:
-        current = next((item for item in memory_registrations if item.get("registrationId") == registration_id), None)
+        token_hash = hashlib.sha256(scanned_id.encode("utf-8")).hexdigest()
+        current = next((item for item in memory_registrations if item.get("registrationId") == scanned_id or (item.get("invitation") or {}).get("qrHash") == token_hash), None)
     if not current:
         raise HTTPException(status_code=404, detail="Registration not found. Send participant to the help desk.")
     if current.get("paymentStatus") != "confirmed":
@@ -95,15 +107,15 @@ async def check_in(request: Request, registration_id: str, admin=Depends(require
     checked_at = datetime.now(timezone.utc)
     if mongo.mongo_ready():
         checked = await mongo.db.registrations.find_one_and_update(
-            {"registrationId": registration_id, "paymentStatus": "confirmed", "checkedIn": {"$ne": True}},
+            {"registrationId": current["registrationId"], "paymentStatus": "confirmed", "checkedIn": {"$ne": True}},
             {"$set": {"checkedIn": True, "checkedInAt": checked_at, "checkedInBy": admin["email"], "updatedAt": checked_at}},
             return_document=ReturnDocument.AFTER,
         )
     else:
-        checked = await update_registration(registration_id, {"checkedIn": True, "checkedInAt": checked_at, "checkedInBy": admin["email"]})
+        checked = await update_registration(current["registrationId"], {"checkedIn": True, "checkedInAt": checked_at, "checkedInBy": admin["email"]})
     if not checked:
         return {"status": "already-checked-in", "checkedInAt": current.get("checkedInAt"), "registration": serialize_registration(current)}
-    await record_admin_action(admin["email"], "check-in", registration_id)
+    await record_admin_action(admin["email"], "check-in", current["registrationId"])
     return {"status": "checked-in", "registration": serialize_registration(checked)}
 
 
@@ -230,21 +242,21 @@ async def invitations_send(request: Request, admin=Depends(require_admin_tab("In
     audience = str(body.get("audience") or "confirmed").strip()
     if audience != "confirmed":
         raise HTTPException(status_code=400, detail="Only confirmed members can receive an event pass.")
-    pass_data = normalize_pass_template(body.get("pass") or {})
-    pass_data["eventId"] = event_id
     event_record = await get_event(event_id)
-    venue = str(pass_data.get("venue") or (event_record.get("venue") if event_record else "") or "").strip()
-    date = str(event_record.get("date") if event_record else "26 SEP 2026").strip()
-    time = str(event_record.get("time") if event_record else "09:00 AM").strip()
-    gate = str(event_record.get("gate") if event_record else "VEC Gate 1").strip()
-    if not venue or not date or not time or not gate:
-        raise HTTPException(status_code=400, detail="Missing required event details (venue, date, time, gate). Fill all event details before generating passes.")
-    pass_data["venue"] = venue
-    pass_data["date"] = date
-    pass_data["time"] = time
-    pass_data["gate"] = gate
-    if event_record and venue != event_record.get("venue"):
-        await update_event(event_id, {"venue": venue}, admin["email"])
+    if not event_record:
+        raise HTTPException(status_code=404, detail="Choose a valid event before generating passes.")
+    venue = str(event_record.get("venue") or "").strip()
+    date = str(event_record.get("date") or "").strip()
+    time = str(event_record.get("time") or "").strip()
+    gate = str(event_record.get("gate") or "").strip()
+    terminal = str(event_record.get("terminal") or "").strip()
+    seat_type = str(event_record.get("seatType") or "VIP").strip()
+    if event_record.get("passActive") is False:
+        raise HTTPException(status_code=400, detail="Pass generation is disabled for this event.")
+    if not venue or not date or not time or not gate or not terminal:
+        raise HTTPException(status_code=400, detail="Missing required event details (venue, date, time, gate, terminal). Fill all event details before generating passes.")
+    pass_data = normalize_pass_template({"title": f"Noctivus '26 {event_record['name']} Pass", "eventId": event_id, "venue": venue})
+    pass_data.update({"eventName": event_record["name"], "date": date, "time": time, "gate": gate, "terminal": terminal, "seatType": seat_type})
     if mongo.mongo_ready():
         await mongo.db.pass_templates.update_one(
             {"eventId": event_id},
@@ -254,17 +266,71 @@ async def invitations_send(request: Request, admin=Depends(require_admin_tab("In
         queued_pass = {"templateEventId": event_id}
     else:
         queued_pass = pass_data
-    selected = [
+    eligible = [
         row for row in await load_registrations({"status": "confirmed"})
         if any(item.get("eventId") == event_id for item in row.get("eventRegistrations", []))
     ][:1000]
+    requested_ids = {str(item).strip() for item in body.get("registrationIds", []) if str(item).strip()}
+    selected = [row for row in eligible if not requested_ids or row.get("registrationId") in requested_ids]
+    if requested_ids and len(selected) != len(requested_ids):
+        raise HTTPException(status_code=400, detail="One or more selected members are not confirmed for this event.")
     if not selected:
         raise HTTPException(status_code=404, detail="No confirmed registrations were found for this event.")
     for registration in selected:
-        await queue_email("invitation", registration, queued_pass)
-        await update_registration(registration["registrationId"], {"invitation": {"sentAt": datetime.now(timezone.utc), "sentBy": admin["email"], "passTitle": pass_data["title"], "passFields": pass_data["fields"]}})
+        qr_token, qr_hash = create_pass_token()
+        await queue_email("invitation", registration, {**queued_pass, "qrToken": qr_token})
+        await update_registration(registration["registrationId"], {"invitation": {"sentAt": datetime.now(timezone.utc), "sentBy": admin["email"], "eventId": event_id, "passTitle": pass_data["title"], "qrHash": qr_hash, "status": "active"}})
     await record_admin_action(admin["email"], "invitation.send", event_id, {"count": len(selected), "audience": audience})
     return {"sent": len(selected)}
+
+
+@router.post("/invitations/preview")
+async def invitations_preview(request: Request, _admin=Depends(require_admin_tab("Invitations"))):
+    body = await request.json()
+    event_id = str(body.get("eventId") or "").strip()
+    registration_id = str(body.get("registrationId") or "").strip()
+    if not event_id:
+        raise HTTPException(status_code=400, detail="Select an event to preview a pass.")
+    event = await get_event(event_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Choose a valid event before previewing a pass.")
+    if event.get("passActive") is False:
+        raise HTTPException(status_code=400, detail="Pass generation is disabled for this event.")
+    if not all(str(event.get(key) or "").strip() for key in ("venue", "date", "time", "gate", "terminal")):
+        raise HTTPException(status_code=400, detail="Event details incomplete - set date/time/gate/venue/terminal in the Events tab.")
+    rows = await load_registrations({"eventId": event_id, "status": "confirmed"})
+    registration = next((row for row in rows if row.get("registrationId") == registration_id), None) if registration_id else (rows[0] if rows else None)
+    if not registration and registration_id:
+        raise HTTPException(status_code=404, detail="Select a confirmed registrant to preview a pass.")
+    if not registration:
+        registration = {
+            "registrationId": "NOC26-PREVIEW",
+            "participant": {
+                "name": "Preview Participant",
+                "college": "Participant College",
+                "email": "participant@example.com",
+                "foodPreference": "Veg",
+            },
+            "eventRegistrations": [{
+                "eventId": event["id"],
+                "eventName": event["name"],
+                "category": event["category"],
+                "feeSnapshot": event["fee"],
+            }],
+            "expectedAmount": event["fee"],
+        }
+    pass_data = {
+        "eventId": event_id,
+        "eventName": str(event["name"]),
+        "venue": str(event["venue"]),
+        "date": str(event["date"]),
+        "time": str(event["time"]),
+        "gate": str(event["gate"]),
+        "terminal": str(event["terminal"]),
+        "seatType": str(event.get("seatType") or "VIP"),
+    }
+    preview_token = create_pass_token()[0]
+    return Response(content=await render_pass_artwork_bytes(registration, pass_data, preview_token), media_type="image/png")
 
 
 @router.post("/announcements/send")

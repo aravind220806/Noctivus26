@@ -4,36 +4,23 @@ import html
 import re
 from datetime import datetime, timedelta, timezone
 from collections.abc import Callable, Awaitable
-from functools import lru_cache
-from io import BytesIO
-from pathlib import Path
 
 import httpx
-import qrcode
-from PIL import Image, ImageDraw, ImageFont
 from pymongo import ReturnDocument
 
 from app.core.config import settings
 from app.db import mongo
+from app.services.boarding_pass_service import render_pass_artwork_bytes
 
 
 def normalize_pass_template(pass_data: dict | None) -> dict:
     data = pass_data or {}
-    image_data_url = str(data.get("imageDataUrl") or "")[:180000]
-    if not image_data_url.startswith("data:image/"):
-        image_data_url = ""
     fields = []
     for field in data.get("fields") if isinstance(data.get("fields"), list) else []:
         row = {"label": str((field or {}).get("label") or "")[:40], "value": str((field or {}).get("value") or "")[:140]}
         if row["label"]:
             fields.append(row)
-    return {"title": str(data.get("title") or "Noctivus 26 Event Pass")[:80], "eventId": str(data.get("eventId") or "")[:80], "venue": str(data.get("venue") or "")[:160], "imageDataUrl": image_data_url, "fields": fields[:14]}
-
-
-@lru_cache(maxsize=1)
-def default_pass_artwork() -> str:
-    artwork = Path(__file__).resolve().parents[1] / "assets" / "pass1.jpg"
-    return "data:image/jpeg;base64," + base64.b64encode(artwork.read_bytes()).decode("ascii")
+    return {"title": str(data.get("title") or "Noctivus 26 Event Pass")[:80], "eventId": str(data.get("eventId") or "")[:80], "eventName": str(data.get("eventName") or "")[:120], "venue": str(data.get("venue") or "")[:160], "date": str(data.get("date") or "")[:60], "time": str(data.get("time") or "")[:60], "gate": str(data.get("gate") or "")[:60], "terminal": str(data.get("terminal") or "")[:60], "seatType": str(data.get("seatType") or "VIP")[:40], "fields": fields[:14]}
 
 
 def pass_tag_values(registration: dict, event_id: str = "") -> dict[str, str]:
@@ -139,6 +126,7 @@ async def send_invitation(registration: dict, pass_data: dict) -> None:
     if not settings.resend_api_key or not settings.confirm_from:
         return
     template_event_id = str(pass_data.get("templateEventId") or "")
+    token = str(pass_data.get("qrToken") or "")
     if template_event_id and mongo.mongo_ready():
         template = await mongo.db.pass_templates.find_one({"eventId": template_event_id}, {"pass": 1})
         pass_data = (template or {}).get("pass") or {}
@@ -146,7 +134,8 @@ async def send_invitation(registration: dict, pass_data: dict) -> None:
     participant = registration.get("participant") or {}
     event_id = str(pass_data.get("eventId") or template_event_id)
     event_names = pass_tag_values(registration, event_id)["event"]
-    await _send_email(participant.get("email"), f"{pass_data['title']} - {registration.get('registrationId')}", invitation_html(registration, pass_data, event_names))
+    artwork = await render_pass_artwork_bytes(registration, pass_data, token or None)
+    await _send_email(participant.get("email"), f"{pass_data['title']} - {registration.get('registrationId')}", invitation_html(registration, pass_data, event_names, artwork), attachments=[{"filename": f"noctivus-boarding-pass-{registration.get('registrationId')}.png", "content": base64.b64encode(artwork).decode("ascii")}])
 
 
 async def send_confirmation(registration: dict) -> None:
@@ -166,25 +155,25 @@ async def send_announcement(registration: dict, data: dict) -> None:
     await _send_email(participant.get("email"), subject, f"<h1>{subject}</h1><p>{message}</p>")
 
 
-async def _send_email(to_email: str, subject: str, body: str) -> None:
+async def _send_email(to_email: str, subject: str, body: str, attachments: list[dict] | None = None) -> None:
     async with httpx.AsyncClient(timeout=15) as client:
         response = await client.post(
             "https://api.resend.com/emails",
             headers={"Authorization": f"Bearer {settings.resend_api_key}", "Content-Type": "application/json"},
-            json={"from": settings.confirm_from, "to": to_email, "subject": subject, "html": body},
+            json={"from": settings.confirm_from, "to": to_email, "subject": subject, "html": body, **({"attachments": attachments} if attachments else {})},
         )
         response.raise_for_status()
 
 
-def invitation_html(registration: dict, pass_data: dict, event_names: str) -> str:
+def invitation_html(registration: dict, pass_data: dict, event_names: str, artwork: bytes | None = None) -> str:
     participant = registration.get("participant") or {}
     fields = [
         ("Passenger", participant.get("name")),
         ("Event", event_names),
-        ("Date", resolve_pass_tags("{{date}}", registration, pass_data.get("eventId", ""))),
-        ("Time", resolve_pass_tags("{{time}}", registration, pass_data.get("eventId", ""))),
-        ("Gate", resolve_pass_tags("{{gate}}", registration, pass_data.get("eventId", ""))),
-        ("Terminal", resolve_pass_tags("{{terminal}}", registration, pass_data.get("eventId", ""))),
+        ("Date", pass_data.get("date")),
+        ("Time", pass_data.get("time")),
+        ("Gate", pass_data.get("gate")),
+        ("Terminal", pass_data.get("terminal")),
         ("From", participant.get("college")),
         ("Registration ID", registration.get("registrationId")),
         *[(resolve_pass_tags(field["label"], registration, pass_data.get("eventId", "")), resolve_pass_tags(field["value"], registration, pass_data.get("eventId", ""))) for field in pass_data["fields"]],
@@ -192,39 +181,11 @@ def invitation_html(registration: dict, pass_data: dict, event_names: str) -> st
     rows = "".join(f"<tr><th style=\"text-align:left;padding:10px;border-bottom:1px solid #ddd\">{html.escape(str(label or ''))}</th><td style=\"padding:10px;border-bottom:1px solid #ddd\">{html.escape(str(value or ''))}</td></tr>" for label, value in fields)
     venue = html.escape(str(pass_data.get("venue") or "Velammal Engineering College"))
     rows += f"<tr><th style=\"text-align:left;padding:10px;border-bottom:1px solid #ddd\">Venue</th><td style=\"padding:10px;border-bottom:1px solid #ddd\">{venue}</td></tr>"
-    image = f"<img src=\"{render_pass_artwork(registration, pass_data)}\" alt=\"Personalized Noctivus 26 boarding pass\" style=\"width:100%;max-height:280px;object-fit:cover;border-radius:10px\">"
-    return f"<div style=\"font-family:Arial,sans-serif;max-width:620px;margin:auto;color:#111\"><h1>{html.escape(pass_data['title'])}</h1>{image}<p>Your Noctivus '26 event pass is ready.</p><table style=\"width:100%;border-collapse:collapse\">{rows}</table></div>"
+    image = ""
+    if artwork:
+        image = f"<img src=\"data:image/png;base64,{base64.b64encode(artwork).decode('ascii')}\" alt=\"Personalized Noctivus 26 boarding pass\" style=\"width:100%;max-height:280px;object-fit:cover;border-radius:10px\">"
+    return f"<div style=\"font-family:Arial,sans-serif;max-width:620px;margin:auto;color:#111\"><h1>{html.escape(pass_data['title'])}</h1>{image}<p>Your personalized boarding pass is attached. Present its QR code at check-in.</p><table style=\"width:100%;border-collapse:collapse\">{rows}</table></div>"
 
 
 def render_pass_artwork(registration: dict, pass_data: dict) -> str:
-    """Render only at email-send time so no personalized image is stored in MongoDB."""
-    event_id = str(pass_data.get("eventId") or "")
-    values = pass_tag_values(registration, event_id)
-    image = Image.open(Path(__file__).resolve().parents[1] / "assets" / "pass1.jpg").convert("RGB")
-    draw = ImageDraw.Draw(image)
-    # Pillow's built-in font keeps deployment independent of OS font packages.
-    font = ImageFont.load_default(size=15)
-    small_font = ImageFont.load_default(size=12)
-
-    def write_value(x: int, y: int, width: int, value: str, text_font=font) -> None:
-        draw.rectangle((x, y, x + width, y + 25), fill="#f7f7f5")
-        clipped = str(value or "-")
-        while clipped and draw.textbbox((0, 0), clipped, font=text_font)[2] > width - 6:
-            clipped = clipped[:-2] + "…"
-        draw.text((x + 3, y + 5), clipped, fill="#0d173f", font=text_font)
-
-    write_value(98, 155, 132, values["name"])
-    write_value(267, 155, 105, values["date"])
-    write_value(407, 155, 95, values["time"])
-    write_value(524, 155, 95, values["gate"])
-    write_value(98, 234, 72, values["flight"])
-    write_value(205, 234, 58, values["seat"])
-    write_value(288, 234, 54, values["zone"])
-    write_value(367, 234, 110, values["terminal"])
-    write_value(98, 352, 350, f"{values['event']} | {pass_data.get('venue') or values['toVenue']}", small_font)
-
-    qr = qrcode.make(values["registrationId"]).resize((92, 92))
-    image.paste(qr.convert("RGB"), (496, 265))
-    output = BytesIO()
-    image.save(output, format="JPEG", quality=82, optimize=True)
-    return "data:image/jpeg;base64," + base64.b64encode(output.getvalue()).decode("ascii")
+    raise RuntimeError("Use render_pass_artwork_bytes asynchronously for generated boarding passes.")
