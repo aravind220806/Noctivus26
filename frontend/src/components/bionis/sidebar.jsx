@@ -2,15 +2,7 @@ import { Logo } from './logo';
 import { navigationGroups } from './navigation';
 import { cn } from './shared';
 
-type SidebarProps = {
-  activeTab: string;
-  visibleTabs: string[];
-  onTabChange: (tab: string) => void;
-  user: { name?: string; email?: string; picture?: string };
-  onLogout: () => void;
-};
-
-export function Sidebar({ activeTab, visibleTabs, onTabChange, user, onLogout }: SidebarProps) {
+export function Sidebar({ activeTab, visibleTabs, onTabChange, user, onLogout }) {
   const allowed = new Set(visibleTabs);
 
   return (

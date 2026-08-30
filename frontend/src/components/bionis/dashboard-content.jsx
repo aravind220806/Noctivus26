@@ -1,37 +1,11 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Card, CardTitle } from './shared';
 
-type EventItem = {
-  eventId: string;
-  eventName: string;
-  category?: string;
-  venue?: string;
-  date?: string;
-  time?: string;
-  status?: string;
-  effectiveStatus?: string;
-  registrations: number;
-  confirmed?: number;
-  pending?: number;
-};
-
-type Overview = {
-  total: number;
-  confirmedRevenue: number;
-  statuses: { pending: number; confirmed: number };
-  events: Array<EventItem>;
-  recent: Array<{ registrationId: string; participant?: { name?: string; email?: string }; eventRegistrations?: Array<{ eventName: string }>; createdAt?: string; paymentStatus?: string }>;
-  storage?: { available?: boolean; limitBytes?: number; storageBytes?: number; dataBytes?: number; indexBytes?: number };
-};
-
 const eventOrder = ['Ideathon', 'Cyber Heist CTF', 'IoT Exploit', 'Secure X VibeCode', 'Mind Cage', 'Mystery Hunt', 'Tune Trap', 'Auction Arena'];
 
 export function DashboardContent({
   overview,
   onToggleEventStatus,
-}: {
-  overview: Overview;
-  onToggleEventStatus?: (eventId: string, currentStatus: string) => void;
 }) {
   const usedBytes = overview.storage?.storageBytes || overview.storage?.dataBytes || 0;
   const usage = overview.storage?.available && overview.storage.limitBytes ? Math.min(100, Math.round((usedBytes / overview.storage.limitBytes) * 100)) : null;
@@ -141,10 +115,10 @@ export function DashboardContent({
   );
 }
 
-function MetricCard({ label, value, tone }: { label: string; value: string | number; tone: string }) {
+function MetricCard({ label, value, tone }) {
   return <article className={`metric-card metric-card--${tone}`}><span>{label}</span><strong>{value}</strong></article>;
 }
 
-function formatBytes(value: number) {
+function formatBytes(value) {
   return value >= 1024 * 1024 ? `${(value / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(0, Math.round(value / 1024))} KB`;
 }

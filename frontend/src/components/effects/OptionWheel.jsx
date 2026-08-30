@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect, type PointerEvent, type KeyboardEvent } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 import './OptionWheel.css';
 
 const DEFAULT_ITEMS = [
@@ -15,52 +15,6 @@ const DEFAULT_ITEMS = [
   'Chillwave',
   'Drum & Bass',
 ];
-
-export interface OptionWheelProps {
-  items?: string[];
-  defaultSelected?: number;
-  onChange?: (index: number, item: string) => void;
-  textColor?: string;
-  activeColor?: string;
-  side?: 'left' | 'right';
-  fontSize?: number;
-  spacing?: number;
-  curve?: number;
-  tilt?: number;
-  blur?: number;
-  fade?: number;
-  minOpacity?: number;
-  smoothing?: number;
-  inset?: number;
-  loop?: boolean;
-  draggable?: boolean;
-  soundUrl?: string;
-  soundVolume?: number;
-  className?: string;
-}
-
-interface DragState {
-  y: number;
-  start: number;
-  id: number;
-}
-
-interface CfgState {
-  count: number;
-  items: string[];
-  rowH: number;
-  curve: number;
-  tilt: number;
-  blur: number;
-  fade: number;
-  minOpacity: number;
-  side: 'left' | 'right';
-  loop: boolean;
-  smoothing: number;
-  draggable: boolean;
-  soundUrl: string;
-  soundVolume: number;
-}
 
 export default function OptionWheel({
   items = DEFAULT_ITEMS,
@@ -83,24 +37,24 @@ export default function OptionWheel({
   soundUrl = '',
   soundVolume = 0.5,
   className = '',
-}: OptionWheelProps) {
-  const rootRef = useRef<HTMLDivElement | null>(null);
-  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const posRef = useRef<number>(defaultSelected);
-  const targetRef = useRef<number>(defaultSelected);
-  const rafRef = useRef<number | null>(null);
-  const lastRef = useRef<number>(0);
-  const cfgRef = useRef<CfgState>({} as CfgState);
+}) {
+  const rootRef = useRef(null);
+  const itemRefs = useRef([]);
+  const posRef = useRef(defaultSelected);
+  const targetRef = useRef(defaultSelected);
+  const rafRef = useRef(null);
+  const lastRef = useRef(0);
+  const cfgRef = useRef({});
   const onChangeRef = useRef(onChange);
-  const selectedRef = useRef<number>(defaultSelected);
-  const wheelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const dragRef = useRef<DragState | null>(null);
-  const dragMovedRef = useRef<boolean>(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const audioUrlRef = useRef<string>('');
-  const lastTickRef = useRef<number>(0);
-  const [selectedIndex, setSelectedIndex] = useState<number>(defaultSelected);
-  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const selectedRef = useRef(defaultSelected);
+  const wheelTimerRef = useRef(null);
+  const dragRef = useRef(null);
+  const dragMovedRef = useRef(false);
+  const audioRef = useRef(null);
+  const audioUrlRef = useRef('');
+  const lastTickRef = useRef(0);
+  const [selectedIndex, setSelectedIndex] = useState(defaultSelected);
+  const [isDragging, setIsDragging] = useState(false);
 
   const remPx =
     typeof window !== 'undefined'
@@ -125,7 +79,7 @@ export default function OptionWheel({
     soundVolume,
   };
 
-  const runFrame = useCallback((now: number) => {
+  const runFrame = useCallback((now) => {
     const dt = Math.min((now - lastRef.current) / 1000, 0.05);
     lastRef.current = now;
     const cfg = cfgRef.current;
@@ -197,7 +151,7 @@ export default function OptionWheel({
   }, []);
 
   const applyTarget = useCallback(
-    (value: number, snap: boolean) => {
+    (value, snap) => {
       const cfg = cfgRef.current;
       let v = value;
       if (!cfg.loop) v = Math.min(Math.max(v, 0), Math.max(cfg.count - 1, 0));
@@ -218,7 +172,7 @@ export default function OptionWheel({
   useEffect(() => {
     const el = rootRef.current;
     if (!el) return;
-    const onWheel = (e: WheelEvent) => {
+    const onWheel = (e) => {
       e.preventDefault();
       const cfg = cfgRef.current;
       const delta = e.deltaMode === 1 ? e.deltaY * 24 : e.deltaY;
@@ -234,7 +188,7 @@ export default function OptionWheel({
     };
   }, [applyTarget]);
 
-  const handlePointerDown = useCallback((e: PointerEvent<HTMLDivElement>) => {
+  const handlePointerDown = useCallback((e) => {
     if (!cfgRef.current.draggable) return;
     dragRef.current = { y: e.clientY, start: targetRef.current, id: e.pointerId };
     dragMovedRef.current = false;
@@ -242,7 +196,7 @@ export default function OptionWheel({
   }, []);
 
   const handlePointerMove = useCallback(
-    (e: PointerEvent<HTMLDivElement>) => {
+    (e) => {
       const drag = dragRef.current;
       if (!drag) return;
       const dy = e.clientY - drag.y;
@@ -263,7 +217,7 @@ export default function OptionWheel({
   }, [applyTarget]);
 
   const handleItemClick = useCallback(
-    (index: number) => {
+    (index) => {
       if (dragMovedRef.current) return;
       const cfg = cfgRef.current;
       const cur = targetRef.current;
@@ -278,8 +232,8 @@ export default function OptionWheel({
   );
 
   const handleKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLDivElement>) => {
-      let delta: number | null = null;
+    (e) => {
+      let delta = null;
       if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') delta = -1;
       else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') delta = 1;
       if (delta == null) return;
@@ -323,7 +277,7 @@ export default function OptionWheel({
         '--ow-active-color': activeColor,
         '--ow-font-size': `${fontSize}rem`,
         '--ow-inset': `${inset}px`,
-      } as React.CSSProperties}
+      }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerEnd}

@@ -1,12 +1,6 @@
 import { BionisIcons } from './icons';
 
-type TopbarProps = {
-  activeTab: string;
-  onRefresh: () => void;
-  onMenuToggle: () => void;
-};
-
-export function Topbar({ activeTab, onRefresh, onMenuToggle }: TopbarProps) {
+export function Topbar({ activeTab, onRefresh, onMenuToggle }) {
   return (
     <header className="admin-topbar bionis-topbar">
       <button className="admin-menu-toggle" type="button" onClick={onMenuToggle} aria-label="Toggle admin menu"><BionisIcons.menu size={20} /></button>
