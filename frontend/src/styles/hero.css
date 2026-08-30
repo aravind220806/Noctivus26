@@ -6,7 +6,7 @@
   position: relative;
   min-height: 100svh;
   display: flex;
-  align-items: center;
+  align-items: flex-start;   /* flow from top to prevent vertical overflow clipping */
   overflow: hidden;
   border-bottom: 1px solid var(--line);
   isolation: isolate;
@@ -97,6 +97,13 @@
 .hero__scroll span {
   background: var(--lime);
   box-shadow: 0 0 18px rgba(167, 255, 24, .75);
+}
+
+/* ── Short viewport safeguard for constrained screen heights ── */
+@media (max-height: 700px) {
+  .hero__facts    { margin-top: var(--sp-6); }   /* 24px */
+  .hero-countdown { margin-top: var(--sp-4); }  /* 16px */
+  .hero__actions  { margin-top: var(--sp-4); }  /* 16px */
 }
 
 /* ── Split Flap Countdown ── */
