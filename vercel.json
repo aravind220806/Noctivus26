@@ -1,19 +1,49 @@
 {
-  "outputDirectory": "frontend/dist",
-  "framework": "vite",
-  "functions": {
-    "api/index.py": {
-      "runtime": "python3.12"
-    }
-  },
-  "rewrites": [
+  "version": 2,
+  "builds": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/index.py"
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "frontend/dist"
+      }
     },
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "src": "api/index.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "api/index.py"
+    },
+    {
+      "src": "/assets/(.*)",
+      "dest": "frontend/dist/assets/$1"
+    },
+    {
+      "src": "/brand/(.*)",
+      "dest": "frontend/dist/brand/$1"
+    },
+    {
+      "src": "/images/(.*)",
+      "dest": "frontend/dist/images/$1"
+    },
+    {
+      "src": "/fonts/(.*)",
+      "dest": "frontend/dist/fonts/$1"
+    },
+    {
+      "src": "/logo.png",
+      "dest": "frontend/dist/logo.png"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "frontend/dist/index.html"
     }
   ]
 }

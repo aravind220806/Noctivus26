@@ -9,6 +9,8 @@ db = None
 
 async def connect_mongo() -> None:
     global client, db
+    if client and db is not None:
+        return
     if not settings.mongodb_uri:
         db = None
         client = None
