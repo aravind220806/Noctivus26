@@ -2,7 +2,7 @@ import { Component, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { events } from './data/site.js';
 import RegistrationModal from './components/RegistrationModal.jsx';
-import PillNav from './components/PillNav.jsx';
+import Navbar from './components/Navbar.jsx';
 import useReveal from './hooks/useReveal.js';
 import { getApiBase } from './lib/api';
 import { SiteSnow } from './components/sections/SiteSnow';
@@ -18,19 +18,10 @@ import { LocationMapSection } from './components/sections/LocationMapSection';
 import { FooterSection } from './components/sections/FooterSection';
 import { EventModal } from './components/sections/EventModal';
 
-const navigationItems = [
-  { label: 'Home', href: '#top' },
-  { label: 'About', href: '#about' },
-  { label: 'Events', href: '#events' },
-  { label: 'Timeline', href: '#timeline' },
-  { label: 'Contact', href: '#contact' },
-];
-
 export default function App() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [registration, setRegistration] = useState(null);
   const [registrationOpen, setRegistrationOpen] = useState(false);
-  const [activeHref, setActiveHref] = useState('#top');
   const scrollProgressRef = useRef(null);
   const registerableEvents = useMemo(() => events.filter((event) => event.registerable !== false), []);
   useReveal();
@@ -45,21 +36,6 @@ export default function App() {
         if (error.name !== 'AbortError') setRegistrationOpen(false);
       });
     return () => controller.abort();
-  }, []);
-
-  useEffect(() => {
-    const sections = navigationItems.map(({ href }) => document.querySelector(href)).filter(Boolean);
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-        if (visible) setActiveHref(`#${visible.target.id}`);
-      },
-      { rootMargin: '-28% 0px -58% 0px', threshold: [0.05, 0.3, 0.6] }
-    );
-    sections.forEach((section) => observer.observe(section));
-    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -93,16 +69,7 @@ export default function App() {
       </a>
       <SiteSnow />
       <div className="scroll-progress" ref={scrollProgressRef} aria-hidden="true" />
-      <PillNav
-        items={navigationItems}
-        activeHref={activeHref}
-        baseColor="#101427"
-        pillColor="rgba(255,255,255,0.07)"
-        pillTextColor="#bfc9ea"
-        hoveredPillTextColor="#ffffff"
-        ctaLabel="Register"
-        onCtaClick={() => openRegistration()}
-      />
+      <Navbar />
 
       <main id="main">
         <HeroSection onRegister={() => openRegistration()} />
