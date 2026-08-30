@@ -50,13 +50,19 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.frontend_origins,
+    allow_origin_regex=r"https://.*\.vercel\.app|https://.*\.ngrok-free\.app|https://.*\.ngrok-free\.dev|http://localhost:\d+|http://127\.0\.0\.1:\d+",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
+# Mount primary routes with /api prefix
 app.include_router(public_router, prefix="/api")
 app.include_router(admin_router, prefix="/api/admin")
+
+# Mount fallback routes without /api prefix for Vercel serverless functions
+app.include_router(admin_router, prefix="/admin", include_in_schema=False)
+app.include_router(public_router, prefix="", include_in_schema=False)
 
 
 @app.exception_handler(Exception)
