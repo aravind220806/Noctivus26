@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 
 export default function LineSidebar({
   items = [],
-  accentColor = '#F5A124',
+  accentColor = '#00E6B8',
   textColor = '#E2E8F0',
   markerColor = 'rgba(255, 255, 255, 0.35)',
   showIndex = true,

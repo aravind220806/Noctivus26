@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════════
-   PAGE SECTIONS & FOOTER STYLES
+   PAGE SECTIONS & FOOTER STYLES (mobile-first architecture)
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 /* ── About Section ── */
@@ -8,10 +8,10 @@
 }
 
 .about-grid {
-  display: grid;
-  grid-template-columns: 1fr .86fr;
-  gap: var(--sp-8);
-  padding-left: 100px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+  padding-left: 0;
 }
 
 .about-copy p {
@@ -30,12 +30,11 @@
 }
 
 .about-manifesto {
-  padding: 30px 0 20px 36px;
-  padding-left: var(--sp-8);
+  padding: var(--sp-4);
   display: flex;
   flex-direction: column;
   justify-content: center;
-  border-left: 1px solid var(--line);
+  border-left: 2px solid var(--cyan);
 }
 
 .about-manifesto span {
@@ -65,14 +64,14 @@
 .stats-grid {
   margin-top: var(--sp-12);
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
 }
 
 .stat {
   position: relative;
-  padding: var(--sp-6);
+  padding: var(--sp-4);
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--line);
@@ -87,13 +86,13 @@
 }
 .stat span { color: var(--muted); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
 
-/* ── Timeline Section ── */
+/* ── Schedule Section ── */
 .schedule-section {
   background: var(--surface);
 }
 
 .timeline {
-  margin: 35px 0 0 100px;
+  margin-top: var(--sp-6);
 }
 
 .timeline-row {
@@ -117,33 +116,33 @@
 
 /* ── Brochure Section ── */
 .brochure-section {
-  padding-top: var(--sp-24);
-  padding-bottom: var(--sp-16);
+  padding-top: var(--sp-16);
+  padding-bottom: var(--sp-12);
   overflow: hidden;
   background: var(--bg);
 }
 
 .brochure-full__header {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--sp-6);
-  align-items: end;
-  margin-bottom: var(--sp-12);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  align-items: flex-start;
+  margin-bottom: var(--sp-8);
 }
 
 .brochure-gallery-wrap {
-  width: min(1440px, calc(100vw - 36px));
+  width: 100%;
   margin: 0 auto;
   padding: var(--sp-4);
   height: 500px;
   border: 1px solid var(--line);
-  border-radius: 24px;
+  border-radius: 16px;
   background: linear-gradient(145deg, rgba(10, 15, 15, .72), rgba(5, 6, 7, .94));
   box-shadow: 0 24px 70px rgba(0, 0, 0, .34);
 }
 
 .poster-controls {
-  width: min(1440px, calc(100vw - 36px));
+  width: 100%;
   margin: var(--sp-4) auto 0;
   display: flex;
   justify-content: flex-end;
@@ -157,13 +156,13 @@
 
 .crew-grid, .social-link-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: var(--sp-4);
 }
 
 .crew-card {
-  min-height: 230px;
-  padding: var(--sp-6);
+  min-height: 200px;
+  padding: var(--sp-4);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -173,8 +172,8 @@
 }
 
 .crew-card h3 {
-  margin: var(--sp-6) 0;
-  font-size: clamp(26px, 3vw, 42px);
+  margin: var(--sp-4) 0;
+  font-size: clamp(24px, 3vw, 42px);
   line-height: 1.02;
 }
 
@@ -183,7 +182,7 @@
 }
 
 .contact-layout {
-  padding: clamp(var(--sp-6), 5vw, var(--sp-12));
+  padding: var(--sp-6) var(--sp-4);
   color: var(--text);
   background:
     radial-gradient(circle at 88% 0%, rgba(167, 255, 24, .15), transparent 34%),
@@ -203,24 +202,24 @@ footer {
 }
 
 .footer-venue {
-  margin-bottom: var(--sp-16);
+  margin-bottom: var(--sp-12);
   border-color: rgba(0, 221, 242, .18);
   background: var(--surface);
 }
 
 .footer-venue__copy {
-  padding: clamp(var(--sp-8), 5vw, var(--sp-16));
+  padding: var(--sp-6);
 }
 
 .footer-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: var(--sp-8);
-  padding-top: var(--sp-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+  padding-top: var(--sp-6);
 }
 
 .footer-brand {
-  font-size: 32px;
+  font-size: 28px;
   font-weight: normal;
   letter-spacing: -.04em;
 }
@@ -228,28 +227,87 @@ footer {
 .footer-brand span { color: var(--cyan); }
 
 .footer-bottom {
-  grid-column: 1/-1;
-  margin-top: var(--sp-12);
+  margin-top: var(--sp-8);
   padding-top: var(--sp-6);
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: var(--sp-4);
   border-top: 1px solid var(--line);
 }
 
 .footer-links {
   display: flex;
-  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: var(--sp-4);
 }
 
-@media (max-width: 600px) {
-  .timeline-row {
-    grid-template-columns: 90px 24px 1fr;
+/* ══════════════════════════════════════════════════════════════════════════════
+   Media Queries — Progressive Responsive Enhancement
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 640px) {
+  .crew-grid, .social-link-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .timeline-row time {
-    font-size: 18px;
+
+  .footer-bottom {
+    flex-direction: row;
+    justify-content: space-between;
   }
-  .timeline-row h3 {
-    font-size: 17px;
+}
+
+@media (min-width: 701px) {
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .stat {
+    padding: var(--sp-6);
+  }
+
+  .brochure-full__header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--sp-6);
+    align-items: end;
+    margin-bottom: var(--sp-12);
+  }
+
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--sp-8);
+    padding-top: var(--sp-8);
+  }
+
+  .footer-brand {
+    font-size: 32px;
+  }
+
+  .footer-venue__copy {
+    padding: clamp(var(--sp-8), 5vw, var(--sp-16));
+  }
+}
+
+@media (min-width: 981px) {
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr .86fr;
+    gap: var(--sp-8);
+  }
+
+  .about-manifesto {
+    padding: 30px 0 20px 36px;
+    border-left: 1px solid var(--line);
+  }
+
+  .crew-grid, .social-link-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--sp-6);
+  }
+
+  .crew-card {
+    min-height: 230px;
+    padding: var(--sp-6);
   }
 }

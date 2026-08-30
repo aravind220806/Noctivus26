@@ -12,8 +12,8 @@ const navLinks = [
 
 const themes = ['brand', 'light'];
 const themeLabels = {
-  brand: { label: 'Navy', dot: '#F5A124' },
-  light: { label: 'Light', dot: '#FF8C00' },
+  brand: { label: 'Navy', dot: '#00E6B8' },
+  light: { label: 'Light', dot: '#00E6B8' },
 };
 
 function applyTheme(theme) {
@@ -97,7 +97,7 @@ export default function Navbar() {
       <div className="fixed right-6 top-1/2 -translate-y-1/2 z-50 hidden md:block desktop-sidebar-wrap">
         <LineSidebar
           items={navLinks.map((l) => l.label)}
-          accentColor="#F5A124"
+          accentColor="#00E6B8"
           textColor={isCurrentSectionDark ? '#E2E8F0' : '#475569'}
           markerColor={isCurrentSectionDark ? 'rgba(255, 255, 255, 0.35)' : 'rgba(15, 23, 42, 0.35)'}
           showIndex
@@ -134,7 +134,7 @@ export default function Navbar() {
 
         <a href="/" className="flex items-center gap-5 brand-mobile-logo">
           <span className="font-inter font-bold text-2xl tracking-tighter text-fg">
-            <span className="text-accent" style={{ color: '#F5A124' }}>NOCTIVUS</span> '26
+            <span className="text-accent" style={{ color: 'var(--cyan)' }}>NOCTIVUS</span> '26
           </span>
           <img
             src={logoSrc}
