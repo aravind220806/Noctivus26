@@ -35,7 +35,7 @@
   border-radius: 28px;
   background:
     radial-gradient(circle at 18% 12%, color-mix(in srgb, var(--accent, var(--cyan)) 24%, transparent), transparent 34%),
-    linear-gradient(145deg, rgba(10, 32, 48, .96), rgba(7, 21, 34, .98));
+    linear-gradient(145deg, rgba(10, 15, 15, .96), rgba(5, 6, 7, .98));
 }
 
 .event-card__button {
@@ -67,7 +67,7 @@
   color: var(--cyan);
   font-family: var(--display-font);
   font-size: 15px;
-  font-weight: 700;
+  font-weight: normal;
   line-height: 1;
   text-transform: uppercase;
 }
@@ -87,7 +87,7 @@
 .event-card__body h3 {
   color: var(--text);
   font-size: 26px;
-  font-weight: 780;
+  font-weight: normal;
   line-height: 1.02;
   letter-spacing: 0;
 }
@@ -121,7 +121,7 @@
   gap: 7px;
   border: 1px solid var(--line);
   border-radius: 6px;
-  color: #07100f;
+  color: var(--bg);
   background: var(--cyan);
   font-size: 10px;
   font-weight: 700;

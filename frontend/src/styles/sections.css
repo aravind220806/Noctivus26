@@ -4,7 +4,7 @@
 
 /* ── About Section ── */
 .about {
-  background: #071522;
+  background: var(--surface);
 }
 
 .about-grid {
@@ -23,7 +23,7 @@
 }
 
 .about-copy .lead {
-  color: #e6ebe8;
+  color: var(--text);
   font-size: clamp(22px, 2.5vw, 32px);
   line-height: 1.35;
   letter-spacing: -.02em;
@@ -40,7 +40,7 @@
 
 .about-manifesto span {
   margin-bottom: 18px;
-  color: #68716e;
+  color: var(--muted);
   font-size: 9px;
   letter-spacing: .22em;
 }
@@ -54,7 +54,7 @@
 .about-showcase {
   margin-top: var(--sp-16);
   border-color: rgba(0, 221, 242, .18);
-  background: var(--surface-2);
+  background: var(--surface);
   box-shadow: 0 30px 90px rgba(0, 0, 0, .34);
 }
 
@@ -89,7 +89,7 @@
 
 /* ── Timeline Section ── */
 .schedule-section {
-  background: #071522;
+  background: var(--surface);
 }
 
 .timeline {
@@ -112,7 +112,7 @@
   letter-spacing: -.02em;
 }
 .timeline-node { position: relative; width: 8px; height: 8px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 12px var(--cyan); }
-.timeline-row h3 { margin: 0; font-size: 22px; font-weight: 530; color: var(--text); }
+.timeline-row h3 { margin: 0; font-size: 22px; font-weight: normal; color: var(--text); }
 .timeline-row p { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
 
 /* ── Brochure Section ── */
@@ -138,7 +138,7 @@
   height: 500px;
   border: 1px solid var(--line);
   border-radius: 24px;
-  background: linear-gradient(145deg, rgba(13, 22, 38, .72), rgba(5, 7, 11, .94));
+  background: linear-gradient(145deg, rgba(10, 15, 15, .72), rgba(5, 6, 7, .94));
   box-shadow: 0 24px 70px rgba(0, 0, 0, .34);
 }
 
@@ -152,7 +152,7 @@
 
 /* ── Crew & Contact ── */
 .crew-section {
-  background: #071522;
+  background: var(--surface);
 }
 
 .crew-grid, .social-link-grid {
@@ -187,7 +187,7 @@
   color: var(--text);
   background:
     radial-gradient(circle at 88% 0%, rgba(167, 255, 24, .15), transparent 34%),
-    linear-gradient(135deg, #0A2030, #071522);
+    linear-gradient(135deg, var(--surface), var(--bg));
 }
 
 .contact-card > div {
@@ -199,13 +199,13 @@ footer {
   padding-top: var(--sp-16);
   padding-bottom: var(--sp-6);
   color: var(--text);
-  background: #030607;
+  background: var(--bg);
 }
 
 .footer-venue {
   margin-bottom: var(--sp-16);
   border-color: rgba(0, 221, 242, .18);
-  background: var(--surface-2);
+  background: var(--surface);
 }
 
 .footer-venue__copy {
@@ -221,7 +221,7 @@ footer {
 
 .footer-brand {
   font-size: 32px;
-  font-weight: 740;
+  font-weight: normal;
   letter-spacing: -.04em;
 }
 

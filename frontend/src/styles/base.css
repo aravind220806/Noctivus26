@@ -22,7 +22,7 @@ img { max-width: 100%; }
   width: 100%;
   max-width: var(--page-max);
   margin-inline: auto;
-  padding-inline: var(--page-gutter-desktop);
+  padding-inline: var(--page-gutter-mobile);
 }
 
 .skip-link {
@@ -86,7 +86,7 @@ img { max-width: 100%; }
   font-size: clamp(43px, 6vw, 78px);
   line-height: .98;
   letter-spacing: -.055em;
-  font-weight: 630;
+  font-weight: normal;
 }
 
 .section-title p {
@@ -98,7 +98,7 @@ img { max-width: 100%; }
 }
 
 .muted-title { color: #56605c; }
-.kicker { color: var(--cyan); font-size: 11px; font-weight: 655; letter-spacing: .18em; text-transform: uppercase; }
+.kicker { color: var(--cyan); font-size: 11px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; }
 
 [data-reveal] {
   opacity: 0;
@@ -136,7 +136,7 @@ img { max-width: 100%; }
   font-size: 14px;
 }
 .button-primary { color: #05080A; background: var(--cyan); }
-.button-primary:hover:not(:disabled) { color: #05080A; background: #38F27D; }
+.button-primary:hover:not(:disabled) { color: var(--bg); background: var(--teal); }
 .button-secondary, .button-ghost {
   color: var(--text);
   border-color: rgba(0, 221, 242, .28);

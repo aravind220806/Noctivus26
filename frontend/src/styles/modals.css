@@ -22,7 +22,7 @@
   border: 1px solid rgba(0, 221, 242, .22);
   border-radius: 50%;
   color: var(--text);
-  background: #0A2030;
+  background: var(--surface);
   cursor: pointer;
 }
 
@@ -53,11 +53,11 @@
 }
 
 .notebook-view h1, .notebook-view h2, .notebook-entry-note, .notebook-page-label {
-  font-family: 'Caveat', cursive;
+  font-family: var(--mono-font);
 }
 
 .notebook-view p, .notebook-view li, .notebook-callout, .notebook-nav button {
-  font-family: 'Kalam', cursive;
+  font-family: var(--mono-font);
 }
 
 .notebook-close {
@@ -131,9 +131,9 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid rgba(93, 70, 210, .55);
+  border: 1px solid var(--line);
   border-radius: 20px;
-  background: #070b13;
+  background: var(--bg);
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95);
   margin: auto;
 }
@@ -147,12 +147,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(127, 153, 211, .12);
-  background: #070b13;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
 }
 
 .registration-modal__header h2 {
-  color: #f8fafc;
+  color: var(--text);
   font-size: 26px;
   margin: 4px 0 0;
 }
@@ -163,17 +163,17 @@
   grid-template-columns: repeat(4, 1fr);
   gap: var(--sp-2);
   padding: var(--sp-3) var(--sp-6);
-  background: #070b13;
-  border-bottom: 1px solid rgba(127, 153, 211, .1);
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
 }
 
 .registration-progress span {
   font-size: 12px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--muted);
   text-align: center;
   padding: 4px 0;
-  border-bottom: 2px solid #1e293b;
+  border-bottom: 2px solid var(--line);
   transition: all 0.2s ease;
 }
 
@@ -201,10 +201,10 @@
   width: 100%;
   height: 44px;
   padding: 8px 14px;
-  border: 1px solid #1e293b;
+  border: 1px solid var(--line);
   border-radius: 8px;
-  color: #f8fafc;
-  background: #0d1322;
+  color: var(--text);
+  background: var(--surface);
   font-size: 14px;
 }
 
@@ -215,15 +215,15 @@
   gap: var(--sp-3);
   margin-top: var(--sp-3);
   padding-top: var(--sp-4);
-  border-top: 1px solid rgba(127, 153, 211, .12);
+  border-top: 1px solid var(--line);
 }
 
 .payment-layout {
   display: grid;
   grid-template-columns: 260px 1fr;
   gap: var(--sp-6);
-  background: #0b101a;
-  border: 1px solid #1e293b;
+  background: var(--bg);
+  border: 1px solid var(--line);
   border-radius: 14px;
   padding: var(--sp-6);
 }
@@ -233,8 +233,8 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--sp-4) var(--sp-6);
-  background: #0d1322;
-  border: 1px solid #1e293b;
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: 12px;
 }
 
