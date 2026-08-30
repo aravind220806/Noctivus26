@@ -47,15 +47,16 @@ async def google_auth(request: Request):
         if not access:
             raise HTTPException(status_code=403, detail="This Google account is not allowed for admin access. Add the exact Google email to ADMIN_EMAILS or Admin Access.")
         user = {"email": google_email, "name": profile.get("name") or google_email, "picture": profile.get("picture") or "", "tabs": access["tabs"], "owner": access["owner"]}
-        response = Response(content=json.dumps({"user": user}, separators=(",", ":")), media_type="application/json")
+        origin = str(request.headers.get("origin") or "")
+        is_https = origin.startswith("https://") or request.headers.get("x-forwarded-proto") == "https" or settings.environment == "production"
         response.set_cookie(
             "noctivus_admin_session",
             sign_admin_token(user),
             max_age=8 * 60 * 60,
             httponly=True,
-            secure=settings.environment == "production",
-            samesite="none" if settings.environment == "production" else "lax",
-            path="/api/admin",
+            secure=is_https,
+            samesite="none" if is_https else "lax",
+            path="/",
         )
         return response
     except HTTPException:
