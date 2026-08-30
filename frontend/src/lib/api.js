@@ -15,9 +15,5 @@ export function apiUrl(path) {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
   const base = getApiBase();
 
-  if (!base && !import.meta.env.DEV) {
-    throw new Error('VITE_API_URL is not configured. Set it to the deployed backend URL, for example https://api.noctivus.site');
-  }
-
   return `${base}${normalizedPath}`;
 }

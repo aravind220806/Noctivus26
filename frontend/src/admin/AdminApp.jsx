@@ -8,9 +8,6 @@ import './admin.css';
 const apiBase = getApiBase();
 const apiPath = (path) => {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  if (!apiBase && !import.meta.env.DEV) {
-    throw new Error('VITE_API_URL is not configured. Set it to the deployed backend URL, for example https://api.noctivus.site');
-  }
   return `${apiBase}${normalizedPath}`;
 };
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
@@ -665,7 +662,7 @@ function Login({ onSession }) {
               window.location.replace('/admin');
             } catch (loginError) {
               const message = loginError instanceof TypeError
-                ? 'Admin API unavailable. Start the backend on localhost:4000 and try again.'
+                ? 'Admin API unavailable. Check the production backend deployment and try again.'
                 : loginError.message;
               setError(message);
             } finally { setLoading(false); }
