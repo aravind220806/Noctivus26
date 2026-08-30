@@ -27,7 +27,12 @@ export function EventsSection({ onSelect }) {
             </button>
           ))}
         </div>
-        <div className="events-grid">
+        <div className="events-grid-wrap">
+          <span className="hud-corner hud-corner--tl" aria-hidden="true" />
+          <span className="hud-corner hud-corner--tr" aria-hidden="true" />
+          <span className="hud-corner hud-corner--bl" aria-hidden="true" />
+          <span className="hud-corner hud-corner--br" aria-hidden="true" />
+          <div className="events-grid">
           {visibleEvents.map((event, index) => (
             <motion.article
               className={`event-card accent-${event.accent}`}
@@ -70,6 +75,7 @@ export function EventsSection({ onSelect }) {
               </motion.button>
             </motion.article>
           ))}
+        </div>
         </div>
         <p className="events-note" data-reveal>
           <span>*</span> Final rules, capacities, and event timings will be locked before registration opens.

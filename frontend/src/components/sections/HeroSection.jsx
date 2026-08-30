@@ -6,6 +6,10 @@ export function HeroSection({ onRegister }) {
   return (
     <section className="hero" id="top">
       <div className="page-width hero__inner">
+        <span className="hud-corner hud-corner--tl" aria-hidden="true" />
+        <span className="hud-corner hud-corner--tr" aria-hidden="true" />
+        <span className="hud-corner hud-corner--bl" aria-hidden="true" />
+        <span className="hud-corner hud-corner--br" aria-hidden="true" />
         <div className="hero__main">
           <span className="hero__eyebrow">{site.eyebrow}</span>
           <img className="hero__logo" src="/brand/noctivus-emblem.webp" alt="Noctivus emblem" width="480" height="534" fetchPriority="high" />

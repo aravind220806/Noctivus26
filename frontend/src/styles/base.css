@@ -61,8 +61,28 @@ img { max-width: 100%; }
 
 /* ── Section Header ── */
 .section {
+  position: relative;
   padding-block: var(--space-section);
   border-bottom: 1px solid var(--line);
+}
+
+.section::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1200px, 90%);
+  height: 1px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--cyan) 0px,
+    var(--cyan) 8px,
+    transparent 8px,
+    transparent 16px
+  );
+  opacity: .4;
+  pointer-events: none;
 }
 
 .section-title {

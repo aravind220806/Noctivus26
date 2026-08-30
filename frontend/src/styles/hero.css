@@ -20,9 +20,40 @@
 }
 
 .hero__inner {
-  padding-top: var(--sp-24);
-  padding-bottom: var(--sp-16);
+  position: relative;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: var(--sp-12) var(--sp-8);
   width: var(--page);
+  margin-inline: auto;
+  clip-path: polygon(
+    24px 0,
+    calc(100% - 20px) 0,
+    100% 20px,
+    100% calc(45% - 20px),
+    calc(100% - 12px) 45%,
+    calc(100% - 12px) calc(45% + 24px),
+    100% calc(45% + 44px),
+    100% calc(100% - 24px),
+    calc(100% - 24px) 100%,
+    0 100%,
+    0 24px
+  );
+}
+
+@media (max-width: 700px) {
+  .hero__inner {
+    padding: var(--sp-6) var(--sp-4);
+    clip-path: polygon(
+      14px 0,
+      calc(100% - 12px) 0,
+      100% 12px,
+      100% calc(100% - 14px),
+      calc(100% - 14px) 100%,
+      0 100%,
+      0 14px
+    );
+  }
 }
 
 .hero__eyebrow {

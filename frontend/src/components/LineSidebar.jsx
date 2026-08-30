@@ -98,7 +98,8 @@ export default function LineSidebar({
                     width: isActive ? `${markerLength}px` : isHovered ? `${markerLength * 0.7}px` : `${markerLength * 0.4}px`,
                     height: '2px',
                     backgroundColor: isActive ? accentColor : isHovered ? '#FFFFFF' : markerColor,
-                    borderRadius: '2px',
+                    borderRadius: '0',
+                    clipPath: 'polygon(3px 0, 100% 0, 100% 100%, 0 100%, 0 3px)',
                     transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
                     boxShadow: isActive ? `0 0 12px ${accentColor}` : 'none',
                   }}

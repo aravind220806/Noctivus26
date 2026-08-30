@@ -6,6 +6,21 @@
   background: var(--bg);
 }
 
+.events-grid-wrap {
+  position: relative;
+  border: 1px solid var(--line);
+  padding: var(--sp-6);
+  background: var(--surface);
+  clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
+}
+
+@media (max-width: 700px) {
+  .events-grid-wrap {
+    padding: var(--sp-3);
+    clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  }
+}
+
 .events-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -44,11 +59,27 @@
   position: relative;
   min-height: 360px;
   overflow: hidden;
-  border: 1px solid rgba(0, 221, 242, .18);
-  border-radius: 28px;
-  background:
-    radial-gradient(circle at 18% 12%, color-mix(in srgb, var(--accent, var(--cyan)) 24%, transparent), transparent 34%),
-    linear-gradient(145deg, rgba(10, 15, 15, .96), rgba(5, 6, 7, .98));
+  border: 1px solid var(--accent, var(--cyan));
+  border-radius: 0;
+  background: var(--surface);
+  box-shadow: 0 0 14px -2px color-mix(in srgb, var(--accent, var(--cyan)) 38%, transparent);
+  clip-path: polygon(
+    20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px
+  );
+  transition: transform .22s ease, box-shadow .22s ease;
+}
+
+.event-card:hover {
+  box-shadow: 0 0 24px 2px color-mix(in srgb, var(--accent, var(--cyan)) 70%, transparent);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 700px) {
+  .event-card {
+    clip-path: polygon(
+      12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px
+    );
+  }
 }
 
 .event-card__button {

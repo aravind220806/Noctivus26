@@ -51,10 +51,12 @@
 }
 
 .about-showcase {
+  position: relative;
   margin-top: var(--sp-16);
-  border-color: rgba(0, 221, 242, .18);
+  border: 1px solid var(--line);
   background: var(--surface);
   box-shadow: 0 30px 90px rgba(0, 0, 0, .34);
+  clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px);
 }
 
 .about-showcase figcaption {
@@ -161,14 +163,16 @@
 }
 
 .crew-card {
+  position: relative;
   min-height: 200px;
   padding: var(--sp-4);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 0;
   background: var(--surface);
+  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
 }
 
 .crew-card h3 {
@@ -182,8 +186,11 @@
 }
 
 .contact-layout {
+  position: relative;
   padding: var(--sp-6) var(--sp-4);
   color: var(--text);
+  border: 1px solid var(--line);
+  clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
   background:
     radial-gradient(circle at 88% 0%, rgba(167, 255, 24, .15), transparent 34%),
     linear-gradient(135deg, var(--surface), var(--bg));

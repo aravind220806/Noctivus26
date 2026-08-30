@@ -35,6 +35,10 @@ export function AboutSection() {
           </div>
         </div>
         <figure className="about-showcase" data-reveal>
+          <span className="hud-corner hud-corner--tl" aria-hidden="true" />
+          <span className="hud-corner hud-corner--tr" aria-hidden="true" />
+          <span className="hud-corner hud-corner--bl" aria-hidden="true" />
+          <span className="hud-corner hud-corner--br" aria-hidden="true" />
           <div className="about-showcase__image">
             <img src="/images/noctivus-students.webp" alt="Students gathered at Noctivus" width="1400" height="1050" loading="lazy" decoding="async" />
           </div>
