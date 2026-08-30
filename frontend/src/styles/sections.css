@@ -79,7 +79,12 @@
 }
 
 .stat:last-child { border-right: 0; }
-.stat strong { font-size: clamp(38px, 5vw, 68px); letter-spacing: -.06em; font-weight: 560; }
+.stat strong {
+  font-family: var(--display-font);
+  font-size: clamp(38px, 5vw, 68px);
+  letter-spacing: -.02em;
+  font-weight: 700;
+}
 .stat span { color: var(--muted); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
 
 /* ── Timeline Section ── */
@@ -94,12 +99,17 @@
 .timeline-row {
   min-height: 116px;
   display: grid;
-  grid-template-columns: 45px 90px 32px 1fr;
+  grid-template-columns: 120px 32px 1fr;
   align-items: center;
   border-bottom: 1px solid var(--line);
 }
 
-.timeline-row time { font-size: 26px; letter-spacing: -.04em; }
+.timeline-row time {
+  font-family: var(--display-font);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
 .timeline-node { position: relative; width: 8px; height: 8px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 12px var(--cyan); }
 .timeline-row h3 { margin: 0; font-size: 22px; font-weight: 530; color: var(--text); }
 .timeline-row p { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
@@ -229,4 +239,16 @@ footer {
   display: flex;
   justify-content: flex-end;
   gap: var(--sp-4);
+}
+
+@media (max-width: 600px) {
+  .timeline-row {
+    grid-template-columns: 90px 24px 1fr;
+  }
+  .timeline-row time {
+    font-size: 18px;
+  }
+  .timeline-row h3 {
+    font-size: 17px;
+  }
 }
