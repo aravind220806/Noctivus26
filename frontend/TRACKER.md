@@ -1,6 +1,6 @@
 # NOCTIVUS '26 — Work Tracker
 
-Updated: 2026-08-30. Resume here if context resets.
+Updated: 2026-08-31. Resume here if context resets.
 
 ---
 
@@ -11,7 +11,7 @@ Routes confirmed, dead CSS removed, accents remapped.
 
 ## Phase 1 — Palette + Display Font 🔄 IN PROGRESS
 
-### 1a — Font fixes ⬜ (in progress this session)
+### 1a — Font fixes ✅ DONE (commit 958d7ee)
 
 Issues found and being fixed:
 - `--body-font: 'Inter'` → should be mono stack (IBM Plex Mono / JetBrains Mono)
@@ -24,7 +24,7 @@ Issues found and being fixed:
 - `.footer-brand font-weight: 740` → `normal`
 - Remove Caveat/Kalam `<link>` from `index.html`
 
-### 1b — Palette cleanup ⬜ (in progress this session)
+### 1b — Palette cleanup ✅ DONE (commit 958d7ee)
 
 - `--surface-2: #0E1414` — extra token not in palette → remove, remap to `--surface`
 - `#071522` section backgrounds (about, schedule, crew) → `var(--surface)`
@@ -43,7 +43,7 @@ Issues found and being fixed:
 - Flap-digit backgrounds `#111513, #171c19` etc. → `var(--surface)` based
 - `.event-card` gradient `rgba(10,32,48), rgba(7,21,34)` → surface-based
 
-### 1c — Mobile-first spacing flip ⬜ (in progress this session)
+### 1c — Mobile-first spacing flip ✅ DONE (commit 958d7ee)
 
 `spacing.css` still uses `max-width` (desktop-first). Needs to flip to `min-width`:
 - Default = mobile values (from old `max-width: 700px` block)
@@ -52,10 +52,16 @@ Issues found and being fixed:
 - `variables.css`: `--space-section → var(--sp-12)` (mobile), `--page` → mobile default
 - `base.css`: `.page-width padding-inline` → mobile gutter as default
 
-### 1d — Checkpoint ⬜
+### 1d — Checkpoint ⬜ AWAITING USER
 
-Take screenshots: hero, one card, timeline with Aldrich + palette applied.
+Need screenshots: hero, one event card, timeline — with Aldrich + closed palette.
 Post for user confirmation before Phase 2.
+
+**Notable decisions this session:**
+- Notebook modal (EventModal) `Caveat`/`Kalam` fonts replaced with `--mono-font`. The paper interior colors (#F4EFE4, #14120F ink) left intentionally — they're the notebook paper aesthetic, not cyberpunk palette.
+- `--surface-2` removed; `about-showcase` and `footer-venue` now use `--surface`.
+- All `#071522` blue-tinted darks replaced with `var(--surface)`; atmospheric difference is negligible.
+- spacing.css: 380px breakpoint behaviour preserved — registration gets narrower side padding as default, normal padding kicks in at ≥381px.
 
 ---
 
