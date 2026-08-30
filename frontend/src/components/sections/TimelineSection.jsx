@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import {
   User,
   Cpu,
@@ -59,15 +60,105 @@ function formatTime(hour24) {
   return `${h12}:${min}`;
 }
 
+function formatTimeRange(hour24) {
+  const h = Math.floor(hour24);
+  const minsDecimal = hour24 % 1;
+  const min = minsDecimal === 0 ? '00' : minsDecimal === 0.25 ? '15' : minsDecimal === 0.5 ? '30' : '45';
+  const period = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  const padHour = String(h12).padStart(2, '0');
+  return `${padHour}:${min} ${period}`;
+}
+
 export function TimelineSection() {
   const { layout, maxRows } = assignRows(events);
   const containerHeight = maxRows * rowHeight;
+
+  // Process mobile agenda groups chronologically sorted
+  const mobileGroups = useMemo(() => {
+    const sorted = [...events].map((e, index) => ({
+      ...e,
+      originalIndex: index,
+      color: RAIL_COLORS[index % RAIL_COLORS.length],
+    })).sort((a, b) => a.start - b.start);
+
+    const groupsMap = {};
+    sorted.forEach((event) => {
+      if (!groupsMap[event.start]) {
+        groupsMap[event.start] = [];
+      }
+      groupsMap[event.start].push(event);
+    });
+
+    return Object.keys(groupsMap)
+      .map(Number)
+      .sort((a, b) => a - b)
+      .map((startTime) => {
+        const groupEvents = groupsMap[startTime];
+        const isConcurrent = groupEvents.length > 1;
+        return {
+          startTime,
+          formattedStart: formatTimeRange(startTime),
+          isConcurrent,
+          count: groupEvents.length,
+          events: groupEvents,
+        };
+      });
+  }, []);
 
   return (
     <section className="timeline-section" id="timeline">
       <p className="timeline-title">EVENT TIMELINE</p>
       <div className="timeline-rule" />
 
+      {/* Mobile Agenda List View (Default < 701px) */}
+      <div className="timeline-agenda">
+        {/* HUD corner brackets decoration */}
+        <span className="hud-corner hud-corner--tl" aria-hidden="true" />
+        <span className="hud-corner hud-corner--tr" aria-hidden="true" />
+        <span className="hud-corner hud-corner--bl" aria-hidden="true" />
+        <span className="hud-corner hud-corner--br" aria-hidden="true" />
+
+        <div className="agenda-timeline">
+          {mobileGroups.map((group) => (
+            <div className="time-group" key={group.startTime}>
+              <span 
+                className="time-group__tick" 
+                style={group.isConcurrent ? { background: 'var(--lime)', boxShadow: '0 0 8px var(--lime)' } : {}}
+                aria-hidden="true" 
+              />
+              <div className="time-group__header">
+                <span>{group.formattedStart}</span>
+                {group.isConcurrent && (
+                  <span className="time-group__concurrency-tag">⚡ {group.count} Concurrent</span>
+                )}
+              </div>
+
+              {group.events.map((event, idx) => {
+                const EventIcon = event.icon;
+                return (
+                  <div 
+                    className={`agenda-row agenda-row--${event.color}`} 
+                    key={`${group.startTime}-${idx}`}
+                  >
+                    <div className="agenda-row__icon-wrap">
+                      <EventIcon size={16} />
+                    </div>
+                    <div className="agenda-row__details">
+                      <span className="agenda-row__title">{event.title}</span>
+                      <span className="agenda-row__time">
+                        {formatTimeRange(event.start)} – {formatTimeRange(event.end)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Desktop Gantt View (Media query overrides >= 701px) */}
       <div className="timeline-scroll">
         <div className="timeline-frame">
           {/* HUD corner brackets decoration */}

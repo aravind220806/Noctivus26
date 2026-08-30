@@ -1,21 +1,20 @@
 /* Timeline — Night City reskin
-   Uses the existing tokens: --bg --surface --line --cyan --teal --lime
-   --text --muted --error, and --display-font / --mono-font.
-   No new colors introduced. */
+   Uses existing tokens: --bg --surface --line --cyan --teal --lime
+   --text --muted --error, and --display-font / --mono-font. */
 
 .timeline-section {
-  padding: 0 clamp(1.5rem, 5vw, 8rem);
+  padding: 0 clamp(1rem, 5vw, 8rem);
   color: var(--text);
   font-family: var(--mono-font);
 }
 
 .timeline-title {
   font-family: var(--display-font);
-  font-weight: 400; /* Aldrich ships 400 only */
+  font-weight: 400; /* Aldrich is Regular weight only */
   letter-spacing: 0.12em;
   text-align: center;
   font-size: 0.85rem;
-  padding: 5rem 0 2rem;
+  padding: 4rem 0 1.5rem;
 }
 
 .timeline-rule {
@@ -25,29 +24,13 @@
   margin-bottom: 1.5rem;
 }
 
-.timeline-scroll {
-  width: 100%;
-  overflow-x: auto;
-}
-
-.timeline-frame {
-  position: relative;
-  min-width: 1080px;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  padding: 1.5rem 3rem;
-  border-radius: 2px;
-  /* single deliberate chamfer, not full rounding */
-  clip-path: polygon(
-    24px 0, 100% 0, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0 100%, 0 24px
-  );
-}
-
-/* HUD corner brackets — reused motif from countdown component */
+/* ─────────────────────────────────────────────────────────────────────────────
+   HUD Corner Brackets Motif
+   ───────────────────────────────────────────────────────────────────────────── */
 .hud-corner {
   position: absolute;
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   border-color: var(--cyan);
   border-style: solid;
   opacity: 0.7;
@@ -58,115 +41,245 @@
 .hud-corner--bl { bottom: 6px; left: 6px; border-width: 0 0 1px 1px; }
 .hud-corner--br { bottom: 6px; right: 6px; border-width: 0 1px 1px 0; }
 
-/* Time axis */
-.timeline-axis {
+/* ─────────────────────────────────────────────────────────────────────────────
+   Mobile Agenda List (Default View)
+   ───────────────────────────────────────────────────────────────────────────── */
+.timeline-agenda {
+  display: block;
   position: relative;
-  width: 100%;
-  height: 32px;
-  margin-bottom: 1rem;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: 24px 16px;
+  border-radius: 2px;
+  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+  margin-bottom: var(--sp-12);
 }
 
-.timeline-tick {
-  position: absolute;
-  transform: translateX(-50%);
+.agenda-timeline {
+  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 4px;
+  gap: 24px;
+  padding-left: 20px;
+  border-left: 1px dashed var(--line);
 }
 
-.timeline-tick__mark {
-  width: 1px;
-  height: 6px;
-  background: var(--muted);
-}
-
-.timeline-tick--hour .timeline-tick__mark {
-  height: 10px;
-  background: var(--cyan);
-  opacity: 0.6;
-}
-
-.timeline-tick__label {
-  font-size: 0.7rem;
-  color: var(--muted);
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-/* Grid */
-.timeline-grid {
+.time-group {
   position: relative;
-  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.timeline-grid__lines {
+.time-group__tick {
   position: absolute;
-  inset: 0;
-  display: grid;
-  pointer-events: none;
-  z-index: 0;
+  left: -25px; /* aligns to the dashed spine */
+  top: 4px;
+  width: 9px;
+  height: 9px;
+  background: var(--cyan);
+  border: 2px solid var(--bg);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--cyan);
 }
 
-.timeline-grid__line {
-  border-left: 1px solid var(--line);
-}
-
-/* Event bars — flat surface fill + glowing border, not tinted fills */
-.timeline-bar {
-  position: absolute;
-  background: var(--surface);
-  border: 1px solid var(--cyan);
-  z-index: 1;
-  /* single chamfer top-left, connector-jack feel */
-  clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px);
-  transition: box-shadow 0.15s ease, filter 0.15s ease;
-}
-
-.timeline-bar--cyan { border-color: var(--cyan); }
-.timeline-bar--teal { border-color: var(--teal); }
-.timeline-bar--lime { border-color: var(--lime); }
-
-.timeline-bar--cyan .timeline-bar__icon { color: var(--cyan); }
-.timeline-bar--teal .timeline-bar__icon { color: var(--teal); }
-.timeline-bar--lime .timeline-bar__icon { color: var(--lime); }
-
-.timeline-bar:hover {
-  box-shadow: 0 0 8px -1px currentColor;
-}
-.timeline-bar--cyan:hover { box-shadow: 0 0 8px -1px var(--cyan); }
-.timeline-bar--teal:hover { box-shadow: 0 0 8px -1px var(--teal); }
-.timeline-bar--lime:hover { box-shadow: 0 0 8px -1px var(--lime); }
-
-.timeline-bar__content {
+.time-group__header {
+  font-family: var(--display-font);
+  font-size: 14px;
+  color: var(--cyan);
+  letter-spacing: 0.05em;
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  height: 100%;
-  padding: 0 0.85rem;
+  gap: 8px;
 }
 
-.timeline-bar__icon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
+.time-group__concurrency-tag {
+  font-family: var(--mono-font);
+  font-size: 10px;
+  color: var(--lime);
+  background: rgba(167, 255, 24, 0.08);
+  border: 1px solid rgba(167, 255, 24, 0.2);
+  padding: 1px 6px;
+  border-radius: 3px;
 }
 
-.timeline-bar__label {
-  font-size: 0.72rem;
+.agenda-row {
+  position: relative;
+  background: #070d0d;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent-color, var(--cyan));
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  clip-path: polygon(6px 0, 100% 0, 100% 100%, 0 100%, 0 6px);
+}
+
+.agenda-row--cyan { --accent-color: var(--cyan); }
+.agenda-row--teal { --accent-color: var(--teal); }
+.agenda-row--lime { --accent-color: var(--lime); }
+
+.agenda-row__icon-wrap {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--accent-color, var(--cyan));
+}
+
+.agenda-row__details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.agenda-row__title {
+  font-size: 12.5px;
+  font-weight: 500;
   color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-/* Mobile: simplify chamfers rather than removing the treatment */
-@media (max-width: 700px) {
-  .timeline-frame {
-    padding: 1rem 1.25rem;
-    clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+.agenda-row__time {
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+/* Hide Desktop view by default */
+.timeline-scroll {
+  display: none;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Desktop Gantt View (≥701px Enhancement)
+   ───────────────────────────────────────────────────────────────────────────── */
+@media (min-width: 701px) {
+  .timeline-agenda {
+    display: none;
   }
+
+  .timeline-scroll {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    margin-bottom: var(--sp-12);
+  }
+
+  .timeline-frame {
+    position: relative;
+    min-width: 1080px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    padding: 1.5rem 3rem;
+    border-radius: 2px;
+    clip-path: polygon(24px 0, 100% 0, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0 100%, 0 24px);
+  }
+
+  .hud-corner {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Time axis */
+  .timeline-axis {
+    position: relative;
+    width: 100%;
+    height: 32px;
+    margin-bottom: 1rem;
+  }
+
+  .timeline-tick {
+    position: absolute;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .timeline-tick__mark {
+    width: 1px;
+    height: 6px;
+    background: var(--muted);
+  }
+
+  .timeline-tick--hour .timeline-tick__mark {
+    height: 10px;
+    background: var(--cyan);
+    opacity: 0.6;
+  }
+
+  .timeline-tick__label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* Grid */
+  .timeline-grid {
+    position: relative;
+    width: 100%;
+  }
+
+  .timeline-grid__lines {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .timeline-grid__line {
+    border-left: 1px solid var(--line);
+  }
+
+  /* Event bars */
   .timeline-bar {
-    clip-path: polygon(6px 0, 100% 0, 100% 100%, 0 100%, 0 6px);
+    position: absolute;
+    background: var(--surface);
+    border: 1px solid var(--cyan);
+    z-index: 1;
+    clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px);
+    transition: box-shadow 0.15s ease, filter 0.15s ease;
+  }
+
+  .timeline-bar--cyan { border-color: var(--cyan); }
+  .timeline-bar--teal { border-color: var(--teal); }
+  .timeline-bar--lime { border-color: var(--lime); }
+
+  .timeline-bar--cyan .timeline-bar__icon { color: var(--cyan); }
+  .timeline-bar--teal .timeline-bar__icon { color: var(--teal); }
+  .timeline-bar--lime .timeline-bar__icon { color: var(--lime); }
+
+  .timeline-bar:hover {
+    box-shadow: 0 0 8px -1px currentColor;
+  }
+  .timeline-bar--cyan:hover { box-shadow: 0 0 8px -1px var(--cyan); }
+  .timeline-bar--teal:hover { box-shadow: 0 0 8px -1px var(--teal); }
+  .timeline-bar--lime:hover { box-shadow: 0 0 8px -1px var(--lime); }
+
+  .timeline-bar__content {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    height: 100%;
+    padding: 0 0.85rem;
+  }
+
+  .timeline-bar__icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+
+  .timeline-bar__label {
+    font-size: 0.72rem;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
