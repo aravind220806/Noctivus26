@@ -20,7 +20,7 @@
 
   /* Typography */
   --mono-font: 'IBM Plex Mono', 'JetBrains Mono', 'Space Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
-  --body-font: var(--mono-font);
+  --body-font: 'IBM Plex Mono', 'JetBrains Mono', monospace;
   --display-font: 'Aldrich', var(--mono-font);
   font-family: var(--body-font);
   font-optical-sizing: auto;

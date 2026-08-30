@@ -420,6 +420,10 @@ footer {
     padding-inline: var(--page-gutter-desktop); /* 24px */
   }
 
+  .hero__inner {
+    padding: 0; /* cancel page-width gutter — hero uses --page for width */
+  }
+
   .section {
     padding-block: var(--sp-16);  /* 64px */
   }
