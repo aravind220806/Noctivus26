@@ -5,7 +5,6 @@ import RegistrationModal from './components/RegistrationModal.jsx';
 import Navbar from './components/Navbar.jsx';
 import useReveal from './hooks/useReveal.js';
 import { getApiBase } from './lib/api';
-import { SiteSnow } from './components/sections/SiteSnow';
 import { HeroSection } from './components/sections/HeroSection';
 import { AboutSection } from './components/sections/AboutSection';
 import { EventsSection } from './components/sections/EventsSection';
@@ -67,7 +66,6 @@ export default function App() {
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <SiteSnow />
       <div className="scroll-progress" ref={scrollProgressRef} aria-hidden="true" />
       <Navbar />
 

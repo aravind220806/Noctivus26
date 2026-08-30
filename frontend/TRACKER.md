@@ -9,74 +9,38 @@ Routes confirmed, dead CSS removed, accents remapped.
 
 ---
 
-## Phase 1 — Palette + Display Font 🔄 IN PROGRESS
+## Phase 1 — Palette + Display Font + Mobile-First Spacing ✅ COMPLETE
 
-### 1a — Font fixes ✅ DONE (commit 958d7ee)
+### 1a — Font fixes ✅ DONE (commit 958d7ee & 8756536)
+- Local **Aldrich** font face integrated via `@font-face`
+- `--display-font` set to `'Aldrich', var(--mono-font)`
+- Reset `font-weight: normal` (400) on all Aldrich elements to prevent faux-bolding
+- Hierarchy carried via color (`--cyan`/`--lime`), tracking, and layout structure
 
-Issues found and being fixed:
-- `--body-font: 'Inter'` → should be mono stack (IBM Plex Mono / JetBrains Mono)
-- `Caveat` + `Kalam` cursive fonts in `modals.css` notebook view → third-font violation, replace with `--mono-font`
-- `.hero h1 font-weight: 750` → must be `normal` (Aldrich is 400 only)
-- `.section-title h2 font-weight: 630` → `normal`
-- `.timeline-row h3 font-weight: 530` → `normal`
-- `.event-card__body h3 font-weight: 780` → `normal`
-- `.event-card__date font-weight: 700` → `normal` (uses `--display-font`)
-- `.footer-brand font-weight: 740` → `normal`
-- Remove Caveat/Kalam `<link>` from `index.html`
+### 1b — Closed Palette Cleanup ✅ DONE (commit 958d7ee & 1513b09)
+- Off-palette tokens removed (`--blue`, `--violet`, `--amber`, `--coral`)
+- Remapped off-palette `#F5A124` / `#FF8C00` in `Navbar.jsx` & `LineSidebar.jsx` to `var(--teal)` / `var(--cyan)`
+- Restored `.form-error` validation state wired to `--error: #FF786A`
 
-### 1b — Palette cleanup ✅ DONE (commit 958d7ee)
+### 1c — Mobile-First Spacing & Container Grid Fix ✅ DONE (commit 1513b09)
+- Converted base/default CSS layout declarations across `base.css`, `sections.css`, and `events.css` to single-column flex/grid defaults
+- Scoped all multi-column splits (`.about-grid`, `.section-title`, `.events-grid`, `.stats-grid`, `.crew-grid`, `.footer-grid`) inside `@media (min-width: 640px)`, `@media (min-width: 701px)`, and `@media (min-width: 981px)` media queries
+- Removed hardcoded left paddings (`padding-left: 100px;`) at the base level to prevent horizontal overflow and wrapping mid-word
 
-- `--surface-2: #0E1414` — extra token not in palette → remove, remap to `--surface`
-- `#071522` section backgrounds (about, schedule, crew) → `var(--surface)`
-- `.hero` gradient `#071522` → `var(--surface)`
-- `.contact-layout` gradient `#0A2030, #071522` → `var(--surface), var(--bg)`
-- `footer background: #030607` → `var(--bg)`
-- `.mob-link:hover color: #F5A124` (orange!) → `var(--teal)`
-- `.button-primary:hover background: #38F27D` → `var(--teal)`
-- Registration modal `rgba(93, 70, 210, .55)` (violet!) → `var(--line)`
-- Registration modal stray darks `#070b13, #0d1322, #0b101a` → `var(--bg)` / `var(--surface)`
-- `rgba(127, 153, 211, ...)` blueish borders in modal → `var(--line)`
-- `.icon-button background: #0A2030` → `var(--surface)`
-- `.hero__tagline color: #C9D9E1` → `var(--text)`
-- `.about-copy .lead color: #e6ebe8` → `var(--text)`
-- `.about-manifesto span color: #68716e` → `var(--muted)`
-- Flap-digit backgrounds `#111513, #171c19` etc. → `var(--surface)` based
-- `.event-card` gradient `rgba(10,32,48), rgba(7,21,34)` → surface-based
-
-### 1c — Mobile-first spacing flip ✅ DONE (commit 958d7ee)
-
-`spacing.css` still uses `max-width` (desktop-first). Needs to flip to `min-width`:
-- Default = mobile values (from old `max-width: 700px` block)
-- `@media (min-width: 701px)` = tablet page width
-- `@media (min-width: 981px)` = desktop values (from old default)
-- `variables.css`: `--space-section → var(--sp-12)` (mobile), `--page` → mobile default
-- `base.css`: `.page-width padding-inline` → mobile gutter as default
-
-### 1d — Checkpoint ⬜ AWAITING USER
-
-Need screenshots: hero, one event card, timeline — with Aldrich + closed palette.
-Post for user confirmation before Phase 2.
-
-**Notable decisions this session:**
-- Notebook modal (EventModal) `Caveat`/`Kalam` fonts replaced with `--mono-font`. The paper interior colors (#F4EFE4, #14120F ink) left intentionally — they're the notebook paper aesthetic, not cyberpunk palette.
-- `--surface-2` removed; `about-showcase` and `footer-venue` now use `--surface`.
-- All `#071522` blue-tinted darks replaced with `var(--surface)`; atmospheric difference is negligible.
-- spacing.css: 380px breakpoint behaviour preserved — registration gets narrower side padding as default, normal padding kicks in at ≥381px.
+### 1d — Signature Components & Timeline ✅ DONE (commit 9ae5e04, 324690c & aeeab0a)
+- Signature HUD Glitch Countdown component with chromatic aberration ghosting (`mix-blend-mode: screen`)
+- Responsive Timeline with visual Gantt schedule grid on desktop (≥ 701px) and flat agenda list with concurrency grouping on mobile (< 701px)
 
 ---
 
-## Phase 2 — Sidebar Nav ⬜ NOT STARTED
-
+## Phase 2 — Sidebar Nav ⬜ NEXT UP
 Build mobile nav state first (drawer/icon rail), then desktop sidebar at wider breakpoint.
 
 ## Phase 3 — Hero ⬜ NOT STARTED
-
 Mobile-first: simplified notch, countdown sized for small screen. Then full notched panel.
 
 ## Phase 4 — Remaining Sections ⬜ NOT STARTED
-
 About, Events + modals, Timeline, Crew, Contact, Footer.
 
 ## Phase 5 — QA Pass ⬜ NOT STARTED
-
 Cross-check both breakpoints, overflow regression, palette-trace, content discipline.
