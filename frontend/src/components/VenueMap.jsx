@@ -37,7 +37,10 @@ export default function VenueMap({ latitude, longitude, directionsUrl }) {
     marker.type = 'button';
     marker.className = 'venue-map__marker';
     marker.setAttribute('aria-label', 'Velammal Engineering College location');
-    marker.innerHTML = '<span><i></i></span>';
+    const markerPin = document.createElement('span');
+    const markerDot = document.createElement('i');
+    markerPin.append(markerDot);
+    marker.append(markerPin);
 
     const popupContent = document.createElement('div');
     popupContent.className = 'venue-map__popup';

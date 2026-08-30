@@ -41,7 +41,7 @@ class Settings:
     admin_session_secret = env("ADMIN_SESSION_SECRET") or "development-admin-session-secret"
     google_client_id = env("GOOGLE_CLIENT_ID")
     admin_emails = [email.lower() for email in csv_env("ADMIN_EMAILS")]
-    allow_memory_db = env("ALLOW_MEMORY_DB").lower() == "true"
+    allow_memory_db = env("ALLOW_MEMORY_DB", "true" if environment != "production" else "false").lower() == "true"
     registration_open = env("REGISTRATION_OPEN").lower() == "true"
     resend_api_key = env("RESEND_API_KEY")
     confirm_from = env("CONFIRM_FROM")

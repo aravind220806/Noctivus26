@@ -5,7 +5,7 @@ import json
 import time
 from typing import Callable
 
-from fastapi import Header, HTTPException
+from fastapi import Cookie, Header, HTTPException
 
 from app.core.config import settings
 from app.services.admin_access_service import normalize_admin_tabs, resolve_admin_access
@@ -47,8 +47,8 @@ def verify_admin_token(token: str | None) -> dict | None:
         return None
 
 
-async def require_admin(authorization: str | None = Header(default=None)) -> dict:
-    provided = str(authorization or "").replace("Bearer ", "", 1).replace("bearer ", "", 1)
+async def require_admin(authorization: str | None = Header(default=None), noctivus_admin_session: str | None = Cookie(default=None)) -> dict:
+    provided = noctivus_admin_session or str(authorization or "").replace("Bearer ", "", 1).replace("bearer ", "", 1)
     admin = verify_admin_token(provided)
     if not admin:
         raise HTTPException(status_code=401, detail="Admin authorization required.")
@@ -59,8 +59,8 @@ async def require_admin(authorization: str | None = Header(default=None)) -> dic
 
 
 def require_admin_tab(tab: str) -> Callable:
-    async def dependency(authorization: str | None = Header(default=None)) -> dict:
-        admin = await require_admin(authorization)
+    async def dependency(authorization: str | None = Header(default=None), noctivus_admin_session: str | None = Cookie(default=None)) -> dict:
+        admin = await require_admin(authorization, noctivus_admin_session)
         if tab not in (admin.get("tabs") or []):
             raise HTTPException(status_code=403, detail=f"{tab} access required.")
         return admin
@@ -69,11 +69,10 @@ def require_admin_tab(tab: str) -> Callable:
 
 
 def require_any_admin_tab(tabs: list[str]) -> Callable:
-    async def dependency(authorization: str | None = Header(default=None)) -> dict:
-        admin = await require_admin(authorization)
+    async def dependency(authorization: str | None = Header(default=None), noctivus_admin_session: str | None = Cookie(default=None)) -> dict:
+        admin = await require_admin(authorization, noctivus_admin_session)
         if not any(tab in (admin.get("tabs") or []) for tab in tabs):
             raise HTTPException(status_code=403, detail="This admin action is not allowed for your account.")
         return admin
 
     return dependency
-

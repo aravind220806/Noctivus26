@@ -6,6 +6,17 @@
   color: var(--text);
 }
 
+.scheduler-panel { max-width: 980px; }
+.scheduler-lanes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 24px 0; }
+.scheduler-lane { padding: 18px; border: 1px solid var(--line); background: #101412; }
+.scheduler-lane h3 { margin: 0 0 16px; }
+.scheduler-results { margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--line); }
+.scheduler-results h3 { margin: 0 0 14px; }
+.scheduler-results > div { display: grid; gap: 5px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.scheduler-results small { color: var(--muted); line-height: 1.5; }
+.scheduler-analysis { margin: 20px 0 0; padding: 16px; overflow-x: auto; color: #b9c8ff; background: #0a0e18; white-space: pre-wrap; }
+@media (max-width: 700px) { .scheduler-lanes { grid-template-columns: 1fr; } }
+
 .admin-login {
   display: grid;
   place-items: center;
@@ -699,49 +710,1927 @@
 }
 
 /* Admin design-system cascade finalizer. Keep this block last. */
-.admin-loading,
+.admin-shell,
 .admin-login,
-.admin-shell {
-  color: #101828;
-  background:
-    linear-gradient(180deg, rgba(25,79,209,.05), rgba(25,79,209,0) 280px),
-    #f5f7fb;
+.admin-loading {
+  --admin-bg: #05070b;
+  --admin-surface: #111827;
+  --admin-surface-alt: #0b1220;
+  --admin-text: #f8fafc;
+  --admin-muted: #94a3b8;
+  --admin-border: #243244;
+  color: var(--admin-text);
+  background: radial-gradient(circle at 18% 0%, rgba(59,130,246,.16), transparent 28%), #05070b;
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-.admin-login section,
+.admin-sidebar,
+.bionis-sidebar,
+.admin-panel,
+.bionis-card,
 .admin-metrics article,
-.admin-panel {
-  border-color: #d9e1ec;
+.metric-card,
+.recent-list > div,
+.registration-table article,
+.access-list article,
+.event-lifecycle-card,
+.admin-login section {
+  border: 1px solid var(--admin-border);
   border-radius: 12px;
-  background: #ffffff;
-  box-shadow: 0 1px 2px rgba(16,24,40,.05);
+  color: var(--admin-text);
+  background: #111827;
+  box-shadow: 0 18px 44px rgba(0,0,0,.24);
 }
 
-.admin-login h1,
+.admin-sidebar,
+.bionis-sidebar,
+.button-secondary,
+.verify-actions button,
+.field input,
+.field select,
+.field textarea,
+.admin-form input,
+.admin-form select,
+.admin-form textarea,
+.verify-actions input,
+.admin-table-wrap,
+.access-tabs,
+.pass-event-details,
+.invitation-members,
+.field-checkbox,
+.boarding-pass-empty,
+.check-in-camera {
+  border-color: var(--admin-border);
+  color: #f8fafc;
+  background: #0b1220;
+}
+
 .admin-brand,
+.bionis-logo,
 .admin-user strong,
 .admin-topbar h1,
+.admin-panel h2,
+.bionis-card-title,
+.storage-monitor h2,
+.bionis-section-label,
 .admin-metrics strong,
-.admin-panel h2 {
-  color: #101828;
+.metric-card strong,
+.recent-list strong,
+.registration-table strong,
+.access-list strong,
+.bionis-score strong {
+  color: #f8fafc;
+}
+
+.admin-nav-label,
+.admin-sidebar nav button,
+.admin-help,
+.admin-panel p,
+.recent-list small,
+.registration-table small,
+.access-list small,
+.admin-metrics span,
+.metric-card span,
+.field > span,
+.admin-user small,
+.storage-monitor p,
+.event-bars > div,
+.event-bars strong,
+.storage-monitor__values,
+.admin-empty {
+  color: var(--admin-muted);
+}
+
+.bionis-logo__mark,
+.admin-table th {
+  background: #172033;
+}
+
+.admin-sidebar nav button.active,
+.admin-sidebar nav button:hover {
+  color: #bfdbfe;
+  border-color: transparent;
+  background: rgba(59,130,246,.16);
+}
+
+.admin-sidebar nav button.active .admin-nav-dot,
+.admin-sidebar nav button:hover .admin-nav-dot {
+  background: #3B82F6;
+}
+
+.admin-nav-dot {
+  background: #475569;
+}
+
+.admin-login .kicker,
+.admin-topbar .kicker {
+  color: #3B82F6;
+}
+
+.admin-topbar .button-secondary,
+.button-primary,
+.admin-user button {
+  border: 1px solid #334155;
+  color: #ffffff;
+  background: #000000;
+}
+
+.button-secondary:hover:not(:disabled),
+.verify-actions button:hover {
+  border-color: #3B82F6;
+  color: #bfdbfe;
+  background: rgba(59,130,246,.14);
+}
+
+.metric-card--blue strong { color: #60A5FA; }
+.metric-card--orange strong,
+.metric-card--amber strong,
+.metric-card--purple strong,
+.metric-card--violet strong,
+.storage-monitor__heading strong { color: #F59E0B; }
+.metric-card--green strong { color: #34D399; }
+
+.event-bars div div,
+.storage-meter,
+.status-pill {
+  background: #1f2937;
+}
+
+.event-bars i {
+  background: #f8fafc;
+}
+
+.admin-table td {
+  color: var(--admin-text);
+  border-color: var(--admin-border);
+}
+
+.admin-table tbody tr:nth-child(even) { background: #0f172a; }
+.admin-table tbody tr:hover { background: #172033; }
+
+.admin-message,
+.admin-empty {
+  border: 1px solid var(--admin-border);
+  background: #111827;
+}
+
+.status-pill { color: #cbd5e1; }
+.status-pill--pending,
+.admin-shell .status-pill--coming-soon { color: #FBBF24; background: rgba(245,158,11,.16); }
+.status-pill--confirmed,
+.admin-shell .status-pill--open { color: #34D399; background: rgba(16,185,129,.16); }
+.status-pill--mismatch,
+.status-pill--duplicate,
+.admin-shell .status-pill--closed { color: #F87171; background: rgba(248,113,113,.16); }
+
+.storage-monitor .kicker { color: #06B6D4; }
+.storage-meter i { background: #F59E0B; }
+.admin-login__home { border-color: var(--admin-border); color: #bfdbfe; background: #0b1220; }
+
+/* End-of-file dark admin override. */
+.admin-shell,
+.admin-login,
+.admin-loading {
+  --admin-bg: #05070b;
+  --admin-surface: #111827;
+  --admin-surface-alt: #0b1220;
+  --admin-text: #f8fafc;
+  --admin-muted: #94a3b8;
+  --admin-border: #243244;
+  color: var(--admin-text);
+  background: radial-gradient(circle at 18% 0%, rgba(59,130,246,.16), transparent 28%), #05070b;
+}
+
+.admin-sidebar,
+.bionis-sidebar,
+.admin-panel,
+.bionis-card,
+.admin-metrics article,
+.metric-card,
+.recent-list > div,
+.registration-table article,
+.access-list article,
+.event-lifecycle-card,
+.admin-login section {
+  border: 1px solid var(--admin-border);
+  color: var(--admin-text);
+  background: #111827;
+  box-shadow: 0 18px 44px rgba(0,0,0,.24);
+}
+
+.admin-sidebar,
+.bionis-sidebar,
+.button-secondary,
+.verify-actions button,
+.field input,
+.field select,
+.field textarea,
+.admin-form input,
+.admin-form select,
+.admin-form textarea,
+.verify-actions input,
+.admin-table-wrap,
+.access-tabs,
+.pass-event-details,
+.invitation-members,
+.field-checkbox,
+.boarding-pass-empty,
+.check-in-camera {
+  border-color: var(--admin-border);
+  color: #f8fafc;
+  background: #0b1220;
+}
+
+.admin-brand,
+.bionis-logo,
+.admin-user strong,
+.admin-topbar h1,
+.admin-panel h2,
+.bionis-card-title,
+.storage-monitor h2,
+.bionis-section-label,
+.admin-metrics strong,
+.metric-card strong,
+.recent-list strong,
+.registration-table strong,
+.access-list strong,
+.bionis-score strong {
+  color: #f8fafc;
+}
+
+.admin-nav-label,
+.admin-sidebar nav button,
+.admin-help,
+.admin-panel p,
+.recent-list small,
+.registration-table small,
+.access-list small,
+.admin-metrics span,
+.metric-card span,
+.field > span,
+.admin-user small,
+.storage-monitor p,
+.event-bars > div,
+.event-bars strong,
+.storage-monitor__values,
+.admin-empty {
+  color: var(--admin-muted);
+}
+
+.bionis-logo__mark,
+.admin-table th {
+  background: #172033;
+}
+
+.admin-sidebar nav button.active,
+.admin-sidebar nav button:hover {
+  color: #bfdbfe;
+  background: rgba(59,130,246,.16);
+}
+
+.admin-sidebar nav button.active .admin-nav-dot,
+.admin-sidebar nav button:hover .admin-nav-dot {
+  background: #3B82F6;
+}
+
+.admin-nav-dot {
+  background: #475569;
+}
+
+.admin-topbar .kicker {
+  color: #3B82F6;
+}
+
+.admin-topbar .button-secondary,
+.button-primary,
+.admin-user button {
+  border: 1px solid #334155;
+  color: #ffffff;
+  background: #000000;
+}
+
+.button-secondary:hover:not(:disabled),
+.verify-actions button:hover {
+  border-color: #3B82F6;
+  color: #bfdbfe;
+  background: rgba(59,130,246,.14);
+}
+
+.metric-card--blue strong { color: #60A5FA; }
+.metric-card--orange strong,
+.metric-card--amber strong,
+.metric-card--purple strong,
+.metric-card--violet strong,
+.storage-monitor__heading strong { color: #F59E0B; }
+.metric-card--green strong { color: #34D399; }
+
+.event-bars div div,
+.storage-meter,
+.status-pill {
+  background: #1f2937;
+}
+
+.event-bars i {
+  background: #f8fafc;
+}
+
+.admin-table td {
+  color: var(--admin-text);
+  border-color: var(--admin-border);
+}
+
+.admin-table tbody tr:nth-child(even) { background: #0f172a; }
+.admin-table tbody tr:hover { background: #172033; }
+
+.admin-message,
+.admin-empty {
+  border: 1px solid var(--admin-border);
+  background: #111827;
+}
+
+.status-pill { color: #cbd5e1; }
+.status-pill--pending,
+.admin-shell .status-pill--coming-soon { color: #FBBF24; background: rgba(245,158,11,.16); }
+.status-pill--confirmed,
+.admin-shell .status-pill--open { color: #34D399; background: rgba(16,185,129,.16); }
+.status-pill--mismatch,
+.status-pill--duplicate,
+.admin-shell .status-pill--closed { color: #F87171; background: rgba(248,113,113,.16); }
+
+.storage-monitor .kicker { color: #06B6D4; }
+.storage-meter i { background: #F59E0B; }
+.admin-login__home { border-color: var(--admin-border); color: #bfdbfe; background: #0b1220; }
+
+/* Dark Bionis admin theme. Keep this block last. */
+.admin-shell,
+.admin-login,
+.admin-loading {
+  --admin-bg: #05070b;
+  --admin-surface: #111827;
+  --admin-surface-alt: #0b1220;
+  --admin-text: #f8fafc;
+  --admin-muted: #94a3b8;
+  --admin-border: #243244;
+  --admin-blue: #3B82F6;
+  --admin-orange: #F59E0B;
+  --admin-green: #10B981;
+  --admin-purple: #8B5CF6;
+  --admin-cyan: #06B6D4;
+  color: var(--admin-text);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(59,130,246,.16), transparent 28%),
+    radial-gradient(circle at 88% 12%, rgba(139,92,246,.12), transparent 24%),
+    #05070b;
+}
+
+.admin-sidebar,
+.bionis-sidebar,
+.admin-panel,
+.bionis-card,
+.admin-metrics article,
+.metric-card,
+.recent-list > div,
+.registration-table article,
+.access-list article,
+.event-lifecycle-card,
+.admin-login section {
+  border: 1px solid var(--admin-border);
+  color: var(--admin-text);
+  background: #111827;
+  box-shadow: 0 18px 44px rgba(0,0,0,.24);
+}
+
+.admin-sidebar,
+.bionis-sidebar {
+  background: #0b1220;
+  box-shadow: inset -1px 0 0 rgba(255,255,255,.04);
+}
+
+.admin-brand,
+.bionis-logo,
+.admin-user strong,
+.admin-topbar h1,
+.admin-panel h2,
+.bionis-card-title,
+.storage-monitor h2,
+.bionis-section-label,
+.admin-metrics strong,
+.metric-card strong,
+.recent-list strong,
+.registration-table strong,
+.access-list strong {
+  color: #f8fafc;
+}
+
+.bionis-logo__mark {
+  background: #172033;
+}
+
+.admin-nav-label,
+.admin-sidebar nav button,
+.admin-help,
+.admin-panel p,
+.recent-list small,
+.registration-table small,
+.access-list small,
+.admin-metrics span,
+.metric-card span,
+.field > span,
+.admin-user small,
+.storage-monitor p,
+.event-bars > div,
+.event-bars strong {
+  color: var(--admin-muted);
+}
+
+.admin-sidebar nav button {
+  background: transparent;
+}
+
+.admin-sidebar nav button.active,
+.admin-sidebar nav button:hover {
+  color: #bfdbfe;
+  background: rgba(59,130,246,.16);
+}
+
+.admin-sidebar nav button.active .admin-nav-dot,
+.admin-sidebar nav button:hover .admin-nav-dot {
+  background: #3B82F6;
+}
+
+.admin-nav-dot {
+  background: #475569;
+}
+
+.admin-topbar .kicker {
+  color: #3B82F6;
+}
+
+.admin-topbar .button-secondary,
+.button-primary,
+.admin-user button {
+  border: 1px solid #334155;
+  color: #ffffff;
+  background: #000000;
+}
+
+.button-secondary,
+.verify-actions button {
+  border-color: var(--admin-border);
+  color: #f8fafc;
+  background: #0b1220;
+}
+
+.button-secondary:hover:not(:disabled),
+.verify-actions button:hover {
+  border-color: #3B82F6;
+  color: #bfdbfe;
+  background: rgba(59,130,246,.14);
+}
+
+.bionis-score span,
+.storage-monitor__values,
+.admin-empty {
+  color: var(--admin-muted);
+}
+
+.bionis-score strong {
+  color: #f8fafc;
+}
+
+.metric-card--blue strong { color: #60A5FA; }
+.metric-card--orange strong,
+.metric-card--amber strong,
+.metric-card--purple strong,
+.metric-card--violet strong { color: #F59E0B; }
+.metric-card--green strong { color: #34D399; }
+
+.metric-card--blue { --metric-color: #3B82F6; --metric-soft: rgba(59,130,246,.24); }
+.metric-card--orange,
+.metric-card--amber { --metric-color: #F59E0B; --metric-soft: rgba(245,158,11,.22); }
+.metric-card--green { --metric-color: #10B981; --metric-soft: rgba(16,185,129,.2); }
+.metric-card--purple,
+.metric-card--violet { --metric-color: #8B5CF6; --metric-soft: rgba(139,92,246,.22); }
+
+.event-bars div div,
+.storage-meter {
+  background: #1f2937;
+}
+
+.event-bars i {
+  background: #f8fafc;
+}
+
+.admin-table-wrap,
+.access-tabs,
+.pass-event-details,
+.invitation-members,
+.field-checkbox,
+.boarding-pass-empty,
+.check-in-camera {
+  border-color: var(--admin-border);
+  color: var(--admin-text);
+  background: #0b1220;
+}
+
+.admin-table th {
+  color: var(--admin-muted);
+  background: #172033;
+}
+
+.admin-table td {
+  color: var(--admin-text);
+  border-color: var(--admin-border);
+}
+
+.admin-table tbody tr:nth-child(even) {
+  background: #0f172a;
+}
+
+.admin-table tbody tr:hover {
+  background: #172033;
+}
+
+.field input,
+.field select,
+.field textarea,
+.admin-form input,
+.admin-form select,
+.admin-form textarea,
+.verify-actions input {
+  border-color: var(--admin-border);
+  color: #f8fafc;
+  background: #0b1220;
+}
+
+.field input::placeholder,
+.admin-form input::placeholder,
+.field textarea::placeholder {
+  color: #64748b;
+}
+
+.admin-message,
+.admin-empty {
+  border: 1px solid var(--admin-border);
+  background: #111827;
+}
+
+.status-pill {
+  color: #cbd5e1;
+  background: #1f2937;
+}
+
+.status-pill--pending,
+.admin-shell .status-pill--coming-soon {
+  color: #FBBF24;
+  background: rgba(245,158,11,.16);
+}
+
+.status-pill--confirmed,
+.admin-shell .status-pill--open {
+  color: #34D399;
+  background: rgba(16,185,129,.16);
+}
+
+.status-pill--mismatch,
+.status-pill--duplicate,
+.admin-shell .status-pill--closed {
+  color: #F87171;
+  background: rgba(248,113,113,.16);
+}
+
+.storage-monitor .kicker {
+  color: #06B6D4;
+}
+
+.storage-monitor__heading strong {
+  color: #F59E0B;
+}
+
+.storage-meter i {
+  background: #F59E0B;
+}
+
+.admin-login__home {
+  border-color: var(--admin-border);
+  color: #bfdbfe;
+  background: #0b1220;
+}
+
+/* Bionis dashboard final skin. */
+.admin-shell,
+.admin-login,
+.admin-loading {
+  --admin-bg: #000000;
+  --admin-surface: #ffffff;
+  --admin-text: #000000;
+  --admin-muted: #9CA3AF;
+  --admin-border: #E5E7EB;
+  --admin-blue: #3B82F6;
+  --admin-orange: #F59E0B;
+  --admin-green: #10B981;
+  --admin-purple: #8B5CF6;
+  --admin-cyan: #06B6D4;
+  min-height: 100vh;
+  color: var(--admin-text);
+  background: #000000;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.admin-shell {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+}
+
+.admin-main {
+  min-width: 0;
+  padding: 30px clamp(18px, 3vw, 36px) 44px;
+}
+
+.admin-sidebar,
+.bionis-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #E5E7EB;
+  background: #FFFFFF;
+  color: #000000;
+  box-shadow: none;
+}
+
+.admin-brand,
+.bionis-logo {
+  min-height: 48px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  border-radius: 0;
+  color: #000000;
+  background: transparent;
+  font-size: 15px;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: none;
+}
+
+.admin-brand img,
+.bionis-logo__mark img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.bionis-logo__mark {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #F3F4F6;
+}
+
+.admin-sidebar nav,
+.bionis-nav {
+  display: grid;
+  gap: 18px;
+  margin-top: 28px;
+}
+
+.bionis-nav__group {
+  display: grid;
+  gap: 6px;
+}
+
+.admin-nav-label {
+  margin: 0 0 6px;
+  color: #9CA3AF;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.admin-sidebar nav button {
+  min-height: 42px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  border-radius: 12px;
+  color: #6B7280;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-nav-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 999px;
+  background: #D1D5DB;
+}
+
+.admin-sidebar nav button svg {
+  color: currentColor;
+}
+
+.admin-sidebar nav button.active,
+.admin-sidebar nav button:hover {
+  color: #3B82F6;
+  background: #EFF6FF;
+}
+
+.admin-sidebar nav button.active .admin-nav-dot,
+.admin-sidebar nav button:hover .admin-nav-dot {
+  background: #3B82F6;
+}
+
+.admin-user,
+.bionis-user {
+  margin-top: auto;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 10px;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  color: #9CA3AF;
+  background: #FFFFFF;
+}
+
+.admin-user img,
+.admin-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+}
+
+.admin-avatar {
+  display: grid;
+  place-items: center;
+  color: #FFFFFF;
+  background: #000000;
+  font-weight: 800;
+}
+
+.admin-user strong,
+.admin-user small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-user strong {
+  color: #000000;
+  font-size: 13px;
+}
+
+.admin-user small {
+  color: #9CA3AF;
+  font-size: 11px;
+}
+
+.admin-user button {
+  grid-column: 1 / -1;
+  min-height: 40px;
+  border: 0;
+  border-radius: 12px;
+  color: #FFFFFF;
+  background: #000000;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.admin-topbar,
+.bionis-topbar {
+  margin-bottom: 24px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.admin-topbar .kicker {
+  color: #3B82F6;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+
+.admin-topbar h1 {
+  margin: 6px 0 0;
+  color: #FFFFFF;
+  font-size: clamp(36px, 5vw, 56px);
+  line-height: 1;
+  font-weight: 850;
+}
+
+.admin-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.button,
+.admin-shell button {
+  min-height: 42px;
+  border-radius: 12px;
+  font-weight: 800;
+}
+
+.admin-topbar .button-secondary,
+.button-primary {
+  border: 0;
+  color: #FFFFFF;
+  background: #000000;
+}
+
+.admin-topbar .button-secondary {
+  background: #000000;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.16);
+  text-transform: uppercase;
+}
+
+.button-secondary {
+  border: 1px solid #E5E7EB;
+  color: #000000;
+  background: #FFFFFF;
+}
+
+.admin-panel,
+.bionis-card,
+.admin-metrics article,
+.recent-list > div,
+.registration-table article,
+.access-list article,
+.event-lifecycle-card,
+.admin-login section {
+  border: 0;
+  border-radius: 12px;
+  color: #000000;
+  background: #FFFFFF;
+  box-shadow: none;
+}
+
+.admin-panel,
+.bionis-card {
+  padding: 22px;
+}
+
+.admin-panel h2,
+.bionis-card-title,
+.storage-monitor h2 {
+  margin: 0 0 16px;
+  color: #000000;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.bionis-overview {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.bionis-score-card {
+  min-height: 132px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.bionis-section-label {
+  color: #000000;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.bionis-score strong {
+  display: block;
+  color: #000000;
+  font-size: 48px;
+  line-height: .92;
+}
+
+.bionis-score span {
+  color: #9CA3AF;
+  font-size: 12px;
+}
+
+.admin-metrics {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.admin-metrics article,
+.metric-card {
+  position: relative;
+  min-height: 132px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.admin-metrics article::before,
+.metric-card::before {
+  content: "";
+  position: absolute;
+  right: -38px;
+  bottom: -52px;
+  width: 132px;
+  height: 132px;
+  border-radius: 999px;
+  background: var(--metric-soft, rgba(59, 130, 246, .13));
+  z-index: -1;
+}
+
+.admin-metrics article::after,
+.metric-card::after {
+  content: "";
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--metric-color, #3B82F6);
+}
+
+.metric-card--blue { --metric-color: #3B82F6; --metric-soft: rgba(59, 130, 246, .14); }
+.metric-card--orange,
+.metric-card--amber { --metric-color: #F59E0B; --metric-soft: rgba(245, 158, 11, .16); }
+.metric-card--green { --metric-color: #10B981; --metric-soft: rgba(16, 185, 129, .14); }
+.metric-card--purple,
+.metric-card--violet { --metric-color: #8B5CF6; --metric-soft: rgba(139, 92, 246, .14); }
+
+.admin-metrics span,
+.metric-card span {
+  color: #9CA3AF;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.admin-metrics strong,
+.metric-card strong {
+  margin-top: 10px;
+  color: #000000;
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 850;
+}
+
+.metric-card--orange strong,
+.metric-card--amber strong,
+.metric-card--violet strong,
+.metric-card--purple strong {
+  color: #F59E0B;
+}
+
+.metric-card--green strong {
+  color: #10B981;
+}
+
+.bionis-dashboard-grid,
+.admin-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(320px, 2fr);
+  gap: 16px;
+}
+
+.bionis-event-demand {
+  min-height: 324px;
+}
+
+.event-bars {
+  display: grid;
+  gap: 13px;
+}
+
+.event-bars > div {
+  display: grid;
+  grid-template-columns: minmax(140px, 190px) 1fr 34px;
+  align-items: center;
+  gap: 12px;
+  color: #9CA3AF;
+  font-size: 13px;
+}
+
+.event-bars div div {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #E5E7EB;
+}
+
+.event-bars i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #000000;
+}
+
+.event-bars strong {
+  color: #9CA3AF;
+}
+
+.recent-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.recent-list > div {
+  padding: 10px 0;
+  display: grid;
+  grid-template-columns: 94px 1fr;
+  gap: 4px 10px;
+  border-bottom: 1px solid #F3F4F6;
+  border-radius: 0;
+}
+
+.recent-list small {
+  color: #9CA3AF;
+}
+
+.recent-list .status-pill {
+  grid-column: 2;
+}
+
+.storage-monitor {
+  margin-top: 16px;
+}
+
+.storage-monitor__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.storage-monitor .kicker {
+  color: #06B6D4;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+
+.storage-monitor__heading strong {
+  color: #F59E0B;
+  font-weight: 850;
+}
+
+.storage-monitor p,
+.admin-help,
+.admin-panel p {
+  color: #9CA3AF;
+}
+
+.storage-meter {
+  height: 8px;
+  margin: 18px 0 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #E5E7EB;
+}
+
+.storage-meter i {
+  display: block;
+  height: 100%;
+  background: #F59E0B;
+}
+
+.storage-monitor__values {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #9CA3AF;
+  font-size: 12px;
+}
+
+.admin-message {
+  border: 0;
+  border-radius: 12px;
+  color: #000000;
+  background: #FFFFFF;
+}
+
+.status-pill {
+  width: fit-content;
+  padding: 5px 9px;
+  border-radius: 999px;
+  color: #6B7280;
+  background: #F3F4F6;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.status-pill--pending,
+.admin-shell .status-pill--coming-soon {
+  color: #F59E0B;
+  background: #FEF3C7;
+}
+
+.status-pill--confirmed,
+.admin-shell .status-pill--open {
+  color: #10B981;
+  background: #D1FAE5;
+}
+
+.status-pill--mismatch,
+.status-pill--duplicate,
+.admin-shell .status-pill--closed {
+  color: #DC2626;
+  background: #FEE2E2;
+}
+
+.field input,
+.field select,
+.field textarea,
+.admin-form input,
+.admin-form select,
+.admin-form textarea,
+.verify-actions input {
+  min-height: 42px;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  color: #000000;
+  background: #FFFFFF;
+}
+
+.field > span {
+  color: #9CA3AF;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.admin-menu-toggle {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .bionis-overview {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .bionis-dashboard-grid,
+  .admin-grid,
+  .admin-grid--wide {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-shell {
+    display: block;
+  }
+
+  .admin-main {
+    padding: 76px 12px 32px;
+  }
+
+  .admin-menu-toggle {
+    position: fixed;
+    z-index: 60;
+    top: 14px;
+    left: 14px;
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 12px;
+    color: #FFFFFF;
+    background: #000000;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.18);
+  }
+
+  .admin-sidebar {
+    position: fixed;
+    z-index: 50;
+    inset: 0 auto 0 0;
+    width: min(82vw, 300px);
+    transform: translateX(-105%);
+    transition: transform .24s ease;
+  }
+
+  .admin-shell--nav-open .admin-sidebar {
+    transform: translateX(0);
+  }
+
+  .admin-topbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-topbar h1 {
+    font-size: 36px;
+  }
+
+  .admin-topbar-actions,
+  .admin-topbar-actions .button {
+    width: 100%;
+  }
+
+  .admin-metrics {
+    gap: 10px;
+  }
+
+  .admin-metrics article,
+  .metric-card {
+    min-height: 112px;
+    padding: 14px;
+  }
+
+  .admin-metrics strong,
+  .metric-card strong {
+    font-size: 27px;
+  }
+
+  .event-bars > div {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Bionis-inspired admin dashboard skin. Keep this final so old content gets the new UX. */
+.admin-shell,
+.admin-login,
+.admin-loading {
+  --admin-bg: #f3f6f1;
+  --admin-surface: #fffdf7;
+  --admin-surface-soft: #eef5e9;
+  --admin-surface-alt: #f8faf5;
+  --admin-text: #161b14;
+  --admin-muted: #687263;
+  --admin-border: #dfe7d8;
+  --admin-border-strong: #cad8c2;
+  --admin-accent: #2f6f4e;
+  --admin-accent-strong: #21543a;
+  --admin-lime: #c8f169;
+  --admin-blue: #2d6cdf;
+  --admin-violet: #805ad5;
+  --admin-amber: #b7791f;
+  --admin-success: #25855a;
+  --admin-danger: #c2412d;
+  --admin-warning: #b7791f;
+  --admin-radius-sm: 8px;
+  --admin-radius-md: 12px;
+  --admin-radius-lg: 18px;
+  --admin-shadow-sm: 0 1px 0 rgba(22, 27, 20, .05), 0 10px 24px rgba(22, 27, 20, .045);
+  --admin-shadow-md: 0 18px 44px rgba(22, 27, 20, .1);
+  min-height: 100vh;
+  color: var(--admin-text);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(200, 241, 105, .28), transparent 30%),
+    linear-gradient(135deg, #f8faf4 0%, #edf5e7 48%, #f7f4ed 100%);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.admin-shell {
+  grid-template-columns: 280px minmax(0, 1fr);
 }
 
 .admin-sidebar {
-  border-color: #d9e1ec;
-  background: rgba(255,255,255,.94);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  padding: 18px;
+  border-right: 1px solid rgba(202, 216, 194, .85);
+  background: rgba(255, 253, 247, .78);
+  backdrop-filter: blur(18px);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, .7);
+}
+
+.admin-brand {
+  min-height: 52px;
+  padding: 7px;
+  border: 1px solid var(--admin-border);
+  border-radius: 16px;
+  color: var(--admin-text);
+  background: rgba(255, 255, 255, .7);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.admin-brand img {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  object-fit: contain;
+  background: #101510;
+}
+
+.admin-sidebar nav {
+  gap: 5px;
+  margin-top: 22px;
+}
+
+.admin-nav-label {
+  margin: 22px 12px 8px;
+  color: #8a9584;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.admin-sidebar nav button {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-inline: 12px;
+  border-radius: 14px;
+  color: var(--admin-muted);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.admin-nav-dot {
+  width: 9px;
+  height: 9px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: transparent;
 }
 
 .admin-sidebar nav button:hover,
 .admin-sidebar nav button.active {
-  color: #194fd1;
-  border-color: #c6d7ff;
-  background: #eef4ff;
+  color: #173323;
+  border-color: rgba(47, 111, 78, .18);
+  background: linear-gradient(135deg, var(--admin-lime), #dff8a4);
+  box-shadow: 0 10px 20px rgba(47, 111, 78, .12);
 }
 
-.admin-sidebar nav button.active .admin-nav-dot { background: #194fd1; }
-.admin-login .kicker,
-.admin-topbar .kicker { color: #194fd1; }
+.admin-sidebar nav button.active .admin-nav-dot {
+  background: #173323;
+}
+
+.admin-user {
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--admin-border);
+  border-radius: 18px;
+  color: var(--admin-muted);
+  background: rgba(255, 255, 255, .65);
+}
+
+.admin-user img,
+.admin-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+}
+
+.admin-avatar {
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: #173323;
+  font-weight: 900;
+}
+
+.admin-user strong,
+.admin-user small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-user strong {
+  color: var(--admin-text);
+}
+
+.admin-user button {
+  grid-column: 1 / -1;
+  min-height: 40px;
+  border-color: var(--admin-border);
+  border-radius: 12px;
+  color: var(--admin-text);
+  background: var(--admin-surface);
+}
+
+.admin-main {
+  padding: 32px clamp(22px, 3vw, 42px) 56px;
+}
+
+.admin-topbar {
+  align-items: center;
+  margin-bottom: 26px;
+}
+
+.admin-topbar h1 {
+  margin-top: 7px;
+  color: var(--admin-text);
+  font-size: clamp(30px, 4vw, 46px);
+  font-weight: 850;
+  line-height: .98;
+}
+
+.admin-topbar .kicker {
+  color: var(--admin-accent);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: .16em;
+}
+
+.admin-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-panel,
+.admin-metrics article,
+.admin-login section,
+.recent-list > div,
+.registration-table article,
+.access-list article,
+.event-lifecycle-card {
+  border: 1px solid rgba(202, 216, 194, .86);
+  border-radius: var(--admin-radius-lg);
+  background: rgba(255, 253, 247, .86);
+  box-shadow: var(--admin-shadow-sm);
+}
+
+.admin-panel {
+  padding: 22px;
+}
+
+.admin-panel h2 {
+  color: var(--admin-text);
+  font-size: 17px;
+  font-weight: 850;
+}
+
+.admin-help,
+.admin-panel p,
+.recent-list small,
+.registration-table small,
+.access-list small,
+.admin-metrics span {
+  color: var(--admin-muted);
+}
+
+.admin-grid {
+  gap: 18px;
+}
+
+.admin-grid--wide {
+  grid-template-columns: minmax(330px, 430px) minmax(0, 1fr);
+}
+
+.admin-metrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.admin-metrics article {
+  position: relative;
+  min-height: 126px;
+  overflow: hidden;
+  padding: 20px;
+  isolation: isolate;
+}
+
+.admin-metrics article::before {
+  content: "";
+  position: absolute;
+  inset: auto -28px -44px auto;
+  width: 118px;
+  height: 118px;
+  border-radius: 50%;
+  background: var(--metric-glow, rgba(200, 241, 105, .55));
+  z-index: -1;
+}
+
+.admin-metrics article::after {
+  content: "";
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: var(--metric-chip, #173323);
+  box-shadow: inset 0 0 0 8px rgba(255,255,255,.18);
+}
+
+.metric-card--blue { --metric-glow: rgba(45, 108, 223, .16); --metric-chip: #2d6cdf; }
+.metric-card--amber { --metric-glow: rgba(183, 121, 31, .18); --metric-chip: #e9b44c; }
+.metric-card--green { --metric-glow: rgba(37, 133, 90, .18); --metric-chip: #25855a; }
+.metric-card--violet { --metric-glow: rgba(128, 90, 213, .16); --metric-chip: #805ad5; }
+
+.admin-metrics span {
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.admin-metrics strong {
+  margin-top: auto;
+  color: var(--admin-text);
+  font-size: clamp(30px, 4vw, 40px);
+  line-height: .95;
+}
+
+.event-bars {
+  gap: 14px;
+}
+
+.event-bars > div {
+  grid-template-columns: minmax(128px, 210px) 1fr 42px;
+  color: var(--admin-text);
+}
+
+.event-bars div div {
+  height: 12px;
+  border-radius: 999px;
+  background: #e6eee0;
+}
+
+.event-bars i {
+  background: linear-gradient(90deg, var(--admin-accent), var(--admin-lime));
+}
+
+.recent-list > div {
+  grid-template-columns: 118px 1fr 1.2fr auto;
+  padding: 14px;
+}
+
+.registration-table {
+  gap: 10px;
+}
+
+.registration-table article {
+  min-height: 88px;
+  padding: 14px;
+}
+
+.registration-table label {
+  color: var(--admin-accent);
+  font-weight: 800;
+}
+
+.admin-event-list {
+  display: grid;
+  gap: 12px;
+  border: 0;
+  background: transparent;
+}
+
+.admin-event-list article {
+  grid-template-columns: minmax(180px, 1fr) auto auto;
+}
+
+.event-pass-fields {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(170px, 1.2fr) repeat(2, minmax(0, 1fr)) minmax(126px, auto) auto;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--admin-border-strong);
+}
+
+.field > span,
+.admin-form label > span {
+  color: var(--admin-muted);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: .04em;
+}
+
+.field input,
+.field select,
+.field textarea,
+.admin-form input,
+.admin-form select,
+.admin-form textarea,
+.verify-actions input {
+  min-height: 44px;
+  border-color: var(--admin-border);
+  border-radius: 12px;
+  color: var(--admin-text);
+  background: rgba(255, 255, 255, .75);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9);
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus,
+.admin-form input:focus,
+.admin-form select:focus,
+.admin-form textarea:focus,
+.verify-actions input:focus,
+.admin-shell button:focus-visible,
+.admin-shell a:focus-visible {
+  outline: 2px solid rgba(47, 111, 78, .45);
+  outline-offset: 2px;
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 4px rgba(47, 111, 78, .11);
+}
+
+.button {
+  min-height: 42px;
+  border-radius: 12px;
+  font-weight: 850;
+  box-shadow: none;
+  transition: transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease, color .18s ease;
+}
+
+.button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.button-primary {
+  border-color: #173323;
+  color: #f9fff1;
+  background: #173323;
+}
+
+.button-primary:hover:not(:disabled) {
+  background: var(--admin-accent-strong);
+  box-shadow: 0 14px 26px rgba(47, 111, 78, .2);
+}
+
+.button-secondary,
+.verify-actions button,
+.admin-user button {
+  border-color: var(--admin-border);
+  color: var(--admin-text);
+  background: rgba(255, 253, 247, .82);
+}
+
+.button-secondary:hover:not(:disabled),
+.verify-actions button:hover {
+  border-color: rgba(47, 111, 78, .32);
+  color: var(--admin-accent);
+  background: #f1f8eb;
+}
+
+.verify-actions button:first-of-type {
+  border-color: var(--admin-success);
+  color: #fff;
+  background: var(--admin-success);
+}
+
+.admin-message {
+  border: 1px solid rgba(47, 111, 78, .2);
+  border-left: 4px solid var(--admin-accent);
+  border-radius: 14px;
+  color: var(--admin-accent-strong);
+  background: rgba(232, 246, 219, .78);
+}
+
+.admin-empty {
+  border-color: var(--admin-border-strong);
+  border-radius: 14px;
+  color: var(--admin-muted);
+  background: rgba(255, 255, 255, .55);
+}
+
+.status-pill {
+  min-height: 25px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.status-pill--pending,
+.admin-shell .status-pill--coming-soon {
+  color: #7a4b08;
+  background: #fff3cf;
+}
+
+.status-pill--confirmed,
+.admin-shell .status-pill--open {
+  color: #146c43;
+  background: #dff8ea;
+}
+
+.status-pill--mismatch,
+.status-pill--duplicate,
+.admin-shell .status-pill--closed {
+  color: #9c2d1d;
+  background: #ffe3de;
+}
+
+.admin-table-wrap {
+  border-color: var(--admin-border);
+  border-radius: 16px;
+  background: rgba(255, 253, 247, .86);
+}
+
+.admin-table th {
+  color: var(--admin-muted);
+  background: var(--admin-surface-soft);
+}
+
+.admin-table td {
+  color: var(--admin-text);
+  border-color: var(--admin-border);
+}
+
+.admin-table tbody tr:nth-child(even) {
+  background: rgba(248, 250, 245, .7);
+}
+
+.admin-table tbody tr:hover {
+  background: #f0f7ea;
+}
+
+.access-tabs,
+.pass-event-details,
+.invitation-members,
+.field-checkbox,
+.boarding-pass-empty,
+.check-in-camera {
+  border-color: var(--admin-border);
+  border-radius: 14px;
+  background: rgba(248, 250, 245, .8);
+}
+
+.boarding-pass-card,
+.boarding-pass-render {
+  border-radius: 18px;
+}
+
+.boarding-pass-card {
+  box-shadow: var(--admin-shadow-md);
+}
+
+.admin-login section {
+  width: min(470px, 100%);
+  padding: 34px;
+}
+
+.admin-login h1 {
+  color: var(--admin-text);
+  font-size: clamp(32px, 6vw, 44px);
+}
+
+.admin-login__home {
+  width: fit-content;
+  min-height: 40px;
+  margin: -10px 0 22px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  color: var(--admin-accent);
+  background: rgba(255, 255, 255, .72);
+  font-size: 13px;
+  font-weight: 850;
+  text-decoration: none;
+  box-shadow: var(--admin-shadow-sm);
+  transition: transform .18s ease, border-color .18s ease, background .18s ease;
+}
+
+.admin-login__home:hover {
+  transform: translateY(-1px);
+  border-color: rgba(47, 111, 78, .32);
+  background: #f1f8eb;
+}
+
+@media (max-width: 1180px) {
+  .admin-shell {
+    display: block;
+  }
+
+  .admin-sidebar {
+    z-index: 20;
+    height: auto;
+    padding: 12px 16px;
+    border-right: 0;
+    border-bottom: 1px solid var(--admin-border);
+  }
+
+  .admin-brand {
+    width: fit-content;
+  }
+
+  .admin-sidebar nav {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .admin-nav-label,
+  .admin-user {
+    display: none;
+  }
+
+  .admin-sidebar nav button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .admin-main {
+    padding: 22px 16px 40px;
+  }
+
+  .admin-grid,
+  .admin-grid--wide {
+    grid-template-columns: 1fr;
+  }
+
+  .event-pass-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .admin-main {
+    padding-inline: 12px;
+  }
+
+  .admin-topbar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .admin-topbar-actions,
+  .admin-topbar-actions .button {
+    width: 100%;
+  }
+
+  .admin-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .admin-metrics article {
+    min-height: 102px;
+    padding: 14px;
+  }
+
+  .admin-metrics article::after {
+    right: 12px;
+    top: 12px;
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
+  }
+
+  .admin-metrics strong {
+    font-size: 27px;
+  }
+
+  .admin-panel {
+    padding: 16px;
+  }
+
+  .recent-list > div,
+  .event-bars > div,
+  .event-pass-fields,
+  .admin-filters,
+  .admin-shell .check-in-panel .admin-form {
+    grid-template-columns: 1fr;
+  }
+
+  .registration-table {
+    overflow-x: auto;
+  }
+
+  .registration-table article {
+    min-width: 700px;
+  }
+}
 
 /* Noctivus official dark palette for admin surfaces. */
 .admin-loading,
@@ -1315,6 +3204,16 @@
   border-left-color: var(--admin-success);
   color: var(--admin-success);
   background: #ecfdf3;
+}
+
+.admin-empty {
+  margin: 14px 0 0;
+  padding: 16px;
+  border: 1px dashed var(--admin-border);
+  border-radius: var(--admin-radius-md);
+  color: var(--admin-muted);
+  background: color-mix(in srgb, var(--admin-surface) 92%, var(--admin-bg));
+  font-size: 13px;
 }
 
 .admin-metrics {
@@ -2022,46 +3921,135 @@
 }
 
 /* Admin design-system cascade finalizer. Keep this block last. */
-.admin-loading,
+.admin-shell,
 .admin-login,
-.admin-shell {
-  color: #101828;
-  background:
-    linear-gradient(180deg, rgba(25,79,209,.05), rgba(25,79,209,0) 280px),
-    #f5f7fb;
+.admin-loading {
+  --admin-bg: #05070b;
+  --admin-surface: #111827;
+  --admin-surface-alt: #0b1220;
+  --admin-text: #f8fafc;
+  --admin-muted: #94a3b8;
+  --admin-border: #243244;
+  color: var(--admin-text);
+  background: radial-gradient(circle at 18% 0%, rgba(59,130,246,.16), transparent 28%), #05070b;
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-.admin-login section,
+.admin-sidebar,
+.bionis-sidebar,
+.admin-panel,
+.bionis-card,
 .admin-metrics article,
-.admin-panel {
-  border-color: #d9e1ec;
+.metric-card,
+.recent-list > div,
+.registration-table article,
+.access-list article,
+.event-lifecycle-card,
+.admin-login section {
+  border: 1px solid var(--admin-border);
   border-radius: 12px;
-  background: #ffffff;
-  box-shadow: 0 1px 2px rgba(16,24,40,.05);
+  color: var(--admin-text);
+  background: #111827;
+  box-shadow: 0 18px 44px rgba(0,0,0,.24);
 }
 
-.admin-login h1,
+.admin-sidebar,
+.bionis-sidebar,
+.button-secondary,
+.verify-actions button,
+.field input,
+.field select,
+.field textarea,
+.admin-form input,
+.admin-form select,
+.admin-form textarea,
+.verify-actions input,
+.admin-table-wrap,
+.access-tabs,
+.pass-event-details,
+.invitation-members,
+.field-checkbox,
+.boarding-pass-empty,
+.check-in-camera {
+  border-color: var(--admin-border);
+  color: #f8fafc;
+  background: #0b1220;
+}
+
 .admin-brand,
+.bionis-logo,
 .admin-user strong,
 .admin-topbar h1,
+.admin-panel h2,
+.bionis-card-title,
+.storage-monitor h2,
+.bionis-section-label,
 .admin-metrics strong,
-.admin-panel h2 {
-  color: #101828;
+.metric-card strong,
+.recent-list strong,
+.registration-table strong,
+.access-list strong,
+.bionis-score strong {
+  color: #f8fafc;
 }
 
-.admin-sidebar {
-  border-color: #d9e1ec;
-  background: rgba(255,255,255,.94);
+.admin-nav-label,
+.admin-sidebar nav button,
+.admin-help,
+.admin-panel p,
+.recent-list small,
+.registration-table small,
+.access-list small,
+.admin-metrics span,
+.metric-card span,
+.field > span,
+.admin-user small,
+.storage-monitor p,
+.event-bars > div,
+.event-bars strong,
+.storage-monitor__values,
+.admin-empty {
+  color: var(--admin-muted);
 }
 
-.admin-sidebar nav button:hover,
-.admin-sidebar nav button.active {
-  color: #194fd1;
-  border-color: #c6d7ff;
-  background: #eef4ff;
-}
-
-.admin-sidebar nav button.active .admin-nav-dot { background: #194fd1; }
+.bionis-logo__mark,
+.admin-table th { background: #172033; }
+.admin-sidebar nav button.active,
+.admin-sidebar nav button:hover { color: #bfdbfe; border-color: transparent; background: rgba(59,130,246,.16); }
+.admin-sidebar nav button.active .admin-nav-dot,
+.admin-sidebar nav button:hover .admin-nav-dot { background: #3B82F6; }
+.admin-nav-dot { background: #475569; }
 .admin-login .kicker,
-.admin-topbar .kicker { color: #194fd1; }
+.admin-topbar .kicker { color: #3B82F6; }
+.admin-topbar .button-secondary,
+.button-primary,
+.admin-user button { border: 1px solid #334155; color: #ffffff; background: #000000; }
+.button-secondary:hover:not(:disabled),
+.verify-actions button:hover { border-color: #3B82F6; color: #bfdbfe; background: rgba(59,130,246,.14); }
+.metric-card--blue strong { color: #60A5FA; }
+.metric-card--orange strong,
+.metric-card--amber strong,
+.metric-card--purple strong,
+.metric-card--violet strong,
+.storage-monitor__heading strong { color: #F59E0B; }
+.metric-card--green strong { color: #34D399; }
+.event-bars div div,
+.storage-meter,
+.status-pill { background: #1f2937; }
+.event-bars i { background: #f8fafc; }
+.admin-table td { color: var(--admin-text); border-color: var(--admin-border); }
+.admin-table tbody tr:nth-child(even) { background: #0f172a; }
+.admin-table tbody tr:hover { background: #172033; }
+.admin-message,
+.admin-empty { border: 1px solid var(--admin-border); background: #111827; }
+.status-pill { color: #cbd5e1; }
+.status-pill--pending,
+.admin-shell .status-pill--coming-soon { color: #FBBF24; background: rgba(245,158,11,.16); }
+.status-pill--confirmed,
+.admin-shell .status-pill--open { color: #34D399; background: rgba(16,185,129,.16); }
+.status-pill--mismatch,
+.status-pill--duplicate,
+.admin-shell .status-pill--closed { color: #F87171; background: rgba(248,113,113,.16); }
+.storage-monitor .kicker { color: #06B6D4; }
+.storage-meter i { background: #F59E0B; }
+.admin-login__home { border-color: var(--admin-border); color: #bfdbfe; background: #0b1220; }

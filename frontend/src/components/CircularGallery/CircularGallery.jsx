@@ -12,6 +12,8 @@ export default function CircularGallery({
   className = '',
   onActiveChange,
   onPosterClick,
+  autoScroll = false,
+  autoScrollMs = 2600,
 }) {
   const data = useMemo(() => items.filter((item) => item?.image), [items]);
   const count = data.length;
@@ -26,6 +28,14 @@ export default function CircularGallery({
     if (count < 2) return;
     setActive((current) => (current + step + count) % count);
   };
+
+  useEffect(() => {
+    if (!autoScroll || count < 2) return undefined;
+    const timer = window.setInterval(() => {
+      setActive((current) => (current + 1) % count);
+    }, autoScrollMs);
+    return () => window.clearInterval(timer);
+  }, [autoScroll, autoScrollMs, count]);
 
   const getOffset = (index) => {
     let offset = index - active;
@@ -89,7 +99,7 @@ export default function CircularGallery({
                 else setActive(index);
               }}
             >
-              <img src={item.image} alt={item.alt || item.text || item.title || ''} draggable="false" />
+              <img src={item.image} alt={item.alt || item.text || item.title || ''} width={item.width || 900} height={item.height || 1200} loading={offset === 0 ? 'eager' : 'lazy'} decoding="async" draggable="false" />
             </button>
           );
         })}

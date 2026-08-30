@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 import hashlib
+import json
 import logging
 import re
 from urllib.parse import urlparse
@@ -20,6 +21,7 @@ from app.services.event_service import admin_events, update_event, get_event
 from app.services.audit_service import list_admin_actions, record_admin_action
 from app.services.google_auth_service import verify_google_credential
 from app.services.registration_service import create_registration_id, load_registrations, serialize_registration, update_registration
+from app.services.scheduler_service import assign_batches, get_schedule, save_schedule, scheduler_analysis
 from app.db.memory_store import memory_registrations
 from app.db import mongo
 
@@ -45,7 +47,17 @@ async def google_auth(request: Request):
         if not access:
             raise HTTPException(status_code=403, detail="This Google account is not allowed for admin access. Add the exact Google email to ADMIN_EMAILS or Admin Access.")
         user = {"email": google_email, "name": profile.get("name") or google_email, "picture": profile.get("picture") or "", "tabs": access["tabs"], "owner": access["owner"]}
-        return {"token": sign_admin_token(user), "user": user}
+        response = Response(content=json.dumps({"user": user}, separators=(",", ":")), media_type="application/json")
+        response.set_cookie(
+            "noctivus_admin_session",
+            sign_admin_token(user),
+            max_age=8 * 60 * 60,
+            httponly=True,
+            secure=settings.environment == "production",
+            samesite="none" if settings.environment == "production" else "lax",
+            path="/api/admin",
+        )
+        return response
     except HTTPException:
         raise
     except Exception as error:
@@ -58,9 +70,41 @@ async def me(admin=Depends(require_admin)):
     return {"user": admin, "tabs": admin["tabs"]}
 
 
+@router.post("/logout")
+async def logout():
+    response = Response(content='{"ok":true}', media_type="application/json")
+    cookie_options = {
+        "secure": settings.environment == "production",
+        "httponly": True,
+        "samesite": "none" if settings.environment == "production" else "lax",
+    }
+    response.delete_cookie("noctivus_admin_session", path="/api/admin", **cookie_options)
+    response.delete_cookie("noctivus_admin_session", path="/", **cookie_options)
+    return response
+
+
 @router.get("/events")
 async def events(_admin=Depends(require_any_admin_tab(["Events", "Invitations"]))):
     return {"events": await admin_events()}
+
+
+@router.get("/scheduler")
+async def scheduler_get(_admin=Depends(require_admin_tab("Event Scheduler"))):
+    return {"schedule": await get_schedule()}
+
+
+@router.put("/scheduler")
+async def scheduler_save(request: Request, admin=Depends(require_admin_tab("Event Scheduler"))):
+    return {"schedule": await save_schedule(await request.json(), admin["email"])}
+
+
+@router.post("/scheduler/assign")
+async def scheduler_assign(admin=Depends(require_admin_tab("Event Scheduler"))):
+    schedule = await get_schedule()
+    summary = await assign_batches(schedule)
+    await save_schedule(schedule, admin["email"])
+    await record_admin_action(admin["email"], "scheduler.assign", schedule["scheduleId"], summary)
+    return {"schedule": schedule, "summary": summary, "analysis": scheduler_analysis(schedule, summary)}
 
 
 @router.patch("/events/{event_id}")
@@ -249,7 +293,7 @@ async def invitations_send(request: Request, admin=Depends(require_admin_tab("In
     date = str(event_record.get("date") or "").strip()
     time = str(event_record.get("time") or "").strip()
     gate = str(event_record.get("gate") or "").strip()
-    terminal = str(event_record.get("terminal") or "").strip()
+    terminal = str(event_record.get("terminal") or "Main Hall").strip()
     seat_type = str(event_record.get("seatType") or "VIP").strip()
     if event_record.get("passActive") is False:
         raise HTTPException(status_code=400, detail="Pass generation is disabled for this event.")
@@ -278,7 +322,8 @@ async def invitations_send(request: Request, admin=Depends(require_admin_tab("In
         raise HTTPException(status_code=404, detail="No confirmed registrations were found for this event.")
     for registration in selected:
         qr_token, qr_hash = create_pass_token()
-        await queue_email("invitation", registration, {**queued_pass, "qrToken": qr_token})
+        event_entry = next((item for item in registration.get("eventRegistrations", []) if item.get("eventId") == event_id), {})
+        await queue_email("invitation", registration, {**queued_pass, "qrToken": qr_token, "assignedTime": event_entry.get("batchTime")})
         await update_registration(registration["registrationId"], {"invitation": {"sentAt": datetime.now(timezone.utc), "sentBy": admin["email"], "eventId": event_id, "passTitle": pass_data["title"], "qrHash": qr_hash, "status": "active"}})
     await record_admin_action(admin["email"], "invitation.send", event_id, {"count": len(selected), "audience": audience})
     return {"sent": len(selected)}
@@ -296,8 +341,8 @@ async def invitations_preview(request: Request, _admin=Depends(require_admin_tab
         raise HTTPException(status_code=404, detail="Choose a valid event before previewing a pass.")
     if event.get("passActive") is False:
         raise HTTPException(status_code=400, detail="Pass generation is disabled for this event.")
-    if not all(str(event.get(key) or "").strip() for key in ("venue", "date", "time", "gate", "terminal")):
-        raise HTTPException(status_code=400, detail="Event details incomplete - set date/time/gate/venue/terminal in the Events tab.")
+    if not all(str(event.get(key) or "").strip() for key in ("venue", "date", "time", "gate")):
+        raise HTTPException(status_code=400, detail="Event details incomplete - set date/time/gate/venue in the Events tab.")
     rows = await load_registrations({"eventId": event_id, "status": "confirmed"})
     registration = next((row for row in rows if row.get("registrationId") == registration_id), None) if registration_id else (rows[0] if rows else None)
     if not registration and registration_id:
@@ -326,9 +371,12 @@ async def invitations_preview(request: Request, _admin=Depends(require_admin_tab
         "date": str(event["date"]),
         "time": str(event["time"]),
         "gate": str(event["gate"]),
-        "terminal": str(event["terminal"]),
+        "terminal": str(event.get("terminal") or "Main Hall"),
         "seatType": str(event.get("seatType") or "VIP"),
     }
+    event_entry = next((item for item in registration.get("eventRegistrations", []) if item.get("eventId") == event_id), {})
+    if event_entry.get("batchTime"):
+        pass_data["time"] = event_entry["batchTime"]
     preview_token = create_pass_token()[0]
     return Response(content=await render_pass_artwork_bytes(registration, pass_data, preview_token), media_type="image/png")
 

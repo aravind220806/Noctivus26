@@ -30,6 +30,7 @@ async def connect_mongo() -> None:
     await db.admin_access.create_index([("email", ASCENDING)], unique=True)
     await db.admin_access.create_index([("updatedAt", DESCENDING)])
     await db.events.create_index([("id", ASCENDING)], unique=True)
+    await db.event_schedules.create_index([("scheduleId", ASCENDING)], unique=True)
     await db.admin_actions.create_index([("createdAt", DESCENDING)])
     await db.email_jobs.create_index([("status", ASCENDING), ("nextAttemptAt", ASCENDING)])
     await db.email_jobs.create_index("expiresAt", expireAfterSeconds=0)

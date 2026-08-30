@@ -1,14 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '../components/Icon.jsx';
+import DashboardLayout from '../dashboard-layout';
+import { DashboardContent } from '../components/bionis/dashboard-content';
 import './admin.css';
 
 const apiBase = import.meta.env.VITE_API_URL || '';
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
-const tabs = ['Dashboard', 'Verify Members', 'Check-in', 'Events', 'Invitations', 'Announcements', 'AI Analysis', 'Export', 'Audit Log', 'Admin Access'];
+const tabs = ['Dashboard', 'Verify Members', 'Check-in', 'Events', 'Event Scheduler', 'Invitations', 'Announcements', 'AI Analysis', 'Export', 'Audit Log', 'Admin Access'];
 const statuses = ['pending', 'confirmed', 'mismatch', 'duplicate'];
+const adminFetch = (url, options = {}) => fetch(url, { credentials: 'include', ...options, headers: options.headers });
 
 export default function AdminApp() {
-  const [session, setSession] = useState(() => JSON.parse(sessionStorage.getItem('noctivus-admin') || 'null'));
+  const [session, setSession] = useState(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [overview, setOverview] = useState(null);
   const [registrations, setRegistrations] = useState([]);
@@ -16,12 +20,26 @@ export default function AdminApp() {
   const [status, setStatus] = useState('');
   const [selected, setSelected] = useState([]);
   const [message, setMessage] = useState('');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const authHeaders = useMemo(() => ({ Authorization: `Bearer ${session?.token}` }), [session]);
+  const authHeaders = useMemo(() => ({}), []);
   const isLoginRoute = window.location.pathname.startsWith('/login');
-  const allowedTabs = session?.user?.tabs || [];
-  const visibleTabs = tabs.filter((tab) => allowedTabs.includes(tab));
-  const can = (tab) => allowedTabs.includes(tab);
+  const allowedTabs = session?.user?.tabs;
+  const visibleTabs = useMemo(() => tabs.filter((tab) => (allowedTabs || []).includes(tab)), [allowedTabs]);
+  const can = (tab) => (allowedTabs || []).includes(tab);
+
+  useEffect(() => {
+    let active = true;
+    adminFetch(`${apiBase}/api/admin/me`)
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => {
+        if (!active) return;
+        if (data?.user) setSession({ user: data.user });
+        setAuthChecked(true);
+      })
+      .catch(() => active && setAuthChecked(true));
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     if (session && visibleTabs.length && !visibleTabs.includes(activeTab)) setActiveTab(visibleTabs[0]);
@@ -33,30 +51,42 @@ export default function AdminApp() {
   }, [session, eventId, status]);
 
   const saveSession = (data) => {
-    sessionStorage.setItem('noctivus-admin', JSON.stringify(data));
     setSession(data);
   };
 
-  const logout = () => {
-    sessionStorage.removeItem('noctivus-admin');
+  const logout = async () => {
+    try {
+      window.google?.accounts?.id?.disableAutoSelect?.();
+      await adminFetch(`${apiBase}/api/admin/logout`, { method: 'POST' });
+    } catch {
+      window.google?.accounts?.id?.disableAutoSelect?.();
+    }
     setSession(null);
+    setAuthChecked(true);
+    window.location.replace('/login');
   };
 
   const refresh = async () => {
     setMessage('');
-    const needsOverview = ['Dashboard', 'Verify Members', 'Invitations', 'AI Analysis', 'Export'].some(can);
-    const needsRegistrations = ['Verify Members', 'Invitations', 'Export'].some(can);
-    const [overviewResponse, registrationsResponse] = await Promise.all([
-      needsOverview ? fetch(`${apiBase}/api/admin/overview`, { headers: authHeaders }) : Promise.resolve(null),
-      needsRegistrations ? fetch(`${apiBase}/api/admin/registrations?${new URLSearchParams({ ...(eventId && { eventId }), ...(status && { status }) })}`, { headers: authHeaders }) : Promise.resolve(null),
-    ]);
-    if (overviewResponse?.status === 401 || registrationsResponse?.status === 401) return logout();
-    if (overviewResponse?.ok) setOverview(await overviewResponse.json());
-    if (registrationsResponse?.ok) {
-      const registrationsData = await registrationsResponse.json();
-      setRegistrations(registrationsData.registrations || []);
+    try {
+      const needsOverview = ['Dashboard', 'Verify Members', 'Invitations', 'AI Analysis', 'Export'].some(can);
+      const needsRegistrations = ['Verify Members', 'Invitations', 'Export'].some(can);
+      const [overviewResponse, registrationsResponse] = await Promise.all([
+        needsOverview ? adminFetch(`${apiBase}/api/admin/overview`, { headers: authHeaders }) : Promise.resolve(null),
+        needsRegistrations ? adminFetch(`${apiBase}/api/admin/registrations?${new URLSearchParams({ ...(eventId && { eventId }), ...(status && { status }) })}`, { headers: authHeaders }) : Promise.resolve(null),
+      ]);
+      if (overviewResponse?.status === 401 || registrationsResponse?.status === 401) return logout();
+      if (overviewResponse?.ok) setOverview(await overviewResponse.json());
+      if (registrationsResponse?.ok) {
+        const registrationsData = await registrationsResponse.json();
+        setRegistrations(registrationsData.registrations || []);
+      }
+    } catch {
+      setMessage('Unable to load admin data. Check the API connection and try again.');
     }
   };
+
+  if (!authChecked) return <div className="admin-loading">Checking admin session...</div>;
 
   if (!session && !isLoginRoute) {
     window.location.replace('/login');
@@ -71,35 +101,29 @@ export default function AdminApp() {
   }
 
   return (
-    <main className="admin-shell">
-      <aside className="admin-sidebar">
-        <a className="admin-brand" href="/"><img src="/brand/noctivus-emblem.webp" alt="" /> <span>Noctivus Admin</span></a>
-        <nav>
-          <span className="admin-nav-label">Workspace</span>
-          {visibleTabs.filter((tab) => ['Dashboard', 'Verify Members', 'Check-in', 'Events'].includes(tab)).map((tab) => <button key={tab} className={activeTab === tab ? 'active' : ''} onClick={() => setActiveTab(tab)}><span className="admin-nav-dot" />{tab}</button>)}
-          <span className="admin-nav-label">Operations</span>
-          {visibleTabs.filter((tab) => !['Dashboard', 'Verify Members', 'Check-in', 'Events'].includes(tab)).map((tab) => <button key={tab} className={activeTab === tab ? 'active' : ''} onClick={() => setActiveTab(tab)}><span className="admin-nav-dot" />{tab}</button>)}
-        </nav>
-        <div className="admin-user">{session.user?.picture ? <img src={session.user.picture} alt="" /> : <span className="admin-avatar">{(session.user?.name || 'A').slice(0, 1).toUpperCase()}</span>}<div><strong>{session.user?.name || 'Administrator'}</strong><small>{session.user?.email}</small></div><button onClick={logout}>Sign out</button></div>
-      </aside>
-      <section className="admin-main">
-        <header className="admin-topbar">
-          <div><span className="kicker">ADMIN PANEL</span><h1>{activeTab}</h1></div>
-          <div className="admin-topbar-actions"><button className="button button-secondary" onClick={refresh}><Icon name="external" size={16} /> Refresh data</button></div>
-        </header>
+    <DashboardLayout
+      activeTab={activeTab}
+      visibleTabs={visibleTabs}
+      sidebarOpen={sidebarOpen}
+      user={session.user}
+      onTabChange={(tab) => { setActiveTab(tab); setSidebarOpen(false); }}
+      onRefresh={refresh}
+      onLogout={logout}
+      onMenuToggle={() => setSidebarOpen((open) => !open)}
+    >
         {message && <p className="admin-message">{message}</p>}
         {activeTab === 'Dashboard' && can('Dashboard') && <Dashboard overview={overview} />}
         {activeTab === 'Verify Members' && can('Verify Members') && <Verify registrations={registrations} overview={overview} authHeaders={authHeaders} onChanged={refresh} eventId={eventId} setEventId={setEventId} status={status} setStatus={setStatus} selected={selected} setSelected={setSelected} />}
         {activeTab === 'Check-in' && can('Check-in') && <CheckIn authHeaders={authHeaders} />}
         {activeTab === 'Events' && can('Events') && <EventsTab authHeaders={authHeaders} />}
+        {activeTab === 'Event Scheduler' && can('Event Scheduler') && <EventSchedulerTab authHeaders={authHeaders} />}
         {activeTab === 'Audit Log' && can('Audit Log') && <AuditLog authHeaders={authHeaders} />}
         {activeTab === 'Invitations' && can('Invitations') && <Invitations overview={overview} authHeaders={authHeaders} onSent={(count) => { setMessage(`${count} invitation emails queued.`); refresh(); }} />}
         {activeTab === 'Announcements' && can('Announcements') && <Announcements authHeaders={authHeaders} />}
         {activeTab === 'AI Analysis' && can('AI Analysis') && <Analysis overview={overview} authHeaders={authHeaders} />}
         {activeTab === 'Export' && can('Export') && <Export overview={overview} authHeaders={authHeaders} eventId={eventId} setEventId={setEventId} status={status} setStatus={setStatus} />}
         {activeTab === 'Admin Access' && can('Admin Access') && <AdminAccess authHeaders={authHeaders} onChanged={(text) => setMessage(text)} />}
-      </section>
-    </main>
+    </DashboardLayout>
   );
 }
 
@@ -108,7 +132,7 @@ function EventsTab({ authHeaders }) {
   const [drafts, setDrafts] = useState({});
   const [message, setMessage] = useState('');
   const load = async () => {
-    const response = await fetch(`${apiBase}/api/admin/events`, { headers: authHeaders });
+    const response = await adminFetch(`${apiBase}/api/admin/events`, { headers: authHeaders });
     const data = await response.json().catch(() => ({}));
     if (response.ok) {
       setItems(data.events || []);
@@ -118,7 +142,7 @@ function EventsTab({ authHeaders }) {
   };
   useEffect(() => { load(); }, []);
   const save = async (event, changes) => {
-    const response = await fetch(`${apiBase}/api/admin/events/${event.id}`, { method: 'PATCH', headers: { ...authHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify(changes) });
+    const response = await adminFetch(`${apiBase}/api/admin/events/${event.id}`, { method: 'PATCH', headers: { ...authHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify(changes) });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) return setMessage(data.detail || data.message || 'Unable to update event.');
     setMessage(`${event.name} updated.`);
@@ -136,7 +160,7 @@ function CheckIn({ authHeaders }) {
   const [walkIn, setWalkIn] = useState({ name: '', college: '', eventId: '' });
   const scannerRef = useRef(null);
   const load = async () => {
-    const response = await fetch(`${apiBase}/api/admin/check-in/summary`, { headers: authHeaders });
+    const response = await adminFetch(`${apiBase}/api/admin/check-in/summary`, { headers: authHeaders });
     if (response.ok) setSummary(await response.json());
   };
   useEffect(() => { load(); }, []);
@@ -156,13 +180,13 @@ function CheckIn({ authHeaders }) {
   }, [cameraOpen]);
   const scan = async (event) => {
     event.preventDefault();
-    const response = await fetch(`${apiBase}/api/admin/check-in/${encodeURIComponent(registrationId.trim())}`, { method: 'POST', headers: authHeaders });
+    const response = await adminFetch(`${apiBase}/api/admin/check-in/${encodeURIComponent(registrationId.trim())}`, { method: 'POST', headers: authHeaders });
     const data = await response.json().catch(() => ({}));
     setResult({ ok: response.ok, status: data.status, message: data.detail || data.message || data.status });
     setRegistrationId('');
     if (response.ok && data.status === 'checked-in') load();
   };
-  const createWalkIn = async (event) => { event.preventDefault(); const response = await fetch(`${apiBase}/api/admin/walk-ins`, { method: 'POST', headers: { ...authHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify({ participant: { name: walkIn.name, college: walkIn.college }, eventId: walkIn.eventId }) }); const data = await response.json().catch(() => ({})); setResult({ ok: response.ok, message: response.ok ? `Walk-in created: ${data.registration?.registrationId}` : data.detail || data.message || 'Unable to create walk-in.' }); if (response.ok) setWalkIn({ name: '', college: '', eventId: '' }); };
+  const createWalkIn = async (event) => { event.preventDefault(); const response = await adminFetch(`${apiBase}/api/admin/walk-ins`, { method: 'POST', headers: { ...authHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify({ participant: { name: walkIn.name, college: walkIn.college }, eventId: walkIn.eventId }) }); const data = await response.json().catch(() => ({})); setResult({ ok: response.ok, message: response.ok ? `Walk-in created: ${data.registration?.registrationId}` : data.detail || data.message || 'Unable to create walk-in.' }); if (response.ok) setWalkIn({ name: '', college: '', eventId: '' }); };
   return <section className="admin-panel check-in-panel"><h2>Check-in desk</h2><p>Scan the registration QR or enter the registration ID printed on the participant receipt.</p>{cameraOpen && <div id="admin-qr-reader" className="check-in-camera" aria-label="QR scanner camera" />}<div className="check-in-actions"><button className="button button-secondary" type="button" onClick={() => setCameraOpen((open) => !open)}>{cameraOpen ? 'Close camera' : 'Open camera'}</button><small>Camera QR scanning loads only when opened</small></div><form onSubmit={scan} className="admin-form"><input value={registrationId} onChange={(event) => setRegistrationId(event.target.value)} placeholder="NOC26-XXXXXX" autoFocus /><button className="button button-primary" disabled={!registrationId.trim()}>Check in</button></form>{result && <p className={`admin-message ${result.ok ? 'admin-message--success' : ''}`}>{result.message}</p>}<div className="admin-metrics"><article><span>Checked in</span><strong>{summary.checkedIn}</strong></article><article><span>Confirmed</span><strong>{summary.confirmed}</strong></article></div><details className="walk-in-form"><summary>Manual walk-in registration</summary><form onSubmit={createWalkIn} className="admin-form"><input required value={walkIn.name} onChange={(event) => setWalkIn({ ...walkIn, name: event.target.value })} placeholder="Participant name" /><input required value={walkIn.college} onChange={(event) => setWalkIn({ ...walkIn, college: event.target.value })} placeholder="College" /><input required value={walkIn.eventId} onChange={(event) => setWalkIn({ ...walkIn, eventId: event.target.value })} placeholder="Event ID e.g. ideathon" /><button className="button button-primary">Create walk-in</button></form></details></section>;
 }
 
@@ -170,11 +194,11 @@ function AuditLog({ authHeaders }) {
   const [search, setSearch] = useState('');
   const [actions, setActions] = useState([]);
   const load = async () => {
-    const response = await fetch(`${apiBase}/api/admin/audit-log?${new URLSearchParams({ search })}`, { headers: authHeaders });
+    const response = await adminFetch(`${apiBase}/api/admin/audit-log?${new URLSearchParams({ search })}`, { headers: authHeaders });
     if (response.ok) setActions((await response.json()).actions || []);
   };
   useEffect(() => { load(); }, []);
-  return <section className="admin-panel"><h2>Audit log</h2><div className="admin-form"><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search actor, action, target" /><button className="button button-secondary" onClick={load}>Search</button></div><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Target</th></tr></thead><tbody>{actions.map((action, index) => <tr key={`${action.createdAt}-${index}`}><td>{action.createdAt ? new Date(action.createdAt).toLocaleString() : '—'}</td><td>{action.actor}</td><td>{action.action}</td><td>{action.target}</td></tr>)}</tbody></table></div></section>;
+  return <section className="admin-panel"><h2>Audit log</h2><div className="admin-form"><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search actor, action, target" /><button className="button button-secondary" onClick={load}>Search</button></div>{actions.length === 0 ? <p className="admin-empty">No audit records found.</p> : <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Target</th></tr></thead><tbody>{actions.map((action, index) => <tr key={`${action.createdAt}-${index}`}><td>{action.createdAt ? new Date(action.createdAt).toLocaleString() : '—'}</td><td>{action.actor}</td><td>{action.action}</td><td>{action.target}</td></tr>)}</tbody></table></div>}</section>;
 }
 
 function Announcements({ authHeaders }) {
@@ -182,7 +206,7 @@ function Announcements({ authHeaders }) {
   const [result, setResult] = useState('');
   const send = async (event) => {
     event.preventDefault();
-    const response = await fetch(`${apiBase}/api/admin/announcements/send`, { method: 'POST', headers: { ...authHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
+    const response = await adminFetch(`${apiBase}/api/admin/announcements/send`, { method: 'POST', headers: { ...authHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
     const data = await response.json().catch(() => ({}));
     setResult(response.ok ? `${data.queued} email(s) queued.` : data.detail || data.message || 'Unable to send announcement.');
   };
@@ -215,12 +239,13 @@ function Login({ onSession }) {
       if (timedOut) return;
       try {
         if (!window.google?.accounts?.id) throw new Error('Google sign-in is unavailable.');
+        window.google.accounts.id.disableAutoSelect?.();
         window.google.accounts.id.initialize({
           client_id: googleClientId,
           callback: async ({ credential }) => {
             setLoading(true);
             try {
-              const response = await fetch(`${apiBase}/api/admin/auth/google`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ credential }) });
+              const response = await adminFetch(`${apiBase}/api/admin/auth/google`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ credential }) });
               const data = await response.json().catch(() => ({}));
               if (!response.ok) throw new Error(data.detail || data.message || `Google sign-in failed (${response.status}).`);
               onSession(data);
@@ -256,6 +281,7 @@ function Login({ onSession }) {
         <img src="/brand/noctivus-emblem.webp" alt="" />
         <span className="kicker">SECURE ADMIN ACCESS</span>
         <h1>Noctivus operations</h1>
+        <a className="admin-login__home" href="/">Back to home</a>
         {googleClientId ? <div id="google-admin-login" aria-busy={loading} /> : <p className="form-error" role="alert">Set VITE_GOOGLE_CLIENT_ID and GOOGLE_CLIENT_ID to enable Google login.</p>}
         {loading && !buttonReady && <p className="admin-login__status">Connecting to Google sign-in…</p>}
         {error && <p className="form-error">{error}</p>}
@@ -266,25 +292,7 @@ function Login({ onSession }) {
 
 function Dashboard({ overview }) {
   if (!overview) return <Skeleton />;
-  const storage = overview.storage;
-  const usedBytes = storage?.storageBytes || storage?.dataBytes || 0;
-  const usage = storage?.available && storage.limitBytes ? Math.min(100, Math.round((usedBytes / storage.limitBytes) * 100)) : null;
-  const formatBytes = (value) => value >= 1024 * 1024 ? `${(value / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(0, Math.round(value / 1024))} KB`;
-  return (
-    <>
-      <div className="admin-metrics">
-        <Metric label="Registrations" value={overview.total} />
-        <Metric label="Pending" value={overview.statuses.pending} />
-        <Metric label="Confirmed" value={overview.statuses.confirmed} />
-        <Metric label="Revenue" value={`Rs.${overview.confirmedRevenue}`} />
-      </div>
-      <div className="admin-grid">
-        <section className="admin-panel"><h2>Event demand</h2><EventBars events={overview.events} /></section>
-        <section className="admin-panel"><h2>Recent registrations</h2><RegistrationList registrations={overview.recent} compact /></section>
-      </div>
-      <section className="admin-panel storage-monitor"><div className="storage-monitor__heading"><div><span className="kicker">DATABASE STORAGE</span><h2>MongoDB capacity</h2></div><strong>{usage === null ? 'Unavailable' : `${usage}% used`}</strong></div>{usage === null ? <p>Storage metrics are unavailable for this database role. Registration and email data remain operational.</p> : <><div className={`storage-meter ${usage >= 85 ? 'storage-meter--warning' : ''}`}><i style={{ width: `${usage}%` }} /></div><div className="storage-monitor__values"><span>{formatBytes(usedBytes)} used</span><span>{formatBytes(storage.limitBytes)} limit</span><span>{formatBytes(storage.indexBytes)} indexes</span></div>{usage >= 85 && <p className="form-error">Storage is nearing the configured limit. Export old reports and review retained email jobs.</p>}</>}</section>
-    </>
-  );
+  return <DashboardContent overview={overview} />;
 }
 
 function Verify({ registrations, overview, authHeaders, onChanged, eventId, setEventId, status, setStatus, selected, setSelected }) {
@@ -292,7 +300,7 @@ function Verify({ registrations, overview, authHeaders, onChanged, eventId, setE
   const [search, setSearch] = useState('');
 
   const verify = async (registrationId, nextStatus) => {
-    const response = await fetch(`${apiBase}/api/admin/registrations/${registrationId}/verify`, {
+    const response = await adminFetch(`${apiBase}/api/admin/registrations/${registrationId}/verify`, {
       method: 'PATCH',
       headers: { ...authHeaders, 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: nextStatus, notes: notes[registrationId] || '', sendEmail: true }),
@@ -317,7 +325,7 @@ function Verify({ registrations, overview, authHeaders, onChanged, eventId, setE
 }
 
 async function bulkVerify(authHeaders, registrationIds, status) {
-  await fetch(`${apiBase}/api/admin/registrations/bulk-verify`, { method: 'POST', headers: { ...authHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify({ registrationIds, status }) });
+  await adminFetch(`${apiBase}/api/admin/registrations/bulk-verify`, { method: 'POST', headers: { ...authHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify({ registrationIds, status }) });
 }
 
 function Invitations({ overview, authHeaders, onSent }) {
@@ -336,10 +344,10 @@ function Invitations({ overview, authHeaders, onSent }) {
   const gate = selectedEvent?.gate || '';
   const date = selectedEvent?.date || '';
   const time = selectedEvent?.time || '';
-  const terminal = selectedEvent?.terminal || '';
+  const terminal = selectedEvent?.terminal || 'Main Hall';
 
   useEffect(() => {
-    fetch(`${apiBase}/api/admin/events`, { headers: authHeaders })
+    adminFetch(`${apiBase}/api/admin/events`, { headers: authHeaders })
       .then((res) => res.json())
       .then((data) => setEventRecords(data.events || []))
       .catch(() => {});
@@ -352,7 +360,7 @@ function Invitations({ overview, authHeaders, onSent }) {
       return undefined;
     }
     let active = true;
-    fetch(`${apiBase}/api/admin/registrations?${new URLSearchParams({ eventId, status: 'confirmed' })}`, { headers: authHeaders })
+    adminFetch(`${apiBase}/api/admin/registrations?${new URLSearchParams({ eventId, status: 'confirmed' })}`, { headers: authHeaders })
       .then((res) => res.json())
       .then((data) => {
         if (!active) return;
@@ -394,7 +402,7 @@ function Invitations({ overview, authHeaders, onSent }) {
     }
     const controller = new AbortController();
     setPreviewMessage('Generating boarding pass...');
-    fetch(`${apiBase}/api/admin/invitations/preview`, {
+    adminFetch(`${apiBase}/api/admin/invitations/preview`, {
       method: 'POST',
       headers: { ...authHeaders, 'Content-Type': 'application/json' },
       body: JSON.stringify({ eventId, registrationId: activeRegistrant?.registrationId || '' }),
@@ -433,15 +441,20 @@ function Invitations({ overview, authHeaders, onSent }) {
     }
     setError('');
     setSending(true);
-    const response = await fetch(`${apiBase}/api/admin/invitations/send`, {
-      method: 'POST',
-      headers: { ...authHeaders, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ eventId, audience: 'confirmed', registrationIds: selectedRegistrationIds }),
-    });
-    const data = await response.json().catch(() => ({}));
-    setSending(false);
-    if (response.ok) onSent(data.sent || 0);
-    else setError(data.detail || 'Unable to queue passes.');
+    try {
+      const response = await adminFetch(`${apiBase}/api/admin/invitations/send`, {
+        method: 'POST',
+        headers: { ...authHeaders, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventId, audience: 'confirmed', registrationIds: selectedRegistrationIds }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (response.ok) onSent(data.sent || 0);
+      else setError(data.detail || data.message || 'Unable to queue passes.');
+    } catch (sendError) {
+      setError(sendError.message || 'Unable to reach the invitation service. Check the API connection and try again.');
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -471,12 +484,56 @@ function Invitations({ overview, authHeaders, onSent }) {
   );
 }
 
+function EventSchedulerTab({ authHeaders }) {
+  const [form, setForm] = useState({ morning: { time: '09:00 AM', memberCount: '' }, afternoon: { time: '02:00 PM', memberCount: '' } });
+  const [summary, setSummary] = useState(null);
+  const [analysis, setAnalysis] = useState('');
+  const [message, setMessage] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const load = async () => {
+    const response = await adminFetch(`${apiBase}/api/admin/scheduler`, { headers: authHeaders });
+    const data = await response.json().catch(() => ({}));
+    if (response.ok && data.schedule) setForm(data.schedule);
+    else setMessage(data.detail || data.message || 'Unable to load scheduler settings.');
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const updateSlot = (slot, key, value) => setForm((current) => ({ ...current, [slot]: { ...current[slot], [key]: value } }));
+
+  const assign = async (event) => {
+    event.preventDefault();
+    setSaving(true);
+    setMessage('');
+    setAnalysis('');
+    try {
+      const saveResponse = await adminFetch(`${apiBase}/api/admin/scheduler`, { method: 'PUT', headers: { ...authHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
+      const saveData = await saveResponse.json().catch(() => ({}));
+      if (!saveResponse.ok) throw new Error(saveData.detail || saveData.message || 'Unable to save scheduler settings.');
+      const response = await adminFetch(`${apiBase}/api/admin/scheduler/assign`, { method: 'POST', headers: authHeaders });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.detail || data.message || 'Unable to assign event batches.');
+      setForm(data.schedule);
+      setSummary(data.summary);
+      setAnalysis(data.analysis || '');
+      setMessage('Confirmed members were assigned to event batches.');
+    } catch (error) {
+      setMessage(error.message || 'Unable to run event automation.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return <form className="admin-panel scheduler-panel" onSubmit={assign}><h2>Event Scheduler</h2><p className="admin-help">Set the morning and afternoon times. Confirmed member counts are calculated automatically for every event. Enter an optional count only when you need to override the automatic split.</p><div className="scheduler-lanes">{[['morning', 'Morning batch'], ['afternoon', 'Afternoon batch']].map(([slot, label]) => <section className="scheduler-lane" key={slot}><h3>{label}</h3><label className="field"><span>Event time</span><input required value={form[slot].time} onChange={(event) => updateSlot(slot, 'time', event.target.value)} placeholder={slot === 'morning' ? '09:00 AM' : '02:00 PM'} /></label><label className="field"><span>Manual member count (optional)</span><input type="number" min="1" max="10000" value={form[slot].memberCount || ''} onChange={(event) => updateSlot(slot, 'memberCount', event.target.value)} placeholder="Automatic" /></label></section>)}</div>{message && <p className="admin-message">{message}</p>}<button className="button button-primary" type="submit" disabled={saving}>{saving ? 'Assigning batches...' : 'Save & automate schedule'} <Icon name="arrow" /></button>{summary && <div className="scheduler-results"><h3>Every event</h3>{summary.events.map((event) => <div key={event.eventId}><strong>{event.eventName} · {event.members} members total</strong><small>Morning: {event.morning} · {event.morningTime} | Afternoon: {event.afternoon} · {event.afternoonTime}</small></div>)}</div>}{analysis && <pre className="scheduler-analysis">{analysis}</pre>}</form>;
+}
+
 function Analysis({ overview, authHeaders }) {
   const [analysis, setAnalysis] = useState('');
   const [loading, setLoading] = useState(false);
   const run = async () => {
     setLoading(true);
-    const response = await fetch(`${apiBase}/api/admin/analysis/ai`, { method: 'POST', headers: authHeaders });
+    const response = await adminFetch(`${apiBase}/api/admin/analysis/ai`, { method: 'POST', headers: authHeaders });
     const data = await response.json();
     setAnalysis(typeof data.analysis === 'string' ? data.analysis : JSON.stringify(data.analysis, null, 2));
     setLoading(false);
@@ -486,7 +543,7 @@ function Analysis({ overview, authHeaders }) {
 
 function Export({ overview, authHeaders, eventId, setEventId, status, setStatus }) {
   const download = async () => {
-    const response = await fetch(`${apiBase}/api/admin/export?${new URLSearchParams({ ...(eventId && { eventId }), ...(status && { status }) })}`, { headers: authHeaders });
+    const response = await adminFetch(`${apiBase}/api/admin/export?${new URLSearchParams({ ...(eventId && { eventId }), ...(status && { status }) })}`, { headers: authHeaders });
     const blob = await response.blob();
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -505,7 +562,7 @@ function AdminAccess({ authHeaders, onChanged }) {
   const [loading, setLoading] = useState(false);
 
   const load = async () => {
-    const response = await fetch(`${apiBase}/api/admin/access`, { headers: authHeaders });
+    const response = await adminFetch(`${apiBase}/api/admin/access`, { headers: authHeaders });
     const data = await response.json();
     if (response.ok) {
       setUsers(data.users || []);
@@ -531,7 +588,7 @@ function AdminAccess({ authHeaders, onChanged }) {
   const save = async (event) => {
     event.preventDefault();
     setLoading(true);
-    const response = await fetch(`${apiBase}/api/admin/access/${encodeURIComponent(form.email.trim().toLowerCase())}`, {
+    const response = await adminFetch(`${apiBase}/api/admin/access/${encodeURIComponent(form.email.trim().toLowerCase())}`, {
       method: 'PUT',
       headers: { ...authHeaders, 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: form.name, tabs: form.tabs, active: true }),
@@ -545,7 +602,7 @@ function AdminAccess({ authHeaders, onChanged }) {
   };
 
   const deactivate = async (email) => {
-    const response = await fetch(`${apiBase}/api/admin/access/${encodeURIComponent(email)}`, { method: 'DELETE', headers: authHeaders });
+    const response = await adminFetch(`${apiBase}/api/admin/access/${encodeURIComponent(email)}`, { method: 'DELETE', headers: authHeaders });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) return onChanged(data.message || 'Unable to remove access.');
     await load();
@@ -556,8 +613,8 @@ function AdminAccess({ authHeaders, onChanged }) {
     <div className="admin-grid admin-grid--wide">
       <form className="admin-panel access-form" onSubmit={save}>
         <h2>Give access</h2>
-        <label className="field"><span>Google email</span><input type="email" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} placeholder="user@gmail.com" /></label>
-        <label className="field"><span>Name</span><input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="Optional" /></label>
+        <label className="field"><span>Google email</span><input required maxLength="190" type="email" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} placeholder="user@gmail.com" /></label>
+        <label className="field"><span>Name</span><input maxLength="80" value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="Optional" /></label>
         <fieldset className="access-tabs">
           <legend>Allowed tabs</legend>
           {availableTabs.map((tab) => <label key={tab}><input type="checkbox" checked={form.tabs.includes(tab)} onChange={() => toggleTab(tab)} /><span>{tab}</span></label>)}
@@ -566,7 +623,7 @@ function AdminAccess({ authHeaders, onChanged }) {
       </form>
       <section className="admin-panel access-list">
         <h2>Current admin users</h2>
-        {users.map((user) => (
+        {users.length === 0 ? <p className="admin-empty">No delegated admin users found.</p> : users.map((user) => (
           <article key={user.email} className={!user.active ? 'inactive' : ''}>
             <div><strong>{user.name || user.email}</strong><small>{user.email}</small></div>
             <div className="access-list__tabs">{user.tabs?.map((tab) => <span key={tab}>{tab}</span>)}</div>
@@ -586,6 +643,7 @@ function Filters({ overview, eventId, setEventId, status, setStatus }) {
 
 function RegistrationTable({ registrations, selected, setSelected, renderActions }) {
   const toggle = (id) => setSelected((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
+  if (registrations.length === 0) return <p className="admin-empty">No registrations match the current filters.</p>;
   return <div className="registration-table">{registrations.map((registration) => <article key={registration.registrationId}><label><input type="checkbox" checked={selected.includes(registration.registrationId)} onChange={() => toggle(registration.registrationId)} /><span>{registration.registrationId}</span></label><div><strong>{registration.participant?.name}</strong><small>{registration.participant?.college}</small></div><div><strong>{registration.eventRegistrations?.map((event) => event.eventName).join(', ')}</strong><small>{registration.participant?.email}</small></div><Status value={registration.paymentStatus} /><div><strong>Rs.{registration.expectedAmount}</strong><small>UTR {registration.utrNumber}</small></div>{renderActions?.(registration)}</article>)}</div>;
 }
 
@@ -594,12 +652,18 @@ function RegistrationList({ registrations }) {
 }
 
 function EventBars({ events }) {
+  const eventOrder = ['Ideathon', 'Cyber Heist CTF', 'IoT Exploit', 'Secure X VibeCode', 'Mind Cage', 'Mystery Hunt', 'Tune Trap', 'Auction Arena'];
+  const sortedEvents = [...events].sort((a, b) => {
+    const aIndex = eventOrder.indexOf(a.eventName);
+    const bIndex = eventOrder.indexOf(b.eventName);
+    return (aIndex === -1 ? eventOrder.length : aIndex) - (bIndex === -1 ? eventOrder.length : bIndex);
+  });
   const max = Math.max(1, ...events.map((event) => event.registrations));
-  return <div className="event-bars">{events.map((event) => <div key={event.eventId}><span>{event.eventName}</span><div><i style={{ width: `${(event.registrations / max) * 100}%` }} /></div><strong>{event.registrations}</strong></div>)}</div>;
+  return <div className="event-bars">{sortedEvents.map((event) => <div key={event.eventId}><span>{event.eventName}</span><div><i style={{ width: `${(event.registrations / max) * 100}%` }} /></div><strong>{event.registrations}</strong></div>)}</div>;
 }
 
-function Metric({ label, value }) {
-  return <article><span>{label}</span><strong>{value}</strong></article>;
+function Metric({ label, value, tone = 'blue' }) {
+  return <article className={`metric-card metric-card--${tone}`}><span>{label}</span><strong>{value}</strong></article>;
 }
 
 function Status({ value }) {

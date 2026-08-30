@@ -4,7 +4,7 @@ from app.core.config import settings
 from app.db.memory_store import memory_admin_access
 from app.db import mongo
 
-ADMIN_TABS = ["Dashboard", "Verify Members", "Check-in", "Events", "Invitations", "Announcements", "AI Analysis", "Export", "Audit Log", "Admin Access"]
+ADMIN_TABS = ["Dashboard", "Verify Members", "Check-in", "Events", "Event Scheduler", "Invitations", "Announcements", "AI Analysis", "Export", "Audit Log", "Admin Access"]
 
 
 def owner_emails() -> list[str]:

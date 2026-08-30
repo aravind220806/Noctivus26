@@ -11,5 +11,9 @@
     "build": "npm run build --workspace frontend",
     "start": "cd backend && python3 run.py",
     "test": "python3 -m compileall backend/app backend/run.py"
+  },
+  "dependencies": {
+    "lucide-react": "^1.37.0",
+    "recharts": "^3.10.1"
   }
 }

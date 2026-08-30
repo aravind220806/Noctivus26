@@ -130,7 +130,10 @@ async def send_invitation(registration: dict, pass_data: dict) -> None:
     if template_event_id and mongo.mongo_ready():
         template = await mongo.db.pass_templates.find_one({"eventId": template_event_id}, {"pass": 1})
         pass_data = (template or {}).get("pass") or {}
+    assigned_time = pass_data.get("assignedTime")
     pass_data = normalize_pass_template(pass_data)
+    if assigned_time:
+        pass_data["time"] = str(assigned_time)
     participant = registration.get("participant") or {}
     event_id = str(pass_data.get("eventId") or template_event_id)
     event_names = pass_tag_values(registration, event_id)["event"]
