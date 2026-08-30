@@ -25,11 +25,10 @@ async def lifespan(_app: FastAPI):
     email_task = None
     try:
         await connect_mongo()
-        if settings.mongodb_uri:
-            print("Connected to MongoDB")
+        logger.info("Connected to MongoDB")
         email_task = asyncio.create_task(email_worker(email_stop))
     except Exception as error:
-        print(f"MongoDB connection failed: {error}")
+        logger.error("MongoDB connection failed: %s", error)
         if settings.node_env == "production":
             raise
     yield
@@ -47,10 +46,12 @@ app = FastAPI(title="Noctivus API", lifespan=lifespan)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(GZipMiddleware, minimum_size=1000)
+_dev_origin_regex = r"https://.*\.vercel\.app|https://.*\.ngrok-free\.app|https://.*\.ngrok-free\.dev|http://localhost:\d+|http://127\.0\.0\.1:\d+"
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.frontend_origins,
-    allow_origin_regex=r"https://.*\.vercel\.app|https://.*\.ngrok-free\.app|https://.*\.ngrok-free\.dev|http://localhost:\d+|http://127\.0\.0\.1:\d+",
+    # Permissive regex is only for local/staging convenience — never allowed in production.
+    allow_origin_regex=None if settings.environment == "production" else _dev_origin_regex,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
@@ -65,17 +66,14 @@ app.include_router(admin_router, prefix="/admin", include_in_schema=False)
 app.include_router(public_router, prefix="", include_in_schema=False)
 
 
-@app.get("/health")
-@app.get("/api/health")
-async def health_check():
-    return {"status": "ok", "service": "noctivus-api"}
-
-
 @app.exception_handler(Exception)
 async def exception_handler(_request: Request, error: Exception):
     logger.exception("Unhandled API error", exc_info=error)
     status_code = getattr(error, "status_code", 500)
-    detail = getattr(error, "detail", None) or str(error) or "Server error"
+    if settings.environment == "production":
+        detail = "Internal server error."
+    else:
+        detail = getattr(error, "detail", None) or str(error) or "Internal server error."
     return JSONResponse(status_code=status_code, content={"message": detail, "detail": detail})
 
 

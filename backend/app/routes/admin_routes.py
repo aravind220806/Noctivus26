@@ -49,13 +49,18 @@ async def google_auth(request: Request):
         user = {"email": google_email, "name": profile.get("name") or google_email, "picture": profile.get("picture") or "", "tabs": access["tabs"], "owner": access["owner"]}
         origin = str(request.headers.get("origin") or "")
         is_https = origin.startswith("https://") or request.headers.get("x-forwarded-proto") == "https" or settings.environment == "production"
+        token, csrf = sign_admin_token(user)
+        response = Response(
+            content=json.dumps({"user": user, "csrfToken": csrf}, separators=(",", ":")),
+            media_type="application/json",
+        )
         response.set_cookie(
             "noctivus_admin_session",
-            sign_admin_token(user),
+            token,
             max_age=8 * 60 * 60,
             httponly=True,
             secure=is_https,
-            samesite="none" if is_https else "lax",
+            samesite="lax",
             path="/",
         )
         return response
@@ -79,10 +84,11 @@ async def dev_auth():
         "tabs": access["tabs"] if access else ADMIN_TABS,
         "owner": True,
     }
-    response = Response(content=json.dumps({"user": user}, separators=(",", ":")), media_type="application/json")
+    token, csrf = sign_admin_token(user)
+    response = Response(content=json.dumps({"user": user, "csrfToken": csrf}, separators=(",", ":")), media_type="application/json")
     response.set_cookie(
         "noctivus_admin_session",
-        sign_admin_token(user),
+        token,
         max_age=8 * 60 * 60,
         httponly=True,
         secure=False,
@@ -103,7 +109,7 @@ async def logout():
     cookie_options = {
         "secure": settings.environment == "production",
         "httponly": True,
-        "samesite": "none" if settings.environment == "production" else "lax",
+        "samesite": "lax",
     }
     response.delete_cookie("noctivus_admin_session", path="/api/admin", **cookie_options)
     response.delete_cookie("noctivus_admin_session", path="/", **cookie_options)

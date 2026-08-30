@@ -1,4 +1,5 @@
 import asyncio
+import hashlib
 import secrets
 import re
 from datetime import datetime, timezone
@@ -15,6 +16,13 @@ from app.services.validation_service import normalize_digits, validate_registrat
 
 def create_registration_id() -> str:
     return f"NOC26-{secrets.token_hex(3).upper()}"
+
+
+def create_qr_token() -> tuple[str, str]:
+    """Return (qrToken, qrHash). Token has 144 bits of entropy — never derived from registrationId."""
+    token = secrets.token_urlsafe(18)
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    return token, token_hash
 
 
 async def registration_status() -> dict:
@@ -40,7 +48,7 @@ async def check_utr_availability(input_value) -> tuple[int, dict]:
     return 200, {"available": not bool(duplicate), "message": "This UTR has already been submitted." if duplicate else "UTR is available."}
 
 
-async def create_registration(payload: dict | None) -> tuple[int, dict]:
+async def create_registration(payload: dict | None, idempotency_key: str | None = None) -> tuple[int, dict]:
     configured_events = await list_events()
     if not settings.registration_open or any(not event.get("detailsComplete", True) for event in configured_events):
         return 403, {"message": "Registration is not open yet."}
@@ -50,13 +58,30 @@ async def create_registration(payload: dict | None) -> tuple[int, dict]:
         return 400, {"message": result["errors"][0], "errors": result["errors"]}
 
     event_ids = [event["eventId"] for event in result["value"]["eventRegistrations"]]
+
+    # Idempotency: return the original result if this key was already processed.
+    if idempotency_key and mongo.mongo_ready():
+        existing = await mongo.db.registrations.find_one(
+            {"idempotencyKey": idempotency_key},
+            {"registrationId": 1},
+        )
+        if existing:
+            return 200, {
+                "registrationId": existing["registrationId"],
+                "message": "Registration received and awaiting payment verification.",
+            }
+
     now = datetime.now(timezone.utc)
     reg_id = create_registration_id()
+    qr_token, qr_hash = create_qr_token()
     record = {
         "registrationId": reg_id,
         "member_id": reg_id,
         "event_ids": event_ids,
         "assigned_slots": [],
+        "qrToken": qr_token,
+        "qrHash": qr_hash,
+        "idempotencyKey": idempotency_key,
         **result["value"],
         "paymentStatus": "pending",
         "payment_email_status": "not_attempted",
@@ -85,10 +110,19 @@ async def create_registration(payload: dict | None) -> tuple[int, dict]:
             message = str(error)
             if "normalized.email" in message or "eventRegistrations.eventId" in message:
                 return 409, {"message": "This email is already registered for one of the selected events."}
+            if "idempotencyKey" in message:
+                # Race: another request with the same key just won — return its result.
+                existing = await mongo.db.registrations.find_one({"idempotencyKey": idempotency_key}, {"registrationId": 1})
+                if existing:
+                    return 200, {"registrationId": existing["registrationId"], "message": "Registration received and awaiting payment verification."}
             return 409, {"message": "This UTR has already been submitted."}
     else:
         if settings.node_env == "production" or not settings.allow_memory_db:
             return 503, {"message": "Registration service is not connected to its database."}
+        if idempotency_key:
+            existing = next((r for r in memory_registrations if r.get("idempotencyKey") == idempotency_key), None)
+            if existing:
+                return 200, {"registrationId": existing["registrationId"], "message": "Registration received and awaiting payment verification."}
         if any(r["normalized"]["email"] == result["value"]["normalized"]["email"] and any(e["eventId"] in event_ids for e in r.get("eventRegistrations", [])) for r in memory_registrations):
             return 409, {"message": "This email is already registered for one of the selected events."}
         if any(r.get("normalizedUtr") == result["value"]["normalizedUtr"] for r in memory_registrations):

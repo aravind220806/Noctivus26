@@ -28,6 +28,7 @@ async def connect_mongo() -> None:
         await db.registrations.create_index([("paymentStatus", ASCENDING), ("checkedIn", ASCENDING)])
         await db.registrations.create_index([("checkedInAt", DESCENDING)])
         await db.registrations.create_index([("normalizedUtr", ASCENDING)], unique=True, sparse=True)
+        await db.registrations.create_index([("idempotencyKey", ASCENDING)], unique=True, sparse=True)
         await db.registrations.create_index([("normalized.email", ASCENDING), ("eventRegistrations.eventId", ASCENDING)])
         await db.registrations.create_index([("normalized.email", ASCENDING)])
         await db.registrations.create_index([("eventRegistrations.eventId", ASCENDING)])
@@ -49,11 +50,10 @@ async def connect_mongo() -> None:
                     {"$set": {"capacity": capacity, "count": count}},
                     upsert=True,
                 )
-    except Exception as error:
+    except Exception:
         client = None
         db = None
-        print(f"MongoDB connection failed: {error}")
-        return
+        raise  # let lifespan decide whether to crash (prod) or degrade (dev)
 
 
 async def reserve_event_capacity(event_ids: list[str]) -> bool:
@@ -94,6 +94,16 @@ async def close_mongo() -> None:
 
 def mongo_ready() -> bool:
     return db is not None
+
+
+async def ping_mongo() -> bool:
+    if not mongo_ready():
+        return False
+    try:
+        await client.admin.command("ping")
+        return True
+    except Exception:
+        return False
 
 
 async def storage_usage() -> dict:
