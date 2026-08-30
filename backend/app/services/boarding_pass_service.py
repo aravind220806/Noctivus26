@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import html
+import re
 import secrets
 from io import BytesIO
 from pathlib import Path
@@ -44,28 +45,73 @@ def qr_data_uri(url: str) -> str:
     return f"data:image/png;base64,{base64.b64encode(output.getvalue()).decode('ascii')}"
 
 
+def _format_time_display(time_str: str) -> str:
+    clean = str(time_str or "").strip()
+    if not clean or clean == "—":
+        return "—"
+    if "AM" in clean.upper() or "PM" in clean.upper():
+        return clean
+    try:
+        parts = clean.split(":")
+        hours = int(parts[0])
+        mins = int(parts[1]) if len(parts) > 1 else 0
+        ampm = "PM" if hours >= 12 else "AM"
+        h12 = hours % 12
+        if h12 == 0:
+            h12 = 12
+        return f"{h12:02d}:{mins:02d} {ampm}"
+    except Exception:
+        return clean
+
+
 def pass_values(registration: dict, pass_data: dict) -> dict[str, str]:
     participant = registration.get("participant") or {}
-    event_id = str(pass_data.get("eventId") or "")
     events = registration.get("eventRegistrations") or []
-    event = next((item for item in events if item.get("eventId") == event_id), events[0] if events else {})
+    assigned_slots = registration.get("assigned_slots") or pass_data.get("assigned_slots") or []
+
+    event_1_name = ""
+    time_1 = ""
+    event_2_name = "—"
+    time_2 = "—"
+
+    # Resolve from pass_data if explicitly provided
+    if pass_data.get("event1"):
+        event_1_name = str(pass_data["event1"])
+    if pass_data.get("time1"):
+        time_1 = _format_time_display(pass_data["time1"])
+    if pass_data.get("event2"):
+        event_2_name = str(pass_data["event2"])
+    if pass_data.get("time2"):
+        time_2 = _format_time_display(pass_data["time2"])
+
+    # Fallback to events list
+    if not event_1_name and events:
+        event_1_name = str(events[0].get("eventName") or events[0].get("eventId") or "Noctivus '26")
+        time_1 = _format_time_display(events[0].get("time") or "09:00 AM")
+        if len(events) > 1:
+            event_2_name = str(events[1].get("eventName") or events[1].get("eventId") or "—")
+            time_2 = _format_time_display(events[1].get("time") or "01:00 PM")
+
+    if not event_1_name:
+        event_1_name = str(pass_data.get("eventName") or "Noctivus '26")
+        time_1 = _format_time_display(pass_data.get("time") or "09:00 AM")
+
     return {
-        "PASSENGER_NAME": str(participant.get("name") or ""),
-        "EVENT_NAME": str(event.get("eventName") or pass_data.get("eventName") or "Noctivus '26"),
-        "EVENT_DATE": str(pass_data.get("date") or event.get("date") or "26 SEP 2026"),
-        "EVENT_TIME": str(pass_data.get("time") or event.get("time") or "09:00 AM"),
-        "EVENT_GATE": str(pass_data.get("gate") or event.get("gate") or "VEC Gate"),
-        "VENUE": str(pass_data.get("venue") or event.get("venue") or ""),
-        "TERMINAL": str(pass_data.get("terminal") or event.get("terminal") or "MAIN HALL"),
-        "SEAT": str(pass_data.get("seatType") or event.get("seatType") or "VIP"),
-        "FLIGHT": "NV26",
-        "ZONE": "1",
-        "FOOD_PREFERENCE": str(participant.get("foodPreference") or "N/A"),
-        "EMAIL_ID": str(participant.get("email") or ""),
-        "FROM_COLLEGE": str(participant.get("college") or ""),
-        "TO_COLLEGE": DESTINATION_COLLEGE,
-        "TO_CITY": DESTINATION_CITY,
-        "UNIQUE_ID": str(registration.get("registrationId") or ""),
+        "PASSENGER_NAME": str(participant.get("name") or "").upper(),
+        "EVENT_1": event_1_name.upper(),
+        "EVENT_DATE": str(pass_data.get("date") or (events[0].get("date") if events else None) or "26 SEP 2026").upper(),
+        "TIME_1": time_1.upper(),
+        "EVENT_GATE": str(pass_data.get("gate") or (events[0].get("gate") if events else None) or "VEC Gate 1").upper(),
+        "VENUE": str(pass_data.get("venue") or (events[0].get("venue") if events else None) or "Main Auditorium").upper(),
+        "TERMINAL": str(pass_data.get("terminal") or (events[0].get("terminal") if events else None) or "MAIN HALL").upper(),
+        "EVENT_2": event_2_name.upper(),
+        "TIME_2": time_2.upper(),
+        "FOOD_PREFERENCE": str(participant.get("foodPreference") or "N/A").upper(),
+        "EMAIL_ID": str(participant.get("email") or "").lower(),
+        "FROM_COLLEGE": str(participant.get("college") or "").upper(),
+        "TO_COLLEGE": DESTINATION_COLLEGE.upper(),
+        "TO_CITY": DESTINATION_CITY.upper(),
+        "UNIQUE_ID": str(registration.get("registrationId") or "").upper(),
     }
 
 
@@ -73,8 +119,8 @@ def render_boarding_pass_html(registration: dict, pass_data: dict, token: str) -
     assets = Path(__file__).resolve().parents[1] / "assets"
     logo = _asset_data_uri(assets / "noctivus-emblem.png") if (assets / "noctivus-emblem.png").exists() else _asset_data_uri(Path(__file__).resolve().parents[3] / "frontend" / "public" / "brand" / "noctivus-emblem.png")
     values = {key: html.escape(value) for key, value in pass_values(registration, pass_data).items()}
-    verify = verification_url(token)
-    qr = qr_data_uri(verify)
+    qr_payload = str(registration.get("registrationId") or values.get("UNIQUE_ID") or token)
+    qr = qr_data_uri(qr_payload)
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -98,10 +144,10 @@ body {{ margin: 0; width: {PASS_WIDTH}px; height: {PASS_HEIGHT}px; background: #
 .row {{ min-width: 0; display: grid; align-items: start; column-gap: 0; padding: 17px 46px 0 108px; overflow: hidden; }}
 .row1,.row2 {{ padding-right: 276px; }}
 .row1 {{ grid-template-columns: 37% 43% 20%; border-bottom: 1px solid #D7DEE8; }}
-.row2 {{ grid-template-columns: 16% 18% 41% 25%; border-bottom: 1px solid #D7DEE8; }}
-.row2 .field {{ padding-left: 18px; padding-right: 18px; }}
-.row3 {{ grid-template-columns: 12% 12% 10% 27% 39%; border-bottom: 1px solid #D7DEE8; }}
-.field {{ min-width: 0; min-height: 42px; padding: 0 24px; border-left: 1px solid #AAB6C8; }}
+.row2 {{ grid-template-columns: 18% 18% 38% 26%; border-bottom: 1px solid #D7DEE8; }}
+.row2 .field {{ padding-left: 16px; padding-right: 16px; }}
+.row3 {{ grid-template-columns: 28% 18% 22% 32%; border-bottom: 1px solid #D7DEE8; }}
+.field {{ min-width: 0; min-height: 42px; padding: 0 16px; border-left: 1px solid #AAB6C8; }}
 .field:first-child {{ border-left: 0; padding-left: 0; }}
 .label {{ display:block; color:#194FD1; font:800 12px/1 Inter; letter-spacing:.45px; text-transform:uppercase; margin-bottom:8px; }}
 .value {{ display:block; font-family:"Roboto Condensed",Arial,sans-serif; font-weight:700; color:#111827; line-height:1.15; max-width:100%; overflow-wrap:anywhere; word-break:normal; hyphens:auto; overflow:hidden; }}
@@ -118,13 +164,13 @@ body {{ margin: 0; width: {PASS_WIDTH}px; height: {PASS_HEIGHT}px; background: #
 .footer span {{ letter-spacing:8px; }}
 .footer b {{ color:#194FD1; letter-spacing:0; }}
 .stub-head {{ display:grid; place-items:center; font:800 26px/1 "Roboto Condensed"; letter-spacing:1px; }}
-.stub-body {{ padding: 14px 28px 0 30px; display:grid; grid-template-rows:auto auto auto auto auto minmax(54px,auto) auto; gap:5px; min-width:0; overflow:hidden; }}
-.stub-field {{ min-width:0; min-height:36px; border-bottom:1px solid #D7DEE8; padding-bottom:5px; }}
-.stub-field .label {{ font-size:10px; margin-bottom:5px; }}
-.stub-field .value {{ font-size:20px; line-height:1.08; }} .stub-grid2 {{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }} .stub-grid3 {{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }}
-.stub-grid2 .stub-field,.stub-grid3 .stub-field {{ border-left:1px solid #AAB6C8; padding-left:12px; }} .stub-grid2 .stub-field:first-child,.stub-grid3 .stub-field:first-child {{ border-left:0; padding-left:0; }}
-.stub-college {{ min-height:62px; }} .stub-college .value {{ font-size:15px; -webkit-line-clamp:3; }}
-.stub-to {{ min-height:54px; }} .stub-to .value {{ font-size:16px; -webkit-line-clamp:2; }}
+.stub-body {{ padding: 10px 24px 0 26px; display:grid; grid-template-rows:auto auto auto auto auto minmax(50px,auto) auto; gap:4px; min-width:0; overflow:hidden; }}
+.stub-field {{ min-width:0; min-height:34px; border-bottom:1px solid #D7DEE8; padding-bottom:4px; }}
+.stub-field .label {{ font-size:10px; margin-bottom:4px; }}
+.stub-field .value {{ font-size:19px; line-height:1.08; }} .stub-grid2 {{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }}
+.stub-grid2 .stub-field {{ border-left:1px solid #AAB6C8; padding-left:10px; }} .stub-grid2 .stub-field:first-child {{ border-left:0; padding-left:0; }}
+.stub-college {{ min-height:56px; }} .stub-college .value {{ font-size:14px; -webkit-line-clamp:3; }}
+.stub-to {{ min-height:48px; }} .stub-to .value {{ font-size:15px; -webkit-line-clamp:2; }}
 .stub-foot {{ display:grid; grid-template-columns:58px 1px minmax(0,1fr); align-items:center; gap:14px; padding:7px 22px; overflow:hidden; }} .stub-foot img {{ width:50px; height:50px; object-fit:contain; }} .stub-foot i {{ height:38px; background:#D7DEE8; }} .stub-foot strong {{ display:block; font:800 25px/1 "Roboto Condensed"; white-space:nowrap; }} .stub-foot span {{ color:#356AE6; }} .stub-foot small {{ display:block; margin-top:4px; font:700 8px/1 Inter; letter-spacing:3px; white-space:nowrap; }}
 </style>
 </head>
@@ -132,20 +178,20 @@ body {{ margin: 0; width: {PASS_WIDTH}px; height: {PASS_HEIGHT}px; background: #
 <div class="ticket">
   <main class="main">
     <header class="header"><img class="logo" src="{logo}" alt=""><div class="brand"><h1>NOCTIVUS <span>'26</span></h1><p>COLLEGE SYMPOSIUM</p></div><div class="pass-title">BOARDING PASS <span class="plane">✈</span></div></header>
-    <section class="row row1"><div class="field"><span class="label">Passenger Name</span><span class="value main-value two-line-field" data-autofit data-max-font="27" data-min-font="13" data-max-lines="2">{values['PASSENGER_NAME']}</span></div><div class="field"><span class="label">Event Name</span><span class="value main-value two-line-field" data-autofit data-max-font="27" data-min-font="13" data-max-lines="2">{values['EVENT_NAME']}</span></div><div class="field"><span class="label">Date</span><span class="value main-value">{values['EVENT_DATE']}</span></div><div class="qr-cell"><img src="{qr}" alt=""></div></section>
-    <section class="row row2"><div class="field"><span class="label">Time</span><span class="value small-value">{values['EVENT_TIME']}</span></div><div class="field"><span class="label">Gate</span><span class="value small-value two-line-field" data-autofit data-max-font="21" data-min-font="13" data-max-lines="2">{values['EVENT_GATE']}</span></div><div class="field"><span class="label">Venue</span><span class="value small-value two-line-field" data-autofit data-max-font="21" data-min-font="13" data-max-lines="2">{values['VENUE']}</span></div><div class="field"><span class="label">Terminal</span><span class="value small-value two-line-field" data-autofit data-max-font="21" data-min-font="13" data-max-lines="2">{values['TERMINAL']}</span></div></section>
-    <section class="row row3"><div class="field"><span class="label">Flight</span><span class="value small-value">NV26</span></div><div class="field"><span class="label">Seat</span><span class="value small-value">{values['SEAT']}</span></div><div class="field"><span class="label">Zone</span><span class="value small-value">1</span></div><div class="field"><span class="label">Food Preference</span><span class="value email-value two-line-field" data-autofit data-max-font="19" data-min-font="12" data-max-lines="2">{values['FOOD_PREFERENCE']}</span></div><div class="field"><span class="label">Email ID</span><span class="value email-value two-line-field" data-autofit data-max-font="19" data-min-font="12" data-max-lines="2">{values['EMAIL_ID']}</span></div></section>
+    <section class="row row1"><div class="field"><span class="label">Passenger Name</span><span class="value main-value two-line-field" data-autofit data-max-font="27" data-min-font="13" data-max-lines="2">{values['PASSENGER_NAME']}</span></div><div class="field"><span class="label">Event 1</span><span class="value main-value two-line-field" data-autofit data-max-font="27" data-min-font="13" data-max-lines="2">{values['EVENT_1']}</span></div><div class="field"><span class="label">Date</span><span class="value main-value">{values['EVENT_DATE']}</span></div><div class="qr-cell"><img src="{qr}" alt=""></div></section>
+    <section class="row row2"><div class="field"><span class="label">Time 1</span><span class="value small-value">{values['TIME_1']}</span></div><div class="field"><span class="label">Gate</span><span class="value small-value two-line-field" data-autofit data-max-font="21" data-min-font="13" data-max-lines="2">{values['EVENT_GATE']}</span></div><div class="field"><span class="label">Venue</span><span class="value small-value two-line-field" data-autofit data-max-font="21" data-min-font="13" data-max-lines="2">{values['VENUE']}</span></div><div class="field"><span class="label">Terminal</span><span class="value small-value two-line-field" data-autofit data-max-font="21" data-min-font="13" data-max-lines="2">{values['TERMINAL']}</span></div></section>
+    <section class="row row3"><div class="field"><span class="label">Event 2</span><span class="value small-value two-line-field" data-autofit data-max-font="21" data-min-font="13" data-max-lines="2">{values['EVENT_2']}</span></div><div class="field"><span class="label">Time 2</span><span class="value small-value">{values['TIME_2']}</span></div><div class="field"><span class="label">Food Preference</span><span class="value email-value two-line-field" data-autofit data-max-font="18" data-min-font="11" data-max-lines="2">{values['FOOD_PREFERENCE']}</span></div><div class="field"><span class="label">Email ID</span><span class="value email-value two-line-field" data-autofit data-max-font="18" data-min-font="11" data-max-lines="2">{values['EMAIL_ID']}</span></div></section>
     <section class="route-wrap"><div class="route-box"><div><div class="route-label">From College</div><div class="value college-line two-line-field" data-autofit data-max-font="24" data-min-font="13" data-max-lines="2">{values['FROM_COLLEGE']}</div><span class="hint">(USER COLLEGE)</span></div><div class="route-center"><div class="dotted"><span>✈</span></div></div><div class="to-block"><div class="route-label">To</div><div class="value college-line two-line-field" data-autofit data-max-font="25" data-min-font="14" data-max-lines="2">{values['TO_COLLEGE']}</div><span class="hint">{values['TO_CITY']}</span></div></div></section>
     <div class="footer"><span>IGNITE</span><b>•</b><span>INNOVATE</span><b>•</b><span>INSPIRE</span></div>
   </main>
   <aside class="stub"><div class="stub-head">BOARDING PASS</div><div class="stub-body">
-    <div class="stub-field"><span class="label">Passenger Name</span><span class="value two-line-field" data-autofit data-max-font="22" data-min-font="12" data-max-lines="2">{values['PASSENGER_NAME']}</span></div>
-    <div class="stub-field"><span class="label">Event Name</span><span class="value two-line-field" data-autofit data-max-font="22" data-min-font="12" data-max-lines="2">{values['EVENT_NAME']}</span></div>
-    <div class="stub-grid2"><div class="stub-field"><span class="label">Date</span><span class="value">{values['EVENT_DATE']}</span></div><div class="stub-field"><span class="label">Time</span><span class="value">{values['EVENT_TIME']}</span></div></div>
-    <div class="stub-grid2"><div class="stub-field"><span class="label">Gate</span><span class="value two-line-field" data-autofit data-max-font="22" data-min-font="12" data-max-lines="2">{values['EVENT_GATE']}</span></div><div class="stub-field"><span class="label">Terminal</span><span class="value two-line-field" data-autofit data-max-font="22" data-min-font="12" data-max-lines="2">{values['TERMINAL']}</span></div></div>
-    <div class="stub-grid3"><div class="stub-field"><span class="label">Seat</span><span class="value">{values['SEAT']}</span></div><div class="stub-field"><span class="label">Flight</span><span class="value">NV26</span></div><div class="stub-field"><span class="label">Zone</span><span class="value">1</span></div></div>
-    <div class="stub-field stub-college"><span class="label">From College</span><span class="value two-line-field" data-autofit data-max-font="17" data-min-font="11" data-max-lines="3">{values['FROM_COLLEGE']}</span></div>
-    <div class="stub-field stub-to"><span class="label">To</span><span class="value two-line-field" data-autofit data-max-font="18" data-min-font="12" data-max-lines="2">{values['TO_COLLEGE']}<br>{values['TO_CITY']}</span></div>
+    <div class="stub-field"><span class="label">Passenger Name</span><span class="value two-line-field" data-autofit data-max-font="21" data-min-font="12" data-max-lines="2">{values['PASSENGER_NAME']}</span></div>
+    <div class="stub-field"><span class="label">Event 1</span><span class="value two-line-field" data-autofit data-max-font="21" data-min-font="12" data-max-lines="2">{values['EVENT_1']}</span></div>
+    <div class="stub-grid2"><div class="stub-field"><span class="label">Date</span><span class="value">{values['EVENT_DATE']}</span></div><div class="stub-field"><span class="label">Time 1</span><span class="value">{values['TIME_1']}</span></div></div>
+    <div class="stub-grid2"><div class="stub-field"><span class="label">Event 2</span><span class="value two-line-field" data-autofit data-max-font="17" data-min-font="10" data-max-lines="2">{values['EVENT_2']}</span></div><div class="stub-field"><span class="label">Time 2</span><span class="value">{values['TIME_2']}</span></div></div>
+    <div class="stub-grid2"><div class="stub-field"><span class="label">Gate</span><span class="value two-line-field" data-autofit data-max-font="20" data-min-font="11" data-max-lines="2">{values['EVENT_GATE']}</span></div><div class="stub-field"><span class="label">Terminal</span><span class="value two-line-field" data-autofit data-max-font="20" data-min-font="11" data-max-lines="2">{values['TERMINAL']}</span></div></div>
+    <div class="stub-field stub-college"><span class="label">From College</span><span class="value two-line-field" data-autofit data-max-font="16" data-min-font="10" data-max-lines="3">{values['FROM_COLLEGE']}</span></div>
+    <div class="stub-field stub-to"><span class="label">To</span><span class="value two-line-field" data-autofit data-max-font="17" data-min-font="11" data-max-lines="2">{values['TO_COLLEGE']}<br>{values['TO_CITY']}</span></div>
   </div><div class="stub-foot"><img src="{logo}" alt=""><i></i><div><strong>NOCTIVUS <span>'26</span></strong><small>COLLEGE SYMPOSIUM</small></div></div></aside>
 </div>
 <script>
@@ -195,16 +241,21 @@ async def validate_boarding_pass_layout(registration: dict, pass_data: dict) -> 
         page = await browser.new_page(viewport={"width": PASS_WIDTH, "height": PASS_HEIGHT}, device_scale_factor=1)
         await page.set_content(html_content, wait_until="load")
         await page.evaluate("fitAllText()")
-        failures = await page.evaluate("""() => Array.from(document.querySelectorAll('[data-autofit]')).map((el) => {
-          const size = parseFloat(getComputedStyle(el).fontSize);
-          const maxLines = Number(el.dataset.maxLines || 2);
-          return {
-          text: el.textContent.trim(),
-          scrollWidth: el.scrollWidth,
-          clientWidth: el.clientWidth,
-          scrollHeight: el.scrollHeight,
-          allowedHeight: Math.ceil(size * 1.15 * maxLines) + 4
-        };
-        }).filter((item) => item.scrollWidth > item.clientWidth || item.scrollHeight > item.allowedHeight)""")
+        await page.evaluate("document.fonts && document.fonts.ready")
+        issues = await page.evaluate(
+            """() => {
+                const results = [];
+                document.querySelectorAll('.field, .stub-field').forEach((el) => {
+                    const label = el.querySelector('.label')?.textContent || '';
+                    const value = el.querySelector('.value');
+                    if (!value) return;
+                    const isOverflowing = value.scrollWidth > value.clientWidth || value.scrollHeight > (value.clientHeight + 4);
+                    if (isOverflowing) {
+                        results.push({ field: label, text: value.textContent });
+                    }
+                });
+                return results;
+            }"""
+        )
         await browser.close()
-        return failures
+        return issues

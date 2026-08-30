@@ -1,3 +1,4 @@
+import asyncio
 import secrets
 import re
 from datetime import datetime, timezone
@@ -50,7 +51,25 @@ async def create_registration(payload: dict | None) -> tuple[int, dict]:
 
     event_ids = [event["eventId"] for event in result["value"]["eventRegistrations"]]
     now = datetime.now(timezone.utc)
-    record = {"registrationId": create_registration_id(), **result["value"], "paymentStatus": "pending", "paymentSubmittedAt": now, "createdAt": now, "updatedAt": now}
+    reg_id = create_registration_id()
+    record = {
+        "registrationId": reg_id,
+        "member_id": reg_id,
+        "event_ids": event_ids,
+        "assigned_slots": [],
+        **result["value"],
+        "paymentStatus": "pending",
+        "payment_email_status": "not_attempted",
+        "payment_email_error": None,
+        "payment_email_sent_at": None,
+        "pass_status": "not_sent",
+        "pass_sent_at": None,
+        "pass_failed_at": None,
+        "pass_failure_reason": None,
+        "paymentSubmittedAt": now,
+        "createdAt": now,
+        "updatedAt": now,
+    }
 
     if mongo.mongo_ready():
         if not await mongo.reserve_event_capacity(event_ids):
@@ -70,23 +89,20 @@ async def create_registration(payload: dict | None) -> tuple[int, dict]:
     else:
         if settings.node_env == "production" or not settings.allow_memory_db:
             return 503, {"message": "Registration service is not connected to its database."}
-        for event_id in event_ids:
-            capacity = settings.event_capacities.get(event_id)
-            if capacity is not None:
-                used = sum(1 for item in memory_registrations if any(event.get("eventId") == event_id for event in item.get("eventRegistrations", [])))
-                if used >= capacity:
-                    return 409, {"message": "One of the selected events has reached capacity."}
-        duplicate_event = any(item.get("normalized", {}).get("email") == result["value"]["normalized"]["email"] and any(event.get("eventId") in event_ids for event in item.get("eventRegistrations", [])) for item in memory_registrations)
-        if duplicate_event:
+        if any(r["normalized"]["email"] == result["value"]["normalized"]["email"] and any(e["eventId"] in event_ids for e in r.get("eventRegistrations", [])) for r in memory_registrations):
             return 409, {"message": "This email is already registered for one of the selected events."}
-        if any(item.get("normalizedUtr") == result["value"]["normalizedUtr"] for item in memory_registrations):
+        if any(r.get("normalizedUtr") == result["value"]["normalizedUtr"] for r in memory_registrations):
             return 409, {"message": "This UTR has already been submitted."}
         memory_registrations.append(record)
 
+    try:
+        from app.services.scheduler_service import assignMembersToSlots
+        asyncio.create_task(assignMembersToSlots())
+    except Exception:
+        pass
+
     return 201, {
         "registrationId": record["registrationId"],
-        "status": "pending",
-        "expectedAmount": record["expectedAmount"],
         "message": "Registration received and awaiting payment verification.",
     }
 
@@ -98,29 +114,48 @@ async def load_registrations(filters: dict | None = None) -> list[dict]:
         query["eventRegistrations.eventId"] = filters["eventId"]
     if filters.get("status"):
         query["paymentStatus"] = filters["status"]
+    if filters.get("pass_status"):
+        if isinstance(filters["pass_status"], list):
+            query["pass_status"] = {"$in": filters["pass_status"]}
+        else:
+            query["pass_status"] = filters["pass_status"]
     if filters.get("search"):
         term = re.escape(str(filters["search"]).strip()[:80])
         query["$or"] = [{"participant.name": {"$regex": term, "$options": "i"}}, {"participant.email": {"$regex": term, "$options": "i"}}, {"participant.phone": {"$regex": term, "$options": "i"}}, {"normalizedUtr": {"$regex": term}}]
 
-    if mongo.mongo_ready():
-        cursor = mongo.db.registrations.find(query).sort("createdAt", -1)
-        rows = await cursor.to_list(length=5000)
-    else:
-        rows = sorted(memory_registrations, key=lambda item: item.get("createdAt") or item.get("paymentSubmittedAt") or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
-        if filters.get("eventId"):
-            rows = [item for item in rows if any(event.get("eventId") == filters["eventId"] for event in item.get("eventRegistrations", []))]
-        if filters.get("status"):
-            rows = [item for item in rows if item.get("paymentStatus") == filters["status"]]
-        if filters.get("search"):
-            term = str(filters["search"]).lower()
-            rows = [item for item in rows if term in f"{item.get('participant', {}).get('name', '')} {item.get('participant', {}).get('email', '')} {item.get('participant', {}).get('phone', '')} {item.get('normalizedUtr', '')}".lower()]
+    try:
+        if mongo.mongo_ready():
+            cursor = mongo.db.registrations.find(query).sort("createdAt", 1 if filters.get("sortAsc") else -1)
+            rows = await cursor.to_list(length=5000)
+            return rows
+    except Exception as error:
+        print(f"Falling back to in-memory registrations: {error}")
+        mongo.client = None
+        mongo.db = None
+
+    rows = sorted(memory_registrations, key=lambda item: item.get("createdAt") or item.get("paymentSubmittedAt") or datetime.min.replace(tzinfo=timezone.utc), reverse=not filters.get("sortAsc"))
+    if filters.get("eventId"):
+        rows = [item for item in rows if any(event.get("eventId") == filters["eventId"] for event in item.get("eventRegistrations", []))]
+    if filters.get("status"):
+        rows = [item for item in rows if item.get("paymentStatus") == filters["status"]]
+    if filters.get("pass_status"):
+        allowed_statuses = filters["pass_status"] if isinstance(filters["pass_status"], list) else [filters["pass_status"]]
+        rows = [item for item in rows if (item.get("pass_status") or "not_sent") in allowed_statuses]
+    if filters.get("search"):
+        term = str(filters["search"]).lower()
+        rows = [item for item in rows if term in f"{item.get('participant', {}).get('name', '')} {item.get('participant', {}).get('email', '')} {item.get('participant', {}).get('phone', '')} {item.get('normalizedUtr', '')}".lower()]
     return rows
 
 
 async def update_registration(registration_id: str, update: dict) -> dict | None:
-    if mongo.mongo_ready():
-        update["updatedAt"] = datetime.now(timezone.utc)
-        return await mongo.db.registrations.find_one_and_update({"registrationId": registration_id}, {"$set": update}, return_document=ReturnDocument.AFTER)
+    try:
+        if mongo.mongo_ready():
+            update["updatedAt"] = datetime.now(timezone.utc)
+            return await mongo.db.registrations.find_one_and_update({"registrationId": registration_id}, {"$set": update}, return_document=ReturnDocument.AFTER)
+    except Exception as error:
+        print(f"Mongo registration update failed; switching to memory fallback: {error}")
+        mongo.client = None
+        mongo.db = None
     for registration in memory_registrations:
         if registration.get("registrationId") == registration_id:
             registration.update(update)
@@ -130,11 +165,23 @@ async def update_registration(registration_id: str, update: dict) -> dict | None
 
 
 def serialize_registration(registration: dict) -> dict:
+    reg_id = registration.get("registrationId") or registration.get("member_id")
+    event_ids = registration.get("event_ids") or [e.get("eventId") for e in registration.get("eventRegistrations", []) if e.get("eventId")]
     return {
-        "registrationId": registration.get("registrationId"),
+        "registrationId": reg_id,
+        "member_id": reg_id,
+        "event_ids": event_ids,
+        "assigned_slots": registration.get("assigned_slots") or [],
         "participant": registration.get("participant"),
         "eventRegistrations": registration.get("eventRegistrations"),
         "paymentStatus": registration.get("paymentStatus"),
+        "payment_email_status": registration.get("payment_email_status") or "not_attempted",
+        "payment_email_error": registration.get("payment_email_error"),
+        "payment_email_sent_at": registration.get("payment_email_sent_at"),
+        "pass_status": registration.get("pass_status") or "not_sent",
+        "pass_sent_at": registration.get("pass_sent_at"),
+        "pass_failed_at": registration.get("pass_failed_at"),
+        "pass_failure_reason": registration.get("pass_failure_reason"),
         "utrNumber": registration.get("utrNumber"),
         "paymentReference": registration.get("paymentReference"),
         "expectedAmount": registration.get("expectedAmount"),

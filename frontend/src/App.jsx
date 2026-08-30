@@ -7,6 +7,7 @@ import PillNav from './components/PillNav.jsx';
 import CircularGallery from './components/CircularGallery/CircularGallery.jsx';
 import SplitFlapCountdown from './components/effects/SplitFlapCountdown.jsx';
 import useReveal from './hooks/useReveal.js';
+import { getApiBase } from './lib/api';
 
 const VenueMap = lazy(() => import('./components/VenueMap.jsx'));
 
@@ -30,7 +31,7 @@ export default function App() {
 
   useEffect(() => {
     const controller = new AbortController();
-    const apiBase = import.meta.env.VITE_API_URL || '';
+    const apiBase = getApiBase();
     fetch(`${apiBase}/api/events`, { signal: controller.signal })
       .then((response) => response.ok ? response.json() : Promise.reject(new Error('Event service unavailable')))
       .then((data) => setRegistrationOpen(data.registrationOpen === true))
@@ -374,7 +375,6 @@ function Timeline() {
 function Brochure() {
   const [fullscreenPoster, setFullscreenPoster] = useState(null);
   const [downloadOpen, setDownloadOpen] = useState(false);
-  const [posterAutoScroll, setPosterAutoScroll] = useState(false);
   const downloadRef = useRef(null);
   const posterItems = useMemo(() => posters.map((poster) => ({ ...poster, text: poster.title })), []);
 
@@ -398,11 +398,7 @@ function Brochure() {
     <section className="section brochure-section" id="brochure">
       <div className="brochure-full">
         <div className="page-width brochure-full__header">
-          <SectionTitle kicker="BROCHURE" title="Posters and downloads." description="Open a poster panel to preview it, then download the poster or the brochure PDF." />
-          <div className="brochure-actions" data-reveal>
-            <a className="button button-primary" href={brochure.href}>Download brochure <Icon name="external" /></a>
-            <a className="button button-secondary" href={posters[0].image} download>Download main poster <Icon name="external" /></a>
-          </div>
+          <SectionTitle kicker="BROCHURE" title="Posters and downloads." description="Open a poster panel to preview it, then download the poster." />
         </div>
         <div className="brochure-gallery-wrap" data-reveal>
           <CircularGallery
@@ -412,18 +408,15 @@ function Brochure() {
             borderRadius={0.05}
             scrollEase={0.03}
             font="600 20px var(--display-font)"
-            autoScroll={posterAutoScroll}
-            autoScrollMs={2400}
+            autoScroll={true}
+            autoScrollMs={2200}
             onPosterClick={setFullscreenPoster}
           />
         </div>
-        <div className="poster-controls" data-reveal>
-          <button className={`button button-secondary poster-auto-toggle${posterAutoScroll ? ' is-active' : ''}`} type="button" aria-pressed={posterAutoScroll} onClick={() => setPosterAutoScroll((active) => !active)}>
-            Auto scroll <span aria-hidden="true">{posterAutoScroll ? 'On' : 'Off'}</span>
-          </button>
+        <div className="poster-controls" data-reveal style={{ justifyContent: 'center' }}>
           <div className="poster-download-menu" ref={downloadRef}>
-            <button className="button button-secondary poster-download-menu__button" type="button" aria-haspopup="menu" aria-expanded={downloadOpen} onClick={() => setDownloadOpen((open) => !open)}>
-              Download Poster <span aria-hidden="true">▾</span>
+            <button className="button button-primary poster-download-menu__button" type="button" aria-haspopup="menu" aria-expanded={downloadOpen} onClick={() => setDownloadOpen((open) => !open)}>
+              Download Posters <span aria-hidden="true">▾</span>
             </button>
             {downloadOpen && (
               <div className="poster-download-menu__list" role="menu">

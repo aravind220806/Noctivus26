@@ -9,7 +9,21 @@ VALID_STATUSES = {"open", "closed", "coming-soon"}
 
 
 def _seed_events() -> list[dict]:
-    return [{**event, "status": event.get("status", "open"), "terminal": event.get("terminal", "MAIN HALL"), "seatType": event.get("seatType", "VIP"), "passActive": event.get("passActive", True), "autoCloseAt": None, "updatedBy": "system", "updatedAt": None} for event in EVENT_CATALOG]
+    return [
+        {
+            **event,
+            "status": event.get("status", "open"),
+            "terminal": event.get("terminal", "MAIN HALL"),
+            "seatType": event.get("seatType", "VIP"),
+            "passActive": event.get("passActive", True),
+            "duration_minutes": event.get("duration_minutes", 90),
+            "is_ctf": event.get("is_ctf", False),
+            "autoCloseAt": None,
+            "updatedBy": "system",
+            "updatedAt": None,
+        }
+        for event in EVENT_CATALOG
+    ]
 
 
 def _is_closed(event: dict, now: datetime | None = None) -> bool:
@@ -25,19 +39,31 @@ def _is_closed(event: dict, now: datetime | None = None) -> bool:
 
 
 def public_event(event: dict) -> dict:
-    return {key: event.get(key) for key in ("id", "name", "category", "fee", "teamMin", "teamMax", "detailsComplete", "status", "autoCloseAt", "venue", "date", "time", "gate", "terminal", "seatType", "passActive")}
+    return {key: event.get(key) for key in ("id", "name", "category", "duration_minutes", "is_ctf", "fee", "teamMin", "teamMax", "detailsComplete", "status", "autoCloseAt", "venue", "date", "time", "gate", "terminal", "seatType", "passActive")}
+
+
+def serialize_event(event: dict) -> dict:
+    item = dict(event)
+    if "_id" in item:
+        item["_id"] = str(item["_id"])
+    return item
 
 
 async def list_events() -> list[dict]:
-    if mongo.mongo_ready():
-        rows = await mongo.db.events.find({}).sort("id", 1).to_list(length=100)
-        if not rows:
-            await seed_events()
+    try:
+        if mongo.mongo_ready():
             rows = await mongo.db.events.find({}).sort("id", 1).to_list(length=100)
-        return rows
+            if not rows:
+                await seed_events()
+                rows = await mongo.db.events.find({}).sort("id", 1).to_list(length=100)
+            return [serialize_event(row) for row in rows]
+    except Exception as error:
+        print(f"Falling back to in-memory events: {error}")
+        mongo.client = None
+        mongo.db = None
     if not memory_events:
         memory_events.extend(_seed_events())
-    return memory_events
+    return [serialize_event(item) for item in memory_events]
 
 
 async def seed_events() -> None:
@@ -45,7 +71,20 @@ async def seed_events() -> None:
     if mongo.mongo_ready():
         await mongo.db.events.create_index("id", unique=True)
         for event in seeded:
-            await mongo.db.events.update_one({"id": event["id"]}, {"$setOnInsert": event}, upsert=True)
+            await mongo.db.events.update_one(
+                {"id": event["id"]},
+                {"$set": {
+                    "name": event["name"],
+                    "category": event["category"],
+                    "duration_minutes": event["duration_minutes"],
+                    "is_ctf": event["is_ctf"],
+                    "venue": event["venue"],
+                    "date": event["date"],
+                    "time": event["time"],
+                    "gate": event["gate"],
+                }, "$setOnInsert": event},
+                upsert=True,
+            )
     elif not memory_events:
         memory_events.extend(seeded)
 
@@ -56,7 +95,7 @@ async def get_event(event_id: str) -> dict | None:
 
 
 async def update_event(event_id: str, changes: dict, updated_by: str) -> dict | None:
-    allowed = {"status", "fee", "teamMin", "teamMax", "autoCloseAt", "venue", "date", "time", "gate", "terminal", "seatType", "passActive"}
+    allowed = {"status", "fee", "teamMin", "teamMax", "autoCloseAt", "venue", "date", "time", "gate", "terminal", "seatType", "passActive", "duration_minutes", "category"}
     update = {key: value for key, value in changes.items() if key in allowed}
     if update.get("status") not in VALID_STATUSES and "status" in update:
         raise ValueError("Invalid event status.")
@@ -66,6 +105,11 @@ async def update_event(event_id: str, changes: dict, updated_by: str) -> dict | 
         raise ValueError("Team minimum must be at least 1.")
     if "teamMax" in update and (not isinstance(update["teamMax"], int) or update["teamMax"] < 1):
         raise ValueError("Team maximum must be at least 1.")
+    if "duration_minutes" in update:
+        try:
+            update["duration_minutes"] = max(15, int(update["duration_minutes"]))
+        except (ValueError, TypeError):
+            pass
     for key in ("venue", "date", "time", "gate", "terminal", "seatType"):
         if key in update:
             update[key] = str(update[key] or "").strip()[:160]
@@ -78,11 +122,13 @@ async def update_event(event_id: str, changes: dict, updated_by: str) -> dict | 
     if merged["teamMin"] > merged["teamMax"]:
         raise ValueError("Team minimum cannot exceed team maximum.")
     if mongo.mongo_ready():
-        await mongo.db.events.replace_one({"id": event_id}, merged)
+        clean_merged = dict(merged)
+        clean_merged.pop("_id", None)
+        await mongo.db.events.replace_one({"id": event_id}, clean_merged)
     else:
         current.clear()
         current.update(merged)
-    return merged
+    return serialize_event(merged)
 
 
 async def admin_events() -> list[dict]:
@@ -93,5 +139,5 @@ async def admin_events() -> list[dict]:
             count = await mongo.db.registrations.count_documents({"eventRegistrations.eventId": event["id"]})
         else:
             count = 0
-        result.append({**event, "registrationCount": count, "effectiveStatus": "closed" if _is_closed(event) else event.get("status")})
+        result.append(serialize_event({**event, "registrationCount": count, "effectiveStatus": "closed" if _is_closed(event) else event.get("status")}))
     return result

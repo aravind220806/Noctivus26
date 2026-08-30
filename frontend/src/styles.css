@@ -286,31 +286,9 @@ footer { padding: 70px 0 25px; background: #030504; }.footer-grid { display: gri
 
 @media (min-width: 701px) {
   .payment-step:has(.payment-layout) {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: start;
-  }
-
-  .payment-step:has(.payment-layout) > .payment-summary,
-  .payment-step:has(.payment-layout) > .payment-layout,
-  .payment-step:has(.payment-layout) > .form-error {
-    grid-column: 1 / -1;
-  }
-
-  .payment-step:has(.payment-layout) > .utr-field {
-    grid-column: 1;
-  }
-
-  .payment-step:has(.payment-layout) > .payment-confirm-actions {
-    grid-column: 2;
-    margin: 22px 0 0 18px;
-    padding: 0;
-    border-top: 0;
-  }
-
-  .payment-step:has(.payment-layout) > .check-field {
-    grid-column: 1 / -1;
-    grid-row: 5;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
   }
 }
 
@@ -2655,8 +2633,7 @@ main > .section { content-visibility: auto; contain-intrinsic-size: auto 900px; 
   .review-event { align-items: flex-start; gap: 18px; }
   .review-event > strong { font-size: 34px; }
   .registration-actions--split { flex-direction: column-reverse; }
-  .payment-gate { min-height: 390px; padding: 32px 22px; }
-  .payment-layout { border-radius: 10px; overflow: hidden; }
+  .payment-layout { border-radius: 12px; overflow: visible; height: auto; }
   .payment-instructions dl > div { grid-template-columns: 72px minmax(0, 1fr); }
   .utr-field input { max-width: none; }
 }
@@ -4945,14 +4922,18 @@ main > .section:nth-of-type(even),
   }
 }
 
-/* Four-step registration form inspired by the split event-form reference. */
+/* Four-step registration form adaptive for mobile and desktop */
 .registration-modal {
-  width: min(1100px, calc(100vw - 32px));
-  display: block;
+  width: min(840px, calc(100vw - 32px));
+  max-height: min(92dvh, 860px);
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   border: 1px solid rgba(93, 70, 210, .55);
-  border-radius: 24px;
+  border-radius: 20px;
   background: #070b13;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95);
+  margin: auto;
 }
 
 .registration-modal::after {
@@ -4960,91 +4941,195 @@ main > .section:nth-of-type(even),
   display: none;
 }
 
-.registration-modal__header,
-.registration-progress,
-.registration-body {
-  grid-column: auto;
-}
-
 .registration-modal__header {
-  position: relative;
-  padding: 28px 30px 12px;
-  border-bottom: 0;
+  flex: 0 0 auto;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 22px 28px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(127, 153, 211, .12);
   background: #070b13;
 }
 
 .registration-modal__header h2 {
   color: #f8fafc;
-  font-size: 28px;
+  font-size: 26px;
+  margin: 4px 0 0;
 }
 
 .registration-progress {
-  position: relative;
-  top: auto;
-  padding: 0 30px 14px;
+  flex: 0 0 auto;
+  display: grid;
   grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 12px 28px;
   background: #070b13;
+  border-bottom: 1px solid rgba(127, 153, 211, .1);
+}
+
+.registration-progress span {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-align: center;
+  padding: 4px 0;
+  border-bottom: 2px solid #1e293b;
+  transition: all 0.2s ease;
+}
+
+.registration-progress span.active {
+  color: var(--cyan);
+  border-bottom-color: var(--cyan);
 }
 
 .registration-body {
-  padding: 18px 30px 30px;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 22px 28px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
 .registration-field-grid,
 .event-choice-grid,
 .review-grid {
+  display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  gap: 16px;
 }
 
 .registration-modal .field > span,
 .food-preference legend {
   color: #f4f6fb;
-  font-size: 16px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
   letter-spacing: 0;
   text-transform: none;
+  margin-bottom: 6px;
+  display: block;
 }
 
 .registration-modal .field input,
 .registration-modal .field select {
-  height: 43px;
-  border-color: #171d2c;
-  border-radius: 6px;
+  width: 100%;
+  height: 44px;
+  padding: 8px 14px;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
   color: #f8fafc;
-  background: #080c15;
+  background: #0d1322;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.registration-modal .field input:focus,
+.registration-modal .field select:focus {
+  outline: none;
+  border-color: var(--cyan);
 }
 
 .registration-modal .field input::placeholder {
-  color: #71788a;
+  color: #64748b;
+}
+
+.email-field-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.email-caps-warning {
+  margin-top: 2px;
+  padding: 6px 10px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  color: #fca5a5;
+  line-height: 1.3;
+}
+
+.email-caps-warning span {
+  font-weight: 500;
+}
+
+.convert-lowercase-btn {
+  font-size: 11px;
+  font-weight: 700;
+  color: #38bdf8;
+  text-decoration: underline;
+  cursor: pointer;
+  white-space: nowrap;
+  background: transparent;
+  border: none;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.convert-lowercase-btn:hover {
+  color: #7dd3fc;
+}
+
+.food-preference {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.food-preference > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.food-preference label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  background: #0d1322;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.food-preference label.selected {
+  border-color: var(--cyan);
+  background: rgba(70, 245, 208, 0.08);
 }
 
 .entry-fee-card,
 .event-select-card {
-  padding: 18px;
+  padding: 16px;
   display: grid;
-  gap: 8px;
+  gap: 6px;
   border: 1px solid rgba(127,153,211,.18);
   border-radius: 10px;
   background: #0b101a;
-}
-
-.entry-fee-card {
-  margin-bottom: 18px;
 }
 
 .entry-fee-card span,
 .entry-fee-card small,
 .event-select-card small {
   color: #8b95aa;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.45;
 }
 
 .entry-fee-card strong {
   color: #f8fafc;
   font-family: var(--display-font);
-  font-size: 44px;
+  font-size: 38px;
   line-height: 1;
 }
 
@@ -5052,60 +5137,445 @@ main > .section:nth-of-type(even),
   opacity: .58;
 }
 
+.review-event {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: #0d1322;
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+}
+
+.review-event h3 {
+  margin: 4px 0 2px;
+  font-size: 18px;
+  color: #fff;
+}
+
+.review-event strong {
+  font-size: 26px;
+  color: var(--cyan);
+}
+
+.registration-review-card {
+  background: #0b101a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.review-section-header {
+  border-bottom: 1px solid #1e293b;
+  padding-bottom: 8px;
+}
+
+.review-section-header span {
+  font-size: 11px;
+  font-weight: 700;
+  color: #38bdf8;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.review-fields-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+}
+
+.review-field-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.review-field-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.review-field-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f8fafc;
+  word-break: break-word;
+}
+
+.review-grid {
+  background: #0b101a;
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+  padding: 16px;
+  gap: 14px;
+}
+
+.review-grid dt {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.review-grid dd {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.payment-step {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .payment-summary {
-  border-radius: 10px 10px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: #0d1322;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
 }
 
-.payment-confirm-actions {
-  position: static;
-  margin: 20px 0 0;
-  padding: 16px 30px;
-  border-top: 1px solid rgba(127,153,211,.18);
-  background: transparent;
-  backdrop-filter: none;
+.payment-summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.payment-confirm-actions .button-primary:disabled {
-  opacity: .45;
-  cursor: not-allowed;
-  filter: grayscale(.25);
+.payment-summary span {
+  font-size: 11px;
+  font-weight: 700;
+  color: #38bdf8;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
 }
 
-.payment-confirm-actions .button-primary:not(:disabled) {
-  box-shadow: 0 0 0 1px rgba(70,245,208,.28), 0 14px 30px rgba(70,245,208,.18);
+.payment-summary strong {
+  font-size: 28px;
+  color: var(--cyan);
+  font-family: var(--display-font, sans-serif);
 }
 
-@media (max-width: 860px) {
-  .registration-modal {
-    grid-template-columns: 1fr;
-    width: min(720px, 100%);
-  }
+.payment-summary small {
+  font-size: 13px;
+  color: #94a3b8;
+}
 
-  .registration-modal::after {
-    min-height: 220px;
+.payment-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 20px;
+  background: #0b101a;
+  border: 1px solid #1e293b;
+  border-radius: 14px;
+  padding: 24px;
+  height: auto;
+  min-height: unset;
+}
+
+.qr-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+.qr-panel img {
+  width: 200px;
+  height: 200px;
+  max-width: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.qr-panel span {
+  font-size: 11px;
+  font-weight: 700;
+  color: #0f172a;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+.mobile-upi-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  gap: 10px;
+}
+
+.pay-upi-btn {
+  width: 100%;
+  min-height: 52px;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: #00d2b4;
+  color: #050a12;
+  border-radius: 10px;
+  border: none;
+  text-decoration: none;
+  box-shadow: 0 4px 18px rgba(0, 210, 180, 0.35);
+  transition: all 0.15s ease;
+}
+
+.pay-upi-btn:hover,
+.pay-upi-btn:active {
+  background: #00f0ce;
+  transform: translateY(-1px);
+}
+
+.upi-helper-text {
+  font-size: 12px;
+  color: #94a3b8;
+  text-align: center;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.upi-fallback-box {
+  margin-top: 6px;
+  padding: 12px 14px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px dashed rgba(56, 189, 248, 0.4);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  font-size: 12px;
+  color: #cbd5e1;
+}
+
+.upi-copy-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: #38bdf8;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.upi-copy-chip code {
+  font-family: monospace;
+}
+
+.upi-copy-chip small {
+  font-size: 11px;
+  background: rgba(56, 189, 248, 0.15);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #7dd3fc;
+}
+
+.payment-instructions {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+}
+
+.payment-instructions .kicker {
+  font-size: 11px;
+  color: #38bdf8;
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+
+.payment-instructions h3 {
+  margin: 0;
+  font-size: 22px;
+  color: #fff;
+}
+
+.payment-instructions dl {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(13, 19, 34, 0.9);
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #1e293b;
+}
+
+.payment-instructions dl > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.payment-instructions dt {
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+
+.payment-instructions dd {
+  margin: 0;
+  color: #f8fafc;
+  font-weight: 700;
+  font-family: var(--mono-font, monospace);
+  font-size: 13px;
+}
+
+.payment-safety {
+  margin: 0;
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.utr-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.utr-field input {
+  font-size: 17px !important;
+  letter-spacing: 1.5px;
+  font-family: monospace;
+  font-weight: 700;
+}
+
+.registration-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 10px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(127, 153, 211, .12);
+}
+
+.registration-actions--split {
+  justify-content: space-between;
+}
+
+.registration-actions .button {
+  min-height: 48px;
+  padding: 0 24px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .modal-shell {
+    padding: 10px;
     align-items: center;
-    grid-column: 1;
-    font-size: clamp(34px, 10vw, 54px);
   }
-}
 
-@media (max-width: 700px) {
   .registration-modal {
-    max-height: 94svh;
-    border-radius: 18px 18px 0 0;
+    width: 100%;
+    max-height: 94dvh;
+    border-radius: 16px;
+  }
+
+  .registration-modal__header {
+    padding: 16px 18px 10px;
+  }
+
+  .registration-modal__header h2 {
+    font-size: 20px;
+  }
+
+  .registration-progress {
+    padding: 8px 16px 10px;
+    gap: 4px;
+  }
+
+  .registration-progress span {
+    font-size: 11px;
+  }
+
+  .registration-body {
+    padding: 14px 18px 20px;
+    gap: 14px;
   }
 
   .registration-field-grid,
   .event-choice-grid,
   .food-preference > div,
-  .review-grid {
+  .review-grid,
+  .review-fields-grid,
+  .payment-layout {
     grid-template-columns: 1fr;
+    gap: 14px;
   }
 
-  .payment-confirm-actions {
-    bottom: -20px;
-    margin: 18px -20px -26px;
-    padding: 14px 20px;
+  .payment-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 20px !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    gap: 16px !important;
+  }
+
+  .mobile-upi-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    gap: 8px !important;
+  }
+
+  .pay-upi-btn {
+    display: flex !important;
+    width: 100% !important;
+    height: 52px !important;
+    min-height: 52px !important;
+    padding: 0 16px !important;
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    border-radius: 10px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  .registration-actions {
+    flex-direction: row;
+    gap: 10px;
+  }
+
+  .registration-actions .button {
+    flex: 1;
+    min-height: 46px;
+    padding: 0 14px;
+    font-size: 14px;
+    justify-content: center;
   }
 }
 

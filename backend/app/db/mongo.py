@@ -10,39 +10,48 @@ db = None
 async def connect_mongo() -> None:
     global client, db
     if not settings.mongodb_uri:
+        db = None
+        client = None
         return
-    client = AsyncIOMotorClient(
-        settings.mongodb_uri,
-        maxPoolSize=settings.mongo_max_pool_size,
-        minPoolSize=settings.mongo_min_pool_size,
-        serverSelectionTimeoutMS=settings.mongo_server_selection_timeout_ms,
-    )
-    await client.admin.command("ping")
-    db = client[settings.mongo_db_name]
-    await db.registrations.create_index([("registrationId", ASCENDING)], unique=True)
-    await db.registrations.create_index([("paymentStatus", ASCENDING), ("checkedIn", ASCENDING)])
-    await db.registrations.create_index([("checkedInAt", DESCENDING)])
-    await db.registrations.create_index([("normalizedUtr", ASCENDING)], unique=True, sparse=True)
-    await db.registrations.create_index([("normalized.email", ASCENDING), ("eventRegistrations.eventId", ASCENDING)], unique=True)
-    await db.registrations.create_index([("normalized.email", ASCENDING)])
-    await db.registrations.create_index([("eventRegistrations.eventId", ASCENDING)])
-    await db.registrations.create_index([("paymentStatus", ASCENDING)])
-    await db.admin_access.create_index([("email", ASCENDING)], unique=True)
-    await db.admin_access.create_index([("updatedAt", DESCENDING)])
-    await db.events.create_index([("id", ASCENDING)], unique=True)
-    await db.event_schedules.create_index([("scheduleId", ASCENDING)], unique=True)
-    await db.admin_actions.create_index([("createdAt", DESCENDING)])
-    await db.email_jobs.create_index([("status", ASCENDING), ("nextAttemptAt", ASCENDING)])
-    await db.email_jobs.create_index("expiresAt", expireAfterSeconds=0)
-    await db.pass_templates.create_index([("eventId", ASCENDING)], unique=True)
-    if settings.event_capacities:
-        for event_id, capacity in settings.event_capacities.items():
-            count = await db.registrations.count_documents({"eventRegistrations.eventId": event_id})
-            await db.event_capacity.update_one(
-                {"eventId": event_id},
-                {"$set": {"capacity": capacity, "count": count}},
-                upsert=True,
-            )
+    try:
+        client = AsyncIOMotorClient(
+            settings.mongodb_uri,
+            maxPoolSize=settings.mongo_max_pool_size,
+            minPoolSize=settings.mongo_min_pool_size,
+            serverSelectionTimeoutMS=settings.mongo_server_selection_timeout_ms,
+        )
+        await client.admin.command("ping")
+        db = client[settings.mongo_db_name]
+        await db.registrations.create_index([("registrationId", ASCENDING)], unique=True)
+        await db.registrations.create_index([("paymentStatus", ASCENDING), ("checkedIn", ASCENDING)])
+        await db.registrations.create_index([("checkedInAt", DESCENDING)])
+        await db.registrations.create_index([("normalizedUtr", ASCENDING)], unique=True, sparse=True)
+        await db.registrations.create_index([("normalized.email", ASCENDING), ("eventRegistrations.eventId", ASCENDING)])
+        await db.registrations.create_index([("normalized.email", ASCENDING)])
+        await db.registrations.create_index([("eventRegistrations.eventId", ASCENDING)])
+        await db.registrations.create_index([("paymentStatus", ASCENDING)])
+        await db.admin_access.create_index([("email", ASCENDING)], unique=True)
+        await db.admin_access.create_index([("updatedAt", DESCENDING)])
+        await db.events.create_index([("id", ASCENDING)], unique=True)
+        await db.event_schedules.create_index([("scheduleId", ASCENDING)], unique=True)
+        await db.admin_actions.create_index([("createdAt", DESCENDING)])
+        await db.email_jobs.create_index([("status", ASCENDING), ("nextAttemptAt", ASCENDING)])
+        await db.pass_templates.create_index([("eventId", ASCENDING)], unique=True)
+        await db.event_slots.create_index([("id", ASCENDING)], unique=True)
+        await db.event_slots.create_index([("event_id", ASCENDING)])
+        if settings.event_capacities:
+            for event_id, capacity in settings.event_capacities.items():
+                count = await db.registrations.count_documents({"eventRegistrations.eventId": event_id})
+                await db.event_capacity.update_one(
+                    {"eventId": event_id},
+                    {"$set": {"capacity": capacity, "count": count}},
+                    upsert=True,
+                )
+    except Exception as error:
+        client = None
+        db = None
+        print(f"MongoDB connection failed: {error}")
+        return
 
 
 async def reserve_event_capacity(event_ids: list[str]) -> bool:

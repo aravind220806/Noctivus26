@@ -29,8 +29,8 @@ def validate_registration(input_data: dict | None, configured_events: list[dict]
     utr_number = normalize_digits(data.get("utrNumber"))
     payment_reference = normalize_text(data.get("paymentReference")).upper()
     food_preference = normalize_text(participant.get("foodPreference")).lower()
-    name = normalize_text(participant.get("name"))
-    college = normalize_text(participant.get("college"))
+    name = normalize_text(participant.get("name")).upper()
+    college = normalize_text(participant.get("college")).upper()
 
     if len(name) < 2:
         errors.append("Participant name is required.")
@@ -53,15 +53,44 @@ def validate_registration(input_data: dict | None, configured_events: list[dict]
     if not (data.get("consent") or {}).get("privacyAccepted"):
         errors.append("Privacy consent is required.")
 
-    submitted_events = data.get("events") if isinstance(data.get("events"), list) else []
-    if not submitted_events:
+    raw_submitted_events = data.get("events") if isinstance(data.get("events"), list) else []
+    if not raw_submitted_events:
         errors.append("Select at least one event.")
+    if len(raw_submitted_events) > 2:
+        errors.append("Members may register for a maximum of 2 events.")
+
+    events_by_id = {event["id"]: event for event in configured_events}
+
+    submitted_events = []
+    for item in raw_submitted_events:
+        if isinstance(item, str):
+            conf = events_by_id.get(item)
+            submitted_events.append({
+                "eventId": item,
+                "teamSize": conf.get("teamMin", 1) if conf else 1,
+                "teamMembers": [],
+            })
+        elif isinstance(item, dict):
+            submitted_events.append(item)
+
     ids = [item.get("eventId") for item in submitted_events if isinstance(item, dict)]
     if len(set(ids)) != len(ids):
         errors.append("The same event cannot be selected twice.")
 
+    selected_configs = [events_by_id.get(eid) for eid in ids if events_by_id.get(eid)]
+    has_ctf = any(e.get("is_ctf") or e["id"] == "cyber-heist-ctf" for e in selected_configs)
+    tech_count = sum(1 for e in selected_configs if e.get("category") in ("tech", "Technical"))
+    non_tech_count = sum(1 for e in selected_configs if e.get("category") in ("non-tech", "Non-technical"))
+
+    if has_ctf and (non_tech_count > 0 or len(selected_configs) > 1):
+        errors.append("Cyber Heist CTF is a dedicated competition and cannot be combined with other events.")
+
+    if tech_count > 1:
+        errors.append("Maximum 1 technical event allowed per registration.")
+    if non_tech_count > 1:
+        errors.append("Maximum 1 non-technical event allowed per registration.")
+
     event_registrations = []
-    events_by_id = {event["id"]: event for event in configured_events}
     for submitted in submitted_events:
         configured = events_by_id.get((submitted or {}).get("eventId"))
         if not configured:
@@ -98,7 +127,7 @@ def validate_registration(input_data: dict | None, configured_events: list[dict]
             "teamSize": team_size,
             "teamSizeMin": configured["teamMin"],
             "teamSizeMax": configured["teamMax"],
-            "teamMembers": [{"name": normalize_text(member.get("name")), "rollNo": normalize_text(member.get("rollNo")).upper()} for member in members if isinstance(member, dict)],
+            "teamMembers": [{"name": normalize_text(member.get("name")).upper(), "rollNo": normalize_text(member.get("rollNo")).upper()} for member in members if isinstance(member, dict)],
         })
 
     expected_amount = sum(event["feeSnapshot"] for event in event_registrations)

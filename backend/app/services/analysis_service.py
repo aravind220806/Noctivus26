@@ -1,3 +1,4 @@
+from app.services.event_service import _is_closed
 from app.services.registration_service import serialize_registration
 
 
@@ -5,7 +6,22 @@ def build_overview(registrations: list[dict], catalog: list[dict] | None = None)
     catalog = catalog or []
     statuses = {"pending": 0, "confirmed": 0, "mismatch": 0, "duplicate": 0}
     events = {
-        event["id"]: {"eventId": event["id"], "eventName": event["name"], "category": event["category"], "registrations": 0, "confirmed": 0, "pending": 0, "checkedIn": 0, "revenue": 0}
+        event["id"]: {
+            "eventId": event["id"],
+            "eventName": event["name"],
+            "category": event.get("category", ""),
+            "venue": event.get("venue", ""),
+            "date": event.get("date", ""),
+            "time": event.get("time", ""),
+            "status": event.get("status", "open"),
+            "effectiveStatus": "closed" if _is_closed(event) else event.get("status", "open"),
+            "fee": event.get("fee", 0),
+            "registrations": 0,
+            "confirmed": 0,
+            "pending": 0,
+            "checkedIn": 0,
+            "revenue": 0,
+        }
         for event in catalog
     }
     expected_revenue = 0

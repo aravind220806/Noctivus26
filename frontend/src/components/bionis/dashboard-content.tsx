@@ -1,18 +1,38 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Card, CardTitle } from './shared';
 
+type EventItem = {
+  eventId: string;
+  eventName: string;
+  category?: string;
+  venue?: string;
+  date?: string;
+  time?: string;
+  status?: string;
+  effectiveStatus?: string;
+  registrations: number;
+  confirmed?: number;
+  pending?: number;
+};
+
 type Overview = {
   total: number;
   confirmedRevenue: number;
   statuses: { pending: number; confirmed: number };
-  events: Array<{ eventId: string; eventName: string; registrations: number }>;
+  events: Array<EventItem>;
   recent: Array<{ registrationId: string; participant?: { name?: string; email?: string }; eventRegistrations?: Array<{ eventName: string }>; createdAt?: string; paymentStatus?: string }>;
   storage?: { available?: boolean; limitBytes?: number; storageBytes?: number; dataBytes?: number; indexBytes?: number };
 };
 
 const eventOrder = ['Ideathon', 'Cyber Heist CTF', 'IoT Exploit', 'Secure X VibeCode', 'Mind Cage', 'Mystery Hunt', 'Tune Trap', 'Auction Arena'];
 
-export function DashboardContent({ overview }: { overview: Overview }) {
+export function DashboardContent({
+  overview,
+  onToggleEventStatus,
+}: {
+  overview: Overview;
+  onToggleEventStatus?: (eventId: string, currentStatus: string) => void;
+}) {
   const usedBytes = overview.storage?.storageBytes || overview.storage?.dataBytes || 0;
   const usage = overview.storage?.available && overview.storage.limitBytes ? Math.min(100, Math.round((usedBytes / overview.storage.limitBytes) * 100)) : null;
   const eventData = [...overview.events].sort((a, b) => eventOrder.indexOf(a.eventName) - eventOrder.indexOf(b.eventName));
@@ -35,6 +55,58 @@ export function DashboardContent({ overview }: { overview: Overview }) {
           <MetricCard label="REVENUE" value={`Rs.${overview.confirmedRevenue}`} tone="purple" />
         </div>
       </section>
+
+      {/* Events Control Panel */}
+      <Card className="dashboard-events-card">
+        <div className="dashboard-card-header">
+          <div>
+            <CardTitle>Events Control &amp; Venues</CardTitle>
+            <p className="admin-help" style={{ margin: '4px 0 0' }}>Manage event status, active venues, and registration availability.</p>
+          </div>
+          <span className="dashboard-event-count">{overview.events.length} Events Configured</span>
+        </div>
+        <div className="dashboard-events-grid">
+          {eventData.map((event) => {
+            const currentStatus = event.effectiveStatus || event.status || 'open';
+            const isOpen = currentStatus === 'open';
+            return (
+              <article className="dashboard-event-row" key={event.eventId}>
+                <div className="dashboard-event-info">
+                  <div className="dashboard-event-title-row">
+                    <strong className="dashboard-event-name">{event.eventName}</strong>
+                    {event.category && <span className="category-pill">{event.category}</span>}
+                  </div>
+                  <div className="dashboard-event-meta">
+                    <span className="dashboard-event-venue">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                      {event.venue || 'Venue TBD'}
+                    </span>
+                    <span className="dashboard-event-regs">
+                      {event.registrations || 0} registered
+                    </span>
+                  </div>
+                </div>
+                <div className="dashboard-event-actions">
+                  <span className={`status-pill status-pill--${currentStatus}`}>
+                    <span className="status-dot" />
+                    {currentStatus.toUpperCase()}
+                  </span>
+                  {onToggleEventStatus && (
+                    <button
+                      type="button"
+                      className={`button button-sm ${isOpen ? 'button-close' : 'button-open'}`}
+                      onClick={() => onToggleEventStatus(event.eventId, currentStatus)}
+                    >
+                      {isOpen ? 'Close Event' : 'Open Event'}
+                    </button>
+                  )}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </Card>
+
       <div className="admin-grid bionis-dashboard-grid">
         <Card className="bionis-event-demand">
           <CardTitle>Event demand</CardTitle>

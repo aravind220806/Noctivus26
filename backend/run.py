@@ -11,4 +11,7 @@ if __name__ == "__main__":
         port=settings.port,
         reload=is_development,
         workers=1 if is_development else settings.web_concurrency,
+        limit_concurrency=1000,
+        timeout_keep_alive=30,
+        backlog=2048,
     )

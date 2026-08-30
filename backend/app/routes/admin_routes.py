@@ -15,13 +15,13 @@ from app.services.admin_access_service import ADMIN_TABS, deactivate_admin_acces
 from app.services.analysis_service import build_overview, create_ai_analysis
 from app.services.event_service import list_events
 from app.services.boarding_pass_service import create_pass_token, render_pass_artwork_bytes
-from app.services.email_service import normalize_pass_template, queue_email, send_confirmation, send_invitation
-from app.services.export_service import registrations_to_csv
+from app.services.email_service import normalize_pass_template, queue_email, send_confirmation, send_invitation, send_member_pass, sendPaymentConfirmationEmail
+from app.services.export_service import export_scheduler_to_excel, registrations_to_csv
 from app.services.event_service import admin_events, update_event, get_event
 from app.services.audit_service import list_admin_actions, record_admin_action
 from app.services.google_auth_service import verify_google_credential
 from app.services.registration_service import create_registration_id, load_registrations, serialize_registration, update_registration
-from app.services.scheduler_service import assign_batches, get_schedule, save_schedule, scheduler_analysis
+from app.services.scheduler_service import assignMembersToSlots, create_custom_slot, delete_slot, generate_all_event_slots, get_scheduler_dashboard_data, load_all_slots, slotsConflict, update_slot
 from app.db.memory_store import memory_registrations
 from app.db import mongo
 
@@ -65,6 +65,32 @@ async def google_auth(request: Request):
         raise HTTPException(status_code=502, detail="The server could not complete Google admin authentication. Check the backend logs.") from error
 
 
+@router.post("/auth/dev")
+async def dev_auth():
+    if settings.environment == "production":
+        raise HTTPException(status_code=403, detail="Dev login is disabled in production.")
+    owner_email = settings.admin_emails[0] if settings.admin_emails else "admin@noctivus.site"
+    access = await resolve_admin_access(owner_email)
+    user = {
+        "email": owner_email,
+        "name": "Admin (Dev)",
+        "picture": "",
+        "tabs": access["tabs"] if access else ADMIN_TABS,
+        "owner": True,
+    }
+    response = Response(content=json.dumps({"user": user}, separators=(",", ":")), media_type="application/json")
+    response.set_cookie(
+        "noctivus_admin_session",
+        sign_admin_token(user),
+        max_age=8 * 60 * 60,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        path="/api/admin",
+    )
+    return response
+
+
 @router.get("/me")
 async def me(admin=Depends(require_admin)):
     return {"user": admin, "tabs": admin["tabs"]}
@@ -90,21 +116,105 @@ async def events(_admin=Depends(require_any_admin_tab(["Events", "Invitations"])
 
 @router.get("/scheduler")
 async def scheduler_get(_admin=Depends(require_admin_tab("Event Scheduler"))):
-    return {"schedule": await get_schedule()}
+    return await get_scheduler_dashboard_data()
 
 
-@router.put("/scheduler")
-async def scheduler_save(request: Request, admin=Depends(require_admin_tab("Event Scheduler"))):
-    return {"schedule": await save_schedule(await request.json(), admin["email"])}
+@router.post("/scheduler/generate-slots")
+async def scheduler_generate_slots(request: Request, admin=Depends(require_admin_tab("Event Scheduler"))):
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    regenerate = bool(body.get("regenerate", False))
+    result = await generate_all_event_slots(regenerate=regenerate)
+    await record_admin_action(
+        admin["email"],
+        "scheduler.generate_slots",
+        "all_events",
+        {"regenerate": regenerate, "timestamp": datetime.now(timezone.utc).isoformat()},
+    )
+    return result
 
 
-@router.post("/scheduler/assign")
-async def scheduler_assign(admin=Depends(require_admin_tab("Event Scheduler"))):
-    schedule = await get_schedule()
-    summary = await assign_batches(schedule)
-    await save_schedule(schedule, admin["email"])
-    await record_admin_action(admin["email"], "scheduler.assign", schedule["scheduleId"], summary)
-    return {"schedule": schedule, "summary": summary, "analysis": scheduler_analysis(schedule, summary)}
+@router.post("/scheduler/run-assignment")
+async def scheduler_run_assignment(admin=Depends(require_admin_tab("Event Scheduler"))):
+    try:
+        summary = await assignMembersToSlots()
+        await record_admin_action(
+            admin["email"],
+            "scheduler.run_assignment",
+            "all_registrations",
+            {"summary": summary, "timestamp": datetime.now(timezone.utc).isoformat()},
+        )
+        return summary
+    except ValueError as err:
+        raise HTTPException(status_code=400, detail=str(err))
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=f"Assignment execution failed: {err}")
+
+
+@router.post("/scheduler/slots")
+async def scheduler_create_slot(request: Request, admin=Depends(require_admin_tab("Event Scheduler"))):
+    body = await request.json()
+    new_slot = await create_custom_slot(body)
+    await record_admin_action(
+        admin["email"],
+        "scheduler.create_slot",
+        new_slot["id"],
+        {"slot": new_slot, "timestamp": datetime.now(timezone.utc).isoformat()},
+    )
+    return {"slot": new_slot, "success": True}
+
+
+@router.patch("/scheduler/slots/{slot_id}")
+async def scheduler_update_slot(slot_id: str, request: Request, admin=Depends(require_admin_tab("Event Scheduler"))):
+    body = await request.json()
+    updated = await update_slot(slot_id, body)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Slot not found.")
+    await record_admin_action(
+        admin["email"],
+        "scheduler.update_slot",
+        slot_id,
+        {"updates": body, "timestamp": datetime.now(timezone.utc).isoformat()},
+    )
+    return {"slot": updated, "success": True}
+
+
+@router.delete("/scheduler/slots/{slot_id}")
+async def scheduler_delete_slot(slot_id: str, admin=Depends(require_admin_tab("Event Scheduler"))):
+    deleted = await delete_slot(slot_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Slot not found.")
+    await record_admin_action(
+        admin["email"],
+        "scheduler.delete_slot",
+        slot_id,
+        {"timestamp": datetime.now(timezone.utc).isoformat()},
+    )
+    return {"success": True}
+
+
+@router.get("/scheduler/export")
+async def scheduler_export_excel(admin=Depends(require_admin_tab("Event Scheduler"))):
+    events = await list_events()
+    slots = await load_all_slots()
+    registrations = await load_registrations()
+    excel_bytes = export_scheduler_to_excel(events, slots, registrations)
+
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M")
+    filename = f"Noctivus26_Event_Schedule_{timestamp}.xlsx"
+    await record_admin_action(
+        admin["email"],
+        "scheduler.export_excel",
+        "all_slots",
+        {"timestamp": datetime.now(timezone.utc).isoformat()},
+    )
+    return Response(
+        content=excel_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.patch("/events/{event_id}")
@@ -134,14 +244,31 @@ async def check_in(request: Request, registration_id: str, admin=Depends(require
         candidate = parsed.path.rstrip("/").split("/")[-1]
         if candidate and candidate != registration_id:
             scanned_id = candidate
+    token_hash = hashlib.sha256(scanned_id.encode("utf-8")).hexdigest()
     current = None
     if mongo.mongo_ready():
-        current = await mongo.db.registrations.find_one({"registrationId": scanned_id})
-        if not current:
-            current = await mongo.db.registrations.find_one({"invitation.qrHash": hashlib.sha256(scanned_id.encode("utf-8")).hexdigest(), "invitation.status": "active"})
+        current = await mongo.db.registrations.find_one({
+            "$or": [
+                {"registrationId": {"$regex": f"^{re.escape(scanned_id)}$", "$options": "i"}},
+                {"invitation.qrHash": token_hash},
+                {"invitation.qrHash": scanned_id},
+                {"invitation.qrToken": scanned_id},
+                {"qrHash": token_hash},
+                {"qrToken": scanned_id},
+            ]
+        })
     else:
-        token_hash = hashlib.sha256(scanned_id.encode("utf-8")).hexdigest()
-        current = next((item for item in memory_registrations if item.get("registrationId") == scanned_id or (item.get("invitation") or {}).get("qrHash") == token_hash), None)
+        clean_lower = scanned_id.lower()
+        current = next(
+            (
+                item
+                for item in memory_registrations
+                if str(item.get("registrationId") or "").lower() == clean_lower
+                or str((item.get("invitation") or {}).get("qrHash") or item.get("qrHash") or "") in [token_hash, scanned_id]
+                or str((item.get("invitation") or {}).get("qrToken") or item.get("qrToken") or "") == scanned_id
+            ),
+            None,
+        )
     if not current:
         raise HTTPException(status_code=404, detail="Registration not found. Send participant to the help desk.")
     if current.get("paymentStatus") != "confirmed":
@@ -250,6 +377,7 @@ async def registrations(eventId: str | None = None, status: str | None = None, s
 
 
 @router.post("/registrations/bulk-verify")
+@limiter.limit("10/minute")
 async def bulk_verify(request: Request, admin=Depends(require_admin_tab("Verify Members"))):
     body = await request.json()
     ids = [str(value) for value in body.get("registrationIds", [])][:200]
@@ -258,13 +386,17 @@ async def bulk_verify(request: Request, admin=Depends(require_admin_tab("Verify 
         raise HTTPException(status_code=400, detail="Select registrations and a valid status.")
     changed = 0
     for registration_id in ids:
-        if await update_registration(registration_id, {"paymentStatus": status, "verifiedAt": datetime.now(timezone.utc), "verifiedBy": admin["email"]}):
+        reg = await update_registration(registration_id, {"paymentStatus": status, "verifiedAt": datetime.now(timezone.utc), "verifiedBy": admin["email"]})
+        if reg:
             changed += 1
+            if status == "confirmed":
+                asyncio.create_task(sendPaymentConfirmationEmail(reg))
     await record_admin_action(admin["email"], f"registration.bulk.{status}", "bulk", {"count": changed})
     return {"updated": changed}
 
 
 @router.patch("/registrations/{registration_id}/verify")
+@limiter.limit("30/minute")
 async def verify_registration(registration_id: str, request: Request, admin=Depends(require_admin_tab("Verify Members"))):
     body = await request.json()
     if body.get("status") not in ["confirmed", "mismatch", "duplicate"]:
@@ -273,110 +405,193 @@ async def verify_registration(registration_id: str, request: Request, admin=Depe
     registration = await update_registration(registration_id, update)
     if not registration:
         raise HTTPException(status_code=404, detail="Registration not found.")
+
     if update["paymentStatus"] == "confirmed" and body.get("sendEmail") is not False:
-        await queue_email("confirmation", registration)
+        try:
+            await sendPaymentConfirmationEmail(registration)
+        except Exception as err:
+            logger.error(f"Error sending payment confirmation email: {err}")
+
+    rows = await load_registrations()
+    fresh_reg = next((r for r in rows if r.get("registrationId") == registration_id), registration)
     await record_admin_action(admin["email"], f"registration.{update['paymentStatus']}", registration_id, {"notes": update["verificationNotes"]})
-    return {"registration": serialize_registration(registration)}
+    return {"registration": serialize_registration(fresh_reg)}
 
 
-@router.post("/invitations/send")
-async def invitations_send(request: Request, admin=Depends(require_admin_tab("Invitations"))):
+@router.post("/registrations/{registration_id}/resend-confirmation-email")
+@limiter.limit("20/minute")
+async def resend_confirmation_email(registration_id: str, request: Request, admin=Depends(require_admin_tab("Verify Members"))):
+    rows = await load_registrations()
+    registration = next((r for r in rows if r.get("registrationId") == registration_id), None)
+    if not registration:
+        raise HTTPException(status_code=404, detail="Registration not found.")
+    result = await sendPaymentConfirmationEmail(registration)
+    fresh_rows = await load_registrations()
+    fresh_reg = next((r for r in fresh_rows if r.get("registrationId") == registration_id), registration)
+    await record_admin_action(admin["email"], "registration.resend_confirmation_email", registration_id, result)
+    return {"success": result.get("success", False), "result": result, "registration": serialize_registration(fresh_reg)}
+
+
+@router.get("/invitations/stats")
+async def invitations_stats(_admin=Depends(require_admin_tab("Invitations"))):
+    rows = await load_registrations({"status": "confirmed"})
+    total_eligible = len(rows)
+    sent_count = sum(1 for r in rows if r.get("pass_status") == "sent")
+    failed_count = sum(1 for r in rows if r.get("pass_status") == "failed")
+    unsent_count = sum(1 for r in rows if (r.get("pass_status") or "not_sent") != "sent")
+    return {
+        "totalEligible": total_eligible,
+        "sentCount": sent_count,
+        "failedCount": failed_count,
+        "unsentCount": unsent_count,
+    }
+
+
+@router.post("/invitations/send-batch")
+@limiter.limit("5/minute")
+async def invitations_send_batch(request: Request, admin=Depends(require_admin_tab("Invitations"))):
     body = await request.json()
-    event_id = str(body.get("eventId") or "").strip()
-    audience = str(body.get("audience") or "confirmed").strip()
-    if audience != "confirmed":
-        raise HTTPException(status_code=400, detail="Only confirmed members can receive an event pass.")
-    event_record = await get_event(event_id)
-    if not event_record:
-        raise HTTPException(status_code=404, detail="Choose a valid event before generating passes.")
-    venue = str(event_record.get("venue") or "").strip()
-    date = str(event_record.get("date") or "").strip()
-    time = str(event_record.get("time") or "").strip()
-    gate = str(event_record.get("gate") or "").strip()
-    terminal = str(event_record.get("terminal") or "Main Hall").strip()
-    seat_type = str(event_record.get("seatType") or "VIP").strip()
-    if event_record.get("passActive") is False:
-        raise HTTPException(status_code=400, detail="Pass generation is disabled for this event.")
-    if not venue or not date or not time or not gate or not terminal:
-        raise HTTPException(status_code=400, detail="Missing required event details (venue, date, time, gate, terminal). Fill all event details before generating passes.")
-    pass_data = normalize_pass_template({"title": f"Noctivus '26 {event_record['name']} Pass", "eventId": event_id, "venue": venue})
-    pass_data.update({"eventName": event_record["name"], "date": date, "time": time, "gate": gate, "terminal": terminal, "seatType": seat_type})
-    if mongo.mongo_ready():
-        await mongo.db.pass_templates.update_one(
-            {"eventId": event_id},
-            {"$set": {"eventId": event_id, "pass": pass_data, "updatedAt": datetime.now(timezone.utc), "updatedBy": admin["email"]}},
-            upsert=True,
-        )
-        queued_pass = {"templateEventId": event_id}
-    else:
-        queued_pass = pass_data
-    eligible = [
-        row for row in await load_registrations({"status": "confirmed"})
-        if any(item.get("eventId") == event_id for item in row.get("eventRegistrations", []))
-    ][:1000]
-    requested_ids = {str(item).strip() for item in body.get("registrationIds", []) if str(item).strip()}
-    selected = [row for row in eligible if not requested_ids or row.get("registrationId") in requested_ids]
-    if requested_ids and len(selected) != len(requested_ids):
-        raise HTTPException(status_code=400, detail="One or more selected members are not confirmed for this event.")
-    if not selected:
-        raise HTTPException(status_code=404, detail="No confirmed registrations were found for this event.")
-    for registration in selected:
-        qr_token, qr_hash = create_pass_token()
-        event_entry = next((item for item in registration.get("eventRegistrations", []) if item.get("eventId") == event_id), {})
-        await queue_email("invitation", registration, {**queued_pass, "qrToken": qr_token, "assignedTime": event_entry.get("batchTime")})
-        await update_registration(registration["registrationId"], {"invitation": {"sentAt": datetime.now(timezone.utc), "sentBy": admin["email"], "eventId": event_id, "passTitle": pass_data["title"], "qrHash": qr_hash, "status": "active"}})
-    await record_admin_action(admin["email"], "invitation.send", event_id, {"count": len(selected), "audience": audience})
-    return {"sent": len(selected)}
+    try:
+        batch_size = int(body.get("batchSize") or 0)
+    except (ValueError, TypeError):
+        batch_size = 0
+    if batch_size <= 0:
+        raise HTTPException(status_code=400, detail="Please enter a valid batch size of 1 or more.")
+
+    all_confirmed = await load_registrations({"status": "confirmed", "sortAsc": True})
+    eligible = [r for r in all_confirmed if (r.get("pass_status") or "not_sent") != "sent"]
+    batch = eligible[:batch_size]
+
+    successful = []
+    failed_list = []
+
+    for registration in batch:
+        result = await send_member_pass(registration, admin["email"])
+        if result["success"]:
+            successful.append({
+                "registrationId": result["registrationId"],
+                "name": result["name"],
+                "email": result["email"],
+            })
+        else:
+            failed_list.append({
+                "registrationId": result["registrationId"],
+                "name": result["name"],
+                "email": result["email"],
+                "reason": result.get("reason") or "Send failed",
+            })
+
+    await record_admin_action(
+        admin["email"],
+        "invitation.batch_send",
+        f"batch_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}",
+        {"attempted": len(batch), "succeeded": len(successful), "failed": len(failed_list)},
+    )
+
+    return {
+        "attempted": len(batch),
+        "succeeded": len(successful),
+        "failed": len(failed_list),
+        "successful": successful,
+        "failedList": failed_list,
+    }
+
+
+@router.post("/invitations/resend-failed")
+@limiter.limit("5/minute")
+async def invitations_resend_failed(request: Request, admin=Depends(require_admin_tab("Invitations"))):
+    body = await request.json()
+    reg_ids = [str(x).strip() for x in (body.get("registrationIds") or []) if str(x).strip()]
+    if not reg_ids:
+        raise HTTPException(status_code=400, detail="No failed registration IDs provided for resend.")
+
+    all_confirmed = await load_registrations({"status": "confirmed"})
+    targets = [r for r in all_confirmed if r.get("registrationId") in reg_ids]
+
+    successful = []
+    failed_list = []
+
+    for registration in targets:
+        result = await send_member_pass(registration, admin["email"])
+        if result["success"]:
+            successful.append({
+                "registrationId": result["registrationId"],
+                "name": result["name"],
+                "email": result["email"],
+            })
+        else:
+            failed_list.append({
+                "registrationId": result["registrationId"],
+                "name": result["name"],
+                "email": result["email"],
+                "reason": result.get("reason") or "Resend failed",
+            })
+
+    await record_admin_action(
+        admin["email"],
+        "invitation.resend_failed",
+        f"resend_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}",
+        {"attempted": len(targets), "succeeded": len(successful), "failed": len(failed_list)},
+    )
+
+    return {
+        "attempted": len(targets),
+        "succeeded": len(successful),
+        "failed": len(failed_list),
+        "successful": successful,
+        "failedList": failed_list,
+    }
 
 
 @router.post("/invitations/preview")
 async def invitations_preview(request: Request, _admin=Depends(require_admin_tab("Invitations"))):
     body = await request.json()
-    event_id = str(body.get("eventId") or "").strip()
     registration_id = str(body.get("registrationId") or "").strip()
-    if not event_id:
-        raise HTTPException(status_code=400, detail="Select an event to preview a pass.")
-    event = await get_event(event_id)
-    if not event:
-        raise HTTPException(status_code=404, detail="Choose a valid event before previewing a pass.")
-    if event.get("passActive") is False:
-        raise HTTPException(status_code=400, detail="Pass generation is disabled for this event.")
-    if not all(str(event.get(key) or "").strip() for key in ("venue", "date", "time", "gate")):
-        raise HTTPException(status_code=400, detail="Event details incomplete - set date/time/gate/venue in the Events tab.")
-    rows = await load_registrations({"eventId": event_id, "status": "confirmed"})
+
+    rows = await load_registrations({"status": "confirmed"})
     registration = next((row for row in rows if row.get("registrationId") == registration_id), None) if registration_id else (rows[0] if rows else None)
-    if not registration and registration_id:
-        raise HTTPException(status_code=404, detail="Select a confirmed registrant to preview a pass.")
+
     if not registration:
         registration = {
             "registrationId": "NOC26-PREVIEW",
             "participant": {
-                "name": "Preview Participant",
-                "college": "Participant College",
-                "email": "participant@example.com",
-                "foodPreference": "Veg",
+                "name": "Alex Johnson",
+                "college": "St. Joseph's Institute of Technology",
+                "email": "alex.johnson@example.com",
+                "foodPreference": "Vegetarian",
             },
             "eventRegistrations": [{
-                "eventId": event["id"],
-                "eventName": event["name"],
-                "category": event["category"],
-                "feeSnapshot": event["fee"],
+                "eventId": "ideathon",
+                "eventName": "Ideathon Challenge",
+                "category": "Technical",
+                "feeSnapshot": 200,
+                "venue": "Main Auditorium",
+                "date": "26 SEP 2026",
+                "time": "09:00 AM",
             }],
-            "expectedAmount": event["fee"],
+            "expectedAmount": 200,
         }
+
+    events = registration.get("eventRegistrations") or []
+    event_entry = events[0] if events else {}
+    event_id = str(event_entry.get("eventId") or "")
+    event_rec = (await get_event(event_id)) if event_id else None
+    event_rec = event_rec or {}
+
     pass_data = {
+        "title": f"Noctivus '26 Boarding Pass",
         "eventId": event_id,
-        "eventName": str(event["name"]),
-        "venue": str(event["venue"]),
-        "date": str(event["date"]),
-        "time": str(event["time"]),
-        "gate": str(event["gate"]),
-        "terminal": str(event.get("terminal") or "Main Hall"),
-        "seatType": str(event.get("seatType") or "VIP"),
+        "eventName": str(event_entry.get("eventName") or event_rec.get("name") or "Noctivus '26"),
+        "venue": str(event_rec.get("venue") or event_entry.get("venue") or "Velammal Engineering College"),
+        "date": str(event_rec.get("date") or event_entry.get("date") or "26 SEP 2026"),
+        "time": str(event_entry.get("batchTime") or event_rec.get("time") or event_entry.get("time") or "09:00 AM"),
+        "gate": str(event_rec.get("gate") or "VEC Gate 1"),
+        "terminal": str(event_rec.get("terminal") or "Main Hall"),
+        "seatType": str(event_rec.get("seatType") or "VIP"),
+        "slotTiming": str(event_entry.get("slotTiming") or (f"{event_rec.get('time', '09:00 AM')} - 01:00 PM" if "AM" in str(event_rec.get("time", "")) else "02:00 PM - 05:00 PM")),
+        "seatNumber": f"S-{str(registration.get('registrationId', '001'))[-4:]}",
     }
-    event_entry = next((item for item in registration.get("eventRegistrations", []) if item.get("eventId") == event_id), {})
-    if event_entry.get("batchTime"):
-        pass_data["time"] = event_entry["batchTime"]
+
     preview_token = create_pass_token()[0]
     return Response(content=await render_pass_artwork_bytes(registration, pass_data, preview_token), media_type="image/png")
 

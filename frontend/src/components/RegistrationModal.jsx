@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Icon from './Icon.jsx';
+import { getApiBase } from '../lib/api';
 
 const emptyForm = { name: '', college: '', phone: '', email: '', foodPreference: '' };
 
@@ -27,16 +28,42 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
   const [receipt, setReceipt] = useState(null);
   const [receiptQrDataUrl, setReceiptQrDataUrl] = useState('');
 
-  const technicalEvents = useMemo(() => events.filter((event) => event.category === 'Technical'), [events]);
-  const nonTechnicalEvents = useMemo(() => events.filter((event) => event.category === 'Non-technical'), [events]);
-  const selectedTechnicalEvent = useMemo(() => events.find((event) => event.id === technicalEventId), [technicalEventId, events]);
-  const selectedNonTechnicalEvent = useMemo(() => events.find((event) => event.id === nonTechnicalEventId), [nonTechnicalEventId, events]);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768);
+  const [showUpiFallback, setShowUpiFallback] = useState(false);
+  const [copiedUpi, setCopiedUpi] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const handleUpiClick = () => {
+    window.setTimeout(() => {
+      if (document.hasFocus()) {
+        setShowUpiFallback(true);
+      }
+    }, 2000);
+  };
+
+  const copyUpiId = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(upiId);
+      setCopiedUpi(true);
+      setTimeout(() => setCopiedUpi(false), 2000);
+    }
+  };
+
+  const technicalEvents = useMemo(() => (events || []).filter((event) => event.category === 'Technical'), [events]);
+  const nonTechnicalEvents = useMemo(() => (events || []).filter((event) => event.category === 'Non-technical'), [events]);
+  const selectedTechnicalEvent = useMemo(() => (events || []).find((event) => event.id === technicalEventId), [technicalEventId, events]);
+  const selectedNonTechnicalEvent = useMemo(() => (events || []).find((event) => event.id === nonTechnicalEventId), [nonTechnicalEventId, events]);
   const ctfSelected = technicalEventId === 'cyber-heist-ctf';
   const selectedEvents = useMemo(() => [selectedTechnicalEvent, ctfSelected ? null : selectedNonTechnicalEvent].filter(Boolean), [ctfSelected, selectedNonTechnicalEvent, selectedTechnicalEvent]);
   const selectedEventNames = selectedEvents.map((event) => event.name).join(' + ');
   const amount = selectedEvents.length ? 200 : 0;
-  const upiId = import.meta.env.VITE_UPI_ID || '';
-  const payee = import.meta.env.VITE_UPI_PAYEE || 'Noctivus 26';
+  const upiId = (import.meta.env.VITE_UPI_ID || '').trim() || 'noctivus2026@okhdfcbank';
+  const payee = (import.meta.env.VITE_UPI_PAYEE || '').trim() || 'Noctivus 26';
   const paymentConfigured = Boolean(upiId) || import.meta.env.DEV;
   const upiLink = useMemo(() => {
     if (!selectedEvents.length || !amount || !upiId) return '';
@@ -63,7 +90,7 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
   }, [onClose]);
 
   useEffect(() => {
-    if (step !== 4 || !paymentStarted || !upiLink) return undefined;
+    if (step !== 4 || !upiLink) return undefined;
     let active = true;
     setQrDataUrl('');
     import('qrcode').then(({ toDataURL }) => toDataURL(upiLink, {
@@ -73,7 +100,7 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
       color: { dark: '#0a1224', light: '#ffffff' },
     })).then((url) => active && setQrDataUrl(url)).catch(() => active && setError('The payment QR could not be generated. Use the UPI app button instead.'));
     return () => { active = false; };
-  }, [paymentStarted, step, upiLink]);
+  }, [step, upiLink]);
 
   useEffect(() => {
     if (!receipt?.registrationId) return undefined;
@@ -97,7 +124,7 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
     const timer = window.setTimeout(async () => {
       setUtrStatus({ state: 'checking', message: 'Checking for a duplicate UTR…' });
       try {
-        const apiBase = import.meta.env.VITE_API_URL || '';
+        const apiBase = getApiBase();
         const response = await fetch(`${apiBase}/api/utr/check`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -126,6 +153,7 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
     if (form.name.trim().length < 2) return setError('Enter your full name.');
     if (form.college.trim().length < 2) return setError('Enter your college name.');
     if (!/^\d{10}$/.test(form.phone.replace(/\D/g, ''))) return setError('Enter a valid 10-digit mobile number.');
+    if (/[A-Z]/.test(form.email)) return setError('Please type your email ID in small letters (lowercase) only.');
     if (!/^\S+@\S+\.\S+$/.test(form.email)) return setError('Enter a valid email address.');
     if (!['veg', 'non-veg'].includes(form.foodPreference)) return setError('Choose a food preference.');
     setError('');
@@ -153,12 +181,18 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
     setSubmitting(true);
     setError('');
     try {
-      const apiBase = import.meta.env.VITE_API_URL || '';
+      const apiBase = getApiBase();
       const response = await fetch(`${apiBase}/api/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          participant: { ...form, phone: form.phone.replace(/\D/g, '') },
+          participant: {
+            ...form,
+            name: form.name.trim().toUpperCase(),
+            college: form.college.trim().toUpperCase(),
+            phone: form.phone.replace(/\D/g, ''),
+            email: form.email.trim().toLowerCase(),
+          },
           events: selectedEvents.map((item) => ({ eventId: item.id, teamSize: 1, teamMembers: [] })),
           paymentReference,
           utrNumber: utr,
@@ -190,10 +224,39 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
 
         {registrationOpen && !receipt && step === 1 && (
           <div className="registration-body registration-details">
-            <div className="field-grid registration-field-grid"><Field label="Full name" value={form.name} onChange={(value) => update('name', value)} autoComplete="name"/><Field label="College name" value={form.college} onChange={(value) => update('college', value)} autoComplete="organization"/><Field label="Phone number" type="tel" inputMode="numeric" value={form.phone} onChange={(value) => update('phone', value.replace(/\D/g, '').slice(0, 10))} autoComplete="tel"/><Field label="Email ID" type="email" value={form.email} onChange={(value) => update('email', value)} autoComplete="email"/></div>
-            <fieldset className="food-preference"><legend>Food preference</legend><div><FoodOption label="Vegetarian" value="veg" selected={form.foodPreference} onSelect={(value) => update('foodPreference', value)}/><FoodOption label="Non-vegetarian" value="non-veg" selected={form.foodPreference} onSelect={(value) => update('foodPreference', value)}/></div></fieldset>
+            <div className="field-grid registration-field-grid">
+              <Field label="Full name" value={form.name} onChange={(value) => update('name', value.toUpperCase())} autoComplete="name"/>
+              <Field label="College name" value={form.college} onChange={(value) => update('college', value.toUpperCase())} autoComplete="organization"/>
+              <Field label="Phone number" type="tel" inputMode="numeric" value={form.phone} onChange={(value) => update('phone', value.replace(/\D/g, '').slice(0, 10))} autoComplete="tel"/>
+              <div className="email-field-wrapper">
+                <Field label="Email ID" type="email" value={form.email} onChange={(value) => { setError(''); update('email', value); }} autoComplete="email"/>
+                {/[A-Z]/.test(form.email) && (
+                  <div className="email-caps-warning">
+                    <span>⚠️ Capital letters detected. Please type email in small letters.</span>
+                    <button
+                      type="button"
+                      className="convert-lowercase-btn"
+                      onClick={() => update('email', form.email.toLowerCase())}
+                    >
+                      Convert to lowercase
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+            <fieldset className="food-preference">
+              <legend>Food preference</legend>
+              <div>
+                <FoodOption label="Vegetarian" value="veg" selected={form.foodPreference} onSelect={(value) => update('foodPreference', value)}/>
+                <FoodOption label="Non-vegetarian" value="non-veg" selected={form.foodPreference} onSelect={(value) => update('foodPreference', value)}/>
+              </div>
+            </fieldset>
             {error && <p className="form-error" role="alert">{error}</p>}
-            <div className="registration-actions"><button className="button button-primary" type="button" onClick={continueToEvents}>Choose events <Icon name="arrow" /></button></div>
+            <div className="registration-actions">
+              <button className="button button-primary" type="button" onClick={continueToEvents}>
+                Choose events <Icon name="arrow" />
+              </button>
+            </div>
           </div>
         )}
 
@@ -211,17 +274,160 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
 
         {registrationOpen && !receipt && step === 3 && (
           <div className="registration-body registration-review">
-            <div className="review-event"><div><span className="kicker">SELECTED EVENTS</span><h3>{selectedEventNames}</h3><small>{selectedEvents.map((event) => event.category).join(' + ')}</small></div><strong>₹{amount}</strong></div>
-            <dl className="review-grid"><ReviewItem label="Full name" value={form.name}/><ReviewItem label="College" value={form.college}/><ReviewItem label="Phone" value={form.phone}/><ReviewItem label="Email" value={form.email}/><ReviewItem label="Food" value={form.foodPreference === 'veg' ? 'Vegetarian' : 'Non-vegetarian'}/><ReviewItem label="Technical" value={selectedTechnicalEvent?.name || 'Nil'}/><ReviewItem label="Non-technical" value={ctfSelected ? 'Nil - disabled for CTF' : selectedNonTechnicalEvent?.name || 'Nil'}/></dl>
-            <p className="review-note"><Icon name="check" size={17}/> Check every detail carefully. Your confirmation will be sent to this email address.</p>
-            <div className="registration-actions registration-actions--split"><button className="button button-secondary" type="button" onClick={() => setStep(2)}>Edit events</button><button className="button button-primary" type="button" onClick={continueToPayment}>Continue to payment <Icon name="arrow" /></button></div>
+            <div className="review-event">
+              <div>
+                <span className="kicker">SELECTED EVENTS</span>
+                <h3>{selectedEventNames}</h3>
+                <small>{selectedEvents.map((event) => event.category).join(' + ')}</small>
+              </div>
+              <strong>₹{amount}</strong>
+            </div>
+
+            <div className="registration-review-card">
+              <div className="review-section-header">
+                <span>PARTICIPANT DETAILS</span>
+              </div>
+              <div className="review-fields-grid">
+                <div className="review-field-item">
+                  <span className="review-field-label">FULL NAME</span>
+                  <strong className="review-field-value">{form.name || '—'}</strong>
+                </div>
+                <div className="review-field-item">
+                  <span className="review-field-label">COLLEGE / INSTITUTION</span>
+                  <strong className="review-field-value">{form.college || '—'}</strong>
+                </div>
+                <div className="review-field-item">
+                  <span className="review-field-label">PHONE NUMBER</span>
+                  <strong className="review-field-value">{form.phone || '—'}</strong>
+                </div>
+                <div className="review-field-item">
+                  <span className="review-field-label">EMAIL ADDRESS</span>
+                  <strong className="review-field-value">{form.email || '—'}</strong>
+                </div>
+                <div className="review-field-item">
+                  <span className="review-field-label">FOOD PREFERENCE</span>
+                  <strong className="review-field-value">
+                    {form.foodPreference === 'veg' ? '🥗 Vegetarian' : form.foodPreference === 'non-veg' ? '🍗 Non-vegetarian' : '—'}
+                  </strong>
+                </div>
+                <div className="review-field-item">
+                  <span className="review-field-label">TECHNICAL EVENT</span>
+                  <strong className="review-field-value">{selectedTechnicalEvent?.name || 'Nil'}</strong>
+                </div>
+                <div className="review-field-item">
+                  <span className="review-field-label">NON-TECHNICAL EVENT</span>
+                  <strong className="review-field-value">
+                    {ctfSelected ? 'Nil (Cyber Heist CTF selected)' : selectedNonTechnicalEvent?.name || 'Nil'}
+                  </strong>
+                </div>
+              </div>
+            </div>
+
+            <p className="review-note">
+              <Icon name="check" size={17}/> Check every detail carefully. Your official payment receipt & updates will be sent to this email address.
+            </p>
+            <div className="registration-actions registration-actions--split">
+              <button className="button button-secondary" type="button" onClick={() => setStep(2)}>Edit events</button>
+              <button className="button button-primary" type="button" onClick={continueToPayment}>Continue to payment <Icon name="arrow" /></button>
+            </div>
           </div>
         )}
 
         {registrationOpen && !receipt && step === 4 && (
           <form className="registration-body payment-step" onSubmit={submitRegistration}>
-            <div className="payment-summary"><div><span>Amount to pay</span><strong>₹{amount}</strong><small>{selectedEventNames}</small></div><button type="button" className="text-button" onClick={() => { setPaymentStarted(false); setStep(3); }}>Edit details</button></div>
-            {!paymentStarted ? <div className="payment-gate"><span className="kicker">SECURE UPI PAYMENT</span><h3>Ready to pay ₹{amount}?</h3><p>A unique payment QR will be generated for <strong>{selectedEventNames}</strong>. Verify the payee and amount in your UPI app before authorizing.</p><div><small>PAYEE</small><strong>{payee}</strong><span>{upiId || 'UPI ID not configured'}</span></div>{!paymentConfigured && <p className="setup-warning">Payment is not configured. Set VITE_UPI_ID before opening registrations.</p>}<button className="button button-primary button-large" type="button" disabled={!paymentConfigured} onClick={() => setPaymentStarted(true)}>Pay now <Icon name="arrow" /></button></div> : <><div className="payment-layout"><div className="qr-panel">{qrDataUrl ? <img src={qrDataUrl} width="260" height="260" alt={`Dynamic UPI QR code to pay ₹${amount} for ${selectedEventNames}`}/> : <div className="qr-loading">Generating payment QR…</div>}<span>Scan & pay with any UPI app</span></div><div className="payment-instructions"><span className="kicker">PAYMENT DETAILS</span><h3>Pay ₹{amount}</h3><dl><div><dt>UPI ID</dt><dd>{upiId}</dd></div><div><dt>Reference</dt><dd>{paymentReference}</dd></div><div><dt>Events</dt><dd>{selectedEventNames}</dd></div></dl><a className="button button-primary" href={upiLink}><Icon name="external"/> Open in UPI app</a><p className="payment-safety">Never share your UPI PIN. Complete authorization only inside your trusted UPI app.</p></div></div><label className={`field utr-field utr-field--${utrStatus.state}`}><span>12-digit UTR / payment reference</span><input type="text" inputMode="numeric" pattern="[0-9]{12}" minLength="12" maxLength="12" autoComplete="off" placeholder="Enter 12 digits after payment" value={utr} aria-invalid={utrStatus.state === 'duplicate'} aria-describedby="utr-status" onChange={(event) => { setError(''); setUtr(event.target.value.replace(/\D/g, '').slice(0, 12)); }}/><small id="utr-status" className="utr-status" aria-live="polite">{utrStatus.message}</small></label><label className="check-field"><input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)}/><span>I confirm that I paid the exact amount and consent to these details being stored for event registration and payment verification.</span></label>{error && <p className="form-error" role="alert">{error}</p>}<div className="registration-actions registration-actions--split payment-confirm-actions"><button className="button button-secondary" type="button" onClick={() => setStep(3)}>Back</button><button className="button button-primary" disabled={submitting || !consent || utr.length !== 12 || utrStatus.state === 'checking' || utrStatus.state === 'duplicate'} type="submit">{submitting ? 'Submitting…' : utrStatus.state === 'checking' ? 'Checking UTR…' : 'Confirm registration'} <Icon name="arrow" /></button></div></>}
+            <div className="payment-summary">
+              <div>
+                <span>AMOUNT TO PAY</span>
+                <strong>₹{amount}</strong>
+                <small>{selectedEventNames}</small>
+              </div>
+              <button type="button" className="text-button" onClick={() => setStep(3)}>Edit details</button>
+            </div>
+
+            <div className="payment-layout">
+              {!isMobile ? (
+                <div className="qr-panel">
+                  {qrDataUrl ? (
+                    <img src={qrDataUrl} width="220" height="220" alt={`UPI QR code to pay ₹${amount} for ${selectedEventNames}`} />
+                  ) : (
+                    <div className="qr-loading">Generating payment QR…</div>
+                  )}
+                  <span>Scan & pay with any UPI app</span>
+                </div>
+              ) : (
+                <div className="mobile-upi-panel">
+                  <a
+                    className="button button-primary button-large pay-upi-btn"
+                    href={upiLink}
+                    onClick={handleUpiClick}
+                  >
+                    PAY IN UPI APP
+                  </a>
+                  <p className="upi-helper-text">This will open your UPI app to complete the payment.</p>
+
+                  {showUpiFallback && (
+                    <div className="upi-fallback-box">
+                      <span>Having trouble? Note the UPI ID below and pay manually:</span>
+                      <button type="button" className="upi-copy-chip" onClick={copyUpiId}>
+                        <code>{upiId}</code>
+                        <small>{copiedUpi ? '✓ Copied' : 'Tap to copy'}</small>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="payment-instructions">
+                <span className="kicker">PAYMENT DETAILS</span>
+                <h3>Pay ₹{amount}</h3>
+                <dl>
+                  <div><dt>UPI ID</dt><dd>{upiId}</dd></div>
+                  <div><dt>Payee</dt><dd>{payee}</dd></div>
+                  <div><dt>Reference</dt><dd>{paymentReference}</dd></div>
+                  <div><dt>Events</dt><dd>{selectedEventNames}</dd></div>
+                </dl>
+                <p className="payment-safety">After completing payment in your UPI app, enter the 12-digit UTR below.</p>
+              </div>
+            </div>
+
+            <label className={`field utr-field utr-field--${utrStatus.state}`}>
+              <span>12-digit UTR / Payment Reference</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]{12}"
+                minLength="12"
+                maxLength="12"
+                autoComplete="off"
+                placeholder="Enter 12 digits after payment"
+                value={utr}
+                aria-invalid={utrStatus.state === 'duplicate'}
+                aria-describedby="utr-status"
+                onChange={(event) => {
+                  setError('');
+                  setUtr(event.target.value.replace(/\D/g, '').slice(0, 12));
+                }}
+              />
+              <small id="utr-status" className="utr-status" aria-live="polite">{utrStatus.message}</small>
+            </label>
+
+            <label className="check-field">
+              <input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} />
+              <span>I confirm that I paid the exact amount and consent to these details being stored for event registration and payment verification.</span>
+            </label>
+
+            {error && <p className="form-error" role="alert">{error}</p>}
+
+            <div className="registration-actions registration-actions--split payment-confirm-actions">
+              <button className="button button-secondary" type="button" onClick={() => setStep(3)}>Back</button>
+              <button
+                className="button button-primary"
+                disabled={submitting || !consent || utr.length !== 12 || utrStatus.state === 'checking' || utrStatus.state === 'duplicate'}
+                type="submit"
+              >
+                {submitting ? 'Submitting…' : utrStatus.state === 'checking' ? 'Checking UTR…' : 'Confirm registration'} <Icon name="arrow" />
+              </button>
+            </div>
           </form>
         )}
 
