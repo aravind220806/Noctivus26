@@ -2,11 +2,7 @@
   "outputDirectory": "frontend/dist",
   "rewrites": [
     {
-      "source": "/api/:match*",
-      "destination": "/api"
-    },
-    {
-      "source": "/((?!api/|assets/|brand/|images/|fonts/|logo\\.png|favicon\\.ico).*)",
+      "source": "/((?!api/|api$).*)",
       "destination": "/index.html"
     }
   ]
