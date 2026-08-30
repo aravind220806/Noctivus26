@@ -1,0 +1,608 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   SPACING STANDARDISATION & RESPONSIVE BREAKPOINT LAYER
+   Scale: 4 · 8 · 12 · 16 · 24 · 32 · 48 · 64 · 96 · 128
+   Container: 1200px max · 24px desktop gutter · 16px mobile gutter
+   Sections:  64px desktop · 48px mobile · 96px hero/large
+   Cards:     24px padding · 16px mobile
+   Buttons:   12px 16px
+   Gaps:      16px standard · 24-32px large
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Page container ── */
+.page-width {
+  width: 100%;
+  max-width: var(--page-max);     /* 1200px */
+  margin-inline: auto;
+  padding-inline: var(--sp-6);    /* 24px */
+}
+
+/* ── Sections ── */
+.section {
+  padding-block: var(--sp-16);    /* 64px */
+}
+
+.section-title {
+  margin-bottom: var(--sp-12);    /* 48px */
+}
+
+/* ── About grid ── */
+.about-grid {
+  gap: var(--sp-8);               /* 32px */
+}
+
+.about-manifesto {
+  padding-left: var(--sp-8);      /* 32px */
+}
+
+.stats-grid {
+  margin-top: var(--sp-12);       /* 48px */
+}
+
+.stat {
+  padding: var(--sp-6);           /* 24px */
+}
+
+/* ── Events grid ── */
+.events-grid {
+  gap: var(--sp-4);               /* 16px */
+}
+
+.event-card__content {
+  padding: var(--sp-6);           /* 24px */
+}
+
+.event-card__body {
+  margin-top: var(--sp-6);        /* 24px */
+}
+
+.event-card__body p {
+  margin-top: var(--sp-3);        /* 12px */
+}
+
+.event-card__footer {
+  margin-top: var(--sp-6);        /* 24px */
+  padding-top: var(--sp-4);       /* 16px */
+  gap: var(--sp-3);               /* 12px */
+}
+
+.event-card__button {
+  padding: var(--sp-6);           /* 24px */
+}
+
+.event-category {
+  padding: var(--sp-1) var(--sp-2); /* 4px 8px */
+}
+
+/* ── Event filters ── */
+.event-filters {
+  margin-bottom: var(--sp-8);     /* 32px */
+  padding: var(--sp-1);           /* 4px */
+  gap: var(--sp-1);               /* 4px */
+}
+
+.event-filters button {
+  padding: 0 var(--sp-4);         /* 0 16px */
+}
+
+/* ── Schedule ── */
+.schedule-reveal {
+  padding: clamp(var(--sp-8), 6vw, var(--sp-16)); /* 32-64px */
+}
+
+.schedule-reveal p {
+  margin-bottom: var(--sp-8);     /* 32px */
+}
+
+/* ── Experience grid ── */
+.experience-grid {
+  gap: var(--sp-4);               /* 16px */
+}
+
+.feature-panel {
+  padding: var(--sp-6);           /* 24px */
+}
+
+.feature-panel h3 {
+  margin-top: var(--sp-12);       /* 48px */
+}
+
+.feature-panel .button {
+  margin-top: var(--sp-6);        /* 24px */
+}
+
+/* ── FAQ ── */
+.faq-item button {
+  gap: var(--sp-4);               /* 16px */
+}
+
+.faq-answer p {
+  padding-bottom: var(--sp-6);    /* 24px */
+}
+
+/* ── Contact ── */
+.contact-layout {
+  padding: clamp(var(--sp-6), 5vw, var(--sp-12)); /* 24-48px */
+}
+
+.contact-card > div {
+  gap: var(--sp-4);               /* 16px */
+}
+
+/* ── Footer ── */
+footer {
+  padding-top: var(--sp-16);      /* 64px */
+  padding-bottom: var(--sp-6);    /* 24px */
+}
+
+.footer-venue {
+  margin-bottom: var(--sp-16);    /* 64px */
+}
+
+.footer-venue__copy {
+  padding: clamp(var(--sp-8), 5vw, var(--sp-16)); /* 32-64px */
+}
+
+.footer-venue__copy .button {
+  margin-top: var(--sp-8);        /* 32px */
+}
+
+.footer-grid {
+  gap: var(--sp-8);               /* 32px */
+  padding-top: var(--sp-8);       /* 32px */
+}
+
+.footer-bottom {
+  margin-top: var(--sp-12);       /* 48px */
+  padding-top: var(--sp-6);       /* 24px */
+}
+
+.footer-links {
+  gap: var(--sp-4);               /* 16px */
+}
+
+/* ── Buttons ── */
+.button {
+  min-height: 48px;
+  padding: var(--sp-3) var(--sp-4); /* 12px 16px */
+}
+
+.button-large {
+  min-height: 48px;
+  padding: var(--sp-3) var(--sp-6); /* 12px 24px */
+}
+
+/* ── Hero spacing ── */
+.hero {
+  padding: var(--sp-24) 0 var(--sp-16); /* 96px 0 64px */
+}
+
+.hero__inner {
+  width: var(--page);
+  padding: 0;
+}
+
+.hero__eyebrow {
+  margin-bottom: var(--sp-4);     /* 16px */
+}
+
+.hero h1 {
+  margin-top: var(--sp-2);        /* 8px */
+}
+
+.hero__tagline {
+  margin-top: var(--sp-6);        /* 24px */
+}
+
+.hero__facts {
+  margin-top: var(--sp-8);        /* 32px */
+  padding-block: var(--sp-4);     /* 16px */
+  gap: var(--sp-8);               /* 32px */
+}
+
+.hero-countdown {
+  margin-top: var(--sp-6);        /* 24px */
+}
+
+.hero__actions {
+  margin-top: var(--sp-6);        /* 24px */
+  gap: var(--sp-3);               /* 12px */
+}
+
+.hero__scroll {
+  bottom: var(--sp-6);            /* 24px */
+}
+
+/* ── About showcase ── */
+.about-showcase {
+  margin-top: var(--sp-16);       /* 64px */
+}
+
+.about-showcase figcaption {
+  padding: clamp(var(--sp-6), 4vw, var(--sp-12)); /* 24-48px */
+}
+
+.about-showcase figcaption strong {
+  margin-top: var(--sp-6);        /* 24px */
+}
+
+.about-showcase figcaption p {
+  margin-top: var(--sp-6);        /* 24px */
+}
+
+/* ── Modals ── */
+.modal-shell {
+  padding: var(--sp-6);           /* 24px */
+}
+
+.event-modal__visual {
+  padding: var(--sp-6);           /* 24px */
+}
+
+.event-modal__content {
+  padding: clamp(var(--sp-8), 4vw, var(--sp-12)); /* 32-48px */
+}
+
+.event-modal__content h2 {
+  margin: var(--sp-3) 0 var(--sp-6); /* 12px 0 24px */
+}
+
+.event-modal .rules {
+  margin-top: var(--sp-8);        /* 32px */
+  padding: var(--sp-6);           /* 24px */
+}
+
+.event-modal__action {
+  margin-top: var(--sp-8);        /* 32px */
+  padding-top: var(--sp-6);       /* 24px */
+  gap: var(--sp-4);               /* 16px */
+}
+
+/* ── Registration modal ── */
+.registration-modal__header {
+  padding: var(--sp-6) var(--sp-6) var(--sp-3); /* 24px 24px 12px */
+}
+
+.registration-progress {
+  padding: var(--sp-3) var(--sp-6); /* 12px 24px */
+  gap: var(--sp-2);               /* 8px */
+}
+
+.registration-body {
+  padding: var(--sp-6);           /* 24px */
+  gap: var(--sp-4);               /* 16px */
+}
+
+.registration-field-grid,
+.event-choice-grid,
+.review-grid {
+  gap: var(--sp-4);               /* 16px */
+}
+
+.registration-actions {
+  margin-top: var(--sp-3);        /* 12px */
+  padding-top: var(--sp-4);       /* 16px */
+  gap: var(--sp-3);               /* 12px */
+}
+
+.registration-actions .button {
+  min-height: 48px;
+  padding: 0 var(--sp-6);         /* 0 24px */
+}
+
+/* ── Payment ── */
+.payment-layout {
+  padding: var(--sp-6);           /* 24px */
+  gap: var(--sp-6);               /* 24px */
+}
+
+.payment-summary {
+  padding: var(--sp-4) var(--sp-6); /* 16px 24px */
+}
+
+.payment-instructions {
+  gap: var(--sp-3);               /* 12px */
+}
+
+.payment-instructions dl {
+  padding: var(--sp-3) var(--sp-4); /* 12px 16px */
+  gap: var(--sp-2);               /* 8px */
+}
+
+.qr-panel {
+  padding: var(--sp-4);           /* 16px */
+  gap: var(--sp-3);               /* 12px */
+}
+
+/* ── Review ── */
+.review-event {
+  padding: var(--sp-4) var(--sp-6); /* 16px 24px */
+}
+
+.registration-review-card {
+  padding: var(--sp-4) var(--sp-6); /* 16px 24px */
+  gap: var(--sp-4);               /* 16px */
+}
+
+.review-fields-grid {
+  gap: var(--sp-4);               /* 16px */
+}
+
+.review-grid {
+  padding: var(--sp-4);           /* 16px */
+  gap: var(--sp-4);               /* 16px */
+}
+
+/* ── Crew & Social ── */
+.crew-grid,
+.social-link-grid {
+  gap: var(--sp-4);               /* 16px */
+}
+
+.crew-card {
+  padding: var(--sp-6);           /* 24px */
+}
+
+.crew-card h3 {
+  margin: var(--sp-6) 0;          /* 24px 0 */
+}
+
+.social-link-grid a {
+  padding: var(--sp-6);           /* 24px */
+}
+
+/* ── Brochure ── */
+.brochure-section {
+  padding-top: var(--sp-24);      /* 96px */
+  padding-bottom: var(--sp-16);   /* 64px */
+}
+
+.brochure-full__header {
+  gap: var(--sp-6);               /* 24px */
+  margin-bottom: var(--sp-12);    /* 48px */
+}
+
+.brochure-actions {
+  gap: var(--sp-3);               /* 12px */
+}
+
+.brochure-gallery-wrap {
+  padding: var(--sp-4);           /* 16px */
+}
+
+.poster-controls {
+  margin-top: var(--sp-4);        /* 16px */
+  gap: var(--sp-3);               /* 12px */
+}
+
+.poster-fullscreen {
+  padding: var(--sp-6);           /* 24px */
+  gap: var(--sp-4);               /* 16px */
+}
+
+/* ── Notebook modal ── */
+.notebook-view {
+  padding: var(--sp-12) var(--sp-12) var(--sp-24) var(--sp-12); /* 48px all, 96px bottom */
+}
+
+.notebook-body p {
+  margin-bottom: var(--sp-4);     /* 16px */
+}
+
+.notebook-body li {
+  margin-bottom: var(--sp-3);     /* 12px */
+  padding-left: var(--sp-8);      /* 32px */
+}
+
+.notebook-callout {
+  margin-top: var(--sp-6);        /* 24px */
+  gap: var(--sp-3);               /* 12px */
+}
+
+.notebook-page-label {
+  margin-bottom: var(--sp-4);     /* 16px */
+}
+
+.notebook-view h1 {
+  margin-bottom: var(--sp-4);     /* 16px */
+}
+
+.notebook-nav {
+  gap: var(--sp-4);               /* 16px */
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   RESPONSIVE SPACING
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Tablet (≤980px) ── */
+@media (max-width: 980px) {
+  :root {
+    --page: min(calc(100% - var(--sp-12)), 768px); /* 48px total = 24px each side */
+  }
+}
+
+/* ── Mobile (≤700px) ── */
+@media (max-width: 700px) {
+  :root {
+    --page: calc(100% - var(--sp-8)); /* 32px total = 16px each side */
+    --space-section: var(--sp-12);    /* 48px */
+  }
+
+  .page-width {
+    padding-inline: var(--sp-4);    /* 16px */
+  }
+
+  .section {
+    padding-block: var(--sp-12);    /* 48px */
+  }
+
+  .section-title {
+    margin-bottom: var(--sp-8);     /* 32px */
+  }
+
+  .hero {
+    padding: var(--sp-16) 0 var(--sp-12); /* 64px 0 48px */
+  }
+
+  .hero__inner {
+    width: var(--page);
+  }
+
+  .hero__actions {
+    gap: var(--sp-2);               /* 8px */
+  }
+
+  .stat {
+    padding: var(--sp-4);           /* 16px */
+  }
+
+  .event-card__content {
+    padding: var(--sp-4);           /* 16px */
+  }
+
+  .event-card__button {
+    padding: var(--sp-4);           /* 16px */
+  }
+
+  .event-card__footer {
+    gap: var(--sp-3);               /* 12px */
+  }
+
+  .feature-panel,
+  .feature-panel--brochure {
+    padding: var(--sp-4);           /* 16px */
+  }
+
+  .feature-panel h3 {
+    margin-top: var(--sp-8);        /* 32px */
+  }
+
+  .faq-item button {
+    padding-block: var(--sp-4);     /* 16px */
+  }
+
+  .faq-answer p {
+    margin-right: var(--sp-4);      /* 16px */
+    padding-bottom: var(--sp-4);    /* 16px */
+  }
+
+  .contact-layout {
+    padding: var(--sp-6) var(--sp-4); /* 24px 16px */
+  }
+
+  .footer-venue {
+    margin-bottom: var(--sp-12);    /* 48px */
+  }
+
+  .footer-venue__copy {
+    padding: var(--sp-8) var(--sp-6); /* 32px 24px */
+  }
+
+  .about-showcase {
+    margin-top: var(--sp-12);       /* 48px */
+  }
+
+  .about-showcase figcaption {
+    padding: var(--sp-6);           /* 24px */
+  }
+
+  .schedule-reveal {
+    padding: var(--sp-8) var(--sp-6); /* 32px 24px */
+  }
+
+  .event-modal__visual {
+    padding: var(--sp-4);           /* 16px */
+  }
+
+  .event-modal__content {
+    padding: var(--sp-8) var(--sp-4) var(--sp-6); /* 32px 16px 24px */
+  }
+
+  .event-modal__action {
+    gap: var(--sp-4);               /* 16px */
+  }
+
+  .modal-shell {
+    padding: 0;
+  }
+
+  .registration-modal__header {
+    padding: var(--sp-4) var(--sp-4) var(--sp-2); /* 16px 16px 8px */
+  }
+
+  .registration-progress {
+    padding: var(--sp-2) var(--sp-4); /* 8px 16px */
+    gap: var(--sp-1);               /* 4px */
+  }
+
+  .registration-body {
+    padding: var(--sp-4);           /* 16px */
+    gap: var(--sp-3);               /* 12px */
+  }
+
+  .registration-actions .button {
+    min-height: 48px;
+    padding: 0 var(--sp-4);         /* 0 16px */
+  }
+
+  .payment-layout {
+    padding: var(--sp-4);           /* 16px */
+    gap: var(--sp-4);               /* 16px */
+  }
+
+  .payment-instructions {
+    padding: var(--sp-6) var(--sp-4); /* 24px 16px */
+  }
+
+  .crew-card {
+    padding: var(--sp-4);           /* 16px */
+  }
+
+  .social-link-grid a {
+    padding: var(--sp-4);           /* 16px */
+  }
+
+  .brochure-section {
+    padding-top: var(--sp-16);      /* 64px */
+    padding-bottom: var(--sp-12);   /* 48px */
+  }
+
+  .brochure-gallery-wrap {
+    padding: var(--sp-3);           /* 12px */
+  }
+
+  .footer-grid {
+    gap: var(--sp-6);               /* 24px */
+    padding-top: var(--sp-6);       /* 24px */
+  }
+
+  .footer-bottom {
+    margin-top: var(--sp-8);        /* 32px */
+  }
+}
+
+/* ── Small mobile (≤480px) ── */
+@media (max-width: 480px) {
+  .notebook-view {
+    padding: var(--sp-12) var(--sp-6) var(--sp-24) var(--sp-8); /* 48px 24px 96px 32px */
+  }
+}
+
+/* ── Narrowest screens (≤380px) ── */
+@media (max-width: 380px) {
+  :root {
+    --page: calc(100% - var(--sp-8)); /* keep 16px each side, not 10px */
+  }
+
+  .hero {
+    padding: var(--sp-24) 0 var(--sp-12); /* 96px 0 48px */
+  }
+
+  .registration-body {
+    padding: var(--sp-4) var(--sp-3); /* 16px 12px */
+  }
+
+  .registration-progress {
+    padding-inline: var(--sp-4);    /* 16px */
+  }
+}

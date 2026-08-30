@@ -1,0 +1,48 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   DESIGN TOKENS & VARIABLES
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --bg: #05080A;
+  --surface: #0A2030;
+  --surface-2: #071522;
+  --text: #F2FAFC;
+  --muted: #91A8B5;
+  --line: rgba(145, 168, 181, .2);
+  --cyan: #00DDF2;
+  --teal: #00E6B8;
+  --lime: #A7FF18;
+  --emerald: #38F27D;
+  --blue: #00DDF2;
+  --violet: #6E7CFF;
+  --amber: #FFC857;
+  --coral: #FF786A;
+  color-scheme: dark;
+
+  /* Typography */
+  --body-font: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --display-font: 'IBM Plex Mono', 'Space Grotesk', var(--body-font);
+  --mono-font: 'JetBrains Mono', 'Space Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-family: var(--body-font);
+  font-optical-sizing: auto;
+  font-synthesis: none;
+
+  /* ── Spacing scale (4px-based) ── */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+  --sp-24: 96px;
+  --sp-32: 128px;
+
+  /* ── Layout tokens ── */
+  --page-max: 1200px;
+  --page-gutter-desktop: var(--sp-6);  /* 24px */
+  --page-gutter-mobile: var(--sp-4);   /* 16px */
+  --page: min(var(--page-max), calc(100vw - var(--page-gutter-desktop) * 2));
+  --space-section: var(--sp-16);       /* 64px */
+}

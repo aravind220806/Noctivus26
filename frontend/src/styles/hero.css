@@ -1,0 +1,207 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   HERO SECTION & COUNTDOWN STYLES
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.hero {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+  isolation: isolate;
+  color: var(--text);
+  background:
+    radial-gradient(ellipse at 50% 8%, rgba(0, 221, 242, .2), transparent 40%),
+    radial-gradient(circle at 18% 68%, rgba(0, 230, 184, .12), transparent 34%),
+    radial-gradient(circle at 82% 70%, rgba(167, 255, 24, .09), transparent 30%),
+    linear-gradient(180deg, #071522 0%, #05080A 74%);
+  border-color: rgba(0, 221, 242, .16);
+}
+
+.hero__inner {
+  padding-top: var(--sp-24);
+  padding-bottom: var(--sp-16);
+  width: var(--page);
+}
+
+.hero__eyebrow {
+  margin-bottom: var(--sp-4);
+  color: var(--cyan);
+}
+
+.hero__logo {
+  width: clamp(138px, 16vw, 238px);
+  filter:
+    drop-shadow(0 22px 46px rgba(0, 0, 0, .56))
+    drop-shadow(0 0 34px rgba(0, 221, 242, .22))
+    drop-shadow(0 0 56px rgba(167, 255, 24, .08));
+}
+
+.hero h1 {
+  margin-top: var(--sp-2);
+  max-width: 100%;
+  color: var(--text);
+  font-size: clamp(76px, 12.6vw, 184px);
+  line-height: .85;
+  letter-spacing: -.075em;
+  font-weight: 750;
+  white-space: nowrap;
+  text-shadow: 0 0 28px rgba(0, 221, 242, .16);
+}
+
+.hero h1 span {
+  color: var(--cyan);
+}
+
+.hero__tagline {
+  margin-top: var(--sp-6);
+  color: #C9D9E1;
+  font-size: clamp(24px, 3vw, 42px);
+  line-height: 1.1;
+  letter-spacing: -.035em;
+}
+
+.hero__facts {
+  margin-top: var(--sp-8);
+  padding-block: var(--sp-4);
+  gap: var(--sp-8);
+  display: flex;
+  color: var(--text);
+  border-block-color: rgba(0, 221, 242, .22);
+}
+
+.hero__facts small, .hero__scroll {
+  color: var(--muted);
+}
+
+.hero__actions {
+  margin-top: var(--sp-6);
+  gap: var(--sp-3);
+  display: flex;
+}
+
+.hero__scroll {
+  position: absolute;
+  bottom: var(--sp-6);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  color: #5c6562;
+  font-size: 8px;
+  letter-spacing: .18em;
+}
+
+.hero__scroll span {
+  background: var(--lime);
+  box-shadow: 0 0 18px rgba(167, 255, 24, .75);
+}
+
+/* ── Split Flap Countdown ── */
+.split-countdown {
+  margin-top: var(--sp-6);
+}
+
+.split-countdown__units {
+  display: flex;
+  gap: 20px;
+}
+
+.flap-unit {
+  position: relative;
+  display: grid;
+  justify-items: start;
+  gap: 7px;
+}
+
+.flap-digits {
+  display: flex;
+  gap: 4px;
+}
+
+.flap-digit {
+  position: relative;
+  width: 38px;
+  height: 52px;
+  display: block;
+  perspective: 180px;
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 4px;
+  background: #111513;
+  box-shadow: 0 8px 20px rgba(0,0,0,.25);
+  overflow: hidden;
+}
+
+.flap-digit::after {
+  position: absolute;
+  z-index: 5;
+  content: '';
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: #020303;
+  box-shadow: 0 1px rgba(255,255,255,.06);
+}
+
+.flap-digit__top, .flap-digit__bottom, .flap-digit__flip {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  display: flex;
+  justify-content: center;
+  color: #edf5f1;
+  font-size: 30px;
+  font-weight: 560;
+  line-height: 52px;
+  font-variant-numeric: tabular-nums;
+}
+
+.flap-digit__top {
+  top: 0;
+  align-items: flex-start;
+  overflow: hidden;
+  background: linear-gradient(#171c19, #111513);
+}
+
+.flap-digit__bottom {
+  bottom: 0;
+  align-items: flex-end;
+  overflow: hidden;
+  background: linear-gradient(#0e1210, #141916);
+}
+
+.flap-digit__flip {
+  z-index: 3;
+  top: 0;
+  align-items: flex-start;
+  overflow: hidden;
+  background: linear-gradient(#1b211e, #101412);
+  transform-origin: bottom;
+  backface-visibility: hidden;
+  animation: flap-change .42s cubic-bezier(.35,.05,.25,1) both;
+}
+
+@keyframes flap-change {
+  0% { transform: rotateX(0); filter: brightness(1.25); }
+  100% { transform: rotateX(-90deg); filter: brightness(.7); }
+}
+
+.flap-unit small {
+  color: #69736f;
+  font-size: 7px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.flap-unit i {
+  position: absolute;
+  top: 13px;
+  right: -14px;
+  color: #59625f;
+  font-size: 18px;
+  font-style: normal;
+}

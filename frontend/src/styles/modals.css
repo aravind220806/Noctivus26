@@ -1,0 +1,250 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   MODALS, NOTEBOOK VIEW & REGISTRATION WIZARD STYLES
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.modal-shell {
+  position: fixed;
+  z-index: 200;
+  inset: 0;
+  padding: var(--sp-6);
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  background: rgba(5, 8, 10, .78);
+  backdrop-filter: blur(10px);
+}
+
+.icon-button {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(0, 221, 242, .22);
+  border-radius: 50%;
+  color: var(--text);
+  background: #0A2030;
+  cursor: pointer;
+}
+
+/* ── Event Notebook Modal ── */
+.notebook-shell {
+  background: rgba(0, 0, 0, .72);
+}
+
+.notebook-view {
+  position: relative;
+  width: min(520px, calc(100vw - 32px));
+  min-height: min(740px, calc(100svh - 48px));
+  max-height: calc(100svh - 48px);
+  padding: var(--sp-12) var(--sp-12) var(--sp-24) var(--sp-12);
+  overflow: hidden auto;
+  border-left: 2px solid rgba(200, 60, 60, 0.3);
+  border-radius: 18px 14px 14px 18px;
+  color: #14120F;
+  background-color: #F4EFE4;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 31px,
+    rgba(60, 60, 60, 0.15) 31px,
+    rgba(60, 60, 60, 0.15) 32px
+  );
+  box-shadow: 8px 8px 0 rgba(210, 206, 194, .95), 12px 12px 0 rgba(150, 146, 136, .72), 0 24px 48px rgba(0, 0, 0, .38);
+}
+
+.notebook-view h1, .notebook-view h2, .notebook-entry-note, .notebook-page-label {
+  font-family: 'Caveat', cursive;
+}
+
+.notebook-view p, .notebook-view li, .notebook-callout, .notebook-nav button {
+  font-family: 'Kalam', cursive;
+}
+
+.notebook-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  color: #14120F;
+  background: transparent;
+  cursor: pointer;
+  transform: rotate(-3deg);
+}
+
+.notebook-doodles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.notebook-doodles svg, .notebook-rough-note {
+  position: absolute;
+  color: #14120F;
+  opacity: .52;
+}
+
+.notebook-entry-note {
+  position: absolute;
+  top: 58px;
+  right: 52px;
+  color: #14120F;
+  font-size: 18px;
+  font-weight: 700;
+  transform: rotate(-4deg);
+}
+
+.notebook-body p {
+  margin-bottom: var(--sp-4);
+  color: #14120F;
+  font-size: 20px;
+  line-height: 1.65;
+}
+
+.notebook-body li {
+  margin-bottom: var(--sp-3);
+  padding-left: var(--sp-8);
+  color: #14120F;
+  font-size: 18px;
+  line-height: 1.8;
+}
+
+.notebook-nav {
+  position: absolute;
+  right: 42px;
+  bottom: 24px;
+  left: 52px;
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+/* ── Four-step Registration Modal ── */
+.registration-modal {
+  width: min(840px, calc(100vw - 32px));
+  max-height: min(92dvh, 860px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(93, 70, 210, .55);
+  border-radius: 20px;
+  background: #070b13;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95);
+  margin: auto;
+}
+
+.registration-modal__header {
+  flex: 0 0 auto;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: var(--sp-6) var(--sp-6) var(--sp-3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(127, 153, 211, .12);
+  background: #070b13;
+}
+
+.registration-modal__header h2 {
+  color: #f8fafc;
+  font-size: 26px;
+  margin: 4px 0 0;
+}
+
+.registration-progress {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-6);
+  background: #070b13;
+  border-bottom: 1px solid rgba(127, 153, 211, .1);
+}
+
+.registration-progress span {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-align: center;
+  padding: 4px 0;
+  border-bottom: 2px solid #1e293b;
+  transition: all 0.2s ease;
+}
+
+.registration-progress span.active {
+  color: var(--cyan);
+  border-bottom-color: var(--cyan);
+}
+
+.registration-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: var(--sp-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.registration-field-grid, .event-choice-grid, .review-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-4);
+}
+
+.registration-modal .field input, .registration-modal .field select {
+  width: 100%;
+  height: 44px;
+  padding: 8px 14px;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  color: #f8fafc;
+  background: #0d1322;
+  font-size: 14px;
+}
+
+.registration-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-3);
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-4);
+  border-top: 1px solid rgba(127, 153, 211, .12);
+}
+
+.payment-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: var(--sp-6);
+  background: #0b101a;
+  border: 1px solid #1e293b;
+  border-radius: 14px;
+  padding: var(--sp-6);
+}
+
+.payment-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-4) var(--sp-6);
+  background: #0d1322;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+}
+
+.qr-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background: #ffffff;
+  border-radius: 10px;
+}

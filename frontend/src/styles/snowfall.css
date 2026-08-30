@@ -1,0 +1,67 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   SITE-WIDE SNOWFALL ANIMATIONS
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.site-snow {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+  background: transparent;
+}
+
+.site-snow__flake {
+  position: absolute;
+  top: -12px;
+  left: var(--snow-left);
+  width: var(--snow-size);
+  height: var(--snow-size);
+  opacity: var(--snow-opacity);
+  transform: translate3d(0, -16px, 0);
+  animation: site-snow-fall var(--snow-duration) linear var(--snow-delay) infinite;
+  will-change: transform, opacity;
+}
+
+.site-snow__flake--small,
+.site-snow__flake--medium,
+.site-snow__flake--large {
+  display: grid;
+  place-items: center;
+  color: #F4EFE4;
+  image-rendering: pixelated;
+}
+
+.site-snow__flake svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  fill: currentColor;
+  shape-rendering: crispEdges;
+}
+
+@keyframes site-snow-fall {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -16px, 0) rotate(0deg);
+  }
+  12% {
+    opacity: var(--snow-opacity);
+  }
+  50% {
+    transform: translate3d(calc(var(--snow-drift) * .45), 52vh, 0) rotate(calc(var(--snow-rotation) * .5));
+  }
+  88% {
+    opacity: var(--snow-opacity);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--snow-drift), 108vh, 0) rotate(var(--snow-rotation));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-snow {
+    display: none;
+  }
+}
