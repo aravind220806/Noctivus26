@@ -18,6 +18,7 @@ import './admin.css';
 
 export default function AdminApp() {
   const [session, setSession] = useState(null);
+  const [csrfToken, setCsrfToken] = useState('');
   const [authChecked, setAuthChecked] = useState(false);
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [overview, setOverview] = useState(null);
@@ -28,7 +29,10 @@ export default function AdminApp() {
   const [message, setMessage] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const authHeaders = useMemo(() => ({}), []);
+  const authHeaders = useMemo(
+    () => (csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
+    [csrfToken],
+  );
   const isLoginRoute = window.location.pathname.startsWith('/login');
   const allowedTabs = session?.user?.tabs;
   const visibleTabs = useMemo(() => tabs.filter((tab) => (allowedTabs || []).includes(tab)), [allowedTabs]);
@@ -60,6 +64,7 @@ export default function AdminApp() {
 
   const saveSession = (data) => {
     setSession(data);
+    if (data?.csrfToken) setCsrfToken(data.csrfToken);
   };
 
   const logout = async () => {
