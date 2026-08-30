@@ -1,6 +1,7 @@
 SHELL := /bin/sh
 
-PYTHON ?= python3
+VENV := venv
+PYTHON ?= $(shell test -f $(VENV)/bin/python && echo $(VENV)/bin/python || echo python3)
 NPM ?= npm
 BACKEND_DIR := backend
 FRONTEND_DIR := frontend
@@ -21,7 +22,8 @@ help:
 install: install-backend install-frontend
 
 install-backend:
-	$(PYTHON) -m pip install -r $(BACKEND_DIR)/requirements.txt
+	@if [ ! -d "$(VENV)" ]; then python3 -m venv $(VENV); fi
+	$(VENV)/bin/pip install -r $(BACKEND_DIR)/requirements.txt
 
 install-frontend:
 	$(NPM) install
@@ -29,7 +31,7 @@ install-frontend:
 dev: dev-frontend
 
 dev-api:
-	cd $(BACKEND_DIR) && $(PYTHON) run.py
+	@if [ -f "$(VENV)/bin/python" ]; then $(VENV)/bin/python $(BACKEND_DIR)/run.py; else $(PYTHON) $(BACKEND_DIR)/run.py; fi
 
 dev-frontend:
 	$(NPM) run dev --workspace $(FRONTEND_DIR)

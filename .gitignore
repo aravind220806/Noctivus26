@@ -1,5 +1,7 @@
 node_modules/
 dist/
+venv/
+.venv/
 .env
 .env.*
 !.env.example
@@ -9,3 +11,4 @@ __pycache__/
 *.py[cod]
 *.log
 .DS_Store
+
