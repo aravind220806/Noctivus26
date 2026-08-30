@@ -1,7 +1,8 @@
 .text-type {
-  display: inline-block;
+  display: block;
   white-space: pre-wrap;
-  font-family: 'IBM Plex Mono', monospace;
+  word-wrap: break-word;
+  font-family: inherit;
   font-size: inherit;
   color: var(--text);
 }
@@ -12,12 +13,13 @@
 }
 
 .text-type__cursor {
-  margin-left: 0.1rem;
+  margin-left: 0.15rem;
   display: inline-block;
-  opacity: 1;
-  color: var(--cyan);
-  text-shadow: 0 0 8px var(--cyan);
-  animation: cursor-blink 0.5s ease-in-out infinite;
+  opacity: 0.8;
+  color: var(--text);
+  text-shadow: 0 0 8px rgba(232, 237, 232, 0.4);
+  animation: cursor-blink 0.8s ease-in-out infinite;
+  font-weight: normal;
 }
 
 .text-type__cursor--hidden {

@@ -8,10 +8,7 @@ export function CrewSection() {
   return (
     <section className="crew-section" id="coordinators">
       <div className="crew-container">
-        <HeadingBar>
-          <h2>COORDINATORS</h2>
-        </HeadingBar>
-        <TickDivider />
+        <HeadingBar level="h2" text="COORDINATORS" sectionIndex="05 / 05" />
 
         <div className="crew-grid" data-reveal>
           {crew.map(([role, description, contact]) => {
@@ -19,15 +16,13 @@ export function CrewSection() {
             const contactLink = isEmail ? `mailto:${contact}` : `tel:${contact.replace(/\s/g, '')}`;
 
             return (
-              <HudPanel key={role} accent="teal">
-                <article className="crew-card">
-                  <h3 className="crew-role">{role}</h3>
-                  <p className="crew-description">{description}</p>
-                  <a href={contactLink} className="crew-contact">
-                    {contact}
-                  </a>
-                </article>
-              </HudPanel>
+              <article key={role} className="crew-card panel scanlines">
+                <h3 className="crew-role">{role}</h3>
+                <p className="crew-description">{description}</p>
+                <a href={contactLink} className="crew-contact">
+                  {contact}
+                </a>
+              </article>
             );
           })}
         </div>

@@ -30,79 +30,67 @@
 .intro-corner--bl { bottom: 2rem; left: 2rem; border-bottom: 1px solid; border-left: 1px solid; }
 .intro-corner--br { bottom: 2rem; right: 2rem; border-bottom: 1px solid; border-right: 1px solid; }
 
-/* Main layout container */
+/* Main layout container — centered vertical stack */
 .intro-content-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2rem;
+  justify-content: center;
+  gap: 3rem;
   width: 100%;
-  max-width: 900px;
+  max-width: 1200px;
+  position: relative;
+  min-height: 80vh;
 }
 
-@media (min-width: 768px) {
-  .intro-content-container {
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    gap: 4rem;
-  }
-}
-
-/* GIF Visual Area */
-.intro-visual-panel {
+/* Boot sequence text — big and prominent */
+.intro-boot-text {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: clamp(200px, 40vw, 320px);
-  aspect-ratio: 320 / 312;
-  position: relative;
-  background: var(--surface);
-  border: 1px solid var(--line);
+  text-align: center;
+  width: 100%;
 }
 
-.intro-gif {
-  width: 90%;
-  height: auto;
+.intro-text-type-large {
+  font-size: clamp(1.2rem, 3.5vw, 2.2rem) !important;
+  font-family: 'Aldrich', sans-serif;
+  color: var(--text);
+  letter-spacing: 0.08em;
+  line-height: 1.5;
+  max-width: 90vw;
+  opacity: 0.95;
+  text-align: center;
+}
+
+.intro-text-type-large .text-type__content {
   display: block;
+  color: var(--text);
 }
 
-/* Terminal & Identity Panel */
-.intro-terminal-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  min-width: 280px;
-  max-width: 480px;
-  text-align: left;
-}
-
-.intro-log-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: clamp(0.75rem, 1.2vw, 0.85rem);
-  color: var(--muted);
-}
-
-.intro-log-line {
-  margin: 0;
+/* Dragon GIF panel — big and centered */
+.intro-dragon-panel {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  width: 100%;
+  position: relative;
 }
 
-.intro-log-line.active {
-  color: var(--cyan);
+.intro-dragon-gif {
+  width: clamp(300px, 60vw, 500px);
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 0 20px var(--cyan));
 }
 
-.intro-identity-reveal {
+/* Branding section — appears after GIF */
+.intro-branding {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 0.5rem;
-  border-top: 1px solid var(--line);
-  padding-top: 1rem;
+  text-align: center;
 }
 
 .intro-title {

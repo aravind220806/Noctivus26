@@ -28,7 +28,7 @@ export function EventsSection({ onSelect }) {
 
   return (
     <section className="events-section" id="events" style={{ padding: '4rem 2rem' }}>
-      <HeadingBar level="h2" text="CHOOSE YOUR EVENT" />
+      <HeadingBar level="h2" text="CHOOSE YOUR EVENT" sectionIndex="03 / 05" />
       
       {/* Categories / Filters */}
       <div className="event-filters" role="group" aria-label="Filter events">

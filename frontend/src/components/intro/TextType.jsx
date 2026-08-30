@@ -156,11 +156,14 @@ const TextType = ({
       className: `text-type ${className}`,
       ...props
     },
-    createElement('span', { className: 'text-type__content', style: { color: getCurrentTextColor() || 'inherit' } }, displayedText),
-    showCursor && createElement('span', {
-      ref: cursorRef,
-      className: `text-type__cursor ${cursorClassName} ${shouldHideCursor ? 'text-type__cursor--hidden' : ''}`,
-    }, cursorCharacter)
+    [
+      createElement('span', { key: 'content', className: 'text-type__content', style: { color: getCurrentTextColor() || 'inherit' } }, displayedText),
+      showCursor && createElement('span', {
+        key: 'cursor',
+        ref: cursorRef,
+        className: `text-type__cursor ${cursorClassName} ${shouldHideCursor ? 'text-type__cursor--hidden' : ''}`,
+      }, cursorCharacter)
+    ]
   );
 };
 

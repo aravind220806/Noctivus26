@@ -5,9 +5,10 @@ import TextType from './TextType';
 import './WebsiteIntro.css';
 
 const INIT_TEXT = [
-  'NOCTIVUS \'26',
-  'INITIALIZING SYSTEM',
-  'LOADING INTERFACE...'
+  'SYSTEM BOOTING...',
+  'INITIALIZING NEURAL NET',
+  'AWAKENING CORE SEQUENCE',
+  'THE DRAGON HAS BEEN AWAKENED'
 ];
 
 export function WebsiteIntro({ onComplete }) {
@@ -25,20 +26,20 @@ export function WebsiteIntro({ onComplete }) {
       return;
     }
 
-    // 3-second sequence:
-    // 0-1.5s: TextType typing animation
-    // 1.5s: Transition to reveal phase (fade out text, show GIF)
-    // 1.5-3s: Show identity reveal
-    // 3s: Complete
+    // Boot sequence (slow reveal):
+    // 0-6s: TextType boot sequence with dragon awakening (slow typing)
+    // 6s: Transition to reveal phase (fade out text, fade in GIF)
+    // 6-14s: GIF fades in slowly, centered and big
+    // 14s: Complete and transition to hero
 
     const timer1 = setTimeout(() => {
       setPhase('reveal');
-    }, 1500);
+    }, 6000);
 
     const timer2 = setTimeout(() => {
       setPhase('done');
       setIsDone(true);
-    }, 3000);
+    }, 14000);
 
     return () => {
       clearTimeout(timer1);
@@ -66,70 +67,55 @@ export function WebsiteIntro({ onComplete }) {
           exit={{ opacity: 0, y: '100%' }}
           transition={{ duration: prefersReducedMotion ? 0.5 : 1.2, ease: 'easeInOut' }}
         >
-          {/* Viewport corner accents */}
-          <span className="intro-corner intro-corner--tl" aria-hidden="true" />
-          <span className="intro-corner intro-corner--tr" aria-hidden="true" />
-          <span className="intro-corner intro-corner--bl" aria-hidden="true" />
-          <span className="intro-corner intro-corner--br" aria-hidden="true" />
-
           <div className="intro-content-container">
 
-            {/* Center GIF visual panel — fades in at 1.5s */}
+            {/* Boot sequence text — typing phase */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: phase === 'reveal' || phase === 'done' ? 1 : 0 }}
-              transition={{ duration: 0.4 }}
-            >
-              <HudCorners accent="cyan">
-                <div className="intro-visual-panel panel">
-                  <img
-                    className="intro-gif"
-                    src="/ascii-dither-export.gif"
-                    alt="Noctivus System Logo Animation"
-                    width="320"
-                    height="312"
-                  />
-                </div>
-              </HudCorners>
-            </motion.div>
-
-            {/* Terminal typing panel — fades out at 1.5s */}
-            <motion.div
-              className="intro-terminal-panel"
+              className="intro-boot-text"
               initial={{ opacity: 1 }}
               animate={{ opacity: phase === 'typing' ? 1 : 0 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.8 }}
             >
-              <div className="intro-log-list">
-                {/* TextType component for initialization sequence */}
-                {phase === 'typing' && (
-                  <TextType
-                    text={INIT_TEXT}
-                    typingSpeed={45}
-                    pauseDuration={400}
-                    deletingSpeed={25}
-                    loop={false}
-                    showCursor={true}
-                    cursorCharacter="|"
-                    className="intro-text-type"
-                  />
-                )}
-              </div>
+              {phase === 'typing' && (
+                <TextType
+                  text={INIT_TEXT}
+                  typingSpeed={150}
+                  pauseDuration={1800}
+                  deletingSpeed={50}
+                  loop={false}
+                  showCursor={true}
+                  cursorCharacter="|"
+                  className="intro-text-type-large"
+                />
+              )}
             </motion.div>
 
-            {/* Reveal text identity — shows at 1.5s */}
+            {/* Dragon GIF — fades in very slowly at 6s, big and centered */}
+            <motion.div
+              className="intro-dragon-panel"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: phase === 'reveal' || phase === 'done' ? 1 : 0, scale: phase === 'reveal' || phase === 'done' ? 1 : 0.8 }}
+              transition={{ duration: 5, ease: 'easeInOut' }}
+            >
+              <img
+                className="intro-dragon-gif"
+                src="/ascii-dither-export.gif"
+                alt="Noctivus Dragon Awakened"
+                width="500"
+                height="487"
+              />
+            </motion.div>
+
+            {/* Noctivus branding — shows after GIF fades in */}
             {(phase === 'reveal' || phase === 'done') && (
               <motion.div
-                className="intro-identity-reveal"
-                initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 8 }}
+                className="intro-branding"
+                initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
+                transition={{ duration: 0.6, delay: 0.8 }}
               >
                 <h1 className="intro-title">NOCTIVUS '26</h1>
                 <p className="intro-meta">26 SEPTEMBER 2026</p>
-                <p className="intro-meta" style={{ color: 'var(--muted)' }}>
-                  Department of CSE (Cyber Security)
-                </p>
               </motion.div>
             )}
 

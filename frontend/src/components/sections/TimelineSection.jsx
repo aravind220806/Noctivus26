@@ -11,6 +11,8 @@ import {
   Smartphone,
   Coffee,
 } from 'lucide-react';
+import { HeadingBar } from '../ui/HeadingBar/HeadingBar';
+import { TickDivider } from '../ui/TickDivider/TickDivider';
 
 const RAIL_COLORS = ['cyan', 'teal', 'lime'];
 
@@ -108,8 +110,7 @@ export function TimelineSection() {
 
   return (
     <section className="timeline-section" id="schedule">
-      <p className="timeline-title">SCHEDULE</p>
-      <div className="timeline-rule" />
+      <HeadingBar level="h2" text="SCHEDULE" sectionIndex="04 / 05" />
 
       {/* Mobile Agenda List View (Default < 701px) */}
       <div className="timeline-agenda">

@@ -17,7 +17,7 @@ export function AboutSection() {
         
         {/* LEFT COLUMN: Heading, Manifesto, Showcase Image */}
         <div className="about-left">
-          <HeadingBar level="h2" text="ABOUT NOCTIVUS" />
+          <HeadingBar level="h2" text="ABOUT NOCTIVUS" sectionIndex="02 / 05" />
           
           <p className="about-manifesto-text">
             A student-built symposium hosted by Velammal Engineering College. Noctivus is the annual national-level symposium of the Department of CSE (Cyber Security).
@@ -31,19 +31,17 @@ export function AboutSection() {
         {/* RIGHT COLUMN: Host College Details & Statistics */}
         <div className="about-right">
           
-          {/* Host Info Box wrapped in HudCorners */}
-          <HudCorners accent="cyan">
-            <div className="about-host-box panel scanlines">
-              <h3 className="about-host-title">HOST COLLEGE</h3>
-              <p className="about-host-item">Velammal Engineering College</p>
-              <p className="about-host-item" style={{ color: 'var(--muted)', fontSize: '0.95rem' }}>
-                Department of CSE (Cyber Security)
-              </p>
-              <p className="about-host-item" style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>
-                Chennai, Tamil Nadu
-              </p>
-            </div>
-          </HudCorners>
+          {/* Host Info Box */}
+          <div className="about-host-box panel scanlines">
+            <h3 className="about-host-title">HOST COLLEGE</h3>
+            <p className="about-host-item">Velammal Engineering College</p>
+            <p className="about-host-item" style={{ color: 'var(--muted)', fontSize: '0.95rem' }}>
+              Department of CSE (Cyber Security)
+            </p>
+            <p className="about-host-item" style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>
+              Chennai, Tamil Nadu
+            </p>
+          </div>
 
           {/* Statistics Grid/List */}
           <div>
