@@ -107,8 +107,8 @@ export function TimelineSection() {
   }, []);
 
   return (
-    <section className="timeline-section" id="timeline">
-      <p className="timeline-title">EVENT TIMELINE</p>
+    <section className="timeline-section" id="schedule">
+      <p className="timeline-title">SCHEDULE</p>
       <div className="timeline-rule" />
 
       {/* Mobile Agenda List View (Default < 701px) */}

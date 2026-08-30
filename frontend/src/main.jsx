@@ -30,9 +30,11 @@ class RootErrorBoundary extends Component {
 
 const AdminApp = lazy(() => import('./admin/AdminApp.jsx'));
 const PassVerification = lazy(() => import('./pages/PassVerification.jsx'));
+const DeviceDemo = lazy(() => import('./components/registration-device/DeviceDemo.jsx'));
 const isAdminRoute = window.location.pathname.startsWith('/admin');
 const isLoginRoute = window.location.pathname.startsWith('/login');
 const isPassRoute = window.location.pathname.startsWith('/p/');
+const isDeviceRoute = window.location.pathname.startsWith('/device');
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -44,6 +46,10 @@ createRoot(document.getElementById('root')).render(
       ) : isPassRoute ? (
         <Suspense fallback={<div className="admin-loading">Verifying pass...</div>}>
           <PassVerification />
+        </Suspense>
+      ) : isDeviceRoute ? (
+        <Suspense fallback={<div className="admin-loading">Loading device demo...</div>}>
+          <DeviceDemo />
         </Suspense>
       ) : (
         <App />

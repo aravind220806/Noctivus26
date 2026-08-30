@@ -1,0 +1,489 @@
+/* --- NOCTIVUS Registration Device Visual & Functional Styling --- */
+
+.device-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 1.5rem 0.5rem;
+  box-sizing: border-box;
+}
+
+/* Industrial Body Enclosure */
+.device-body {
+  position: relative;
+  width: 100%;
+  max-width: 620px;
+  background: var(--surface);
+  border: 2px solid var(--line);
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.85),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.6);
+  padding: 2rem 1.75rem;
+  box-sizing: border-box;
+  clip-path: polygon(
+    0% 16px,
+    16px 0%,
+    calc(100% - 24px) 0%,
+    100% 24px,
+    100% calc(100% - 16px),
+    calc(100% - 16px) 100%,
+    24px 100%,
+    0% calc(100% - 24px)
+  );
+}
+
+.device-body:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 4px;
+}
+
+/* Worn texture overlay */
+.device-body::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.15) 2px,
+    rgba(0, 0, 0, 0.15) 4px
+  );
+  opacity: 0.4;
+  z-index: 1;
+}
+
+/* Structural Screws */
+.device-screw {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.8);
+  z-index: 2;
+}
+
+.screw-tl { top: 12px; left: 16px; }
+.screw-tr { top: 12px; right: 16px; }
+.screw-bl { bottom: 12px; left: 16px; }
+.screw-br { bottom: 12px; right: 16px; }
+
+.device-screw::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 1px;
+  background: var(--line);
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+/* Device Top Header Band */
+.device-header-strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px dashed var(--line);
+  position: relative;
+  z-index: 2;
+}
+
+.device-model-no {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.device-status-led {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--lime);
+}
+
+.led-dot {
+  width: 6px;
+  height: 6px;
+  background-color: var(--lime);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--lime);
+}
+
+/* Recessed Screen Outer Frame */
+.device-screen-bezel {
+  position: relative;
+  background: #04080a;
+  border: 2px solid var(--line);
+  padding: 1.25rem;
+  box-shadow: 
+    inset 0 4px 12px rgba(0, 0, 0, 0.9),
+    inset 0 0 20px rgba(0, 200, 224, 0.03);
+  margin-bottom: 1.5rem;
+  z-index: 2;
+}
+
+/* Inset Display Screen */
+.device-display {
+  position: relative;
+  background: rgba(0, 200, 224, 0.02);
+  border: 1px solid rgba(0, 200, 224, 0.2);
+  padding: 1.5rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  min-height: 190px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Subtle Screen Scanlines */
+.device-display::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    rgba(0, 200, 224, 0) 50%, 
+    rgba(0, 0, 0, 0.25) 50%
+  );
+  background-size: 100% 4px;
+  opacity: 0.6;
+}
+
+/* Screen Header Meta Info */
+.display-header-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--cyan);
+  border-bottom: 1px solid rgba(0, 200, 224, 0.15);
+  padding-bottom: 0.4rem;
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.08em;
+}
+
+.display-category-badge {
+  color: var(--teal);
+  text-transform: uppercase;
+}
+
+/* Screen Main Content */
+.display-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.display-title {
+  font-family: 'Aldrich', sans-serif;
+  font-weight: 400;
+  font-size: clamp(1.35rem, 3.5vw, 1.85rem);
+  color: var(--cyan);
+  letter-spacing: 0.08em;
+  margin: 0;
+  text-shadow: 0 0 10px rgba(0, 200, 224, 0.35);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.display-format {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--text);
+  line-height: 1.4;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.85;
+}
+
+/* Screen Footer Meta Info */
+.display-footer-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  border-top: 1px solid rgba(0, 200, 224, 0.15);
+  padding-top: 0.4rem;
+}
+
+.display-fee {
+  color: var(--lime);
+  font-weight: 600;
+}
+
+.display-nav-hint {
+  color: var(--muted);
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+}
+
+/* Confirm Notification Flash */
+.display-confirm-flash {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 200, 224, 0.15);
+  border: 1px solid var(--cyan);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Aldrich', sans-serif;
+  font-weight: 400;
+  font-size: 1.1rem;
+  color: var(--cyan);
+  letter-spacing: 0.12em;
+  z-index: 5;
+  animation: confirmPulse 0.6s ease forwards;
+}
+
+@keyframes confirmPulse {
+  0% { opacity: 0; transform: scale(0.98); }
+  50% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; }
+}
+
+/* Control Section Layout */
+.device-controls {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+/* D-Pad Controls */
+.control-dpad {
+  display: grid;
+  grid-template-columns: repeat(3, 30px);
+  grid-template-rows: repeat(3, 30px);
+  gap: 3px;
+}
+
+.dpad-btn {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 0 var(--line);
+}
+
+.dpad-btn:hover, .dpad-btn:focus-visible {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  outline: none;
+}
+
+.dpad-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 var(--line);
+}
+
+.dpad-up    { grid-column: 2; grid-row: 1; }
+.dpad-left  { grid-column: 1; grid-row: 2; }
+.dpad-center{ grid-column: 2; grid-row: 2; background: rgba(255,255,255,0.02); border-color: transparent; box-shadow: none; cursor: default; }
+.dpad-right { grid-column: 3; grid-row: 2; }
+.dpad-down  { grid-column: 2; grid-row: 3; }
+
+/* Rotary Dial / Wheel Center Unit */
+.control-wheel-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.wheel-housing {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--line);
+  box-shadow: inset 0 3px 6px rgba(0,0,0,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  touch-action: none;
+}
+
+.wheel-housing:active {
+  cursor: grabbing;
+}
+
+.wheel-dial {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+/* Mechanical ridges on dial */
+.wheel-ridge {
+  position: absolute;
+  width: 2px;
+  height: 100%;
+  background: var(--line);
+  top: 0;
+  left: calc(50% - 1px);
+}
+
+.ridge-0 { transform: rotate(0deg); }
+.ridge-1 { transform: rotate(45deg); }
+.ridge-2 { transform: rotate(90deg); }
+.ridge-3 { transform: rotate(135deg); }
+
+.wheel-center-cap {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--cyan);
+  box-shadow: 0 0 6px rgba(0, 200, 224, 0.3);
+  z-index: 3;
+}
+
+.wheel-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+}
+
+/* Action Buttons Group */
+.control-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.action-btn {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  min-height: 44px;
+  padding: 0.6rem 1.1rem;
+  cursor: pointer;
+  user-select: none;
+  letter-spacing: 0.05em;
+  transition: all 0.15s ease;
+  position: relative;
+  box-shadow: 0 3px 0 var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btn:hover, .action-btn:focus-visible {
+  border-color: var(--teal);
+  color: var(--cyan);
+  outline: none;
+}
+
+.action-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 0 0 var(--line);
+}
+
+.action-btn.primary {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  background: rgba(0, 200, 224, 0.05);
+}
+
+.action-btn.primary:hover, .action-btn.primary:focus-visible {
+  background: rgba(0, 200, 224, 0.15);
+  box-shadow: 0 3px 0 var(--cyan);
+}
+
+.action-btn.primary:active {
+  box-shadow: 0 0 0 var(--cyan);
+}
+
+/* Motion Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .wheel-dial, .display-confirm-flash {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* Responsive Layout */
+@media (max-width: 640px) {
+  .device-body {
+    padding: 1.25rem 1rem;
+  }
+
+  .device-screen-bezel {
+    padding: 0.85rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .device-display {
+    padding: 1.1rem 0.85rem;
+    min-height: 170px;
+  }
+
+  .device-controls {
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    row-gap: 1.25rem;
+  }
+
+  .control-dpad {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .control-wheel-unit {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: center;
+  }
+
+  .control-actions {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+  }
+
+  .action-btn {
+    flex: 1;
+  }
+}

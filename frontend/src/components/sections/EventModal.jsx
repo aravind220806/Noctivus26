@@ -17,13 +17,15 @@ const EVENT_ORDER = [
 export function EventModal({ event, onClose, onRegister }) {
   const [page, setPage] = useState(0);
 
+  if (!event) return null;
+
   const pages = [
     { key: 'overview', title: 'OVERVIEW' },
     { key: 'rules',    title: 'RULES & FORMAT' },
     { key: 'info',     title: 'GOOD TO KNOW' },
   ];
 
-  const eventIndex = EVENT_ORDER.indexOf(event.id);
+  const eventIndex = event.id ? EVENT_ORDER.indexOf(event.id) : -1;
   const displayIndex = eventIndex >= 0
     ? String(eventIndex + 1).padStart(2, '0')
     : '--';

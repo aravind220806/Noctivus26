@@ -1,24 +1,25 @@
 /* ─── LineSidebar — React Bits integration, Noctivus palette ─── */
 
 .line-sidebar {
-  --accent-color:  #00C8E0;
-  --text-color:    #E8EDE8;
-  --marker-color:  rgba(232,237,232,0.22);
-  --marker-length: 48px;
+  --accent-color:  var(--cyan);
+  --text-color:    var(--text);
+  --marker-color:  rgba(234,246,245,0.22);
+  --marker-length: 60px;
   --marker-gap:    0px;
   --tick-scale:    0.5;
-  --max-shift:     20px;
-  --item-gap:      28px;
-  --font-size:     0.85rem;
+  --max-shift:     30px;
+  --item-gap:      20px;
+  --font-size:     1.1rem;
   --smoothing:     100ms;
 
   position: relative;
   display: flex;
-  justify-content: flex-start;
+  justify-content: flex-end;
 }
 
 .line-sidebar--markers {
-  padding-left: calc(var(--marker-length) + var(--marker-gap));
+  padding-right: calc(var(--marker-length) + var(--marker-gap));
+  padding-left: 0;
 }
 
 .line-sidebar__list {
@@ -27,6 +28,7 @@
   padding: 0;
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
   gap: var(--item-gap);
 }
 
@@ -46,6 +48,7 @@
 .line-sidebar__label {
   position: relative;
   display: inline-flex;
+  flex-direction: row-reverse;
   align-items: baseline;
   gap: 0.5rem;
   font-size: var(--font-size);
@@ -54,7 +57,7 @@
   text-transform: uppercase;
   line-height: 1.2;
   color: color-mix(in srgb, var(--accent-color) calc(var(--effect, 0) * 100%), var(--text-color));
-  transform: translateX(calc(var(--effect, 0) * var(--max-shift)));
+  transform: translateX(calc(-1 * var(--effect, 0) * var(--max-shift)));
 }
 
 .line-sidebar__index {
@@ -65,11 +68,12 @@
 .line-sidebar__marker {
   position: absolute;
   top: 50%;
-  left: calc(-1 * var(--marker-length) - var(--marker-gap));
+  right: calc(-1 * var(--marker-length) - var(--marker-gap));
+  left: auto;
   height: 1px;
   width: var(--marker-length);
   background-color: color-mix(in srgb, var(--accent-color) calc(var(--effect, 0) * 100%), var(--marker-color));
-  transform-origin: left center;
+  transform-origin: right center;
   transform: translateY(-50%) scaleX(calc(0.6 + var(--effect, 0) * 0.5));
 }
 
@@ -78,7 +82,8 @@
   content: '';
   position: absolute;
   top: calc(100% + var(--item-gap) / 2);
-  left: calc(-1 * var(--marker-length) - var(--marker-gap));
+  right: calc(-1 * var(--marker-length) - var(--marker-gap));
+  left: auto;
   height: 1px;
   width: calc(var(--marker-length) * var(--tick-scale));
   background-color: var(--marker-color);
@@ -87,6 +92,6 @@
 }
 
 .line-sidebar--scale-tick .line-sidebar__item:not(:last-child)::after {
-  transform-origin: left center;
+  transform-origin: right center;
   transform: translateY(-50%) scaleX(calc(0.6 + var(--effect, 0) * 0.6));
 }

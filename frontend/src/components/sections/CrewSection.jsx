@@ -1,28 +1,35 @@
-import { SectionTitle } from './SectionTitle';
+import { HeadingBar } from '../ui/HeadingBar/HeadingBar';
+import { HudPanel } from '../ui/HudPanel/HudPanel';
+import { TickDivider } from '../ui/TickDivider/TickDivider';
 import { crew } from '../../data/site.js';
+import './CrewSection.css';
 
 export function CrewSection() {
   return (
-    <section className="section crew-section" id="crew">
-      <div className="page-width">
-        <SectionTitle
-          kicker="MEET THE CREW"
-          title={
-            <>
-              Coordinators and
-              <br />
-              <span className="muted-title">organizing team.</span>
-            </>
-          }
-        />
+    <section className="crew-section" id="coordinators">
+      <div className="crew-container">
+        <HeadingBar>
+          <h2>COORDINATORS</h2>
+        </HeadingBar>
+        <TickDivider />
+
         <div className="crew-grid" data-reveal>
-          {crew.map(([role, name, contact]) => (
-            <article className="crew-card" key={role}>
-              <span>{role}</span>
-              <h3>{name}</h3>
-              <a href={contact.includes('@') ? `mailto:${contact}` : `tel:${contact.replace(/\s/g, '')}`}>{contact}</a>
-            </article>
-          ))}
+          {crew.map(([role, description, contact]) => {
+            const isEmail = contact.includes('@');
+            const contactLink = isEmail ? `mailto:${contact}` : `tel:${contact.replace(/\s/g, '')}`;
+
+            return (
+              <HudPanel key={role} accent="teal">
+                <article className="crew-card">
+                  <h3 className="crew-role">{role}</h3>
+                  <p className="crew-description">{description}</p>
+                  <a href={contactLink} className="crew-contact">
+                    {contact}
+                  </a>
+                </article>
+              </HudPanel>
+            );
+          })}
         </div>
       </div>
     </section>

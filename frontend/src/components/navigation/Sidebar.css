@@ -1,17 +1,22 @@
-/* --- Desktop Sidebar (Fixed Right) --- */
+/* --- Desktop Sidebar (Fixed Right Overlay, Minimal Floating) --- */
 .desktop-sidebar {
   position: fixed;
   top: 0;
-  left: 0;
-  bottom: 0;
-  width: 260px;
-  background: var(--surface);
-  border-right: 1px solid var(--line);
+  right: 0;
+  width: 320px;
+  height: 100vh;
+  background: transparent;
   display: flex;
   flex-direction: column;
-  padding: 2rem 2rem 2rem 3.5rem; /* extra left padding for markers */
+  padding: 2.5rem 2rem 2.5rem 1.75rem;
   z-index: 100;
   box-sizing: border-box;
+  overflow-y: auto;
+  pointer-events: none;
+}
+
+.desktop-sidebar > * {
+  pointer-events: auto;
 }
 
 @media (max-width: 900px) {
@@ -20,36 +25,37 @@
   }
 }
 
-.sidebar-logo {
-  font-family: 'Aldrich', sans-serif;
-  font-size: 1.1rem;
-  color: var(--cyan);
-  margin-bottom: 3rem;
-  letter-spacing: 0.1em;
-  white-space: nowrap;
-}
-
 .sidebar-linesidebar {
   flex: 1;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
 }
 
 .sidebar-cta {
   margin-top: auto;
+  padding-top: 1.5rem;
 }
 
-/* --- Layout Offset (right sidebar) --- */
+/* --- Layout Offset (reserved column for right sidebar) --- */
 .main-container {
   min-height: 100vh;
   box-sizing: border-box;
   background: var(--bg);
 }
 
+@media (max-width: 900px) {
+  .main-container {
+    padding-top: 60px; /* account for fixed mobile header */
+    margin-right: 0;
+  }
+}
+
 @media (min-width: 901px) {
   .main-container {
-    margin-left: 260px;
-    margin-right: 0;
+    margin-right: 320px;
+    margin-left: 0;
   }
 }
 

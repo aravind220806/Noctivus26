@@ -1,0 +1,34 @@
+.text-type {
+  display: inline-block;
+  white-space: pre-wrap;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: inherit;
+  color: var(--text);
+}
+
+.text-type__content {
+  display: inline;
+  color: inherit;
+}
+
+.text-type__cursor {
+  margin-left: 0.1rem;
+  display: inline-block;
+  opacity: 1;
+  color: var(--cyan);
+  text-shadow: 0 0 8px var(--cyan);
+  animation: cursor-blink 0.5s ease-in-out infinite;
+}
+
+.text-type__cursor--hidden {
+  display: none;
+}
+
+@keyframes cursor-blink {
+  0%, 49% {
+    opacity: 1;
+  }
+  50%, 100% {
+    opacity: 0;
+  }
+}

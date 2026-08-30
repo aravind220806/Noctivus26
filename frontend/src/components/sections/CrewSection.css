@@ -1,0 +1,118 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   COORDINATORS (CREW) SECTION
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.crew-section {
+  position: relative;
+  background: var(--bg);
+  color: var(--text);
+  padding: 3rem 0;
+}
+
+.crew-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  box-sizing: border-box;
+}
+
+/* Section heading */
+.crew-section h2 {
+  font-family: 'Aldrich', sans-serif;
+  font-weight: 400;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  color: var(--cyan);
+  margin: 0 0 0.5rem 0;
+  letter-spacing: 0.03em;
+}
+
+/* Crew grid — mobile-first stacked, 3-across desktop */
+.crew-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+@media (min-width: 768px) {
+  .crew-grid {
+    flex-direction: row;
+    gap: 2rem;
+    justify-content: space-between;
+  }
+}
+
+/* Individual crew card inside HudPanel */
+.crew-card {
+  padding: 1.5rem;
+  box-sizing: border-box;
+}
+
+.crew-role {
+  font-family: 'Aldrich', sans-serif;
+  font-weight: 400;
+  font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+  color: var(--teal);
+  margin: 0 0 0.75rem 0;
+  letter-spacing: 0.02em;
+}
+
+.crew-description {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: clamp(0.85rem, 1.2vw, 0.95rem);
+  color: var(--muted);
+  margin: 0 0 1rem 0;
+  line-height: 1.5;
+}
+
+.crew-contact {
+  display: inline-block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: clamp(0.8rem, 1vw, 0.9rem);
+  color: var(--cyan);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.2rem;
+  transition: all 0.2s ease;
+}
+
+.crew-contact:hover {
+  color: var(--teal);
+  border-bottom-color: var(--teal);
+}
+
+.crew-contact:focus-visible {
+  outline: 1px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+/* Mobile adjustments */
+@media (max-width: 767px) {
+  .crew-section {
+    padding: 2.5rem 0;
+  }
+
+  .crew-container {
+    padding: 0 1rem;
+  }
+
+  .crew-card {
+    padding: 1.25rem;
+  }
+}
+
+/* Desktop adjustments */
+@media (min-width: 1200px) {
+  .crew-container {
+    padding: 0 2rem;
+  }
+
+  .crew-section {
+    padding: 4rem 0;
+  }
+
+  .crew-grid {
+    gap: 2.5rem;
+  }
+}

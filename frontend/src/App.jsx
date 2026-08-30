@@ -8,15 +8,31 @@ import { HeroSection } from './components/sections/HeroSection.jsx';
 import { AboutSection } from './components/sections/AboutSection.jsx';
 import { EventsSection } from './components/sections/EventsSection.jsx';
 import { EventModal } from './components/sections/EventModal.jsx';
+import { WebsiteIntro } from './components/intro/WebsiteIntro.jsx';
+import { TimelineSection } from './components/sections/TimelineSection.jsx';
+import { CrewSection } from './components/sections/CrewSection.jsx';
+import { FooterSection } from './components/sections/FooterSection.jsx';
 import useReveal from './hooks/useReveal.js';
 import { getApiBase } from './lib/api';
 
 const sectionsList = ['home', 'about', 'events', 'schedule', 'coordinators', 'footer'];
 
 export default function App() {
+  const [showIntro, setShowIntro] = useState(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        // Always show intro on first load (dev mode); comment out for production
+        return true;
+        // return !sessionStorage.getItem('intro-done');
+      }
+    } catch (e) {
+      console.warn('sessionStorage is not accessible:', e);
+    }
+    return true;
+  });
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [registration, setRegistration] = useState(null);
-  const [registrationOpen, setRegistrationOpen] = useState(false);
+  const [registrationOpen, setRegistrationOpen] = useState(true);
   const [activeSection, setActiveSection] = useState('home');
   const scrollProgressRef = useRef(null);
   const registerableEvents = useMemo(() => events.filter((event) => event.registerable !== false), []);
@@ -27,9 +43,13 @@ export default function App() {
     const apiBase = getApiBase();
     fetch(`${apiBase}/api/events`, { signal: controller.signal })
       .then((response) => (response.ok ? response.json() : Promise.reject(new Error('Event service unavailable'))))
-      .then((data) => setRegistrationOpen(data.registrationOpen === true))
+      .then((data) => {
+        if (typeof data.registrationOpen === 'boolean') {
+          setRegistrationOpen(data.registrationOpen);
+        }
+      })
       .catch((error) => {
-        if (error.name !== 'AbortError') setRegistrationOpen(false);
+        if (error.name !== 'AbortError') console.warn('Registration API check fallback: default to open in dev');
       });
     return () => controller.abort();
   }, []);
@@ -93,6 +113,8 @@ export default function App() {
 
   return (
     <ErrorBoundary>
+      {showIntro && <WebsiteIntro onComplete={() => setShowIntro(false)} />}
+
       <div className="scroll-progress" ref={scrollProgressRef} aria-hidden="true" />
       
       <Sidebar 
@@ -111,19 +133,19 @@ export default function App() {
         <AboutSection />
         <EventsSection onSelect={setSelectedEvent} />
         
-        <section id="schedule" className="shell-section">
-          <h1 className="shell-section-title">SCHEDULE</h1>
-        </section>
-        <section id="coordinators" className="shell-section">
-          <h1 className="shell-section-title">COORDINATORS</h1>
-        </section>
-        <section id="footer" className="shell-section">
-          <h1 className="shell-section-title">FOOTER</h1>
-        </section>
+        <TimelineSection />
+        <CrewSection />
+        <FooterSection />
       </main>
 
       <AnimatePresence>
-        {selectedEvent && <EventModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />}
+        {selectedEvent && (
+          <EventModal 
+            event={selectedEvent} 
+            onClose={() => setSelectedEvent(null)} 
+            onRegister={() => openRegistration(selectedEvent.id)} 
+          />
+        )}
       </AnimatePresence>
 
       {registration && (
@@ -139,18 +161,27 @@ export default function App() {
 }
 
 class ErrorBoundary extends Component {
-  state = { hasError: false };
+  state = { hasError: false, error: null };
 
-  static getDerivedStateFromError() {
-    return { hasError: true };
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('CRITICAL UNCAUGHT ERROR:', error, errorInfo);
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <main className="app-error" role="alert">
+        <main className="app-error" role="alert" style={{ padding: '3rem', color: '#ff4d4d', fontFamily: 'monospace' }}>
           <h1>Something went wrong.</h1>
-          <button className="button button-primary" type="button" onClick={() => window.location.reload()}>
+          <pre style={{ background: '#111', padding: '1rem', overflow: 'auto', border: '1px solid #333', color: '#00c8e0' }}>
+            {this.state.error?.toString()}
+            {'\n'}
+            {this.state.error?.stack}
+          </pre>
+          <button className="button button-primary" type="button" onClick={() => window.location.reload()} style={{ marginTop: '1rem' }}>
             Reload page
           </button>
         </main>

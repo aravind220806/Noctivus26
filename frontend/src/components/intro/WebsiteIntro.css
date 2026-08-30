@@ -1,0 +1,123 @@
+/* --- Website Intro Overlay (Night City Theme) --- */
+
+.intro-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background: var(--bg);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 2rem;
+}
+
+/* Subtle corner brackets for the viewport */
+.intro-corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: var(--line);
+  opacity: 0.5;
+}
+.intro-corner--tl { top: 2rem; left: 2rem; border-top: 1px solid; border-left: 1px solid; }
+.intro-corner--tr { top: 2rem; right: 2rem; border-top: 1px solid; border-right: 1px solid; }
+.intro-corner--bl { bottom: 2rem; left: 2rem; border-bottom: 1px solid; border-left: 1px solid; }
+.intro-corner--br { bottom: 2rem; right: 2rem; border-bottom: 1px solid; border-right: 1px solid; }
+
+/* Main layout container */
+.intro-content-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  width: 100%;
+  max-width: 900px;
+}
+
+@media (min-width: 768px) {
+  .intro-content-container {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 4rem;
+  }
+}
+
+/* GIF Visual Area */
+.intro-visual-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(200px, 40vw, 320px);
+  aspect-ratio: 320 / 312;
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.intro-gif {
+  width: 90%;
+  height: auto;
+  display: block;
+}
+
+/* Terminal & Identity Panel */
+.intro-terminal-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 280px;
+  max-width: 480px;
+  text-align: left;
+}
+
+.intro-log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: clamp(0.75rem, 1.2vw, 0.85rem);
+  color: var(--muted);
+}
+
+.intro-log-line {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.intro-log-line.active {
+  color: var(--cyan);
+}
+
+.intro-identity-reveal {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-top: 1px solid var(--line);
+  padding-top: 1rem;
+}
+
+.intro-title {
+  font-family: 'Aldrich', sans-serif;
+  font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+  font-weight: 400;
+  color: var(--cyan);
+  margin: 0;
+  letter-spacing: 0.05em;
+}
+
+.intro-meta {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: clamp(0.75rem, 1.2vw, 0.85rem);
+  color: var(--text);
+  margin: 0;
+  line-height: 1.4;
+}
