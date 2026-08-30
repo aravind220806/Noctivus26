@@ -2,6 +2,7 @@ services:
   - type: web
     name: noctivus26-api
     runtime: python
+    pythonVersion: "3.11.9"
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: python run.py
@@ -15,11 +16,25 @@ services:
         sync: false
       - key: FRONTEND_ORIGINS
         sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: ADMIN_EMAILS
+        sync: false
+      - key: ADMIN_SESSION_SECRET
+        generateValue: true
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "465"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_FROM_EMAIL
+        sync: false
       - key: WEB_CONCURRENCY
         value: "1"
       - key: REDIS_URL
         sync: false
       - key: EVENT_CAPACITIES
         sync: false
-      - key: ADMIN_SESSION_SECRET
-        generateValue: true
