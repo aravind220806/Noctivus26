@@ -65,6 +65,12 @@ app.include_router(admin_router, prefix="/admin", include_in_schema=False)
 app.include_router(public_router, prefix="", include_in_schema=False)
 
 
+@app.get("/health")
+@app.get("/api/health")
+async def health_check():
+    return {"status": "ok", "service": "noctivus-api"}
+
+
 @app.exception_handler(Exception)
 async def exception_handler(_request: Request, error: Exception):
     logger.exception("Unhandled API error", exc_info=error)

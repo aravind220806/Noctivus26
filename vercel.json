@@ -1,49 +1,13 @@
 {
-  "version": 2,
-  "builds": [
+  "outputDirectory": "frontend/dist",
+  "rewrites": [
     {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "frontend/dist"
-      }
+      "source": "/api/:match*",
+      "destination": "/api"
     },
     {
-      "src": "api/index.py",
-      "use": "@vercel/python"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/index.py"
-    },
-    {
-      "src": "/assets/(.*)",
-      "dest": "/frontend/dist/assets/$1"
-    },
-    {
-      "src": "/brand/(.*)",
-      "dest": "/frontend/dist/brand/$1"
-    },
-    {
-      "src": "/images/(.*)",
-      "dest": "/frontend/dist/images/$1"
-    },
-    {
-      "src": "/fonts/(.*)",
-      "dest": "/frontend/dist/fonts/$1"
-    },
-    {
-      "src": "/logo.png",
-      "dest": "/frontend/dist/logo.png"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/frontend/dist/index.html"
+      "source": "/((?!api/|assets/|brand/|images/|fonts/|logo\\.png|favicon\\.ico).*)",
+      "destination": "/index.html"
     }
   ]
 }
