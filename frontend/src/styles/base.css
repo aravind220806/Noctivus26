@@ -6,7 +6,7 @@
 html { scroll-behavior: smooth; background: var(--bg); }
 body { margin: 0; background: var(--bg); color: var(--text); min-width: 320px; overflow-x: hidden; }
 body.modal-open { overflow: hidden; }
-h1, h2, h3, h4, h5, h6 { font-family: var(--display-font); }
+h1, h2, h3, h4, h5, h6 { font-family: var(--display-font); font-weight: normal; }
 button, input, select { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 button { color: inherit; }
@@ -76,9 +76,9 @@ img { max-width: 100%; }
   padding-top: 5px;
   color: var(--cyan);
   font-family: var(--display-font);
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: .12em;
+  font-size: 16px;
+  font-weight: normal;
+  letter-spacing: .16em;
 }
 
 .section-title h2 {
@@ -148,3 +148,12 @@ img { max-width: 100%; }
   background: rgba(0, 221, 242, .08);
 }
 .button:disabled, .button.is-disabled { opacity: .42; cursor: not-allowed; pointer-events: none; }
+
+/* ── Form Error State ── */
+.form-error {
+  padding: 12px 14px;
+  border-left: 2px solid var(--error);
+  color: #ffc4bd;
+  background: rgba(255, 120, 106, .08);
+  font-size: 12px;
+}

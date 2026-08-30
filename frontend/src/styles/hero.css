@@ -163,7 +163,7 @@
   color: #edf5f1;
   font-family: var(--display-font);
   font-size: 30px;
-  font-weight: 560;
+  font-weight: normal;
   line-height: 52px;
   font-variant-numeric: tabular-nums;
 }
