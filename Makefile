@@ -1,6 +1,6 @@
 SHELL := /bin/sh
 
-VENV := venv
+VENV := .venv
 PYTHON ?= $(shell test -f $(VENV)/bin/python && echo $(VENV)/bin/python || echo python3)
 NPM ?= npm
 BACKEND_DIR := backend
@@ -41,6 +41,7 @@ build:
 
 test:
 	$(PYTHON) -m compileall $(BACKEND_DIR)/app $(BACKEND_DIR)/run.py
+	ALLOW_MEMORY_DB=true ENVIRONMENT=development REGISTRATION_OPEN=true PYTHONPATH=$(BACKEND_DIR) $(PYTHON) -m pytest $(BACKEND_DIR)/tests/ -v
 
 load-test:
 	$(PYTHON) scripts/load_test.py
