@@ -140,6 +140,10 @@
 }
 
 /* ── Crew & Contact ── */
+.crew-section {
+  background: #071522;
+}
+
 .crew-grid, .social-link-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

@@ -3,7 +3,7 @@ import { crew } from '../../data/site.js';
 
 export function CrewSection() {
   return (
-    <section className="section faq-section" id="crew">
+    <section className="section crew-section" id="crew">
       <div className="page-width">
         <SectionTitle
           kicker="MEET THE CREW"

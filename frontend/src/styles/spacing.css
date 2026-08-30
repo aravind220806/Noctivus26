@@ -93,32 +93,6 @@
   margin-bottom: var(--sp-8);     /* 32px */
 }
 
-/* ── Experience grid ── */
-.experience-grid {
-  gap: var(--sp-4);               /* 16px */
-}
-
-.feature-panel {
-  padding: var(--sp-6);           /* 24px */
-}
-
-.feature-panel h3 {
-  margin-top: var(--sp-12);       /* 48px */
-}
-
-.feature-panel .button {
-  margin-top: var(--sp-6);        /* 24px */
-}
-
-/* ── FAQ ── */
-.faq-item button {
-  gap: var(--sp-4);               /* 16px */
-}
-
-.faq-answer p {
-  padding-bottom: var(--sp-6);    /* 24px */
-}
-
 /* ── Contact ── */
 .contact-layout {
   padding: clamp(var(--sp-6), 5vw, var(--sp-12)); /* 24-48px */
@@ -466,24 +440,6 @@ footer {
 
   .event-card__footer {
     gap: var(--sp-3);               /* 12px */
-  }
-
-  .feature-panel,
-  .feature-panel--brochure {
-    padding: var(--sp-4);           /* 16px */
-  }
-
-  .feature-panel h3 {
-    margin-top: var(--sp-8);        /* 32px */
-  }
-
-  .faq-item button {
-    padding-block: var(--sp-4);     /* 16px */
-  }
-
-  .faq-answer p {
-    margin-right: var(--sp-4);      /* 16px */
-    padding-bottom: var(--sp-4);    /* 16px */
   }
 
   .contact-layout {
