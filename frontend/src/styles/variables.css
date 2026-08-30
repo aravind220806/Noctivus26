@@ -6,22 +6,31 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Samarkan';
+  src: url('/fonts/Samarkan.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  --bg: #050607;
-  --surface: #0A0F0F;
-  --text: #EAF6F5;
-  --muted: #7E9096;
-  --line: rgba(0, 221, 242, 0.14);
-  --cyan: #00DDF2;
-  --teal: #00E6B8;
+  --bg: #060504;
+  --surface: #0C0A09;
+  --text: #E8EDE8;
+  --muted: #506058;
+  --line: rgba(0, 210, 230, 0.12);
+  --cyan: #00C8E0;
+  --teal: #00D4A8;
   --lime: #A7FF18;
   --error: #FF786A; /* Semantic red for form errors only */
   color-scheme: dark;
 
   /* Typography */
-  --mono-font: 'IBM Plex Mono', 'JetBrains Mono', 'Space Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
-  --body-font: 'IBM Plex Mono', 'JetBrains Mono', monospace;
+  --mono-font: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
+  --body-font: 'IBM Plex Mono', monospace;
   --display-font: 'Aldrich', var(--mono-font);
+  --display-accent-font: 'Samarkan';
   font-family: var(--body-font);
   font-optical-sizing: auto;
   font-synthesis: none;

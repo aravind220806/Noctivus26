@@ -1,85 +1,94 @@
-import { useMemo, useState } from 'react';
-import { motion } from 'motion/react';
-import Icon from '../Icon.jsx';
-import { SectionTitle } from './SectionTitle';
+import React, { useMemo, useState } from 'react';
 import { events } from '../../data/site.js';
+import { HeadingBar } from '../ui/HeadingBar/HeadingBar';
+import { NotchedButton } from '../ui/NotchedButton/NotchedButton';
+import { HudCorners } from '../ui/HudCorners/HudCorners';
 
 export function EventsSection({ onSelect }) {
   const [filter, setFilter] = useState('All');
-  const filters = ['All', 'Technical', 'Non-technical', 'Workshops'];
-  const visibleEvents = useMemo(
-    () => (filter === 'All' ? events : events.filter((event) => event.category === filter)),
-    [filter]
-  );
+  
+  const categories = ['All', 'Technical', 'Non-technical'];
+
+  // Filter out the workshop/demo event to keep exactly the 8 authoritative events
+  const authoritativeEvents = useMemo(() => {
+    return events.filter(e => e.id !== 'cyber-awareness-workshop');
+  }, []);
+
+  const visibleEvents = useMemo(() => {
+    if (filter === 'All') return authoritativeEvents;
+    return authoritativeEvents.filter(e => e.category === filter);
+  }, [filter, authoritativeEvents]);
+
+  const getGridSpanClass = (index, total) => {
+    if (total === 8) {
+      if (index >= 6) return 'grid-span-3'; // Row 3: 2 cards span 3 cols each
+    }
+    return 'grid-span-2'; // Default: Row 1 & 2 cards span 2 cols each
+  };
 
   return (
-    <section className="section events-section" id="events">
-      <div className="page-width">
-        <SectionTitle
-          kicker="EVENTS"
-          title="Choose your event."
-          description="Explore the official event lineup. Rules, formats, fees, and timings will be announced soon."
-        />
-        <div className="event-filters" role="group" aria-label="Filter events">
-          {filters.map((item) => (
-            <button type="button" aria-pressed={filter === item} onClick={() => setFilter(item)} key={item}>
-              {item}
-            </button>
-          ))}
-        </div>
-        <div className="events-grid-wrap">
-          <span className="hud-corner hud-corner--tl" aria-hidden="true" />
-          <span className="hud-corner hud-corner--tr" aria-hidden="true" />
-          <span className="hud-corner hud-corner--bl" aria-hidden="true" />
-          <span className="hud-corner hud-corner--br" aria-hidden="true" />
-          <div className="events-grid">
-          {visibleEvents.map((event, index) => (
-            <motion.article
-              className={`event-card accent-${event.accent}`}
-              data-reveal
-              style={{ '--reveal-order': index }}
-              key={event.id}
-              layoutId={`event-card-${event.id}`}
+    <section className="events-section" id="events" style={{ padding: '4rem 2rem' }}>
+      <HeadingBar level="h2" text="CHOOSE YOUR EVENT" />
+      
+      {/* Categories / Filters */}
+      <div className="event-filters" role="group" aria-label="Filter events">
+        {categories.map((cat) => {
+          const isActive = filter === cat;
+          return (
+            <NotchedButton
+              key={cat}
+              variant={isActive ? 'primary' : 'ghost'}
+              accent="cyan"
+              onClick={() => setFilter(cat)}
+              className="filter-btn"
+              style={{ padding: '0.6rem 1.2rem', fontSize: '0.8rem' }}
             >
-              <motion.button
-                className="event-card__button"
-                onClick={() => onSelect(event)}
-                aria-label={`View ${event.name} rules and regulations`}
-                whileHover="hover"
-              >
-                <motion.img
-                  className="event-card__photo"
-                  src={event.image}
-                  alt=""
-                  loading="lazy"
-                  width="720"
-                  height="480"
-                  style={{ objectPosition: event.imagePosition }}
-                  variants={{ hover: { scale: 1.05 } }}
-                />
-                <div className="event-card__content">
-                  <div className="event-card__meta">
-                    <span className="event-card__date">SEP 26</span>
-                    <span className="event-category">{event.category}</span>
+              {cat}
+            </NotchedButton>
+          );
+        })}
+      </div>
+
+      {/* Events Grid */}
+      <div className="events-grid">
+        {visibleEvents.map((event, index) => {
+          const spanClass = getGridSpanClass(index, visibleEvents.length);
+          const formattedIndex = String(index + 1).padStart(2, '0');
+
+          return (
+            <div 
+              key={event.id} 
+              className={`${spanClass}`}
+              onClick={() => onSelect(event)}
+            >
+              <HudCorners accent={event.accent || 'cyan'}>
+                <article 
+                  className="event-card panel scanlines"
+                  style={{ '--accent': `var(--${event.accent || 'cyan'})` }}
+                >
+                  <div className="event-card-header">
+                    <span className="event-card-index">{formattedIndex}</span>
+                    <span className="event-card-category">{event.category}</span>
                   </div>
-                  <div className="event-card__body">
-                    <h3>{event.name}</h3>
-                    <p>{event.format}</p>
+                  
+                  <div className="event-card-body">
+                    <h3 className="event-card-title">{event.name}</h3>
+                    <p className="event-card-desc">{event.format}</p>
                   </div>
-                  <div className="event-card__footer">
-                    <span className="event-card__cta">
-                      View rules <Icon name="arrow" size={16} />
+
+                  <div className="event-card-footer">
+                    <span className="event-card-meta">
+                      FEE: ₹{event.fee}
+                    </span>
+                    <span className="event-card-cta">
+                      VIEW DETAILS &gt;
                     </span>
                   </div>
-                </div>
-              </motion.button>
-            </motion.article>
-          ))}
-        </div>
-        </div>
-        <p className="events-note" data-reveal>
-          <span>*</span> Final rules, capacities, and event timings will be locked before registration opens.
-        </p>
+                </article>
+              </HudCorners>
+            </div>
+          );
+        })}
       </div>
     </section>
   );

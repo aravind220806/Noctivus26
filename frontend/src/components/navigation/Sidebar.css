@@ -1,0 +1,72 @@
+/* --- Desktop Sidebar (Fixed Right) --- */
+.desktop-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 260px;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 2rem 2rem 3.5rem; /* extra left padding for markers */
+  z-index: 100;
+  box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+  .desktop-sidebar {
+    display: none !important;
+  }
+}
+
+.sidebar-logo {
+  font-family: 'Aldrich', sans-serif;
+  font-size: 1.1rem;
+  color: var(--cyan);
+  margin-bottom: 3rem;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+.sidebar-linesidebar {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.sidebar-cta {
+  margin-top: auto;
+}
+
+/* --- Layout Offset (right sidebar) --- */
+.main-container {
+  min-height: 100vh;
+  box-sizing: border-box;
+  background: var(--bg);
+}
+
+@media (min-width: 901px) {
+  .main-container {
+    margin-left: 260px;
+    margin-right: 0;
+  }
+}
+
+/* --- Placeholder shell sections --- */
+.shell-section {
+  min-height: 100vh;
+  padding: 4rem 2rem;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.shell-section-title {
+  font-family: 'Aldrich', sans-serif;
+  font-size: 3rem;
+  color: var(--cyan);
+  margin-top: 0;
+}

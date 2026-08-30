@@ -1,0 +1,93 @@
+/* --- Mobile Header --- */
+.mobile-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  z-index: 90;
+  box-sizing: border-box;
+}
+
+@media (min-width: 901px) {
+  .mobile-header {
+    display: none !important;
+  }
+}
+
+.mobile-logo {
+  font-family: 'Aldrich', sans-serif;
+  color: var(--cyan);
+  font-size: 1.1rem;
+  letter-spacing: 0.1em;
+}
+
+.hamburger-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 110;
+}
+
+.hamburger-btn:focus-visible {
+  outline: 1px solid var(--cyan);
+}
+
+.hamburger-line {
+  width: 24px;
+  height: 2px;
+  background: var(--cyan);
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.hamburger-btn.open .hamburger-line:nth-child(1) {
+  transform: translateY(8px) rotate(45deg);
+}
+.hamburger-btn.open .hamburger-line:nth-child(2) {
+  opacity: 0;
+}
+.hamburger-btn.open .hamburger-line:nth-child(3) {
+  transform: translateY(-8px) rotate(-45deg);
+}
+
+/* --- Off-canvas Drawer --- */
+.mobile-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: var(--bg);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 80px 2rem 2rem 3.5rem; /* extra left for LineSidebar markers */
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+.mobile-drawer.open {
+  transform: translateX(0);
+}
+
+.drawer-linesidebar {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.drawer-cta {
+  margin-top: 3rem;
+}

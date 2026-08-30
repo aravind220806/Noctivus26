@@ -5,6 +5,7 @@
 
 @import './styles/variables.css';
 @import './styles/base.css';
+@import './styles/primitives.css';
 @import './styles/navbar.css';
 @import './styles/hero.css';
 @import './styles/events.css';

@@ -1,0 +1,71 @@
+/* HudCorners Component Styles */
+
+.hud-corners-container {
+  position: relative;
+}
+
+.hud-corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--accent, var(--cyan));
+  opacity: 0.7;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.hud-corner.tl {
+  top: 8px;
+  left: 8px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.hud-corner.tr {
+  top: 8px;
+  right: 8px;
+  border-left: none;
+  border-bottom: none;
+}
+
+.hud-corner.bl {
+  bottom: 8px;
+  left: 8px;
+  border-right: none;
+  border-top: none;
+}
+
+.hud-corner.br {
+  bottom: 8px;
+  right: 8px;
+  border-left: none;
+  border-top: none;
+}
+
+/* Mobile responsiveness (375px+) */
+@media (max-width: 700px) {
+  .hud-corner {
+    width: 14px;
+    height: 14px;
+  }
+
+  .hud-corner.tl,
+  .hud-corner.tr {
+    top: 6px;
+  }
+
+  .hud-corner.bl,
+  .hud-corner.br {
+    bottom: 6px;
+  }
+
+  .hud-corner.tl,
+  .hud-corner.bl {
+    left: 6px;
+  }
+
+  .hud-corner.tr,
+  .hud-corner.br {
+    right: 6px;
+  }
+}

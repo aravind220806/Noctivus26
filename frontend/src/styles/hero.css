@@ -1,178 +1,152 @@
 /* ═══════════════════════════════════════════════════════════════════════════════
-   HERO SECTION & COUNTDOWN STYLES
+   HERO SECTION STYLES
    ═══════════════════════════════════════════════════════════════════════════════ */
 
-.hero {
+.hero-section {
   position: relative;
-  min-height: 100svh;
+  min-height: 100vh;
   display: flex;
-  align-items: flex-start;   /* flow from top to prevent vertical overflow clipping */
-  overflow: hidden;
-  border-bottom: 1px solid var(--line);
-  isolation: isolate;
+  flex-direction: column;
+  justify-content: center;
+  background: var(--bg);
   color: var(--text);
-  background:
-    radial-gradient(ellipse at 50% 8%, rgba(0, 221, 242, .2), transparent 40%),
-    radial-gradient(circle at 18% 68%, rgba(0, 230, 184, .12), transparent 34%),
-    radial-gradient(circle at 82% 70%, rgba(167, 255, 24, .09), transparent 30%),
-    linear-gradient(180deg, var(--surface) 0%, var(--bg) 74%);
-  border-color: rgba(0, 221, 242, .16);
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 4rem 2rem;
 }
 
-.hero__inner {
-  position: relative;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  padding: var(--sp-12) var(--sp-8);
-  width: var(--page);
-  margin-inline: auto;
-  clip-path: polygon(
-    24px 0,
-    calc(100% - 20px) 0,
-    100% 20px,
-    100% calc(45% - 20px),
-    calc(100% - 12px) 45%,
-    calc(100% - 12px) calc(45% + 24px),
-    100% calc(45% + 44px),
-    100% calc(100% - 24px),
-    calc(100% - 24px) 100%,
-    0 100%,
-    0 24px
-  );
-}
-
-@media (max-width: 700px) {
-  .hero__inner {
-    padding: var(--sp-6) var(--sp-4);
-    clip-path: polygon(
-      14px 0,
-      calc(100% - 12px) 0,
-      100% 12px,
-      100% calc(100% - 14px),
-      calc(100% - 14px) 100%,
-      0 100%,
-      0 14px
-    );
+@media (max-width: 900px) {
+  .hero-section {
+    padding: 60px 1.5rem 2rem;
   }
 }
 
-.hero__eyebrow {
-  margin-bottom: var(--sp-4);
-  color: var(--cyan);
-}
-
-.hero__logo {
-  width: clamp(138px, 16vw, 238px);
-  filter:
-    drop-shadow(0 22px 46px rgba(0, 0, 0, .56))
-    drop-shadow(0 0 34px rgba(0, 221, 242, .22))
-    drop-shadow(0 0 56px rgba(167, 255, 24, .08));
-}
-
-.hero h1 {
-  margin-top: var(--sp-2);
-  max-width: 100%;
-  color: var(--text);
-  font-size: clamp(76px, 12.6vw, 184px);
-  line-height: .85;
-  letter-spacing: -.075em;
-  font-weight: normal;
-  white-space: nowrap;
-  text-shadow: 0 0 28px rgba(0, 221, 242, .16);
-}
-
-.hero h1 span {
-  color: var(--cyan);
-}
-
-.hero__tagline {
-  margin-top: var(--sp-6);
-  color: var(--text);
-  font-size: clamp(24px, 3vw, 42px);
-  line-height: 1.1;
-  letter-spacing: -.035em;
-}
-
-.hero__facts {
-  margin-top: var(--sp-8);
-  padding-block: var(--sp-4);
-  gap: var(--sp-8);
-  display: flex;
-  color: var(--text);
-  border-block-color: rgba(0, 221, 242, .22);
-}
-
-.hero__facts small, .hero__scroll {
-  color: var(--muted);
-}
-
-.hero__actions {
-  margin-top: var(--sp-6);
-  gap: var(--sp-3);
-  display: flex;
-}
-
-.hero__scroll {
-  position: absolute;
-  bottom: var(--sp-6);
-  left: 50%;
-  transform: translateX(-50%);
+/* --- Left Column Visuals --- */
+.hero-visual-panel {
   display: flex;
   align-items: center;
-  gap: 15px;
-  color: var(--muted);
-  font-size: 8px;
-  letter-spacing: .18em;
-}
-
-.hero__scroll span {
-  background: var(--lime);
-  box-shadow: 0 0 18px rgba(167, 255, 24, .75);
-}
-
-/* ── Short viewport safeguard for constrained screen heights ── */
-@media (max-height: 700px) {
-  .hero__facts    { margin-top: var(--sp-6); }   /* 24px */
-  .hero-countdown { margin-top: var(--sp-4); }  /* 16px */
-  .hero__actions  { margin-top: var(--sp-4); }  /* 16px */
-}
-
-/* ── Glitch Countdown ── */
-.hero-countdown {
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
   position: relative;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  padding: var(--sp-6) var(--sp-6) var(--sp-4);
-  margin-top: var(--sp-6);
+}
+
+.hero-logo-img {
+  max-width: 60%;
+  height: auto;
+  filter: drop-shadow(0 0 16px var(--line));
+  z-index: 5;
+  transition: transform 0.3s ease;
+}
+
+.hero-logo-img:hover {
+  transform: scale(1.05);
+}
+
+/* --- Right Column Info --- */
+.hero-info-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: 1rem;
+}
+
+.hero-title {
+  font-family: 'Aldrich', sans-serif;
+  font-weight: 400;
+  font-size: clamp(3rem, 6vw, 5.5rem);
+  line-height: 1.0;
+  color: var(--text);
+  margin: 0 0 1rem 0;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+
+.hero-title span {
+  color: var(--cyan);
+}
+
+.hero-tagline {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: clamp(0.95rem, 1.5vw, 1.25rem);
+  color: var(--text);
+  margin-bottom: 2rem;
+  line-height: 1.5;
+  max-width: 540px;
+}
+
+.hero-meta-grid {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 2.5rem;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 1rem 0;
+}
+
+.hero-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.hero-meta-item label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.hero-meta-item span {
+  font-family: 'Aldrich', sans-serif;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.hero-actions-container {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+/* --- Countdown Overlay --- */
+.hero-countdown-wrap {
+  margin-top: 1.5rem;
   width: fit-content;
 }
 
-/* HUD corner brackets */
-.hero-countdown::before, .hero-countdown::after,
-.hero-countdown__bl, .hero-countdown__br {
-  content: '';
-  position: absolute;
-  width: 18px; height: 18px;
-  border-color: var(--cyan);
-  opacity: .8;
+/* Existing Countdown Overrides */
+.hero-countdown {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: 1.5rem;
+  display: inline-block;
 }
-.hero-countdown::before { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; }
-.hero-countdown::after { top: -1px; right: -1px; border-top: 2px solid; border-right: 2px solid; }
-.hero-countdown__bl { position: absolute; bottom: -1px; left: -1px; border-bottom: 2px solid; border-left: 2px solid; }
-.hero-countdown__br { position: absolute; bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; }
 
 .hero-countdown__units {
   display: flex;
-  justify-content: center;
-  gap: var(--sp-6); /* 24px */
-  flex-wrap: wrap;
+  gap: 1.5rem;
 }
 
 .hero-countdown__unit {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--sp-2); /* 8px */
+  gap: 0.5rem;
 }
 
 .digits {
@@ -182,10 +156,10 @@
 
 .digit-cell {
   position: relative;
-  width: 44px;
-  height: 60px;
-  background: var(--surface);
-  border: 1px solid rgba(0, 221, 242, 0.12);
+  width: 36px;
+  height: 50px;
+  background: var(--bg);
+  border: 1px solid var(--line);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -196,10 +170,9 @@
 .digit-cell .ghost-cyan,
 .digit-cell .ghost-lime {
   position: absolute;
-  font-family: var(--mono-font), monospace;
-  font-weight: 600;
-  font-size: 34px;
-  font-variant-numeric: tabular-nums;
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 500;
+  font-size: 26px;
 }
 
 .digit-cell .real {
@@ -209,44 +182,40 @@
 
 .digit-cell .ghost-cyan {
   color: var(--cyan);
-  opacity: .55;
+  opacity: 0.55;
   z-index: 1;
-  transform: translate(-2px, 0);
+  transform: translate(-1px, 0);
   mix-blend-mode: screen;
 }
 
 .digit-cell .ghost-lime {
   color: var(--lime);
-  opacity: .45;
+  opacity: 0.45;
   z-index: 2;
-  transform: translate(2px, 0);
+  transform: translate(1px, 0);
   mix-blend-mode: screen;
 }
 
-/* Glitch scrambler keyframes and animations */
-.digit-cell.glitching .real { animation: glitch-jitter .09s steps(2) 4; }
-.digit-cell.glitching .ghost-cyan { animation: glitch-jitter-c .09s steps(2) 4; }
-.digit-cell.glitching .ghost-lime { animation: glitch-jitter-l .09s steps(2) 4; }
-
-@keyframes glitch-jitter {
-  0% { transform: translate(0,0); }
-  50% { transform: translate(1px,-1px); }
-  100% { transform: translate(0,0); }
-}
-@keyframes glitch-jitter-c {
-  0% { transform: translate(-2px,0); }
-  50% { transform: translate(-4px,1px); }
-  100% { transform: translate(-2px,0); }
-}
-@keyframes glitch-jitter-l {
-  0% { transform: translate(2px,0); }
-  50% { transform: translate(4px,-1px); }
-  100% { transform: translate(2px,0); }
-}
-
 .hero-countdown__unit small {
-  font-size: 9px;
-  letter-spacing: .18em;
-  text-transform: uppercase;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.15em;
   color: var(--muted);
+  text-transform: uppercase;
 }
+
+/* Brackets decoration */
+.hero-countdown::before, .hero-countdown::after,
+.hero-countdown__bl, .hero-countdown__br {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: var(--cyan);
+  opacity: 0.7;
+}
+
+.hero-countdown::before { top: -1px; left: -1px; border-top: 1px solid; border-left: 1px solid; }
+.hero-countdown::after { top: -1px; right: -1px; border-top: 1px solid; border-right: 1px solid; }
+.hero-countdown__bl { bottom: -1px; left: -1px; border-bottom: 1px solid; border-left: 1px solid; }
+.hero-countdown__br { bottom: -1px; right: -1px; border-bottom: 1px solid; border-right: 1px solid; }

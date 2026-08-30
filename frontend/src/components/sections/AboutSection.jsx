@@ -1,58 +1,66 @@
-import { SectionTitle } from './SectionTitle';
-import { StatsSection } from './StatsSection';
+import React from 'react';
+import { HeadingBar } from '../ui/HeadingBar/HeadingBar';
+import { TickDivider } from '../ui/TickDivider/TickDivider';
+import { HudCorners } from '../ui/HudCorners/HudCorners';
 
 export function AboutSection() {
+  const stats = [
+    { value: '08', label: 'Events' },
+    { value: '05', label: 'Technical events' },
+    { value: '03', label: 'Non-technical events' },
+    { value: '26 Sep', label: 'Event date' },
+  ];
+
   return (
-    <section className="section about" id="about">
-      <div className="page-width">
-        <SectionTitle
-          kicker="ABOUT NOCTIVUS"
-          title={
-            <>
-              A student-built symposium
-              <br />
-              <span className="muted-title">hosted by Velammal Engineering College.</span>
-            </>
-          }
-        />
-        <div className="about-grid">
-          <div className="about-copy" data-reveal>
-            <p className="lead">
-              Noctivus is the annual national-level symposium of the Department of CSE (Cyber Security), Velammal Engineering College.
-            </p>
-            <p>
-              The event brings together technical contests, non-technical challenges, workshops, and campus-wide coordination for students who want to test ideas, sharpen instincts, and compete with purpose.
-            </p>
-            <p>
-              Velammal Engineering College, Chennai, hosts Noctivus as a focused student platform for cyber security, computing, collaboration, and practical learning.
-            </p>
-          </div>
-          <div className="about-manifesto" data-reveal>
-            <span>HOST COLLEGE</span>
-            <strong>Velammal Engineering College</strong>
-            <strong>Department of CSE (Cyber Security)</strong>
-            <strong>Chennai, Tamil Nadu</strong>
-          </div>
+    <section className="about-section" id="about">
+      <div className="about-container">
+        
+        {/* LEFT COLUMN: Heading, Manifesto, Showcase Image */}
+        <div className="about-left">
+          <HeadingBar level="h2" text="ABOUT NOCTIVUS" />
+          
+          <p className="about-manifesto-text">
+            A student-built symposium hosted by Velammal Engineering College. Noctivus is the annual national-level symposium of the Department of CSE (Cyber Security).
+          </p>
+
+          <p className="about-desc-text">
+            The event brings together technical contests, non-technical challenges, workshops, and campus-wide coordination for students who want to test ideas, sharpen instincts, and compete with purpose. Velammal Engineering College, Chennai, hosts Noctivus as a focused student platform for cyber security, computing, collaboration, and practical learning.
+          </p>
         </div>
-        <figure className="about-showcase" data-reveal>
-          <span className="hud-corner hud-corner--tl" aria-hidden="true" />
-          <span className="hud-corner hud-corner--tr" aria-hidden="true" />
-          <span className="hud-corner hud-corner--bl" aria-hidden="true" />
-          <span className="hud-corner hud-corner--br" aria-hidden="true" />
-          <div className="about-showcase__image">
-            <img src="/images/noctivus-students.webp" alt="Students gathered at Noctivus" width="1400" height="1050" loading="lazy" decoding="async" />
+
+        {/* RIGHT COLUMN: Host College Details & Statistics */}
+        <div className="about-right">
+          
+          {/* Host Info Box wrapped in HudCorners */}
+          <HudCorners accent="cyan">
+            <div className="about-host-box panel scanlines">
+              <h3 className="about-host-title">HOST COLLEGE</h3>
+              <p className="about-host-item">Velammal Engineering College</p>
+              <p className="about-host-item" style={{ color: 'var(--muted)', fontSize: '0.95rem' }}>
+                Department of CSE (Cyber Security)
+              </p>
+              <p className="about-host-item" style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>
+                Chennai, Tamil Nadu
+              </p>
+            </div>
+          </HudCorners>
+
+          {/* Statistics Grid/List */}
+          <div>
+            <h3 className="about-host-title" style={{ marginBottom: '1.5rem' }}>SYMPOSIUM STATS</h3>
+            
+            <div className="about-stats-list">
+              {stats.map((stat, idx) => (
+                <div key={idx} className="about-stat-row">
+                  <div className="about-stat-num">{stat.value}</div>
+                  <div className="about-stat-label">{stat.label}</div>
+                </div>
+              ))}
+            </div>
           </div>
-          <figcaption>
-            <span className="kicker">THE NOCTIVUS EXPERIENCE</span>
-            <strong>
-              Built by students.
-              <br />
-              Driven by curiosity.
-            </strong>
-            <p>A day shaped by collaboration, competition, and the people bold enough to show up and take part.</p>
-          </figcaption>
-        </figure>
-        <StatsSection />
+
+        </div>
+
       </div>
     </section>
   );

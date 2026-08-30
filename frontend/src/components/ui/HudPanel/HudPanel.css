@@ -1,0 +1,63 @@
+/* HudPanel Component Styles */
+
+.hud-panel {
+  clip-path: polygon(
+    0px 25px, 26px 0px, calc(60% - 25px) 0px, 60% 25px, 100% 25px,
+    100% calc(100% - 10px), calc(100% - 15px) calc(100% - 10px),
+    calc(80% - 10px) calc(100% - 10px), calc(80% - 15px) 100%,
+    10px 100%, 0% calc(100% - 10px)
+  );
+  background: var(--surface);
+  border: 1px solid var(--accent, var(--cyan));
+  box-shadow: 0 0 16px -4px var(--accent, var(--cyan)), inset 0 0 24px -12px var(--accent, var(--cyan));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.hud-panel.panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.035;
+  pointer-events: none;
+  z-index: 1;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 150px 150px;
+}
+
+.hud-panel.scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent, transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px, rgba(0, 0, 0, 0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+.hud-label {
+  font-family: 'Aldrich', sans-serif;
+  font-weight: 400;
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 0.15em;
+  position: relative;
+  z-index: 5;
+}
+
+/* Mobile responsiveness (375px+) */
+@media (max-width: 700px) {
+  .hud-panel {
+    clip-path: polygon(
+      0px 20px, 20px 0px, calc(70% - 15px) 0px, 70% 20px, 100% 20px,
+      100% calc(100% - 8px), calc(100% - 12px) calc(100% - 8px),
+      calc(75% - 8px) calc(100% - 8px), calc(75% - 12px) 100%,
+      8px 100%, 0% calc(100% - 8px)
+    );
+  }
+}

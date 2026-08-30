@@ -1,0 +1,92 @@
+/* ─── LineSidebar — React Bits integration, Noctivus palette ─── */
+
+.line-sidebar {
+  --accent-color:  #00C8E0;
+  --text-color:    #E8EDE8;
+  --marker-color:  rgba(232,237,232,0.22);
+  --marker-length: 48px;
+  --marker-gap:    0px;
+  --tick-scale:    0.5;
+  --max-shift:     20px;
+  --item-gap:      28px;
+  --font-size:     0.85rem;
+  --smoothing:     100ms;
+
+  position: relative;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.line-sidebar--markers {
+  padding-left: calc(var(--marker-length) + var(--marker-gap));
+}
+
+.line-sidebar__list {
+  list-style: none;
+  margin:  0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--item-gap);
+}
+
+.line-sidebar__item {
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Widen hit area */
+.line-sidebar__item::before {
+  content: '';
+  position: absolute;
+  inset: -6px -24px;
+}
+
+.line-sidebar__label {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: var(--font-size);
+  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  color: color-mix(in srgb, var(--accent-color) calc(var(--effect, 0) * 100%), var(--text-color));
+  transform: translateX(calc(var(--effect, 0) * var(--max-shift)));
+}
+
+.line-sidebar__index {
+  font-size: 0.75em;
+  opacity: calc(0.45 + var(--effect, 0) * 0.55);
+}
+
+.line-sidebar__marker {
+  position: absolute;
+  top: 50%;
+  left: calc(-1 * var(--marker-length) - var(--marker-gap));
+  height: 1px;
+  width: var(--marker-length);
+  background-color: color-mix(in srgb, var(--accent-color) calc(var(--effect, 0) * 100%), var(--marker-color));
+  transform-origin: left center;
+  transform: translateY(-50%) scaleX(calc(0.6 + var(--effect, 0) * 0.5));
+}
+
+/* In-between ticks */
+.line-sidebar--markers .line-sidebar__item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: calc(100% + var(--item-gap) / 2);
+  left: calc(-1 * var(--marker-length) - var(--marker-gap));
+  height: 1px;
+  width: calc(var(--marker-length) * var(--tick-scale));
+  background-color: var(--marker-color);
+  opacity: 0.4;
+  transform: translateY(-50%);
+}
+
+.line-sidebar--scale-tick .line-sidebar__item:not(:last-child)::after {
+  transform-origin: left center;
+  transform: translateY(-50%) scaleX(calc(0.6 + var(--effect, 0) * 0.6));
+}

@@ -1,31 +1,68 @@
-import Icon from '../Icon.jsx';
+import React from 'react';
 import SplitFlapCountdown from '../effects/SplitFlapCountdown.jsx';
 import { site } from '../../data/site.js';
+import { AsymSection } from '../ui/AsymSection/AsymSection';
+import { NotchedButton } from '../ui/NotchedButton/NotchedButton';
 
 export function HeroSection({ onRegister }) {
   return (
-    <section className="hero" id="top">
-      <div className="page-width hero__inner">
-        <span className="hud-corner hud-corner--tl" aria-hidden="true" />
-        <span className="hud-corner hud-corner--tr" aria-hidden="true" />
-        <span className="hud-corner hud-corner--bl" aria-hidden="true" />
-        <span className="hud-corner hud-corner--br" aria-hidden="true" />
-        <div className="hero__main">
-          <span className="hero__eyebrow">{site.eyebrow}</span>
-          <img className="hero__logo" src="/brand/noctivus-emblem.webp" alt="Noctivus emblem" width="480" height="534" fetchPriority="high" />
-          <h1>NOCTIVUS <span>'26</span></h1>
-          <div className="hero__facts" aria-label="Event information">
-            <span><small>WHEN</small>{site.date}</span>
-            <span><small>WHERE</small>Velammal Engineering College · Chennai</span>
+    <section className="hero-section" id="home">
+      <AsymSection
+        leftContent={
+          <div className="hero-visual-panel">
+            <img 
+              className="hero-logo-img" 
+              src="/logo.png" 
+              alt="Noctivus Dragon Emblem" 
+              width="480" 
+              height="534" 
+              fetchPriority="high" 
+            />
           </div>
-          <SplitFlapCountdown target={site.eventStart} />
-          <div className="hero__actions">
-            <a className="button button-primary button-large" href="#events">Explore events <Icon name="arrow" /></a>
-            <button className="button button-ghost button-large" type="button" onClick={onRegister}>Register now</button>
+        }
+        rightContent={
+          <div className="hero-info-wrapper">
+            <span className="hero-eyebrow">{site.eyebrow}</span>
+            <h1 className="hero-title">
+              NOCTIVUS <span>'26</span>
+            </h1>
+            <p className="hero-tagline">
+              National-level technical symposium organized by the Department of CSE (Cyber Security) at Velammal Engineering College.
+            </p>
+
+            <div className="hero-meta-grid">
+              <div className="hero-meta-item">
+                <label>WHEN</label>
+                <span>{site.date}</span>
+              </div>
+              <div className="hero-meta-item">
+                <label>WHERE</label>
+                <span>Velammal Engineering College</span>
+              </div>
+            </div>
+
+            <div className="hero-countdown-wrap">
+              <SplitFlapCountdown target={site.eventStart} />
+            </div>
+
+            <div className="hero-actions-container">
+              <NotchedButton 
+                variant="primary" 
+                onClick={onRegister}
+              >
+                REGISTER NOW
+              </NotchedButton>
+              <NotchedButton 
+                variant="ghost" 
+                as="a" 
+                href="#events"
+              >
+                EXPLORE EVENTS
+              </NotchedButton>
+            </div>
           </div>
-        </div>
-      </div>
-      <a className="hero__scroll" href="#about"><span /> Discover Noctivus</a>
+        }
+      />
     </section>
   );
 }

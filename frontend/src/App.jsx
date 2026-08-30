@@ -2,25 +2,22 @@ import { Component, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { events } from './data/site.js';
 import RegistrationModal from './components/RegistrationModal.jsx';
-import Navbar from './components/Navbar.jsx';
+import Sidebar from './components/navigation/Sidebar.jsx';
+import MobileDrawer from './components/navigation/MobileDrawer.jsx';
+import { HeroSection } from './components/sections/HeroSection.jsx';
+import { AboutSection } from './components/sections/AboutSection.jsx';
+import { EventsSection } from './components/sections/EventsSection.jsx';
+import { EventModal } from './components/sections/EventModal.jsx';
 import useReveal from './hooks/useReveal.js';
 import { getApiBase } from './lib/api';
-import { HeroSection } from './components/sections/HeroSection';
-import { AboutSection } from './components/sections/AboutSection';
-import { EventsSection } from './components/sections/EventsSection';
-import { TimelineSection } from './components/sections/TimelineSection';
-import { BrochureSection } from './components/sections/BrochureSection';
-import { CrewSection } from './components/sections/CrewSection';
-import { ContactSection } from './components/sections/ContactSection';
-import { SocialMediaSection } from './components/sections/SocialMediaSection';
-import { LocationMapSection } from './components/sections/LocationMapSection';
-import { FooterSection } from './components/sections/FooterSection';
-import { EventModal } from './components/sections/EventModal';
+
+const sectionsList = ['home', 'about', 'events', 'schedule', 'coordinators', 'footer'];
 
 export default function App() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [registration, setRegistration] = useState(null);
   const [registrationOpen, setRegistrationOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('home');
   const scrollProgressRef = useRef(null);
   const registerableEvents = useMemo(() => events.filter((event) => event.registerable !== false), []);
   useReveal();
@@ -56,6 +53,39 @@ export default function App() {
     };
   }, []);
 
+  // Scrollspy logic
+  useEffect(() => {
+    const observers = [];
+    sectionsList.forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setActiveSection(id);
+          }
+        },
+        {
+          rootMargin: '-30% 0px -60% 0px',
+        }
+      );
+      observer.observe(el);
+      observers.push(observer);
+    });
+
+    return () => {
+      observers.forEach((o) => o.disconnect());
+    };
+  }, []);
+
+  const navigateToSection = (id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   const openRegistration = (eventId = null) => {
     setSelectedEvent(null);
     setRegistration(eventId || 'open');
@@ -63,28 +93,39 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <a className="skip-link" href="#main">
-        Skip to content
-      </a>
       <div className="scroll-progress" ref={scrollProgressRef} aria-hidden="true" />
-      <Navbar />
+      
+      <Sidebar 
+        activeSection={activeSection} 
+        onNavigate={navigateToSection} 
+        onRegister={() => openRegistration()} 
+      />
+      <MobileDrawer 
+        activeSection={activeSection} 
+        onNavigate={navigateToSection} 
+        onRegister={() => openRegistration()} 
+      />
 
-      <main id="main">
+      <main className="main-container" id="main">
         <HeroSection onRegister={() => openRegistration()} />
         <AboutSection />
         <EventsSection onSelect={setSelectedEvent} />
-        <TimelineSection />
-        <BrochureSection />
-        <CrewSection />
-        <ContactSection onRegister={() => openRegistration()} />
-        <SocialMediaSection />
-        <LocationMapSection />
+        
+        <section id="schedule" className="shell-section">
+          <h1 className="shell-section-title">SCHEDULE</h1>
+        </section>
+        <section id="coordinators" className="shell-section">
+          <h1 className="shell-section-title">COORDINATORS</h1>
+        </section>
+        <section id="footer" className="shell-section">
+          <h1 className="shell-section-title">FOOTER</h1>
+        </section>
       </main>
-      <FooterSection />
 
       <AnimatePresence>
         {selectedEvent && <EventModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />}
       </AnimatePresence>
+
       {registration && (
         <RegistrationModal
           events={registerableEvents}

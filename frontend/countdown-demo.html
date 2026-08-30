@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Countdown treatment — NOCTIVUS '26</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Aldrich&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #050607; --surface: #0A0F0F; --line: rgba(0,221,242,.16);
+    --cyan: #00DDF2; --teal: #00E6B8; --lime: #A7FF18;
+    --text: #EAF6F5; --muted: #7E9096;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: 'IBM Plex Mono', monospace; padding: 40px 20px 80px;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .wrap { max-width: 720px; width: 100%; }
+  .eyebrow { color: var(--cyan); font-size: 11px; letter-spacing: .18em; text-transform: uppercase; text-align: center; }
+  h1 { font-family: 'Aldrich', sans-serif; font-weight: normal; font-size: 22px; text-align: center; margin: 8px 0 4px; letter-spacing: .03em; }
+  .note { color: var(--muted); font-size: 12.5px; text-align: center; max-width: 480px; margin: 0 auto 40px; line-height: 1.6; }
+
+  .countdown-block {
+    position: relative;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    padding: 32px 24px 20px;
+    margin-bottom: 48px;
+  }
+  .countdown-block::before, .countdown-block::after,
+  .countdown-block .bl, .countdown-block .br {
+    content: '';
+    position: absolute;
+    width: 18px; height: 18px;
+    border-color: var(--cyan);
+    opacity: .8;
+  }
+  .countdown-block::before { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; }
+  .countdown-block::after { top: -1px; right: -1px; border-top: 2px solid; border-right: 2px solid; }
+  .countdown-block .bl { bottom: -1px; left: -1px; border-bottom: 2px solid; border-left: 2px solid; }
+  .countdown-block .br { bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; }
+
+  .units { display: flex; justify-content: center; gap: 28px; flex-wrap: wrap; }
+  .unit { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .digits { display: flex; gap: 4px; }
+
+  .digit-cell {
+    position: relative;
+    width: 44px; height: 60px;
+    background: #0d1414;
+    border: 1px solid rgba(255,255,255,.08);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .digit-cell .real, .digit-cell .ghost-cyan, .digit-cell .ghost-lime {
+    position: absolute;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-size: 34px;
+    font-variant-numeric: tabular-nums;
+  }
+  .digit-cell .real { color: var(--text); z-index: 3; }
+  .digit-cell .ghost-cyan { color: var(--cyan); opacity: .55; z-index: 1; transform: translate(-2px, 0); mix-blend-mode: screen; }
+  .digit-cell .ghost-lime { color: var(--lime); opacity: .45; z-index: 2; transform: translate(2px, 0); mix-blend-mode: screen; }
+
+  .digit-cell.glitching .real { animation: glitch-jitter .09s steps(2) 4; }
+  .digit-cell.glitching .ghost-cyan { animation: glitch-jitter-c .09s steps(2) 4; }
+  .digit-cell.glitching .ghost-lime { animation: glitch-jitter-l .09s steps(2) 4; }
+
+  @keyframes glitch-jitter {
+    0% { transform: translate(0,0); }
+    50% { transform: translate(1px,-1px); }
+    100% { transform: translate(0,0); }
+  }
+  @keyframes glitch-jitter-c {
+    0% { transform: translate(-2px,0); }
+    50% { transform: translate(-4px,1px); }
+    100% { transform: translate(-2px,0); }
+  }
+  @keyframes glitch-jitter-l {
+    0% { transform: translate(2px,0); }
+    50% { transform: translate(4px,-1px); }
+    100% { transform: translate(2px,0); }
+  }
+
+  .unit small {
+    font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted);
+  }
+
+  .controls {
+    display: flex; justify-content: center; gap: 12px; margin-bottom: 8px;
+  }
+  .controls button {
+    background: var(--surface); border: 1px solid var(--line); color: var(--text);
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .06em;
+    padding: 8px 16px; cursor: pointer; text-transform: uppercase;
+  }
+  .controls button:hover { border-color: var(--cyan); color: var(--cyan); }
+
+  .compare {
+    margin-top: 56px; border-top: 1px solid var(--line); padding-top: 32px;
+  }
+  .compare h2 { font-family: 'Aldrich', sans-serif; font-weight: normal; font-size: 16px; margin: 0 0 6px; }
+  .compare p { color: var(--muted); font-size: 12.5px; line-height: 1.6; max-width: 560px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Reference-inspired treatment</div>
+  <h1>Countdown to NOCTIVUS '26</h1>
+  <p class="note">Digits are IBM Plex Mono (kept blocky/monospace rather than switched to Aldrich — the countdown needs a squared-off digital-readout feel Aldrich's letterforms don't have). On change, each digit briefly scrambles before landing on the real value, with a palette-safe chromatic-aberration ghost behind it (cyan + lime offset layers instead of literal red/blue).</p>
+
+  <div class="controls">
+    <button id="triggerBtn">Trigger digit change</button>
+    <button id="autoBtn">Toggle auto-tick</button>
+  </div>
+
+  <div class="countdown-block">
+    <span class="bl"></span><span class="br"></span>
+    <div class="units">
+      <div class="unit">
+        <div class="digits" id="days"></div>
+        <small>Days</small>
+      </div>
+      <div class="unit">
+        <div class="digits" id="hours"></div>
+        <small>Hours</small>
+      </div>
+      <div class="unit">
+        <div class="digits" id="mins"></div>
+        <small>Minutes</small>
+      </div>
+      <div class="unit">
+        <div class="digits" id="secs"></div>
+        <small>Seconds</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="compare">
+    <h2>What's happening</h2>
+    <p>Click "Trigger digit change" to see one glitch-decode cycle on the seconds digits — a few rapid random-digit flickers (~90ms, 4 steps) before settling on the real value, echoing the Breach Protocol / quickhack decrypt feel rather than a smooth flip-clock transition. "Toggle auto-tick" runs it continuously like a live countdown would.</p>
+  </div>
+</div>
+
+<script>
+const days = document.getElementById('days');
+const hours = document.getElementById('hours');
+const mins = document.getElementById('mins');
+const secs = document.getElementById('secs');
+
+function makeCell(container, value) {
+  const cell = document.createElement('div');
+  cell.className = 'digit-cell';
+  cell.innerHTML = `
+    <span class="ghost-cyan">${value}</span>
+    <span class="ghost-lime">${value}</span>
+    <span class="real">${value}</span>
+  `;
+  container.appendChild(cell);
+  return cell;
+}
+
+const state = { d: 26, h: 9, m: 51, s: 38 };
+
+function pad(n) { return String(n).padStart(2, '0'); }
+
+function buildAll() {
+  [days, hours, mins, secs].forEach(el => el.innerHTML = '');
+  const dStr = pad(state.d), hStr = pad(state.h), mStr = pad(state.m), sStr = pad(state.s);
+  dStr.split('').forEach(c => makeCell(days, c));
+  hStr.split('').forEach(c => makeCell(hours, c));
+  mStr.split('').forEach(c => makeCell(mins, c));
+  sStr.split('').forEach(c => makeCell(secs, c));
+}
+
+buildAll();
+
+function glitchDigit(cell, finalValue) {
+  cell.classList.add('glitching');
+  const real = cell.querySelector('.real');
+  const gc = cell.querySelector('.ghost-cyan');
+  const gl = cell.querySelector('.ghost-lime');
+  let ticks = 0;
+  const iv = setInterval(() => {
+    if (ticks < 3) {
+      const r = Math.floor(Math.random() * 10);
+      real.textContent = r;
+      gc.textContent = r;
+      gl.textContent = r;
+      ticks++;
+    } else {
+      real.textContent = finalValue;
+      gc.textContent = finalValue;
+      gl.textContent = finalValue;
+      clearInterval(iv);
+      setTimeout(() => cell.classList.remove('glitching'), 100);
+    }
+  }, 45);
+}
+
+function tick() {
+  state.s--;
+  if (state.s < 0) { state.s = 59; state.m--; }
+  if (state.m < 0) { state.m = 59; state.h--; }
+  if (state.h < 0) { state.h = 23; state.d--; }
+  if (state.d < 0) { state.d = 0; }
+
+  const sStr = pad(state.s);
+  const secCells = secs.querySelectorAll('.digit-cell');
+  secCells.forEach((cell, i) => glitchDigit(cell, sStr[i]));
+}
+
+document.getElementById('triggerBtn').addEventListener('click', tick);
+
+let autoTimer = null;
+document.getElementById('autoBtn').addEventListener('click', (e) => {
+  if (autoTimer) {
+    clearInterval(autoTimer);
+    autoTimer = null;
+    e.target.textContent = 'Toggle auto-tick';
+  } else {
+    autoTimer = setInterval(tick, 1200);
+    e.target.textContent = 'Stop auto-tick';
+  }
+});
+</script>
+</body>
+</html>

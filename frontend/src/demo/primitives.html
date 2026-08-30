@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NOCTIVUS UI Primitives Demo</title>
+  <style>
+    @font-face {
+      font-family: 'Aldrich';
+      src: url('/fonts/Aldrich/Aldrich-Regular.ttf') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      --bg: #060504;
+      --surface: #0C0A09;
+      --text: #E8EDE8;
+      --muted: #506058;
+      --line: rgba(0, 210, 230, 0.12);
+      --cyan: #00C8E0;
+      --teal: #00D4A8;
+      --lime: #A7FF18;
+      --error: #FF786A;
+      color-scheme: dark;
+      font-family: 'IBM Plex Mono', monospace;
+      font-optical-sizing: auto;
+      font-synthesis: none;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    .viewport-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      padding: 2rem;
+      background: var(--bg);
+    }
+
+    .viewport {
+      border: 2px solid var(--line);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .viewport-label {
+      background: var(--surface);
+      padding: 0.5rem 1rem;
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .viewport-content {
+      flex: 1;
+      overflow: auto;
+      padding: 1.5rem;
+    }
+
+    .mobile-vp {
+      width: 375px;
+    }
+
+    .desktop-vp {
+      width: 1440px;
+    }
+
+    .demo-section {
+      margin-bottom: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .demo-title {
+      font-family: 'Aldrich', sans-serif;
+      font-weight: 400;
+      font-size: 0.9rem;
+      color: var(--cyan);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 0.5rem;
+    }
+
+    /* ─── HudPanel ─── */
+    .hud-panel {
+      clip-path: polygon(
+        0px 25px, 26px 0px, calc(60% - 25px) 0px, 60% 25px, 100% 25px,
+        100% calc(100% - 10px), calc(100% - 15px) calc(100% - 10px),
+        calc(80% - 10px) calc(100% - 10px), calc(80% - 15px) 100%,
+        10px 100%, 0% calc(100% - 10px)
+      );
+      background: var(--surface);
+      border: 1px solid var(--accent, var(--cyan));
+      box-shadow: 0 0 16px -4px var(--accent, var(--cyan)), inset 0 0 24px -12px var(--accent, var(--cyan));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 2rem;
+      min-height: 100px;
+      text-align: center;
+    }
+
+    .hud-label {
+      font-family: 'Aldrich', sans-serif;
+      font-weight: 400;
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.15em;
+      position: absolute;
+      top: -20px;
+    }
+
+    /* ─── HudCorners ─── */
+    .hud-corners-container {
+      position: relative;
+      border: 1px solid var(--line);
+      padding: 2rem;
+      min-height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface);
+    }
+
+    .hud-corner {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border: 1px solid var(--accent, var(--cyan));
+      opacity: 0.7;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .hud-corner.tl {
+      top: 8px;
+      left: 8px;
+      border-right: none;
+      border-bottom: none;
+    }
+
+    .hud-corner.tr {
+      top: 8px;
+      right: 8px;
+      border-left: none;
+      border-bottom: none;
+    }
+
+    .hud-corner.bl {
+      bottom: 8px;
+      left: 8px;
+      border-right: none;
+      border-top: none;
+    }
+
+    .hud-corner.br {
+      bottom: 8px;
+      right: 8px;
+      border-left: none;
+      border-top: none;
+    }
+
+    /* ─── NotchedButton ─── */
+    .notched-button {
+      clip-path: polygon(0% 0%, calc(100% - 20px) 0%, 100% 20px, 100% 100%, 20px 100%, 0% calc(100% - 20px));
+      font-family: 'Aldrich', sans-serif;
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 1rem 2rem;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      transition: all 0.2s;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    .btn-primary {
+      background: var(--accent, var(--cyan));
+      color: var(--bg);
+    }
+
+    .btn-primary:hover {
+      animation: btn-glitch 0.3s linear infinite;
+      outline: none;
+    }
+
+    @keyframes btn-glitch {
+      0%, 58% {
+        transform: skew(0deg) translateX(0);
+      }
+      60%, 68% {
+        transform: skew(7deg) translateX(-2px);
+      }
+      70%, 100% {
+        transform: skew(0deg) translateX(0);
+      }
+    }
+
+    .btn-ghost-wrapper {
+      display: inline-flex;
+      clip-path: polygon(0% 0%, calc(100% - 20px) 0%, 100% 20px, 100% 100%, 20px 100%, 0% calc(100% - 20px));
+      background: var(--accent, var(--cyan));
+      padding: 1px;
+    }
+
+    .btn-ghost {
+      clip-path: polygon(0% 0%, calc(100% - 20px) 0%, 100% 20px, 100% 100%, 20px 100%, 0% calc(100% - 20px));
+      background: var(--surface);
+      color: var(--accent, var(--cyan));
+      display: block;
+      font-family: 'Aldrich', sans-serif;
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 1rem 2rem;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      text-align: center;
+      transition: all 0.2s;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    .btn-ghost:hover {
+      background: var(--accent, var(--cyan));
+      color: var(--bg);
+      box-shadow: 0 0 24px var(--accent, var(--cyan));
+    }
+
+    /* ─── HeadingBar ─── */
+    .heading-container {
+      margin-bottom: 1.5rem;
+    }
+
+    .heading-container h1,
+    .heading-container h2,
+    .heading-container h3 {
+      font-family: 'Aldrich', sans-serif;
+      font-weight: 400;
+      margin: 0;
+      color: var(--text);
+    }
+
+    .heading-container h1 {
+      font-size: 2rem;
+    }
+
+    .heading-container h2 {
+      font-size: 1.5rem;
+    }
+
+    .heading-container h3 {
+      font-size: 1.25rem;
+    }
+
+    .heading-cursor {
+      display: inline-block;
+      color: var(--cyan);
+      animation: cursor-blink 1s step-end infinite;
+    }
+
+    @keyframes cursor-blink {
+      50% {
+        opacity: 0;
+      }
+    }
+
+    .h-bar {
+      height: 10px;
+      margin-top: 4px;
+    }
+
+    .h-bar.h1-bar {
+      background: var(--cyan);
+      clip-path: polygon(0px 0px, 85px 0px, 90px 5px, 100% 5px, 100% 6px, 85px 6px, 80px 10px, 0px 10px);
+    }
+
+    .h-bar.h2-bar {
+      background: var(--teal);
+      clip-path: polygon(
+        0px 5px, 35px 5px, 40px 0px, 85px 0px, 90px 5px, 100% 5px, 100% 6px,
+        85px 6px, 80px 10px, 20px 10px, 15px 6px, 0px 6px
+      );
+    }
+
+    .h-bar.h3-bar {
+      background: var(--muted);
+      clip-path: polygon(
+        0px 5px, 10px 5px, 15px 0px, 40px 0px, 45px 5px, 100% 5px, 100% 6px,
+        31px 6px, 27px 2px, 15px 2px, 8px 10px, 0px 10px
+      );
+    }
+
+    /* ─── TickDivider ─── */
+    .tick-divider {
+      width: 100%;
+      height: 12px;
+      border-bottom: 1px solid var(--line);
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='12'%3E%3Crect x='0' y='0' width='1' height='12' fill='%2300C8E0' opacity='0.6'/%3E%3Crect x='30' y='6' width='1' height='6' fill='%23506058'/%3E%3Crect x='60' y='6' width='1' height='6' fill='%23506058'/%3E%3Crect x='90' y='6' width='1' height='6' fill='%23506058'/%3E%3C/svg%3E") left bottom repeat-x;
+    }
+
+    /* ─── AsymSection ─── */
+    .asym-section {
+      display: flex;
+      width: 100%;
+      min-height: 300px;
+      gap: 1rem;
+    }
+
+    .asym-left {
+      width: 70%;
+      background: var(--surface);
+      clip-path: polygon(
+        0 0, 100% 0, 100% 28%, calc(100% - 40px) 42%,
+        100% 54%, calc(100% - 25px) 68%, 100% 82%, 100% 100%, 0 100%
+      );
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .asym-right {
+      width: 30%;
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding-left: 2rem;
+    }
+
+    @media (max-width: 700px) {
+      .asym-section {
+        flex-direction: column;
+      }
+
+      .asym-left {
+        width: 100%;
+        min-height: 200px;
+        clip-path: polygon(0 0, 100% 0, 100% calc(100% - 25px), calc(100% - 25px) 100%, 0 100%);
+      }
+
+      .asym-right {
+        width: 100%;
+        padding-left: 0;
+        padding-top: 1.5rem;
+      }
+
+      .hud-panel {
+        clip-path: polygon(
+          0px 20px, 20px 0px, calc(70% - 15px) 0px, 70% 20px, 100% 20px,
+          100% calc(100% - 8px), calc(100% - 12px) calc(100% - 8px),
+          calc(75% - 8px) calc(100% - 8px), calc(75% - 12px) 100%,
+          8px 100%, 0% calc(100% - 8px)
+        );
+      }
+
+      .notched-button {
+        clip-path: polygon(0% 0%, calc(100% - 16px) 0%, 100% 16px, 100% 100%, 16px 100%, 0% calc(100% - 16px));
+        padding: 0.75rem 1.5rem;
+        font-size: 0.85rem;
+      }
+
+      .btn-ghost-wrapper {
+        clip-path: polygon(0% 0%, calc(100% - 16px) 0%, 100% 16px, 100% 100%, 16px 100%, 0% calc(100% - 16px));
+      }
+
+      .btn-ghost {
+        clip-path: polygon(0% 0%, calc(100% - 16px) 0%, 100% 16px, 100% 100%, 16px 100%, 0% calc(100% - 16px));
+        padding: 0.75rem 1.5rem;
+        font-size: 0.85rem;
+      }
+
+      .hud-corner {
+        width: 14px;
+        height: 14px;
+      }
+
+      .hud-corner.tl,
+      .hud-corner.tr {
+        top: 6px;
+      }
+
+      .hud-corner.bl,
+      .hud-corner.br {
+        bottom: 6px;
+      }
+
+      .hud-corner.tl,
+      .hud-corner.bl {
+        left: 6px;
+      }
+
+      .hud-corner.tr,
+      .hud-corner.br {
+        right: 6px;
+      }
+
+      .heading-container h1 {
+        font-size: 1.5rem;
+      }
+
+      .heading-container h2 {
+        font-size: 1.25rem;
+      }
+
+      .heading-container h3 {
+        font-size: 1rem;
+      }
+
+      .h-bar {
+        height: 8px;
+      }
+
+      .tick-divider {
+        height: 10px;
+      }
+    }
+
+    .buttons-row {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="viewport-container">
+    <!-- Mobile (375px) Viewport -->
+    <div class="viewport mobile-vp">
+      <div class="viewport-label">Mobile (375px)</div>
+      <div class="viewport-content">
+        <!-- 1. HudPanel -->
+        <div class="demo-section">
+          <div class="demo-title">1. HudPanel (cyan)</div>
+          <div class="hud-panel" style="--accent: var(--cyan);">
+            <span style="font-size: 0.9rem;">Hud Panel Content</span>
+          </div>
+        </div>
+
+        <!-- 2. HudCorners -->
+        <div class="demo-section">
+          <div class="demo-title">2. HudCorners (teal)</div>
+          <div class="hud-corners-container" style="--accent: var(--teal);">
+            <div class="hud-corner tl" style="border-color: var(--accent);"></div>
+            <div class="hud-corner tr" style="border-color: var(--accent);"></div>
+            <div class="hud-corner bl" style="border-color: var(--accent);"></div>
+            <div class="hud-corner br" style="border-color: var(--accent);"></div>
+            <span style="font-size: 0.9rem;">Content inside</span>
+          </div>
+        </div>
+
+        <!-- 3. NotchedButton -->
+        <div class="demo-section">
+          <div class="demo-title">3. NotchedButton (variants)</div>
+          <div class="buttons-row">
+            <button class="notched-button btn-primary" style="--accent: var(--cyan);">Primary</button>
+          </div>
+          <div class="buttons-row">
+            <div class="btn-ghost-wrapper" style="--accent: var(--teal);">
+              <button class="notched-button btn-ghost">Ghost</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. HeadingBar -->
+        <div class="demo-section">
+          <div class="demo-title">4. HeadingBar (all levels)</div>
+          <div class="heading-container">
+            <h1>Heading 1<span class="heading-cursor">_</span></h1>
+            <div class="h-bar h1-bar"></div>
+          </div>
+          <div class="heading-container">
+            <h2>Heading 2<span class="heading-cursor">_</span></h2>
+            <div class="h-bar h2-bar"></div>
+          </div>
+          <div class="heading-container">
+            <h3>Heading 3<span class="heading-cursor">_</span></h3>
+            <div class="h-bar h3-bar"></div>
+          </div>
+        </div>
+
+        <!-- 5. TickDivider -->
+        <div class="demo-section">
+          <div class="demo-title">5. TickDivider</div>
+          <div class="tick-divider"></div>
+          <span style="font-size: 0.85rem; color: var(--muted);">Tick mark divider above</span>
+        </div>
+
+        <!-- 6. AsymSection -->
+        <div class="demo-section">
+          <div class="demo-title">6. AsymSection</div>
+          <div class="asym-section">
+            <div class="asym-left">Left Content (70%)</div>
+            <div class="asym-right">
+              <span style="font-size: 0.9rem;">Right Content (30%)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop (1440px) Viewport -->
+    <div class="viewport desktop-vp">
+      <div class="viewport-label">Desktop (1440px)</div>
+      <div class="viewport-content">
+        <!-- 1. HudPanel -->
+        <div class="demo-section">
+          <div class="demo-title">1. HudPanel (cyan)</div>
+          <div class="hud-panel" style="--accent: var(--cyan);">
+            <span style="font-size: 1rem;">Hud Panel Content</span>
+          </div>
+        </div>
+
+        <!-- 2. HudCorners -->
+        <div class="demo-section">
+          <div class="demo-title">2. HudCorners (teal)</div>
+          <div class="hud-corners-container" style="--accent: var(--teal);">
+            <div class="hud-corner tl" style="border-color: var(--accent);"></div>
+            <div class="hud-corner tr" style="border-color: var(--accent);"></div>
+            <div class="hud-corner bl" style="border-color: var(--accent);"></div>
+            <div class="hud-corner br" style="border-color: var(--accent);"></div>
+            <span style="font-size: 1rem;">Content inside</span>
+          </div>
+        </div>
+
+        <!-- 3. NotchedButton -->
+        <div class="demo-section">
+          <div class="demo-title">3. NotchedButton (variants)</div>
+          <div class="buttons-row">
+            <button class="notched-button btn-primary" style="--accent: var(--cyan);">Primary</button>
+          </div>
+          <div class="buttons-row">
+            <div class="btn-ghost-wrapper" style="--accent: var(--teal);">
+              <button class="notched-button btn-ghost">Ghost</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. HeadingBar -->
+        <div class="demo-section">
+          <div class="demo-title">4. HeadingBar (all levels)</div>
+          <div class="heading-container">
+            <h1>Heading 1<span class="heading-cursor">_</span></h1>
+            <div class="h-bar h1-bar"></div>
+          </div>
+          <div class="heading-container">
+            <h2>Heading 2<span class="heading-cursor">_</span></h2>
+            <div class="h-bar h2-bar"></div>
+          </div>
+          <div class="heading-container">
+            <h3>Heading 3<span class="heading-cursor">_</span></h3>
+            <div class="h-bar h3-bar"></div>
+          </div>
+        </div>
+
+        <!-- 5. TickDivider -->
+        <div class="demo-section">
+          <div class="demo-title">5. TickDivider</div>
+          <div class="tick-divider"></div>
+          <span style="font-size: 0.85rem; color: var(--muted);">Tick mark divider above</span>
+        </div>
+
+        <!-- 6. AsymSection -->
+        <div class="demo-section">
+          <div class="demo-title">6. AsymSection</div>
+          <div class="asym-section">
+            <div class="asym-left">Left Content (70%)</div>
+            <div class="asym-right">
+              <span style="font-size: 1rem;">Right Content (30%)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
