@@ -106,110 +106,116 @@
   .hero__actions  { margin-top: var(--sp-4); }  /* 16px */
 }
 
-/* ── Split Flap Countdown ── */
-.split-countdown {
-  margin-top: var(--sp-6);
-}
-
-.split-countdown__units {
-  display: flex;
-  gap: 20px;
-}
-
-.flap-unit {
+/* ── Glitch Countdown ── */
+.hero-countdown {
   position: relative;
-  display: grid;
-  justify-items: start;
-  gap: 7px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: var(--sp-6) var(--sp-6) var(--sp-4);
+  margin-top: var(--sp-6);
+  width: fit-content;
 }
 
-.flap-digits {
+/* HUD corner brackets */
+.hero-countdown::before, .hero-countdown::after,
+.hero-countdown__bl, .hero-countdown__br {
+  content: '';
+  position: absolute;
+  width: 18px; height: 18px;
+  border-color: var(--cyan);
+  opacity: .8;
+}
+.hero-countdown::before { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; }
+.hero-countdown::after { top: -1px; right: -1px; border-top: 2px solid; border-right: 2px solid; }
+.hero-countdown__bl { position: absolute; bottom: -1px; left: -1px; border-bottom: 2px solid; border-left: 2px solid; }
+.hero-countdown__br { position: absolute; bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; }
+
+.hero-countdown__units {
+  display: flex;
+  justify-content: center;
+  gap: var(--sp-6); /* 24px */
+  flex-wrap: wrap;
+}
+
+.hero-countdown__unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2); /* 8px */
+}
+
+.digits {
   display: flex;
   gap: 4px;
 }
 
-.flap-digit {
+.digit-cell {
   position: relative;
-  width: 38px;
-  height: 52px;
-  display: block;
-  perspective: 180px;
-  border: 1px solid rgba(255,255,255,.13);
-  border-radius: 4px;
-  background: #111513;
-  box-shadow: 0 8px 20px rgba(0,0,0,.25);
+  width: 44px;
+  height: 60px;
+  background: #090e0e;
+  border: 1px solid rgba(0, 221, 242, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
 }
 
-.flap-digit::after {
+.digit-cell .real,
+.digit-cell .ghost-cyan,
+.digit-cell .ghost-lime {
   position: absolute;
-  z-index: 5;
-  content: '';
-  top: 50%;
-  left: 0;
-  width: 100%;
-  height: 1px;
-  background: #020303;
-  box-shadow: 0 1px rgba(255,255,255,.06);
-}
-
-.flap-digit__top, .flap-digit__bottom, .flap-digit__flip {
-  position: absolute;
-  left: 0;
-  width: 100%;
-  height: 50%;
-  display: flex;
-  justify-content: center;
-  color: #edf5f1;
-  font-family: var(--display-font);
-  font-size: 30px;
-  font-weight: normal;
-  line-height: 52px;
+  font-family: var(--mono-font), monospace;
+  font-weight: 600;
+  font-size: 34px;
   font-variant-numeric: tabular-nums;
 }
 
-.flap-digit__top {
-  top: 0;
-  align-items: flex-start;
-  overflow: hidden;
-  background: linear-gradient(#171c19, #111513);
-}
-
-.flap-digit__bottom {
-  bottom: 0;
-  align-items: flex-end;
-  overflow: hidden;
-  background: linear-gradient(#0e1210, #141916);
-}
-
-.flap-digit__flip {
+.digit-cell .real {
+  color: var(--text);
   z-index: 3;
-  top: 0;
-  align-items: flex-start;
-  overflow: hidden;
-  background: linear-gradient(#1b211e, #101412);
-  transform-origin: bottom;
-  backface-visibility: hidden;
-  animation: flap-change .42s cubic-bezier(.35,.05,.25,1) both;
 }
 
-@keyframes flap-change {
-  0% { transform: rotateX(0); filter: brightness(1.25); }
-  100% { transform: rotateX(-90deg); filter: brightness(.7); }
+.digit-cell .ghost-cyan {
+  color: var(--cyan);
+  opacity: .55;
+  z-index: 1;
+  transform: translate(-2px, 0);
+  mix-blend-mode: screen;
 }
 
-.flap-unit small {
-  color: #69736f;
-  font-size: 7px;
-  letter-spacing: .16em;
+.digit-cell .ghost-lime {
+  color: var(--lime);
+  opacity: .45;
+  z-index: 2;
+  transform: translate(2px, 0);
+  mix-blend-mode: screen;
+}
+
+/* Glitch scrambler keyframes and animations */
+.digit-cell.glitching .real { animation: glitch-jitter .09s steps(2) 4; }
+.digit-cell.glitching .ghost-cyan { animation: glitch-jitter-c .09s steps(2) 4; }
+.digit-cell.glitching .ghost-lime { animation: glitch-jitter-l .09s steps(2) 4; }
+
+@keyframes glitch-jitter {
+  0% { transform: translate(0,0); }
+  50% { transform: translate(1px,-1px); }
+  100% { transform: translate(0,0); }
+}
+@keyframes glitch-jitter-c {
+  0% { transform: translate(-2px,0); }
+  50% { transform: translate(-4px,1px); }
+  100% { transform: translate(-2px,0); }
+}
+@keyframes glitch-jitter-l {
+  0% { transform: translate(2px,0); }
+  50% { transform: translate(4px,-1px); }
+  100% { transform: translate(2px,0); }
+}
+
+.hero-countdown__unit small {
+  font-size: 9px;
+  letter-spacing: .18em;
   text-transform: uppercase;
-}
-
-.flap-unit i {
-  position: absolute;
-  top: 13px;
-  right: -14px;
-  color: #59625f;
-  font-size: 18px;
-  font-style: normal;
+  color: var(--muted);
 }
