@@ -138,3 +138,62 @@
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SVG DESIGN PATTERNS — Diagonal Clips, Node Markers, Coordinate Tags
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.event-card {
+  clip-path: polygon(0 0, 95% 0, 100% 5%, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+  position: relative;
+}
+
+/* Node marker at card top-right corner */
+.event-card::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 4px;
+  height: 4px;
+  background: var(--accent, var(--cyan));
+  border-radius: 50%;
+  opacity: 0.6;
+  z-index: 5;
+}
+
+/* Coordinate tag (event index as micro-label) */
+.event-card-index::after {
+  content: attr(data-coord);
+  display: block;
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+/* Events section divider with grid break */
+.events-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -24px;
+  right: -24px;
+  height: 1px;
+  background: var(--line);
+  z-index: 2;
+}
+
+/* Telemetry mark scattered in section (faint, decorative) */
+.events-section::after {
+  content: '';
+  position: absolute;
+  top: 8%;
+  right: 3%;
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--muted);
+  opacity: 0.3;
+  z-index: 1;
+}

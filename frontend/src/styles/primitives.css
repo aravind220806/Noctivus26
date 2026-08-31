@@ -172,21 +172,21 @@
   min-height: 400px;
 }
 .asym-left {
-  width: 70%;
+  width: 32%;
   background: var(--surface);
-  clip-path: polygon(0 0, 100% 0, 100% 28%, calc(100% - 40px) 42%,
-        100% 54%, calc(100% - 25px) 68%, 100% 82%, 100% 100%, 0 100%);
+  clip-path: polygon(0 0, 100% 0, 100% 28%, calc(100% - 25px) 42%,
+        100% 54%, calc(100% - 15px) 68%, 100% 82%, 100% 100%, 0 100%);
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
 }
 .asym-right {
-  width: 30%;
+  width: 68%;
   background: transparent;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding-left: 2rem;
+  padding-left: 2.5rem;
 }
 
 @media (max-width: 700px) {
