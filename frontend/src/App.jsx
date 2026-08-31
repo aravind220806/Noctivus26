@@ -2,6 +2,7 @@ import { Component, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { events } from './data/site.js';
 import RegistrationModal from './components/RegistrationModal.jsx';
+import Navbar from './components/Navbar.jsx';
 import Sidebar from './components/navigation/Sidebar.jsx';
 import MobileDrawer from './components/navigation/MobileDrawer.jsx';
 import { HeroSection } from './components/sections/HeroSection.jsx';
@@ -117,19 +118,11 @@ export default function App() {
 
       <div className="scroll-progress" ref={scrollProgressRef} aria-hidden="true" />
       
-      {/* Navbar / Navigation commented out */}
-      {/* 
-      <Sidebar 
+      <Navbar 
         activeSection={activeSection} 
         onNavigate={navigateToSection} 
         onRegister={() => openRegistration()} 
       />
-      <MobileDrawer 
-        activeSection={activeSection} 
-        onNavigate={navigateToSection} 
-        onRegister={() => openRegistration()} 
-      /> 
-      */}
 
       <main className="main-container" id="main">
         <HeroSection onRegister={() => openRegistration()} />

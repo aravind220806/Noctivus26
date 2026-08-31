@@ -7,18 +7,12 @@
   background: var(--bg);
   border-bottom: 1px solid var(--line);
   box-sizing: border-box;
-  padding: 3rem 1.5rem;
+  padding: 3rem 8px;
 }
 
 @media (min-width: 768px) {
   .about-section {
-    padding: 4rem 2rem;
-  }
-}
-
-@media (min-width: 1200px) {
-  .about-section {
-    padding: 5rem 3rem;
+    padding: 4rem 40px;
   }
 }
 
