@@ -1,0 +1,40 @@
+<svg viewBox="0 0 511 432" xmlns="http://www.w3.org/2000/svg" font-family="Arial, Helvetica, sans-serif">
+  <defs>
+    <clipPath id="panelClip2">
+      <path d="M 0 0 L 511 0 L 511 432 L 133 432 L 0 300 Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background shape (diagonal cut bottom-left) -->
+  <g clip-path="url(#panelClip2)">
+    <rect x="0" y="0" width="511" height="432" fill="#1414f0"/>
+  </g>
+
+  <!-- number label -->
+  <text x="20" y="24" fill="#ffffff" font-size="17" font-weight="bold" letter-spacing="1">03.</text>
+
+  <!-- DEFY heading with circle over Y -->
+  <text x="18" y="90" fill="#ffffff" font-size="62" font-weight="900" font-style="italic" letter-spacing="-1">DEFY</text>
+  <circle cx="155" cy="78" r="9" fill="#1414f0" stroke="#ffffff" stroke-width="3"/>
+
+  <!-- body copy -->
+  <text fill="#ffffff" font-size="17" font-family="Arial, Helvetica, sans-serif">
+    <tspan x="18" y="132">Operators receive threat alerts,</tspan>
+    <tspan x="18" y="155">full situational awareness, courses</tspan>
+    <tspan x="18" y="178">of action, plus command and</tspan>
+    <tspan x="18" y="201">control of effectors to respond as</tspan>
+    <tspan x="18" y="224">necessary.</tspan>
+  </text>
+
+  <!-- vertical divider -->
+  <line x1="367" y1="292" x2="367" y2="410" stroke="#4a4af5" stroke-width="1.5"/>
+
+  <!-- right-side small text block -->
+  <text fill="#c9cbff" font-size="13" letter-spacing="0.5" font-family="'Courier New', monospace">
+    <tspan x="386" y="315">RBLN.</tspan>
+    <tspan x="386" y="332">PRODUCTS:</tspan>
+    <tspan x="386" y="362">-  IRIS</tspan>
+    <tspan x="386" y="379">-  STATUS</tspan>
+    <tspan x="386" y="396">-  HADES</tspan>
+  </text>
+</svg>

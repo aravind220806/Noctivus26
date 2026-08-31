@@ -83,7 +83,58 @@ use:
   weight with a loud flat fill, translate that into a dark `--surface`
   panel with a glowing `--cyan`/`--teal` border/box-shadow instead. The
   drama comes from geometry + glow, not saturation.
+## 3a. Signature devices — closed vocabulary
 
+Recurring visual moves, applied intentionally and sparingly, always
+through the §2 token set. This is a closed list — six devices, no
+adding a seventh without updating this doc first. Each one must trace
+back to `--cyan`/`--teal`/`--lime`/`--line` exactly like every other
+color decision in this build.
+
+1. **Breaking grid lines** — hairline (`--line`) rules that define a
+   section's internal grid but deliberately overrun a few px past the
+   section boundary into the next section's padding, rather than
+   terminating cleanly at the edge. Signals one continuous system
+   rather than stacked isolated boxes. Apply at section transitions
+   only — not inside a single card or component.
+2. **Node markers** — small dot/crosshair glyphs (`--cyan` or `--teal`,
+   2–4px) sitting at grid-line intersections or section transitions.
+   Reinforces "live system" without adding label text. Decorative only
+   — same rule as §7: no fake label text next to them implying they're
+   functional.
+3. **Scan-line dividers** — a thin horizontal rule at act/section
+   transitions, styled with the existing tick-mark bar motif from §3
+   (not a new shape) rather than a plain `<hr>`. If animated, keep it
+   subtle — a slow opacity sweep, not a loud effect competing with the
+   hero notch as the page's one big "moment."
+4. **Off-grid numerals** — display numerals that already carry real
+   meaning (countdown, event index, section index — same rule as §7's
+   closing line, never fabricated) are allowed to bleed slightly outside
+   the content grid into the gutter, echoing the breaking-grid-line
+   idea. Desktop only — on mobile, keep numerals inside the grid; the
+   16px gutter doesn't have room to spare (see §5 known failure mode
+   logic — don't repeat that class of mistake here).
+5. **Coordinate/callout tags** — small micro-labels (e.g. a two-value
+   tag near a photo or logo mark) in the mono stack, `--muted` or
+   `--teal`. Lighter and more decorative than the existing HUD-style
+   EVENT.ID/STATUS tags used elsewhere — do not let these two systems
+   blur together; if a tag carries real data (an actual event ID,
+   status), it's the existing HUD tag pattern, not this one.
+6. **Chamfered/notched corners** — already defined in §3, listed here
+   only to confirm it's part of this same closed vocabulary, not a
+   separate system.
+
+**Discipline**: these are accents, not decoration budget to spend
+everywhere. A section using three or more of these at once is doing
+too much — pick one, maybe two, per section. Hero is the one place
+allowed to be denser (it already carries the notch treatment as its
+one big moment).
+
+**Phase gate**: this is a structural/visual-language addition, same
+class as the Samarkan approval — implement it as part of whichever
+phase is current when this is approved, and include it in that
+phase's checkpoint screenshots rather than retrofitting it silently
+into already-approved sections.
 ## 4. Typography
 
 - **Display** (h1–h6, oversized numerals, hero title, countdown digits,
