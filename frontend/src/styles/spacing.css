@@ -17,7 +17,7 @@
   width: 100%;
   max-width: var(--page-max);     /* 1200px */
   margin-inline: auto;
-  padding-inline: var(--page-gutter-mobile); /* 16px */
+  padding-inline: var(--page-gutter-mobile); /* 8px */
 }
 
 /* ── Sections ── */

@@ -49,8 +49,8 @@
 
   /* ── Layout tokens (mobile-first defaults) ── */
   --page-max: 1200px;
-  --page-gutter-desktop: var(--sp-6);  /* 24px */
-  --page-gutter-mobile: var(--sp-4);   /* 16px */
+  --page-gutter-desktop: 40px;  /* 40px */
+  --page-gutter-mobile: 8px;    /* 8px */
   --page: calc(100% - var(--page-gutter-mobile) * 2);
   --space-section: var(--sp-12);       /* 48px mobile default */
 }

@@ -13,7 +13,7 @@
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0 40px;
   box-sizing: border-box;
 }
 
@@ -94,7 +94,7 @@
   }
 
   .crew-container {
-    padding: 0 1rem;
+    padding: 0 8px;
   }
 
   .crew-card {
