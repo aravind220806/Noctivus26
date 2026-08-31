@@ -154,7 +154,7 @@ export default function Navbar({ activeSection, onNavigate, onRegister }) {
                       </a>
                     )}
 
-                    {/* Submenu Dropdown */}
+                    {/* Submenu Dropdown (Matching Reference Screenshot) */}
                     {hasChildren && (
                       <div className={`menu-sub-list ${isDropdownOpen ? 'is-visible' : ''}`}>
                         <ul>
@@ -169,7 +169,8 @@ export default function Navbar({ activeSection, onNavigate, onRegister }) {
                                   })
                                 }
                               >
-                                <span>{child.label}</span>
+                                <span className="sub-item-prefix">—</span>
+                                <span className="sub-item-text">{child.label}</span>
                               </a>
                             </li>
                           ))}
@@ -250,6 +251,7 @@ export default function Navbar({ activeSection, onNavigate, onRegister }) {
                                     })
                                   }
                                 >
+                                  <span className="sub-item-prefix">— </span>
                                   {child.label}
                                 </a>
                               </li>
