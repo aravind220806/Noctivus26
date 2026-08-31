@@ -73,7 +73,7 @@ export default function SplitFlapCountdown({ target }) {
   }, [target]);
 
   const units = useMemo(() => [
-    ['DAYS', String(clock.current.days).padStart(3, '0')],
+    ['DAYS', String(clock.current.days).padStart(2, '0')],
     ['HOURS', String(clock.current.hours).padStart(2, '0')],
     ['MINUTES', String(clock.current.minutes).padStart(2, '0')],
     ['SECONDS', String(clock.current.seconds).padStart(2, '0')],

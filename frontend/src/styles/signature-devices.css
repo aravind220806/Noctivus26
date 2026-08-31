@@ -1,0 +1,245 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   SIGNATURE DEVICES — Closed Vocabulary (§3a, CLAUDE.md)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* 1. BREAKING GRID LINES
+   ─────────────────────
+   Hairline (--line) rules that define a section's internal grid but deliberately
+   overrun a few px past the section boundary into the next section's padding. */
+
+.breaking-grid-line {
+  position: relative;
+  height: 1px;
+}
+.breaking-grid-line::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -24px;
+  right: -24px;
+  height: 1px;
+  background: var(--line);
+}
+
+/* 2. NODE MARKERS
+   ──────────────
+   Small dot/crosshair glyphs (--cyan or --teal, 2–4px) at grid-line intersections
+   or section transitions. Reinforces "live system" without adding label text. */
+
+.node-marker {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--accent, var(--cyan));
+  border-radius: 50%;
+  z-index: 3;
+  opacity: 0.8;
+}
+
+.node-marker.crosshair {
+  width: 8px;
+  height: 8px;
+  background: transparent;
+  border: 1px solid var(--accent, var(--cyan));
+  border-radius: 0;
+}
+.node-marker.crosshair::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 1px solid var(--accent, var(--cyan));
+}
+
+/* 3. SCAN-LINE DIVIDERS
+   ───────────────────
+   Thin horizontal rule at section transitions, styled with the tick-mark bar motif
+   (not a new shape) rather than a plain <hr>. */
+
+.scan-line-divider {
+  width: 100%;
+  height: 12px;
+  border-bottom: 1px solid var(--line);
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='12'%3E%3Crect x='0' y='0' width='1' height='12' fill='%2300DDF2' opacity='0.6'/%3E%3Crect x='30' y='6' width='1' height='6' fill='%237E9096' opacity='0.5'/%3E%3Crect x='60' y='6' width='1' height='6' fill='%237E9096' opacity='0.5'/%3E%3Crect x='90' y='6' width='1' height='6' fill='%237E9096' opacity='0.5'/%3E%3C/svg%3E") left bottom repeat-x;
+  margin: 2rem 0;
+}
+
+/* 4. OFF-GRID NUMERALS
+   ──────────────────
+   Display numerals (countdown, event index, section index — real meaning) allowed
+   to bleed slightly outside the content grid. Desktop only; mobile keeps inside grid. */
+
+.off-grid-numeral {
+  font-family: var(--display-font);
+  font-weight: normal;
+  color: var(--accent, var(--cyan));
+  position: relative;
+  letter-spacing: -0.04em;
+}
+
+@media (min-width: 701px) {
+  .off-grid-numeral {
+    position: absolute;
+    margin-left: -3.5rem;
+    font-size: clamp(2.5rem, 4vw, 4rem);
+  }
+}
+
+/* 5. COORDINATE/CALLOUT TAGS
+   ────────────────────────
+   Small micro-labels in the mono stack, --muted or --teal. Lighter and more
+   decorative than HUD-style tags — don't blur with the HUD tag pattern. */
+
+.coordinate-tag {
+  font-family: var(--mono-font);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 2px 6px;
+  background: rgba(126, 144, 150, 0.1);
+  border: 1px solid rgba(126, 144, 150, 0.3);
+  display: inline-block;
+}
+
+.coordinate-tag.accent {
+  color: var(--teal);
+  border-color: rgba(0, 230, 184, 0.3);
+  background: rgba(0, 230, 184, 0.05);
+}
+
+/* 6. CHAMFERED/NOTCHED CORNERS
+   ──────────────────────────
+   Already defined in primitives.css (hud-panel, notched-button, asym-section).
+   Listed here only to confirm it's part of the closed vocabulary. */
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   APPLIED PATTERNS FROM SVG REFERENCES
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* Diagonal clip-path panels (from defy_panel.svg, footer_section.svg) */
+.diagonal-clip-panel {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 0 16px -4px var(--accent, var(--cyan)), inset 0 0 24px -12px var(--accent, var(--cyan));
+}
+
+.diagonal-clip-panel.bottom-left {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 30% 100%, 0 70%);
+}
+
+.diagonal-clip-panel.top-right {
+  clip-path: polygon(0 0, 85% 0, 100% 15%, 100% 100%, 0 100%);
+}
+
+.diagonal-clip-panel.both-corners {
+  clip-path: polygon(0 0, 85% 0, 100% 15%, 100% 100%, 30% 100%, 0 70%);
+}
+
+/* Grid overlay (crosshair dots, telemetry marks) */
+.grid-overlay {
+  position: relative;
+  overflow: hidden;
+}
+
+.grid-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 24px, var(--line) 24px, var(--line) 25px),
+    repeating-linear-gradient(90deg, transparent, transparent 24px, var(--line) 24px, var(--line) 25px);
+  opacity: 0.3;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Telemetry mark: small square with adjacent lines (data indicator) */
+.telemetry-mark {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--muted);
+  opacity: 0.6;
+  z-index: 3;
+}
+
+.telemetry-mark::before,
+.telemetry-mark::after {
+  content: '';
+  position: absolute;
+  background: var(--muted);
+  opacity: 0.6;
+}
+
+.telemetry-mark::before {
+  width: 24px;
+  height: 1px;
+  left: -30px;
+  top: 3px;
+}
+
+.telemetry-mark::after {
+  width: 1px;
+  height: 16px;
+  top: -8px;
+  left: 3px;
+}
+
+/* Vertical divider bar (data block separator) */
+.vertical-divider {
+  width: 1px;
+  background: var(--line);
+  opacity: 0.8;
+}
+
+/* Data block (monospace coordinate/meta information) */
+.data-block {
+  font-family: var(--mono-font);
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  line-height: 1.6;
+  padding: 1rem;
+  background: rgba(0, 221, 242, 0.03);
+  border: 1px solid var(--line);
+  position: relative;
+  z-index: 2;
+}
+
+.data-block.accent {
+  color: var(--teal);
+  background: rgba(0, 230, 184, 0.03);
+  border-color: rgba(0, 230, 184, 0.15);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   DISCIPLINE ENFORCEMENT
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* Limit signature device density: max 2-3 per section, hero excluded */
+.section {
+  --device-count: 0;
+}
+
+.section.dense-devices {
+  --device-count: 3;
+}
+
+/* Mobile simplifications per §5 */
+@media (max-width: 375px) {
+  .diagonal-clip-panel {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%) !important;
+  }
+
+  .off-grid-numeral {
+    position: static;
+    margin-left: 0;
+    font-size: 1.5rem;
+  }
+
+  .breaking-grid-line::before {
+    left: 0;
+    right: 0;
+  }
+}

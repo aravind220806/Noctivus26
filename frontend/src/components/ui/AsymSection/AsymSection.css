@@ -15,19 +15,21 @@
 }
 
 .asym-left {
-  width: 45%;
-  background: transparent;
+  width: 32%;
+  background: var(--surface);
+  clip-path: polygon(0 0, 100% 0, 100% 28%, calc(100% - 25px) 42%,
+        100% 54%, calc(100% - 15px) 68%, 100% 82%, 100% 100%, 0 100%);
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 2rem 1.5rem;
+  justify-content: flex-start;
+  padding: 2rem 1rem 2rem 1.5rem;
   box-sizing: border-box;
   position: relative;
   z-index: 2;
 }
 
 .asym-right {
-  width: 55%;
+  width: 68%;
   background: transparent;
   display: flex;
   flex-direction: column;

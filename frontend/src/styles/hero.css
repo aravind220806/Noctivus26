@@ -26,13 +26,13 @@
 .hero-visual-panel {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   width: 100%;
   height: 100%;
   min-height: 320px;
   position: relative;
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
 .hero-logo-img {
@@ -41,7 +41,7 @@
   filter: drop-shadow(0 0 20px rgba(0, 221, 242, 0.15));
   z-index: 2;
   transition: transform 0.3s ease;
-  margin: 0 auto;
+  margin: 0;
 }
 
 .hero-logo-img:hover {
@@ -255,3 +255,109 @@
 .hero-countdown::after { top: -1px; right: -1px; border-top: 1px solid; border-right: 1px solid; }
 .hero-countdown__bl { bottom: -1px; left: -1px; border-bottom: 1px solid; border-left: 1px solid; }
 .hero-countdown__br { bottom: -1px; right: -1px; border-bottom: 1px solid; border-right: 1px solid; }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SVG DESIGN PATTERNS — Grid Overlay, Node Markers, Telemetry
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Grid overlay on visual panel */
+
+.hero-visual-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 32px, rgba(0, 221, 242, 0.08) 32px, rgba(0, 221, 242, 0.08) 33px),
+    repeating-linear-gradient(90deg, transparent, transparent 32px, rgba(0, 221, 242, 0.08) 32px, rgba(0, 221, 242, 0.08) 33px);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Node markers at grid intersections (scattered, subtle) */
+.hero-visual-panel .node-marker {
+  --x: 24%;
+  --y: 18%;
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 3px;
+  height: 3px;
+  background: var(--cyan);
+  border-radius: 50%;
+  opacity: 0.5;
+  z-index: 3;
+}
+
+/* Telemetry mark (data indicator block) */
+.hero-telemetry {
+  position: absolute;
+  top: 3rem;
+  right: 2rem;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--muted);
+  opacity: 0.4;
+}
+
+.hero-telemetry::before {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 1px;
+  background: var(--muted);
+  top: 2px;
+  left: -26px;
+  opacity: 0.35;
+}
+
+.hero-telemetry::after {
+  content: '';
+  position: absolute;
+  width: 1px;
+  height: 16px;
+  background: var(--muted);
+  left: 2px;
+  top: -14px;
+  opacity: 0.35;
+}
+
+/* Off-grid section number (left side, bleeds into gutter) */
+.hero-section-number {
+  position: absolute;
+  left: -6rem;
+  top: 4rem;
+  font-family: var(--display-font);
+  font-size: clamp(2rem, 3vw, 3.5rem);
+  font-weight: normal;
+  color: rgba(0, 221, 242, 0.25);
+  letter-spacing: -0.04em;
+  z-index: 2;
+  pointer-events: none;
+  user-select: none;
+}
+
+@media (max-width: 900px) {
+  .hero-section-number {
+    position: static;
+    font-size: 1.25rem;
+    color: rgba(0, 221, 242, 0.15);
+    margin-bottom: 1rem;
+  }
+}
+
+/* Scan-line divider at bottom of hero */
+.hero-section::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 12px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='12'%3E%3Crect x='0' y='0' width='1' height='12' fill='%2300DDF2' opacity='0.6'/%3E%3Crect x='30' y='6' width='1' height='6' fill='%237E9096' opacity='0.4'/%3E%3Crect x='60' y='6' width='1' height='6' fill='%237E9096' opacity='0.4'/%3E%3Crect x='90' y='6' width='1' height='6' fill='%237E9096' opacity='0.4'/%3E%3C/svg%3E") left bottom repeat-x;
+  border-bottom: 1px solid var(--line);
+  opacity: 0.8;
+  pointer-events: none;
+  z-index: 10;
+}

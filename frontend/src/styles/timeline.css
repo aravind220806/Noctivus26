@@ -283,3 +283,82 @@
     text-overflow: ellipsis;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SVG DESIGN PATTERNS — Grid Overlay, Coordinate Tags, Vertical Dividers
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.timeline-frame {
+  position: relative;
+}
+
+/* Grid overlay on timeline */
+.timeline-frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 32px, rgba(0, 221, 242, 0.05) 32px, rgba(0, 221, 242, 0.05) 33px),
+    repeating-linear-gradient(90deg, transparent, transparent 120px, rgba(0, 221, 242, 0.05) 120px, rgba(0, 221, 242, 0.05) 121px);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Coordinate tag for time slot (hour label enhancement) */
+.timeline-tick::after {
+  content: attr(data-grid-coord);
+  font-family: var(--mono-font);
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  opacity: 0.6;
+  margin-top: 2px;
+}
+
+/* Vertical divider line between time columns */
+.timeline-frame::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 25%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 80%;
+  background: var(--line);
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Node marker at timeline tick points */
+.timeline-tick {
+  position: relative;
+}
+
+.timeline-tick::before {
+  content: '';
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: var(--cyan);
+  border-radius: 50%;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0.4;
+  z-index: 3;
+}
+
+/* Telemetry mark (data status indicator) */
+.timeline-section::before {
+  content: '';
+  position: absolute;
+  top: 2rem;
+  right: 3%;
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--muted);
+  opacity: 0.3;
+  z-index: 1;
+}

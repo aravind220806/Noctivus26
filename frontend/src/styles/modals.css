@@ -363,3 +363,106 @@
   background: var(--bg);
   border-radius: 2px;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SVG DESIGN PATTERNS — Diagonal Clips, Node Markers, HUD Styling
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Event modal panel with diagonal clip-path */
+.event-modal-panel {
+  clip-path: polygon(0 0, 98% 0, 100% 2%, 100% 100%, 4px 100%, 0 calc(100% - 4px));
+  position: relative;
+}
+
+/* Node marker on event modal title */
+.em-header::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 4px;
+  height: 4px;
+  background: var(--cyan);
+  border-radius: 50%;
+  opacity: 0.6;
+  z-index: 5;
+}
+
+/* Registration modal panel with diagonal clip */
+.registration-modal-panel {
+  clip-path: polygon(0 12px, 12px 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+}
+
+/* Payment modal with top-right diagonal */
+.payment-modal-panel {
+  clip-path: polygon(0 0, 95% 0, 100% 5%, 100% 100%, 0 100%);
+}
+
+/* Telemetry mark in modal footer */
+.modal-footer {
+  position: relative;
+  border-top: 1px solid var(--line);
+}
+
+.modal-footer::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 3%;
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--muted);
+  opacity: 0.3;
+  z-index: 3;
+}
+
+/* Coordinate tag for form field labels */
+.form-field-label {
+  position: relative;
+}
+
+.form-field-label::after {
+  content: attr(data-field-id);
+  display: inline-block;
+  font-family: var(--mono-font);
+  font-size: 0.55rem;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  margin-left: 6px;
+  opacity: 0.5;
+}
+
+/* HUD-style form input with grid background */
+.form-input {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  position: relative;
+}
+
+.form-input::placeholder {
+  color: rgba(234, 246, 245, 0.3);
+  letter-spacing: 0.02em;
+}
+
+/* Vertical divider in payment options */
+.payment-options {
+  display: grid;
+  gap: 1rem;
+}
+
+.payment-option {
+  border-left: 2px solid var(--line);
+  padding-left: 1rem;
+  position: relative;
+}
+
+.payment-option::before {
+  content: '';
+  position: absolute;
+  left: -2px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, var(--cyan) 0%, transparent 100%);
+  opacity: 0.4;
+}

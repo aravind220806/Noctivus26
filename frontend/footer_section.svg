@@ -4,8 +4,8 @@
       <path d="M 20 12 L 1120 12 L 1220 65 L 1580 65 L 1600 90 L 1600 628 L 20 628 Z"/>
     </clipPath>
     <radialGradient id="mapFade" cx="35%" cy="45%" r="65%">
-      <stop offset="0%" stop-color="#4747ff"/>
-      <stop offset="100%" stop-color="#1414f0"/>
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#e0e0e0"/>
     </radialGradient>
   </defs>
 
@@ -27,13 +27,13 @@
 
   <!-- Main footer panel with diagonal top-right and top-left corner cuts -->
   <g clip-path="url(#footerClip)">
-    <rect x="0" y="0" width="1600" height="640" fill="#1414f0"/>
+    <rect x="0" y="0" width="1600" height="640" fill="#050607"/>
 
     <!-- lighter map area gradient -->
     <rect x="380" y="0" width="1220" height="640" fill="url(#mapFade)" opacity="0.55"/>
 
     <!-- hexagon wireframe -->
-    <g stroke="#5c5cf7" stroke-width="1.2" fill="none" opacity="0.7">
+    <g stroke="#ffffff" stroke-width="1.2" fill="none" opacity="0.4">
       <polygon points="795,55 1150,65 1240,320 1150,555 795,545 705,320"/>
       <line x1="795" y1="55" x2="795" y2="545"/>
     </g>
@@ -109,7 +109,7 @@
       <rect x="1200" y="437" width="8" height="8"/>
       <rect x="1340" y="480" width="8" height="8"/>
     </g>
-    <g stroke="#c9cbff" stroke-width="1" opacity="0.6">
+    <g stroke="#ffffff" stroke-width="1" opacity="0.4">
       <line x1="565" y1="220" x2="590" y2="220"/>
       <line x1="565" y1="228" x2="590" y2="228"/>
       <line x1="565" y1="236" x2="590" y2="236"/>
@@ -125,13 +125,13 @@
     </g>
 
     <!-- vertical bar element -->
-    <rect x="1063" y="255" width="8" height="35" fill="#c9cbff" opacity="0.85"/>
+    <rect x="1063" y="255" width="8" height="35" fill="#ffffff" opacity="0.6"/>
 
     <!-- small colored accent dot -->
-    <circle cx="1390" cy="291" r="4" fill="#e050c0"/>
+    <circle cx="1390" cy="291" r="4" fill="#ffffff"/>
 
     <!-- faint circle -->
-    <circle cx="1345" cy="565" r="30" fill="#5c5cf7" opacity="0.25"/>
+    <circle cx="1345" cy="565" r="30" fill="#ffffff" opacity="0.1"/>
 
     <!-- logo mark (angular bird/shield) -->
     <g transform="translate(28,28)" fill="#ffffff">
@@ -143,27 +143,27 @@
     <text x="30" y="378" fill="#ffffff" font-size="66" font-weight="900" font-style="italic" letter-spacing="-1">FEARLESS</text>
 
     <!-- more telemetry marks lower left -->
-    <g stroke="#c9cbff" stroke-width="1" opacity="0.6">
+    <g stroke="#ffffff" stroke-width="1" opacity="0.4">
       <line x1="303" y1="452" x2="328" y2="452"/>
       <line x1="303" y1="460" x2="328" y2="460"/>
       <line x1="303" y1="468" x2="328" y2="468"/>
     </g>
-    <rect x="330" y="450" width="8" height="8" fill="none" stroke="#c9cbff" opacity="0.7"/>
-    <g stroke="#c9cbff" stroke-width="1" opacity="0.6">
+    <rect x="330" y="450" width="8" height="8" fill="none" stroke="#ffffff" opacity="0.4"/>
+    <g stroke="#ffffff" stroke-width="1" opacity="0.4">
       <line x1="463" y1="500" x2="488" y2="500"/>
       <line x1="463" y1="508" x2="488" y2="508"/>
     </g>
-    <rect x="490" y="498" width="8" height="8" fill="none" stroke="#c9cbff" opacity="0.7"/>
-    <g stroke="#c9cbff" stroke-width="1" opacity="0.6">
+    <rect x="490" y="498" width="8" height="8" fill="none" stroke="#ffffff" opacity="0.4"/>
+    <g stroke="#ffffff" stroke-width="1" opacity="0.4">
       <line x1="1183" y1="432" x2="1208" y2="432"/>
       <line x1="1183" y1="440" x2="1208" y2="440"/>
     </g>
-    <rect x="1210" y="430" width="8" height="8" fill="none" stroke="#c9cbff" opacity="0.7"/>
-    <g stroke="#c9cbff" stroke-width="1" opacity="0.6">
+    <rect x="1210" y="430" width="8" height="8" fill="none" stroke="#ffffff" opacity="0.4"/>
+    <g stroke="#ffffff" stroke-width="1" opacity="0.4">
       <line x1="1323" y1="475" x2="1348" y2="475"/>
       <line x1="1323" y1="483" x2="1348" y2="483"/>
     </g>
-    <rect x="1350" y="473" width="8" height="8" fill="none" stroke="#c9cbff" opacity="0.7"/>
+    <rect x="1350" y="473" width="8" height="8" fill="none" stroke="#ffffff" opacity="0.4"/>
 
     <!-- mouse cursor -->
     <path d="M1233,95 L1233,120 L1240,113 L1245,124 L1250,122 L1245,111 L1254,111 Z" fill="#ffffff"/>
@@ -172,9 +172,9 @@
     <text x="800" y="625" fill="#c9cbff" font-size="14" letter-spacing="1" text-anchor="middle" font-family="'Courier New', monospace">&#169; 2026 REBELLION INDUSTRIES // BUILD 04.26</text>
 
     <!-- social icon buttons -->
-    <rect x="1275" y="550" width="90" height="72" fill="#5252f7"/>
-    <rect x="1373" y="550" width="90" height="72" fill="#5252f7"/>
-    <rect x="1471" y="550" width="90" height="72" fill="#5252f7"/>
+    <rect x="1275" y="550" width="90" height="72" fill="#ffffff" opacity="0.1"/>
+    <rect x="1373" y="550" width="90" height="72" fill="#ffffff" opacity="0.1"/>
+    <rect x="1471" y="550" width="90" height="72" fill="#ffffff" opacity="0.1"/>
 
     <!-- X icon -->
     <g transform="translate(1305,573)" fill="#ffffff">
@@ -190,7 +190,7 @@
     <!-- YouTube icon -->
     <g transform="translate(1498,565)">
       <rect x="0" y="8" width="42" height="26" rx="7" fill="#ffffff"/>
-      <path d="M17,15 L28,21 L17,27 Z" fill="#5252f7"/>
+      <path d="M17,15 L28,21 L17,27 Z" fill="#050607"/>
     </g>
   </g>
 

@@ -117,6 +117,8 @@ export default function App() {
 
       <div className="scroll-progress" ref={scrollProgressRef} aria-hidden="true" />
       
+      {/* Navbar / Navigation commented out */}
+      {/* 
       <Sidebar 
         activeSection={activeSection} 
         onNavigate={navigateToSection} 
@@ -126,7 +128,8 @@ export default function App() {
         activeSection={activeSection} 
         onNavigate={navigateToSection} 
         onRegister={() => openRegistration()} 
-      />
+      /> 
+      */}
 
       <main className="main-container" id="main">
         <HeroSection onRegister={() => openRegistration()} />
