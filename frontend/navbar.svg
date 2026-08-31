@@ -1,0 +1,27 @@
+<svg viewBox="0 0 1600 100" xmlns="http://www.w3.org/2000/svg" font-family="Arial, Helvetica, sans-serif">
+  <!-- background -->
+  <rect width="1600" height="100" fill="#ffffff"/>
+
+  <!-- top thick dark bar -->
+  <rect x="0" y="0" width="1600" height="4" fill="#1a1a1a"/>
+
+  <!-- bottom thin divider -->
+  <line x1="0" y1="98" x2="1600" y2="98" stroke="#e5e5e5" stroke-width="1"/>
+
+  <!-- logo mark -->
+  <g transform="translate(28,22)" fill="#0a0a0a">
+    <path d="M0,0 L20,0 L24,32 L30,16 L36,32 L42,0 L62,0 L49,60 L36,39 L24,60 Z"/>
+  </g>
+
+  <!-- nav items -->
+  <rect x="627" y="28" width="10" height="10" fill="#1414f0"/>
+  <text x="645" y="38" fill="#1414f0" font-size="14" letter-spacing="1" font-weight="bold">RBLN.</text>
+
+  <text x="712" y="38" fill="#c7c7c7" font-size="14" letter-spacing="1">MISSION</text>
+  <text x="852" y="38" fill="#c7c7c7" font-size="14" letter-spacing="1">PRODUCTS</text>
+  <text x="972" y="38" fill="#c7c7c7" font-size="14" letter-spacing="1">NEWS</text>
+
+  <!-- contact us button (angled left edge) -->
+  <path d="M 1478 15 L 1600 15 L 1600 55 L 1490 55 Z" fill="#1414f0"/>
+  <text x="1500" y="40" fill="#ffffff" font-size="14" letter-spacing="1" font-weight="bold">CONTACT US</text>
+</svg>

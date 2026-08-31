@@ -34,11 +34,12 @@ export function EventsSection({ onSelect }) {
       <div className="event-filters" role="group" aria-label="Filter events">
         {categories.map((cat) => {
           const isActive = filter === cat;
+          const filterAccent = cat === 'Non-technical' ? 'lime' : 'cyan';
           return (
             <NotchedButton
               key={cat}
               variant={isActive ? 'primary' : 'ghost'}
-              accent="cyan"
+              accent={filterAccent}
               onClick={() => setFilter(cat)}
               className="filter-btn"
               style={{ padding: '0.6rem 1.2rem', fontSize: '0.8rem' }}

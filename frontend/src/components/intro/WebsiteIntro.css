@@ -1,111 +1,304 @@
-/* --- Website Intro Overlay (Night City Theme) --- */
+/* ═══════════════════════════════════════════════════════════════════════════════
+   NOCTIVUS INTRO OVERLAY
+   ═══════════════════════════════════════════════════════════════════════════════ */
 
-.intro-overlay {
+.rebellion-intro-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100vh;
-  background: var(--bg);
-  z-index: 999;
+  inset: 0;
+  z-index: 99999;
+  background-color: #050505;
+  color: #ffffff;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   overflow: hidden;
+  user-select: none;
+  cursor: pointer;
   box-sizing: border-box;
-  padding: 2rem;
 }
 
-/* Subtle corner brackets for the viewport */
-.intro-corner {
+/* --- Outer Viewport Corner Registration Marks --- */
+.v-mark {
   position: absolute;
-  width: 20px;
-  height: 20px;
-  border-color: var(--line);
-  opacity: 0.5;
-}
-.intro-corner--tl { top: 2rem; left: 2rem; border-top: 1px solid; border-left: 1px solid; }
-.intro-corner--tr { top: 2rem; right: 2rem; border-top: 1px solid; border-right: 1px solid; }
-.intro-corner--bl { bottom: 2rem; left: 2rem; border-bottom: 1px solid; border-left: 1px solid; }
-.intro-corner--br { bottom: 2rem; right: 2rem; border-bottom: 1px solid; border-right: 1px solid; }
-
-/* Main layout container — centered vertical stack */
-.intro-content-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3rem;
-  width: 100%;
-  max-width: 1200px;
-  position: relative;
-  min-height: 80vh;
+  width: 14px;
+  height: 14px;
+  border-color: rgba(255, 255, 255, 0.45);
+  border-style: solid;
+  pointer-events: none;
 }
 
-/* Boot sequence text — big and prominent */
-.intro-boot-text {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  width: 100%;
+.v-mark-tl {
+  top: 18px;
+  left: 18px;
+  border-width: 1px 0 0 1px;
 }
 
-.intro-text-type-large {
-  font-size: clamp(1.2rem, 3.5vw, 2.2rem) !important;
-  font-family: 'Aldrich', sans-serif;
-  color: var(--text);
-  letter-spacing: 0.08em;
-  line-height: 1.5;
-  max-width: 90vw;
-  opacity: 0.95;
-  text-align: center;
+.v-mark-tr {
+  top: 18px;
+  right: 18px;
+  border-width: 1px 1px 0 0;
 }
 
-.intro-text-type-large .text-type__content {
-  display: block;
-  color: var(--text);
+.v-mark-bl {
+  bottom: 18px;
+  left: 18px;
+  border-width: 0 0 1px 1px;
 }
 
-/* Dragon GIF panel — big and centered */
-.intro-dragon-panel {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  position: relative;
+.v-mark-br {
+  bottom: 18px;
+  right: 18px;
+  border-width: 0 1px 1px 0;
 }
 
-.intro-dragon-gif {
-  width: clamp(300px, 60vw, 500px);
-  height: auto;
-  display: block;
-  filter: drop-shadow(0 0 20px var(--cyan));
-}
-
-/* Branding section — appears after GIF */
-.intro-branding {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  text-align: center;
-}
-
-.intro-title {
-  font-family: 'Aldrich', sans-serif;
-  font-size: clamp(1.8rem, 3.5vw, 2.5rem);
-  font-weight: 400;
-  color: var(--cyan);
-  margin: 0;
-  letter-spacing: 0.05em;
-}
-
-.intro-meta {
+.v-pointer-tl {
+  position: absolute;
+  top: 32px;
+  left: 32px;
   font-family: 'IBM Plex Mono', monospace;
-  font-size: clamp(0.75rem, 1.2vw, 0.85rem);
-  color: var(--text);
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  pointer-events: none;
+}
+
+/* --- Viewport Center Edge Ticks --- */
+.v-tick {
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0.4);
+  pointer-events: none;
+}
+
+.v-tick-top {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 10px;
+}
+.v-tick-top::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: -4px;
+  width: 9px;
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+.v-tick-bottom {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 10px;
+}
+.v-tick-bottom::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -4px;
+  width: 9px;
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+.v-tick-left {
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 1px;
+}
+.v-tick-left::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: -4px;
+  width: 1px;
+  height: 9px;
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+.v-tick-right {
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 1px;
+}
+.v-tick-right::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: -4px;
+  width: 1px;
+  height: 9px;
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+/* --- Main Centered Bounding Container --- */
+.rebellion-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: min(85vw, 900px);
+  padding: 3rem 2rem 1.8rem;
+  box-sizing: border-box;
+}
+
+/* Bounding Box Corner Squares ■ */
+.inner-dot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background-color: #ffffff;
+  pointer-events: none;
+}
+
+.dot-tl { top: 0; left: 0; }
+.dot-tr { top: 0; right: 0; }
+.dot-bl { bottom: 3rem; left: 0; }
+.dot-br { bottom: 3rem; right: 0; }
+
+/* Bomb Ticker Header */
+.rebellion-bomb-ticker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 2rem;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.ticker-label {
+  font-size: clamp(0.65rem, 1vw, 0.78rem);
+  letter-spacing: 0.25em;
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: uppercase;
+}
+
+.ticker-timer {
+  font-size: clamp(0.9rem, 1.6vw, 1.2rem);
+  letter-spacing: 0.2em;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.ticker-timer.ticking {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.ticker-timer.locked {
+  color: var(--cyan, #00ddf2);
+  text-shadow: 0 0 10px rgba(0, 221, 242, 0.4);
+}
+
+/* Title: NOCTIVUS */
+.rebellion-title-mask {
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.rebellion-title {
+  font-family: 'Aldrich', 'IBM Plex Mono', sans-serif;
+  font-size: clamp(2.8rem, 8.5vw, 6.5rem);
+  font-weight: 400;
+  text-transform: uppercase;
+  color: #ffffff;
   margin: 0;
-  line-height: 1.4;
+  padding: 0;
+  line-height: 1.05;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.ticking-title {
+  letter-spacing: 0.15em;
+  opacity: 0.85;
+}
+
+.locked-title {
+  letter-spacing: 0.12em;
+  opacity: 1;
+  text-shadow: 0 0 16px rgba(255, 255, 255, 0.25);
+}
+
+/* Lower Metadata Row */
+.rebellion-metadata-row {
+  margin-top: 3.5rem;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: clamp(0.6rem, 1vw, 0.72rem);
+  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.12em;
+  padding-top: 0.6rem;
+}
+
+.meta-sep {
+  color: rgba(255, 255, 255, 0.35);
+  letter-spacing: -0.1em;
+}
+
+/* Bottom Scroll Indicator */
+.rebellion-scroll-indicator {
+  position: absolute;
+  bottom: 2.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+}
+
+.scroll-chevron {
+  width: 14px;
+  height: 8px;
+  animation: chevronPulse 2s ease-in-out infinite;
+}
+
+@keyframes chevronPulse {
+  0%, 100% { transform: translateY(0); opacity: 0.7; }
+  50% { transform: translateY(4px); opacity: 1; }
+}
+
+.scroll-text {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.25em;
+  color: rgba(255, 255, 255, 0.75);
+  text-transform: uppercase;
+}
+
+/* Media Query for Small Mobile Screens */
+@media (max-width: 640px) {
+  .rebellion-container {
+    width: 92vw;
+    padding: 2rem 0.5rem 1rem;
+  }
+  
+  .rebellion-title {
+    font-size: clamp(2.2rem, 10vw, 3.5rem);
+    letter-spacing: 0.06em !important;
+  }
+
+  .rebellion-metadata-row {
+    font-size: 0.52rem;
+    letter-spacing: 0.04em;
+  }
+
+  .scroll-text {
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+  }
 }
