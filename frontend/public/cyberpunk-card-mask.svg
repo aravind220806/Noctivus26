@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2400 1000" width="2400" height="1000">
+  <!--
+    Night City Cyberpunk Polygon Cutout Mask Asset
+    Base Canvas Resolution: 2400x1000px (2.4:1 Aspect Ratio)
+    Corner Cut Dimensions (px at 2400x1000 canvas scale / 1200x500 card scale):
+    - Top-Left (TL): 120px cut (60px @ 1200x500) [Large Cut]
+    - Top-Right (TR): 50px cut (25px @ 1200x500) [Small Cut]
+    - Bottom-Right (BR): 120px cut (60px @ 1200x500) [Large Cut]
+    - Bottom-Left (BL): 50px cut (25px @ 1200x500) [Small Cut]
+  -->
+  <polygon points="120,0 2350,0 2400,50 2400,880 2280,1000 50,1000 0,950 0,120" fill="#FFFFFF" />
+</svg>
