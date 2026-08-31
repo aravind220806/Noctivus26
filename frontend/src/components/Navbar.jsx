@@ -53,19 +53,11 @@ export default function Navbar({ activeSection, onNavigate, onRegister }) {
     };
   }, [checkProximity]);
 
-  // Exact nav items requested: HOME -> ABOUT -> EVENTS (TECH -> NON TECH) -> TIMELINE -> COORDINATORS
+  // Nav items: HOME -> ABOUT -> EVENTS -> TIMELINE -> COORDINATORS
   const navItems = [
     { id: 'home', label: 'HOME', href: '#home' },
     { id: 'about', label: 'ABOUT', href: '#about' },
-    {
-      id: 'events',
-      label: 'EVENTS',
-      href: '#events',
-      children: [
-        { id: 'tech', label: 'TECH', href: '#events' },
-        { id: 'non-tech', label: 'NON TECH', href: '#events' },
-      ],
-    },
+    { id: 'events', label: 'EVENTS', href: '#events' },
     { id: 'schedule', label: 'TIMELINE', href: '#schedule' },
     { id: 'coordinators', label: 'COORDINATORS', href: '#coordinators' },
   ];
@@ -154,7 +146,7 @@ export default function Navbar({ activeSection, onNavigate, onRegister }) {
                       </a>
                     )}
 
-                    {/* Submenu Dropdown (Exact Match to Reference Screenshot) */}
+                    {/* Submenu Dropdown */}
                     {hasChildren && (
                       <div className={`menu-sub-list ${isDropdownOpen ? 'is-visible' : ''}`}>
                         <ul>
