@@ -102,7 +102,7 @@
     </g>
 
     <!-- small square telemetry marks -->
-    <g fill="none" stroke="#c9cbff" opacity="0.7">
+    <g fill="none" stroke="#ffffff" opacity="0.35">
       <rect x="592" y="223" width="8" height="8"/>
       <rect x="342" y="450" width="8" height="8"/>
       <rect x="494" y="505" width="8" height="8"/>
@@ -169,7 +169,7 @@
     <path d="M1233,95 L1233,120 L1240,113 L1245,124 L1250,122 L1245,111 L1254,111 Z" fill="#ffffff"/>
 
     <!-- copyright text -->
-    <text x="800" y="625" fill="#c9cbff" font-size="14" letter-spacing="1" text-anchor="middle" font-family="'Courier New', monospace">&#169; 2026 REBELLION INDUSTRIES // BUILD 04.26</text>
+    <text x="800" y="625" fill="#ffffff" font-size="14" letter-spacing="1" text-anchor="middle" font-family="'Courier New', monospace" opacity="0.5">&#169; 2026 REBELLION INDUSTRIES // BUILD 04.26</text>
 
     <!-- social icon buttons -->
     <rect x="1275" y="550" width="90" height="72" fill="#ffffff" opacity="0.1"/>
