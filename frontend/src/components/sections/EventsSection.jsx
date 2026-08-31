@@ -27,9 +27,39 @@ export function EventsSection({ onSelect }) {
   };
 
   return (
-    <section className="events-section" id="events" style={{ padding: '4rem 2rem' }}>
+    <section className="events-section" id="events">
       <HeadingBar level="h2" text="CHOOSE YOUR EVENT" sectionIndex="03 / 05" />
       
+      {/* Cyberpunk Showcase / Highlight Card matching reference image */}
+      <div className="featured-event-card panel scanlines">
+        <div className="featured-card-media">
+          <img 
+            src="/images/noctivus-students.webp" 
+            alt="Noctivus Cyberpunk Symposium" 
+            loading="lazy" 
+          />
+        </div>
+        <div className="featured-card-content">
+          <span className="featured-card-tag">/ ABOUT</span>
+          <h3 className="featured-card-title">WHAT'S NEW</h3>
+          <p className="featured-card-desc">
+            It's official! Brace yourself for Chennai's ultimate Cyber Security symposium at Noctivus '26. Experience live CTF challenges, Ideathons, IoT Exploits, Non-technical strategy arenas, and hands-on workshops hosted by the Department of CSE (Cyber Security) at Velammal Engineering College.
+          </p>
+          <div className="featured-card-actions">
+            <NotchedButton
+              variant="primary"
+              accent="lime"
+              onClick={() => {
+                const target = authoritativeEvents.find(e => e.id === 'cyber-heist-ctf') || authoritativeEvents[0];
+                if (target) onSelect(target);
+              }}
+            >
+              FEATURED EVENT: CYBER HEIST CTF &gt;
+            </NotchedButton>
+          </div>
+        </div>
+      </div>
+
       {/* Categories / Filters */}
       <div className="event-filters" role="group" aria-label="Filter events">
         {categories.map((cat) => {
