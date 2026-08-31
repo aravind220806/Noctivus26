@@ -209,15 +209,14 @@
 .menu-sub-list {
   position: absolute;
   top: 100%;
-  left: -1px;
-  min-width: 180px;
+  left: 0;
+  min-width: 220px;
   background: rgba(5, 7, 10, 0.94);
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
   border: 1px solid var(--nav-accent);
-  border-top: 1px solid var(--nav-accent);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.95), 0 0 15px var(--nav-accent-subtle);
-  padding: 10px 0;
+  padding: 12px 0;
   z-index: 1000;
   opacity: 0;
   visibility: hidden;
@@ -251,7 +250,6 @@
 .menu-sub-list a {
   display: flex;
   align-items: center;
-  gap: 10px;
   padding: 10px 18px;
   font-family: var(--display-font, 'Aldrich'), 'Rajdhani', sans-serif;
   font-weight: 700;
@@ -264,11 +262,16 @@
   background: transparent;
 }
 
-.sub-item-prefix {
-  color: var(--nav-accent);
-  font-weight: 700;
-  font-size: 0.95rem;
-  transition: color 0.18s ease;
+/* Branch tick mark (Stemming directly from left border, matching reference image) */
+.menu-sub-list a::before {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+  background-color: var(--nav-accent);
+  margin-right: 12px;
+  flex-shrink: 0;
+  transition: background-color 0.18s ease;
 }
 
 .menu-sub-list a:hover {
@@ -276,8 +279,8 @@
   color: #000000 !important;
 }
 
-.menu-sub-list a:hover .sub-item-prefix {
-  color: #000000 !important;
+.menu-sub-list a:hover::before {
+  background-color: #000000 !important;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
