@@ -29,33 +29,33 @@
 }
 
 .v-mark-tl {
-  top: 18px;
-  left: 18px;
+  top: max(14px, env(safe-area-inset-top, 14px));
+  left: max(14px, env(safe-area-inset-left, 14px));
   border-width: 1px 0 0 1px;
 }
 
 .v-mark-tr {
-  top: 18px;
-  right: 18px;
+  top: max(14px, env(safe-area-inset-top, 14px));
+  right: max(14px, env(safe-area-inset-right, 14px));
   border-width: 1px 1px 0 0;
 }
 
 .v-mark-bl {
-  bottom: 18px;
-  left: 18px;
+  bottom: max(14px, env(safe-area-inset-bottom, 14px));
+  left: max(14px, env(safe-area-inset-left, 14px));
   border-width: 0 0 1px 1px;
 }
 
 .v-mark-br {
-  bottom: 18px;
-  right: 18px;
+  bottom: max(14px, env(safe-area-inset-bottom, 14px));
+  right: max(14px, env(safe-area-inset-right, 14px));
   border-width: 0 1px 1px 0;
 }
 
 .v-pointer-tl {
   position: absolute;
-  top: 32px;
-  left: 32px;
+  top: max(26px, env(safe-area-inset-top, 26px));
+  left: max(26px, env(safe-area-inset-left, 26px));
   font-family: 'IBM Plex Mono', monospace;
   font-size: 14px;
   color: rgba(255, 255, 255, 0.7);
@@ -144,8 +144,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: min(85vw, 900px);
-  padding: 3rem 2rem 1.8rem;
+  width: min(92vw, 900px);
+  max-width: 100%;
+  padding: clamp(1.5rem, 4vh, 3rem) clamp(0.75rem, 3vw, 2rem);
   box-sizing: border-box;
 }
 
@@ -160,29 +161,30 @@
 
 .dot-tl { top: 0; left: 0; }
 .dot-tr { top: 0; right: 0; }
-.dot-bl { bottom: 3rem; left: 0; }
-.dot-br { bottom: 3rem; right: 0; }
+.dot-bl { bottom: 2rem; left: 0; }
+.dot-br { bottom: 2rem; right: 0; }
 
 /* Bomb Ticker Header */
 .rebellion-bomb-ticker {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.4rem;
-  margin-bottom: 2rem;
+  gap: 0.35rem;
+  margin-bottom: clamp(1.2rem, 3vh, 2rem);
   font-family: 'IBM Plex Mono', monospace;
+  text-align: center;
 }
 
 .ticker-label {
-  font-size: clamp(0.65rem, 1vw, 0.78rem);
-  letter-spacing: 0.25em;
+  font-size: clamp(0.6rem, 2.2vw, 0.78rem);
+  letter-spacing: clamp(0.12em, 1.8vw, 0.25em);
   color: rgba(255, 255, 255, 0.55);
   text-transform: uppercase;
 }
 
 .ticker-timer {
-  font-size: clamp(0.9rem, 1.6vw, 1.2rem);
-  letter-spacing: 0.2em;
+  font-size: clamp(0.85rem, 3.2vw, 1.2rem);
+  letter-spacing: clamp(0.1em, 1.5vw, 0.2em);
   font-weight: 600;
   transition: color 0.3s ease;
 }
@@ -198,49 +200,53 @@
 
 /* Title: NOCTIVUS */
 .rebellion-title-mask {
-  overflow: hidden;
   display: flex;
   justify-content: center;
   align-items: center;
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .rebellion-title {
   font-family: 'Aldrich', 'IBM Plex Mono', sans-serif;
-  font-size: clamp(2.8rem, 8.5vw, 6.5rem);
+  font-size: clamp(2rem, 7.5vw, 5.5rem);
   font-weight: 400;
   text-transform: uppercase;
   color: #ffffff;
   margin: 0;
   padding: 0;
-  line-height: 1.05;
+  line-height: 1.1;
   text-align: center;
   white-space: nowrap;
+  max-width: 100%;
 }
 
 .ticking-title {
-  letter-spacing: 0.15em;
+  letter-spacing: clamp(0.04em, 1.2vw, 0.14em);
   opacity: 0.85;
 }
 
 .locked-title {
-  letter-spacing: 0.12em;
+  letter-spacing: clamp(0.04em, 1.2vw, 0.12em);
   opacity: 1;
   text-shadow: 0 0 16px rgba(255, 255, 255, 0.25);
 }
 
 /* Lower Metadata Row */
 .rebellion-metadata-row {
-  margin-top: 3.5rem;
+  margin-top: clamp(1.8rem, 4vh, 3.5rem);
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.5rem;
   font-family: 'IBM Plex Mono', monospace;
-  font-size: clamp(0.6rem, 1vw, 0.72rem);
+  font-size: clamp(0.55rem, 1.8vw, 0.72rem);
   color: rgba(255, 255, 255, 0.55);
-  letter-spacing: 0.12em;
+  letter-spacing: clamp(0.04em, 1vw, 0.12em);
   padding-top: 0.6rem;
+  flex-wrap: wrap;
 }
 
 .meta-sep {
@@ -251,13 +257,13 @@
 /* Bottom Scroll Indicator */
 .rebellion-scroll-indicator {
   position: absolute;
-  bottom: 2.5rem;
+  bottom: clamp(1.2rem, 3.5vh, 2.5rem);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.5rem;
   cursor: pointer;
 }
 
@@ -274,31 +280,53 @@
 
 .scroll-text {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.75rem;
-  letter-spacing: 0.25em;
+  font-size: clamp(0.65rem, 1.8vw, 0.75rem);
+  letter-spacing: clamp(0.12em, 2vw, 0.25em);
   color: rgba(255, 255, 255, 0.75);
   text-transform: uppercase;
 }
 
-/* Media Query for Small Mobile Screens */
+/* Media Query for Mobile Screens */
 @media (max-width: 640px) {
   .rebellion-container {
-    width: 92vw;
-    padding: 2rem 0.5rem 1rem;
+    width: 95vw;
+    padding: 1.5rem 0.5rem 1rem;
   }
   
   .rebellion-title {
-    font-size: clamp(2.2rem, 10vw, 3.5rem);
-    letter-spacing: 0.06em !important;
+    font-size: clamp(1.65rem, 7.8vw, 2.8rem);
+    letter-spacing: 0.05em !important;
   }
 
   .rebellion-metadata-row {
     font-size: 0.52rem;
     letter-spacing: 0.04em;
+    justify-content: center;
+    gap: 0.6rem;
   }
 
-  .scroll-text {
-    font-size: 0.65rem;
-    letter-spacing: 0.18em;
+  .v-pointer-tl {
+    display: none;
+  }
+
+  .inner-dot {
+    width: 4px;
+    height: 4px;
+  }
+}
+
+/* Media Query for Extra Small Mobile Screens (<= 360px) */
+@media (max-width: 360px) {
+  .rebellion-title {
+    font-size: 1.45rem;
+    letter-spacing: 0.03em !important;
+  }
+
+  .ticker-label {
+    font-size: 0.55rem;
+  }
+
+  .ticker-timer {
+    font-size: 0.8rem;
   }
 }

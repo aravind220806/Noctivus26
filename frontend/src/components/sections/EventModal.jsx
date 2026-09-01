@@ -4,14 +4,14 @@ import { site } from '../../data/site.js';
 import { NotchedButton } from '../ui/NotchedButton/NotchedButton';
 
 const EVENT_ORDER = [
-  'ctf',
+  'mystery-hunt',
   'bug-hunt',
-  'prompt-heist',
+  'ctf',
   'secure-x-vibecode',
   'ignite',
-  'mystery-hunt',
-  'tune-trap',
   'ipl-auction',
+  'tune-tracker',
+  'prompt-heist',
 ];
 
 export function EventModal({ event, onClose, onRegister }) {
@@ -21,7 +21,7 @@ export function EventModal({ event, onClose, onRegister }) {
 
   const pages = [
     { key: 'overview', title: 'OVERVIEW' },
-    { key: 'rules',    title: 'RULES & REGULATIONS' },
+    { key: 'rules', title: 'RULES & REGULATIONS' },
     { key: 'coordinators', title: 'COORDINATORS' },
   ];
 
@@ -74,8 +74,8 @@ export function EventModal({ event, onClose, onRegister }) {
           </div>
           <button className="em-close" onClick={onClose} aria-label="Close event details">
             <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
-              <line x1="1" y1="1" x2="15" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="square"/>
-              <line x1="15" y1="1" x2="1" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="square"/>
+              <line x1="1" y1="1" x2="15" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="square" />
+              <line x1="15" y1="1" x2="1" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="square" />
             </svg>
             <span className="em-close-label">ESC</span>
           </button>
@@ -156,10 +156,6 @@ export function EventModal({ event, onClose, onRegister }) {
                 </div>
               )}
 
-              <p className="em-desc em-desc--muted" style={{ fontSize: '0.8rem', marginTop: '1rem' }}>
-                Reporting time and venue details will be provided at the registration desk on event day.
-                General inquiries: {site.contactEmail} / {site.contactPhone}.
-              </p>
             </div>
           )}
         </div>
