@@ -30,7 +30,6 @@ export const events = [
     imagePosition: '45% 50%',
     format: 'A cybersecurity challenge where teams solve problems and find flags using ethical security techniques.',
     details: [
-      'Bring your own laptop and charger (Laptop is mandatory).',
       'Use ethical and legal methods only.',
       'Do not attack or damage the competition system.',
       'Do not share flags or solutions with other teams.',
@@ -57,7 +56,6 @@ export const events = [
     imagePosition: '58% 45%',
     format: 'Find and report security vulnerabilities through live, hands-on cybersecurity challenges. Covers web security, infrastructure security, authentication, authorization, privilege escalation, and exploitation.',
     details: [
-      'Bring your own laptop and charger (Laptop is mandatory).',
       'Test only the targets given by the organizers.',
       'Use ethical and legal methods only.',
       'Manual security testing is allowed.',
@@ -113,7 +111,6 @@ export const events = [
     imagePosition: '52% 38%',
     format: 'Build a useful and working solution based on a problem statement given by the organizers. AI-assisted coding is allowed.',
     details: [
-      'Bring your own laptop and charger (Laptop is mandatory).',
       'Choose one problem statement provided by the organizers.',
       'Build the project during the event.',
       'AI tools such as ChatGPT, Copilot, Cursor, and Gemini are allowed.',
@@ -121,6 +118,7 @@ export const events = [
       'Be ready to explain how you used AI.',
       "Do not copy another participant's project.",
       'Do not submit an old project as your own.',
+      'Bring your own laptop and charger.',
       'Maintain professional behaviour.',
       'Judges or Coordinators decision is final.',
     ],
