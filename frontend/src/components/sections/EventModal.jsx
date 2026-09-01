@@ -5,14 +5,18 @@ import { NotchedButton } from '../ui/NotchedButton/NotchedButton';
 
 const EVENT_ORDER = [
   'crime-investigation',
-  'bug-bounty-2026',
+  'bug-hunt',
   'ctf',
   'secure-x-vibecode',
-  'ppt-ideathon',
+  'ignite',
   'ipl-auction-2026',
   'tune-tracker',
+<<<<<<< HEAD
   'ai-jail-break',
   'playground-of-hackers',
+=======
+  'prompt-heist',
+>>>>>>> f92f8d4 (feat(events): rename Bug Bounty to Bug Hunt, AI Jail Break to Prompt Heist, PPT Ideathon to IGNITE, and update all event fees to ₹150)
 ];
 
 export function EventModal({ event, onClose, onRegister }) {
