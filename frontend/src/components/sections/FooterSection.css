@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════════
-   NOCTIVUS ’26 FOOTER — CYBER-HUD THEME WITH COMPACT MAP & DETAILS
+   NOCTIVUS ’26 FOOTER — CYBER-HUD THEME (MAP RIGHT, DETAILS LEFT, SOCIAL CENTER)
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 .footer-cyber-hud {
@@ -35,17 +35,17 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   MAIN FOOTER CONTENT LAYOUT (MAP + DETAILS LEFT, SOCIAL RIGHT)
+   MAIN FOOTER CONTENT LAYOUT (DETAILS LEFT, MAP RIGHT)
    ───────────────────────────────────────────────────────────────────────────── */
-.footer-content-layout {
+.footer-main-layout {
   display: flex;
   flex-direction: column;
   gap: 2.5rem;
-  margin-bottom: 3rem;
+  margin-bottom: 2.5rem;
 }
 
-@media (min-width: 1024px) {
-  .footer-content-layout {
+@media (min-width: 992px) {
+  .footer-main-layout {
     flex-direction: row;
     justify-content: space-between;
     align-items: flex-start;
@@ -53,87 +53,18 @@
   }
 }
 
-/* Left & Middle Wrapper: Map + Venue/Contact/Bus Info */
-.footer-venue-details-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  flex: 1;
-}
-
-@media (min-width: 768px) {
-  .footer-venue-details-wrap {
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 2.25rem;
-  }
-}
-
-/* Compact Google Map Box */
-.footer-compact-map {
-  position: relative;
-  width: 100%;
-  height: 180px;
-  border-radius: 8px;
-  border: 1px solid rgba(0, 240, 255, 0.4);
-  background-color: #050E17;
-  overflow: hidden;
-  box-shadow: 0 0 16px rgba(0, 240, 255, 0.12);
-  flex-shrink: 0;
-}
-
-@media (min-width: 768px) {
-  .footer-compact-map {
-    width: 250px;
-    height: 170px;
-  }
-}
-
-.footer-map-iframe {
-  width: 100%;
-  height: 100%;
-  border: 0;
-  filter: invert(90%) hue-rotate(180deg) brightness(85%) contrast(110%) saturate(120%);
-  display: block;
-}
-
-.footer-map-link {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: rgba(5, 15, 24, 0.85);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  border: 1px solid #00f0ff;
-  color: #00f0ff;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 4px 8px;
-  border-radius: 3px;
-  text-decoration: none;
-  transition: all 0.2s ease;
-  z-index: 5;
-}
-
-.footer-map-link:hover {
-  background: #00f0ff;
-  color: #000000;
-  box-shadow: 0 0 12px rgba(0, 240, 255, 0.6);
-}
-
-/* Info Columns Beside Map (Venue, Contact, Bus Route) */
+/* Left Side: Info Columns (Venue, Contact, Bus Route) */
 .footer-info-columns {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.5rem;
+  gap: 1.75rem;
   flex: 1;
 }
 
 @media (min-width: 600px) {
   .footer-info-columns {
     grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
+    gap: 1.75rem;
   }
 }
 
@@ -148,7 +79,7 @@
   align-items: center;
   gap: 0.45rem;
   font-family: 'Aldrich', 'Rajdhani', sans-serif;
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   font-weight: 700;
   color: #00f0ff;
   letter-spacing: 0.1em;
@@ -156,21 +87,21 @@
 }
 
 .footer-info-icon {
-  width: 1.05rem;
-  height: 1.05rem;
+  width: 1.1rem;
+  height: 1.1rem;
   color: #00f0ff;
   flex-shrink: 0;
 }
 
 .footer-info-body {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   color: #7C8BA1;
   line-height: 1.55;
 }
 
 .footer-info-body p {
-  margin: 0 0 0.2rem 0;
+  margin: 0 0 0.25rem 0;
 }
 
 .footer-text-link {
@@ -209,37 +140,76 @@
   height: 0.85rem;
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   RIGHT SIDE: SOCIAL MEDIA ACTIONS
-   ───────────────────────────────────────────────────────────────────────────── */
-.footer-social-side {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.75rem;
+/* Right Side: Compact Google Map */
+.footer-map-side {
   flex-shrink: 0;
+  width: 100%;
 }
 
-@media (min-width: 1024px) {
-  .footer-social-side {
-    align-items: flex-end;
+@media (min-width: 992px) {
+  .footer-map-side {
+    width: 300px;
   }
 }
 
-.footer-social-title {
-  font-family: 'Aldrich', 'Rajdhani', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 700;
+.footer-compact-map {
+  position: relative;
+  width: 100%;
+  height: 175px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 240, 255, 0.4);
+  background-color: #050E17;
+  overflow: hidden;
+  box-shadow: 0 0 18px rgba(0, 240, 255, 0.15);
+}
+
+.footer-map-iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  filter: invert(90%) hue-rotate(180deg) brightness(85%) contrast(110%) saturate(120%);
+  display: block;
+}
+
+.footer-map-link {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(5, 15, 24, 0.85);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid #00f0ff;
   color: #00f0ff;
-  letter-spacing: 0.1em;
-  margin: 0;
-  text-transform: uppercase;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 3px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  z-index: 5;
+}
+
+.footer-map-link:hover {
+  background: #00f0ff;
+  color: #000000;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.6);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   CENTER BOTTOM: SOCIAL MEDIA ACTIONS
+   ───────────────────────────────────────────────────────────────────────────── */
+.footer-social-center-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 1.5rem 0 2.5rem;
 }
 
 .footer-social-actions {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
 .footer-social-btn {
@@ -247,8 +217,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.85rem;
-  height: 2.85rem;
+  width: 3.1rem;
+  height: 3.1rem;
   border-radius: 6px;
   border: 1px solid rgba(0, 240, 255, 0.45);
   background-color: rgba(5, 20, 28, 0.6);
@@ -266,15 +236,15 @@
 }
 
 .footer-social-icon {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.3rem;
+  height: 1.3rem;
   fill: #00f0ff;
   transition: transform 0.25s ease;
 }
 
 .footer-x-icon {
-  width: 1.05rem;
-  height: 1.05rem;
+  width: 1.1rem;
+  height: 1.1rem;
 }
 
 .footer-social-btn:hover .footer-social-icon {
