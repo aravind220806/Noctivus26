@@ -7,7 +7,8 @@ from datetime import datetime, timedelta, timezone
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
-from email.utils import formataddr
+from email.mime.base import MIMEBase
+from email.utils import formataddr, make_msgid
 from pathlib import Path
 from collections.abc import Callable, Awaitable
 
@@ -159,28 +160,56 @@ def build_confirmation_html(full_name: str, event_names_str: str) -> str:
 </html>"""
 
 
-async def send_smtp_email(to_email: str, subject: str, html_body: str, attachment_path: str | None = None, attachment_name: str | None = None) -> None:
+async def send_smtp_email(
+    to_email: str,
+    subject: str,
+    html_body: str,
+    attachment_path: str | None = None,
+    attachment_name: str | None = None,
+    inline_image_bytes: bytes | None = None,
+    inline_image_cid: str | None = None,
+    inline_image_name: str | None = None,
+) -> None:
     sender_name = "Noctivus '26"
     sender_email = settings.smtp_from_email or "noctivus2026@gmail.com"
     from_header = formataddr((sender_name, sender_email))
 
-    message = MIMEMultipart("mixed")
-    message["From"] = from_header
-    message["To"] = to_email
-    message["Subject"] = subject
+    if inline_image_bytes and inline_image_cid:
+        # Build multipart/related so the image is embedded inline — no paperclip
+        outer = MIMEMultipart("mixed")
+        outer["From"] = from_header
+        outer["To"] = to_email
+        outer["Subject"] = subject
 
-    html_part = MIMEText(html_body, "html", "utf-8")
-    message.attach(html_part)
+        related = MIMEMultipart("related")
+        html_part = MIMEText(html_body, "html", "utf-8")
+        related.attach(html_part)
 
-    if attachment_path and os.path.exists(attachment_path):
-        with open(attachment_path, "rb") as f:
-            img_data = f.read()
-        image_part = MIMEImage(img_data, name=attachment_name or os.path.basename(attachment_path))
-        image_part.add_header("Content-Disposition", "attachment", filename=attachment_name or os.path.basename(attachment_path))
-        message.attach(image_part)
+        img_part = MIMEImage(inline_image_bytes, name=inline_image_name or "boarding_pass.png")
+        img_part.add_header("Content-ID", f"<{inline_image_cid}>")
+        img_part.add_header("Content-Disposition", "inline", filename=inline_image_name or "boarding_pass.png")
+        related.attach(img_part)
+
+        outer.attach(related)
+        message = outer
+    else:
+        message = MIMEMultipart("mixed")
+        message["From"] = from_header
+        message["To"] = to_email
+        message["Subject"] = subject
+
+        html_part = MIMEText(html_body, "html", "utf-8")
+        message.attach(html_part)
+
+        if attachment_path and os.path.exists(attachment_path):
+            with open(attachment_path, "rb") as f:
+                img_data = f.read()
+            image_part = MIMEImage(img_data, name=attachment_name or os.path.basename(attachment_path))
+            image_part.add_header("Content-Disposition", "attachment", filename=attachment_name or os.path.basename(attachment_path))
+            message.attach(image_part)
 
     if not settings.smtp_password:
-        print(f"[SMTP Dev Simulation] Email to {to_email} (Subject: {subject}, Attached: {bool(attachment_path)}) - set SMTP_PASSWORD to send live.")
+        print(f"[SMTP Dev Simulation] Email to {to_email} (Subject: {subject}, Inline image: {bool(inline_image_bytes)}) - set SMTP_PASSWORD to send live.")
         return
 
     use_tls = settings.smtp_port == 465
@@ -371,28 +400,17 @@ async def send_member_pass(registration: dict, admin_email: str = "") -> dict:
         qr_token, qr_hash = create_pass_token()
         artwork = await render_pass_artwork_bytes(registration, pass_data, qr_token)
         event_names = event_entry.get("eventName") or event_rec.get("name") or "Noctivus '26"
-
         safe_name = re.sub(r"[^\w\s-]", "", name).strip().replace(" ", "_") or "Member"
-        temp_dir = Path("/tmp/passes")
-        temp_dir.mkdir(parents=True, exist_ok=True)
-        temp_img_file = str(temp_dir / f"Noctivus26_Pass_{safe_name}.png")
-        with open(temp_img_file, "wb") as f:
-            f.write(artwork)
+        cid = make_msgid(domain="noctivus.site").strip("<>")
 
-        try:
-            await send_smtp_email(
-                to_email=email,
-                subject=f"{pass_data['title']}",
-                html_body=invitation_html(registration, pass_data, event_names, artwork),
-                attachment_path=temp_img_file,
-                attachment_name=f"Noctivus26_Pass_{safe_name}.png",
-            )
-        finally:
-            if os.path.exists(temp_img_file):
-                try:
-                    os.remove(temp_img_file)
-                except Exception:
-                    pass
+        await send_smtp_email(
+            to_email=email,
+            subject=f"{pass_data['title']}",
+            html_body=invitation_html(registration, pass_data, event_names, cid=cid),
+            inline_image_bytes=artwork,
+            inline_image_cid=cid,
+            inline_image_name=f"Noctivus26_Pass_{safe_name}.png",
+        )
 
         now = datetime.now(timezone.utc)
         await update_registration(reg_id, {
@@ -439,26 +457,17 @@ async def send_invitation(registration: dict, pass_data: dict) -> None:
     event_names = pass_tag_values(registration, event_id)["event"]
     artwork = await render_pass_artwork_bytes(registration, pass_data, token or None)
 
-    temp_dir = Path("/tmp/passes")
-    temp_dir.mkdir(parents=True, exist_ok=True)
-    temp_file = str(temp_dir / f"pass_{registration.get('registrationId', 'preview')}.png")
-    with open(temp_file, "wb") as f:
-        f.write(artwork)
+    reg_id = str(registration.get("registrationId") or "preview")
+    cid = make_msgid(domain="noctivus.site").strip("<>")
 
-    try:
-        await send_smtp_email(
-            to_email=email,
-            subject=f"{pass_data['title']} - {registration.get('registrationId')}",
-            html_body=invitation_html(registration, pass_data, event_names, artwork),
-            attachment_path=temp_file,
-            attachment_name=f"noctivus-boarding-pass-{registration.get('registrationId')}.png",
-        )
-    finally:
-        if os.path.exists(temp_file):
-            try:
-                os.remove(temp_file)
-            except Exception:
-                pass
+    await send_smtp_email(
+        to_email=email,
+        subject=f"{pass_data['title']} - {reg_id}",
+        html_body=invitation_html(registration, pass_data, event_names, cid=cid),
+        inline_image_bytes=artwork,
+        inline_image_cid=cid,
+        inline_image_name=f"noctivus-boarding-pass-{reg_id}.png",
+    )
 
 
 async def send_confirmation(registration: dict) -> None:
@@ -475,26 +484,87 @@ async def send_announcement(registration: dict, data: dict) -> None:
     await send_smtp_email(email, subject, f"<h1>{subject}</h1><p>{message}</p>")
 
 
-def invitation_html(registration: dict, pass_data: dict, event_names: str, artwork: bytes | None = None) -> str:
+def invitation_html(registration: dict, pass_data: dict, event_names: str, artwork: bytes | None = None, cid: str | None = None) -> str:
     participant = registration.get("participant") or {}
-    fields = [
-        ("Passenger", participant.get("name")),
-        ("Event", event_names),
-        ("Date", pass_data.get("date")),
-        ("Time", pass_data.get("time")),
-        ("Gate", pass_data.get("gate")),
-        ("Terminal", pass_data.get("terminal")),
-        ("From", participant.get("college")),
-        ("Registration ID", registration.get("registrationId")),
-        *[(resolve_pass_tags(field["label"], registration, pass_data.get("eventId", "")), resolve_pass_tags(field["value"], registration, pass_data.get("eventId", ""))) for field in pass_data["fields"]],
-    ]
-    rows = "".join(f"<tr><th style=\"text-align:left;padding:10px;border-bottom:1px solid #ddd\">{html.escape(str(label or ''))}</th><td style=\"padding:10px;border-bottom:1px solid #ddd\">{html.escape(str(value or ''))}</td></tr>" for label, value in fields)
-    venue = html.escape(str(pass_data.get("venue") or "Velammal Engineering College"))
-    rows += f"<tr><th style=\"text-align:left;padding:10px;border-bottom:1px solid #ddd\">Venue</th><td style=\"padding:10px;border-bottom:1px solid #ddd\">{venue}</td></tr>"
-    image = ""
-    if artwork:
-        image = f"<img src=\"data:image/png;base64,{base64.b64encode(artwork).decode('ascii')}\" alt=\"Personalized Noctivus 26 boarding pass\" style=\"width:100%;max-height:280px;object-fit:cover;border-radius:10px\">"
-    return f"<div style=\"font-family:Arial,sans-serif;max-width:620px;margin:auto;color:#111\"><h1>{html.escape(pass_data['title'])}</h1>{image}<p>Your personalized boarding pass is attached. Present its QR code at check-in.</p><table style=\"width:100%;border-collapse:collapse\">{rows}</table></div>"
+    name = html.escape(str(participant.get("name") or "Member"))
+    college = html.escape(str(participant.get("college") or ""))
+    reg_id = html.escape(str(registration.get("registrationId") or ""))
+    event_esc = html.escape(str(event_names or ""))
+    date_esc = html.escape(str(pass_data.get("date") or "26 SEP 2026"))
+    time_esc = html.escape(str(pass_data.get("time") or "09:00 AM"))
+    gate_esc = html.escape(str(pass_data.get("gate") or "Gate 1"))
+    terminal_esc = html.escape(str(pass_data.get("terminal") or "Main Hall"))
+    venue_esc = html.escape(str(pass_data.get("venue") or "Velammal Engineering College"))
+    title_esc = html.escape(str(pass_data.get("title") or "Noctivus '26 Boarding Pass"))
+
+    # Board pass image — prefer CID inline embed, fall back to base64 data URI
+    if cid:
+        img_tag = f'<img src="cid:{cid}" alt="Your Noctivus \'26 Boarding Pass" style="display:block;width:100%;max-width:600px;border-radius:12px;margin:0 auto;" />'
+    elif artwork:
+        b64 = base64.b64encode(artwork).decode("ascii")
+        img_tag = f'<img src="data:image/png;base64,{b64}" alt="Your Noctivus \'26 Boarding Pass" style="display:block;width:100%;max-width:600px;border-radius:12px;margin:0 auto;" />'
+    else:
+        img_tag = ""
+
+    info_rows = "".join(f"""
+      <tr>
+        <td style="padding:10px 14px;border-bottom:1px solid #2a2a3a;color:#8b9cb5;font-size:12px;white-space:nowrap;width:130px">{lbl}</td>
+        <td style="padding:10px 14px;border-bottom:1px solid #2a2a3a;color:#e8eaf6;font-size:13px;font-weight:600">{val}</td>
+      </tr>""" for lbl, val in [
+        ("Passenger", name),
+        ("College", college),
+        ("Event", event_esc),
+        ("Date", date_esc),
+        ("Time", time_esc),
+        ("Gate", gate_esc),
+        ("Terminal", terminal_esc),
+        ("Venue", venue_esc),
+        ("Registration ID", f'<span style="font-family:monospace;letter-spacing:.05em">{reg_id}</span>'),
+    ] if val)
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{title_esc}</title></head>
+<body style="margin:0;padding:0;background:#0a0a12;font-family:Inter,Arial,sans-serif">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a12;padding:32px 0">
+    <tr><td align="center">
+      <table role="presentation" width="100%" style="max-width:600px;margin:0 auto">
+
+        <!-- Header -->
+        <tr><td style="padding:0 0 24px;text-align:center">
+          <p style="margin:0 0 6px;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#5b5ce2">NOCTIVUS &rsquo;26 &bull; SYMPOSIUM</p>
+          <h1 style="margin:0;font-size:26px;font-weight:800;color:#f0f4ff;letter-spacing:-.02em">Your Boarding Pass</h1>
+          <p style="margin:8px 0 0;font-size:14px;color:#8b9cb5">Present this at the check&#8209;in counter</p>
+        </td></tr>
+
+        <!-- Boarding pass image — full width, inline -->  
+        <tr><td style="padding:0 0 24px">
+          <div style="border-radius:14px;overflow:hidden;box-shadow:0 8px 40px rgba(91,92,226,.25)">
+            {img_tag}
+          </div>
+        </td></tr>
+
+        <!-- Details table -->
+        <tr><td style="background:#111127;border-radius:12px;overflow:hidden;border:1px solid #1e1e38">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+            <tr><td colspan="2" style="padding:14px 14px 10px;border-bottom:1px solid #2a2a3a">
+              <span style="font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:#5b5ce2;font-weight:700">Flight Details</span>
+            </td></tr>
+            {info_rows}
+          </table>
+        </td></tr>
+
+        <!-- CTA -->
+        <tr><td style="padding:24px 0;text-align:center">
+          <p style="margin:0 0 16px;font-size:14px;color:#8b9cb5">Scan the QR code on your pass at the entry gate.</p>
+          <p style="margin:0;font-size:12px;color:#4a5568">This is an automated email from Noctivus &rsquo;26 &bull; Velammal Engineering College</p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
 
 
 def render_pass_artwork(registration: dict, pass_data: dict) -> str:

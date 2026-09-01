@@ -100,7 +100,7 @@ async def dev_auth():
 
 @router.get("/me")
 async def me(admin=Depends(require_admin)):
-    return {"user": admin, "tabs": admin["tabs"]}
+    return {"user": admin, "tabs": admin["tabs"], "csrfToken": admin.get("csrf", "")}
 
 
 @router.post("/logout")
@@ -550,10 +550,17 @@ async def invitations_resend_failed(request: Request, admin=Depends(require_admi
     }
 
 
-@router.post("/invitations/preview")
+@router.api_route("/invitations/preview", methods=["GET", "POST"])
 async def invitations_preview(request: Request, _admin=Depends(require_admin_tab("Invitations"))):
-    body = await request.json()
-    registration_id = str(body.get("registrationId") or "").strip()
+    registration_id = ""
+    if request.method == "POST":
+        try:
+            body = await request.json()
+            registration_id = str(body.get("registrationId") or "").strip()
+        except Exception:
+            registration_id = ""
+    else:
+        registration_id = str(request.query_params.get("registrationId") or "").strip()
 
     rows = await load_registrations({"status": "confirmed"})
     registration = next((row for row in rows if row.get("registrationId") == registration_id), None) if registration_id else (rows[0] if rows else None)
