@@ -1,13 +1,13 @@
 /* ═══════════════════════════════════════════════════════════════════════════════
-   COORDINATORS (CREW) SECTION
+   NOCTIVUS ’26 — COORDINATORS SECTION (CYBER-HUD)
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 .crew-section {
   margin-top: 3rem;
   margin-bottom: 3rem;
   position: relative;
-  background: var(--surface);
-  color: var(--text);
+  background: var(--surface, #050B10);
+  color: var(--text, #7C8BA1);
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   box-sizing: border-box;
@@ -36,6 +36,9 @@
 
 .crew-container {
   width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 28px;
   box-sizing: border-box;
 }
 
@@ -44,62 +47,106 @@
   color: #ffffff;
 }
 
-/* Crew grid — mobile-first stacked, 3-across desktop */
-.crew-grid {
-  display: flex;
-  flex-direction: column;
+/* 3 Cards Row across full width */
+.crew-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 1.5rem;
-  margin-top: 2rem;
+  margin-top: 1.5rem;
 }
 
 @media (min-width: 768px) {
-  .crew-grid {
-    flex-direction: row;
-    gap: 2rem;
-    justify-content: space-between;
+  .crew-cards-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.75rem;
   }
 }
 
-/* Individual crew card inside HudPanel */
-.crew-card {
-  padding: 1.5rem;
+/* Individual Cyber Coordinator Card */
+.cyber-crew-card {
+  position: relative;
+  background-color: rgba(5, 20, 28, 0.7);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  padding: 2rem 1.5rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 220px;
   box-sizing: border-box;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
 }
 
-.crew-role {
-  font-family: 'Aldrich', sans-serif;
-  font-weight: 400;
-  font-size: clamp(1.1rem, 2.5vw, 1.4rem);
-  color: var(--teal);
-  margin: 0 0 0.75rem 0;
-  letter-spacing: 0.02em;
+.cyber-crew-card:hover {
+  border-color: rgba(0, 240, 255, 0.6);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+  transform: translateY(-3px);
 }
 
-.crew-description {
+/* Corner Ticks */
+.card-corner {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  pointer-events: none;
+}
+
+.card-corner-tl {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid #00f0ff;
+  border-left: 2px solid #00f0ff;
+}
+
+.card-corner-tr {
+  top: -1px;
+  right: -1px;
+  border-top: 2px solid #00f0ff;
+  border-right: 2px solid #00f0ff;
+}
+
+.card-corner-bl {
+  bottom: -1px;
+  left: -1px;
+  border-bottom: 2px solid #00f0ff;
+  border-left: 2px solid #00f0ff;
+}
+
+.card-corner-br {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid #00f0ff;
+  border-right: 2px solid #00f0ff;
+}
+
+.crew-card-title {
+  font-family: 'Aldrich', 'Rajdhani', sans-serif;
+  font-size: 1.55rem;
+  line-height: 1.15;
+  font-weight: 700;
+  color: #00f0ff;
+  letter-spacing: 0.03em;
+  margin: 0 0 1.25rem 0;
+  text-transform: none;
+}
+
+.crew-card-role {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: clamp(0.85rem, 1.2vw, 0.95rem);
-  color: var(--muted);
-  margin: 0 0 1rem 0;
-  line-height: 1.5;
+  font-size: 0.82rem;
+  color: #7C8BA1;
+  line-height: 1.45;
+  margin: 0 0 1.5rem 0;
 }
 
-.crew-contact {
-  display: inline-block;
+.crew-card-link {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: clamp(0.8rem, 1vw, 0.9rem);
-  color: var(--cyan);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #00f0ff;
   text-decoration: none;
-  border-bottom: 1px solid var(--line);
-  padding-bottom: 0.2rem;
-  transition: all 0.2s ease;
+  word-break: break-all;
+  transition: color 0.2s ease;
 }
 
-.crew-contact:hover {
-  color: var(--teal);
-  border-bottom-color: var(--teal);
-}
-
-.crew-contact:focus-visible {
-  outline: 1px solid var(--cyan);
-  outline-offset: 2px;
+.crew-card-link:hover {
+  color: #caff00;
 }
