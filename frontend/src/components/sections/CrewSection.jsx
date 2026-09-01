@@ -1,7 +1,5 @@
+import React from 'react';
 import { HeadingBar } from '../ui/HeadingBar/HeadingBar';
-import { HudPanel } from '../ui/HudPanel/HudPanel';
-import { TickDivider } from '../ui/TickDivider/TickDivider';
-import { crew } from '../../data/site.js';
 import './CrewSection.css';
 
 export function CrewSection() {
@@ -10,21 +8,55 @@ export function CrewSection() {
       <div className="crew-container">
         <HeadingBar level="h2" text="COORDINATORS" sectionIndex="05 / 05" />
 
-        <div className="crew-grid" data-reveal>
-          {crew.map(([role, description, contact]) => {
-            const isEmail = contact.includes('@');
-            const contactLink = isEmail ? `mailto:${contact}` : `tel:${contact.replace(/\s/g, '')}`;
+        {/* 3 Coordinator Cards across full width */}
+        <div className="crew-cards-grid">
+          {/* Faculty Coordinator */}
+          <article className="cyber-crew-card">
+            <div className="card-corner card-corner-tl" aria-hidden="true" />
+            <div className="card-corner card-corner-tr" aria-hidden="true" />
+            <div className="card-corner card-corner-bl" aria-hidden="true" />
+            <div className="card-corner card-corner-br" aria-hidden="true" />
+            
+            <h3 className="crew-card-title">
+              Faculty<br />Coordinator
+            </h3>
+            <p className="crew-card-role">Department of CSE (Cyber Security)</p>
+            <a href="mailto:faculty@velammal.edu.in" className="crew-card-link">
+              faculty@velammal.edu.in
+            </a>
+          </article>
 
-            return (
-              <article key={role} className="crew-card panel scanlines">
-                <h3 className="crew-role">{role}</h3>
-                <p className="crew-description">{description}</p>
-                <a href={contactLink} className="crew-contact">
-                  {contact}
-                </a>
-              </article>
-            );
-          })}
+          {/* Student Coordinator */}
+          <article className="cyber-crew-card">
+            <div className="card-corner card-corner-tl" aria-hidden="true" />
+            <div className="card-corner card-corner-tr" aria-hidden="true" />
+            <div className="card-corner card-corner-bl" aria-hidden="true" />
+            <div className="card-corner card-corner-br" aria-hidden="true" />
+
+            <h3 className="crew-card-title">
+              Student<br />Coordinator
+            </h3>
+            <p className="crew-card-role">Noctivus Organizing Team</p>
+            <a href="tel:+919876543210" className="crew-card-link">
+              +91 98765 43210
+            </a>
+          </article>
+
+          {/* Registration Desk */}
+          <article className="cyber-crew-card">
+            <div className="card-corner card-corner-tl" aria-hidden="true" />
+            <div className="card-corner card-corner-tr" aria-hidden="true" />
+            <div className="card-corner card-corner-bl" aria-hidden="true" />
+            <div className="card-corner card-corner-br" aria-hidden="true" />
+
+            <h3 className="crew-card-title">
+              Registration<br />Desk
+            </h3>
+            <p className="crew-card-role">Payments and confirmations</p>
+            <a href="mailto:noctivus26@velammal.edu.in" className="crew-card-link">
+              noctivus26@velammal.edu.in
+            </a>
+          </article>
         </div>
       </div>
     </section>
