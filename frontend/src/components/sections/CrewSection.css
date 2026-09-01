@@ -3,17 +3,34 @@
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 .crew-section {
+  margin-top: 3rem;
+  margin-bottom: 3rem;
   position: relative;
-  background: var(--bg);
+  background: var(--surface);
   color: var(--text);
+  border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   box-sizing: border-box;
-  padding: 4rem 1.5rem;
+  padding: 4rem 1.5rem 5rem;
+  clip-path: polygon(
+    0 0, 100% 0,
+    100% calc(100% - 40px), calc(100% - 60px) 100%,
+    40% 100%, calc(40% - 30px) calc(100% - 16px),
+    0 calc(100% - 16px)
+  );
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
 }
 
 @media (min-width: 768px) {
   .crew-section {
-    padding: 4rem 3.5rem;
+    padding: 4rem 3.5rem 5.5rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .crew-section {
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0 100%);
+    padding-bottom: 4rem;
   }
 }
 
@@ -22,14 +39,9 @@
   box-sizing: border-box;
 }
 
-/* Section heading */
-.crew-section h2 {
-  font-family: 'Aldrich', sans-serif;
-  font-weight: 400;
-  font-size: clamp(1.75rem, 4vw, 2.5rem);
-  color: var(--cyan);
-  margin: 0 0 0.5rem 0;
-  letter-spacing: 0.03em;
+/* Section heading — crisp white title, exact same size and typography as all other sections */
+.crew-section .heading-container h2 {
+  color: #ffffff;
 }
 
 /* Crew grid — mobile-first stacked, 3-across desktop */

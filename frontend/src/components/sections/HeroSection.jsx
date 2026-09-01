@@ -51,16 +51,6 @@ export function HeroSection({ onRegister }) {
           </div>
         }
       />
-
-      {/* Quiet Cut-Edge Boundary Numeral Indicator */}
-      <div className="hero-cut-boundary">
-        <span>01 / 05</span>
-        <span className="hero-cut-chevron" aria-hidden="true">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.75">
-            <path d="M2 4L6 8L10 4" strokeLinecap="square" strokeLinejoin="miter"/>
-          </svg>
-        </span>
-      </div>
     </section>
   );
 }

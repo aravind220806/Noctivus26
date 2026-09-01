@@ -5,6 +5,7 @@ import RegistrationModal from './components/RegistrationModal.jsx';
 import Navbar from './components/Navbar.jsx';
 import Sidebar from './components/navigation/Sidebar.jsx';
 import MobileDrawer from './components/navigation/MobileDrawer.jsx';
+import { TickDivider } from './components/ui/TickDivider/TickDivider';
 import { HeroSection } from './components/sections/HeroSection.jsx';
 import { AboutSection } from './components/sections/AboutSection.jsx';
 import { EventsSection } from './components/sections/EventsSection.jsx';
@@ -127,9 +128,11 @@ export default function App() {
       <main className="main-container" id="main">
         <HeroSection onRegister={() => openRegistration()} />
         <AboutSection />
+        <TickDivider />
         <EventsSection onSelect={setSelectedEvent} />
-        
+        <TickDivider />
         <TimelineSection />
+        <TickDivider />
         <CrewSection />
         <FooterSection />
       </main>
