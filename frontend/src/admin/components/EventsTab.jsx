@@ -76,11 +76,12 @@ export function EventsTab({ authHeaders, onEventChanged }) {
   });
 
   return (
-    <section className="admin-panel events-admin-container">
-      <div className="events-toolbar">
-        <div>
-          <h2>Event Management &amp; Status Controls</h2>
-          <p className="admin-help" style={{ margin: '4px 0 0' }}>
+    <div className="events-tab-wrapper">
+      {/* Top Banner Toolbar */}
+      <div className="events-management-header">
+        <div className="events-title-area">
+          <h2 className="events-section-title">Event Management &amp; Status Controls</h2>
+          <p className="admin-help">
             Toggle registration status (Open / Closed), assign event venues, and configure boarding pass details.
           </p>
         </div>
@@ -97,30 +98,47 @@ export function EventsTab({ authHeaders, onEventChanged }) {
         </div>
       </div>
 
-      <div className="admin-filters" style={{ margin: '4px 0' }}>
-        <label className="field" style={{ flex: 1 }}>
-          <span>Search events</span>
+      {/* Filter & Search Bar */}
+      <div className="events-filter-bar">
+        <div className="events-search-field">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="search-icon">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by event name, category, or venue..."
+            className="events-search-input"
           />
-        </label>
-        <label className="field" style={{ width: '180px' }}>
-          <span>Status Filter</span>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          {search && (
+            <button type="button" className="search-clear-btn" onClick={() => setSearch('')}>
+              ×
+            </button>
+          )}
+        </div>
+        <div className="events-status-select-wrap">
+          <span className="filter-label">Filter:</span>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="events-status-select"
+          >
             <option value="all">All Events ({items.length})</option>
             <option value="open">Open Only ({openCount})</option>
             <option value="closed">Closed Only ({closedCount})</option>
           </select>
-        </label>
+        </div>
       </div>
 
-      {message && <p className="admin-message">{message}</p>}
+      {message && <div className="admin-message-banner">{message}</div>}
 
-      <div className="admin-event-list" style={{ display: 'grid', gap: '16px' }}>
+      {/* Event Cards Grid */}
+      <div className="events-cards-container">
         {filteredItems.length === 0 ? (
-          <p className="admin-empty">No events match the selected search or filter.</p>
+          <div className="events-empty-state">
+            <p>No events match the selected search or filter criteria.</p>
+          </div>
         ) : (
           filteredItems.map((event) => {
             const effStatus = event.effectiveStatus || event.status || 'open';
@@ -128,21 +146,32 @@ export function EventsTab({ authHeaders, onEventChanged }) {
             const isSaving = savingId === event.id;
 
             return (
-              <article className="event-card-expanded" key={event.id}>
-                <div className="event-card-header-bar">
-                  <div className="event-card-title-group">
-                    <h3>{event.name}</h3>
-                    {event.category && <span className="category-pill">{event.category}</span>}
-                    <span className="event-card-badge-venue">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-                      {drafts[event.id]?.venue || event.venue || 'No venue assigned'}
-                    </span>
-                    <span style={{ fontSize: '12px', color: '#94a3b8' }}>
-                      Rs.{event.fee} · {event.registrationCount || 0} registrations
-                    </span>
+              <article className="event-card-box" key={event.id}>
+                {/* Event Card Header */}
+                <div className="event-card-top-row">
+                  <div className="event-card-left-info">
+                    <div className="event-name-row">
+                      <h3 className="event-heading">{event.name}</h3>
+                      {event.category && (
+                        <span className={`category-pill category-pill--${event.category.toLowerCase().replace(/[^a-z]/g, '')}`}>
+                          {event.category}
+                        </span>
+                      )}
+                    </div>
+                    <div className="event-tags-row">
+                      <span className="event-venue-tag">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                          <circle cx="12" cy="10" r="3" />
+                        </svg>
+                        {drafts[event.id]?.venue || event.venue || 'No venue assigned'}
+                      </span>
+                      <span className="event-meta-pill">₹{event.fee} fee</span>
+                      <span className="event-meta-pill">{event.registrationCount || 0} registered</span>
+                    </div>
                   </div>
 
-                  <div className="event-card-status-actions">
+                  <div className="event-card-right-actions">
                     <span className={`status-pill status-pill--${effStatus}`}>
                       <span className="status-dot" />
                       {effStatus.toUpperCase()}
@@ -153,82 +182,102 @@ export function EventsTab({ authHeaders, onEventChanged }) {
                       disabled={isSaving}
                       onClick={() => save(event, { status: isOpen ? 'closed' : 'open' })}
                     >
-                      {isSaving ? 'Updating...' : isOpen ? '🔴 Close Event' : '🟢 Open Event'}
+                      {isSaving ? 'Updating...' : isOpen ? 'Close Event' : 'Open Event'}
                     </button>
                   </div>
                 </div>
 
-                <div className="event-pass-fields">
-                  <label className="field">
-                    <span>Venue Location</span>
-                    <input
-                      value={drafts[event.id]?.venue || ''}
-                      onChange={(e) => changeDraft(event.id, 'venue', e.target.value)}
-                      placeholder="e.g. CSE Cyber Lab 1 / Main Auditorium"
-                    />
-                  </label>
-                  <label className="field">
-                    <span>Date</span>
-                    <input
-                      value={drafts[event.id]?.date || ''}
-                      onChange={(e) => changeDraft(event.id, 'date', e.target.value)}
-                      placeholder="26 Sep 2026"
-                    />
-                  </label>
-                  <label className="field">
-                    <span>Time</span>
-                    <input
-                      value={drafts[event.id]?.time || ''}
-                      onChange={(e) => changeDraft(event.id, 'time', e.target.value)}
-                      placeholder="09:00 AM"
-                    />
-                  </label>
-                  <label className="field">
-                    <span>Gate</span>
-                    <input
-                      value={drafts[event.id]?.gate || ''}
-                      onChange={(e) => changeDraft(event.id, 'gate', e.target.value)}
-                      placeholder="VEC Gate 1"
-                    />
-                  </label>
-                  <label className="field">
-                    <span>Terminal / Hall</span>
-                    <input
-                      value={drafts[event.id]?.terminal || ''}
-                      onChange={(e) => changeDraft(event.id, 'terminal', e.target.value)}
-                      placeholder="MAIN HALL"
-                    />
-                  </label>
-                  <label className="field">
-                    <span>Seat Type</span>
-                    <input
-                      value={drafts[event.id]?.seatType || ''}
-                      onChange={(e) => changeDraft(event.id, 'seatType', e.target.value)}
-                      placeholder="VIP"
-                    />
-                  </label>
-                  <label className="field field-checkbox">
-                    <input
-                      type="checkbox"
-                      checked={drafts[event.id]?.passActive !== false}
-                      onChange={(e) => changeDraft(event.id, 'passActive', e.target.checked)}
-                    />
-                    <span>Pass active</span>
-                  </label>
-                  <button
-                    type="button"
-                    className="button button-primary"
-                    disabled={isSaving}
-                    onClick={() => save(event, drafts[event.id])}
-                  >
-                    {isSaving ? 'Saving...' : 'Save details'}
-                  </button>
+                {/* Event Form Fields */}
+                <div className="event-card-body">
+                  <div className="event-inputs-grid">
+                    <label className="event-field event-field--venue">
+                      <span className="field-label">Venue Location</span>
+                      <input
+                        className="event-text-input"
+                        value={drafts[event.id]?.venue || ''}
+                        onChange={(e) => changeDraft(event.id, 'venue', e.target.value)}
+                        placeholder="e.g. CSE Cyber Lab 1 / Main Auditorium"
+                      />
+                    </label>
+                    <label className="event-field">
+                      <span className="field-label">Date</span>
+                      <input
+                        className="event-text-input"
+                        value={drafts[event.id]?.date || ''}
+                        onChange={(e) => changeDraft(event.id, 'date', e.target.value)}
+                        placeholder="26 Sep 2026"
+                      />
+                    </label>
+                    <label className="event-field">
+                      <span className="field-label">Time</span>
+                      <input
+                        className="event-text-input"
+                        value={drafts[event.id]?.time || ''}
+                        onChange={(e) => changeDraft(event.id, 'time', e.target.value)}
+                        placeholder="09:00 AM"
+                      />
+                    </label>
+                    <label className="event-field">
+                      <span className="field-label">Gate</span>
+                      <input
+                        className="event-text-input"
+                        value={drafts[event.id]?.gate || ''}
+                        onChange={(e) => changeDraft(event.id, 'gate', e.target.value)}
+                        placeholder="VEC Gate 1"
+                      />
+                    </label>
+                    <label className="event-field">
+                      <span className="field-label">Terminal / Hall</span>
+                      <input
+                        className="event-text-input"
+                        value={drafts[event.id]?.terminal || ''}
+                        onChange={(e) => changeDraft(event.id, 'terminal', e.target.value)}
+                        placeholder="MAIN HALL"
+                      />
+                    </label>
+                    <label className="event-field">
+                      <span className="field-label">Seat Type</span>
+                      <input
+                        className="event-text-input"
+                        value={drafts[event.id]?.seatType || ''}
+                        onChange={(e) => changeDraft(event.id, 'seatType', e.target.value)}
+                        placeholder="VIP"
+                      />
+                    </label>
+                  </div>
+
+                  {/* Actions Footer */}
+                  <div className="event-card-footer">
+                    <label className="event-checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={drafts[event.id]?.passActive !== false}
+                        onChange={(e) => changeDraft(event.id, 'passActive', e.target.checked)}
+                        className="event-checkbox"
+                      />
+                      <span>Pass active on dispatch</span>
+                    </label>
+
+                    <button
+                      type="button"
+                      className="button button-save-event"
+                      disabled={isSaving}
+                      onClick={() => save(event, drafts[event.id])}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                        <polyline points="17 21 17 13 7 13 7 21" />
+                        <polyline points="7 3 7 8 15 8" />
+                      </svg>
+                      {isSaving ? 'Saving...' : 'Save details'}
+                    </button>
+                  </div>
                 </div>
               </article>
             );
           })
         )}
       </div>
-    </section>
+    </div>
   );
 }

@@ -74,7 +74,24 @@ export function VerifyTab({
           <span>Search</span>
           <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Name, email, phone, UTR" />
         </label>
-        <Filters overview={overview} eventId={eventId} setEventId={setEventId} status={status} setStatus={setStatus} />
+        <label className="field">
+          <span>Event</span>
+          <select value={eventId} onChange={(event) => setEventId(event.target.value)}>
+            <option value="">All events</option>
+            {overview?.events?.map((event) => (
+              <option key={event.eventId} value={event.eventId}>{event.eventName}</option>
+            ))}
+          </select>
+        </label>
+        <label className="field">
+          <span>Status</span>
+          <select value={status} onChange={(event) => setStatus(event.target.value)}>
+            <option value="">All statuses</option>
+            {['pending', 'confirmed', 'mismatch', 'duplicate'].map((item) => (
+              <option key={item} value={item}>{item}</option>
+            ))}
+          </select>
+        </label>
       </div>
       <div className="verify-bulk-actions">
         <button

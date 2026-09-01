@@ -31,10 +31,10 @@ export function InvitationsTab({ authHeaders, onSent }) {
   useEffect(() => {
     const controller = new AbortController();
     setPreviewMessage('Generating boarding pass preview...');
+
     adminFetch(apiPath('/api/admin/invitations/preview'), {
-      method: 'POST',
-      headers: { ...authHeaders, 'Content-Type': 'application/json' },
-      body: JSON.stringify({}),
+      method: 'GET',
+      headers: authHeaders,
       signal: controller.signal,
     })
       .then(async (response) => {
