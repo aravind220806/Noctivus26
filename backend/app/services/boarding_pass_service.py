@@ -222,18 +222,18 @@ async function fitAllText() {{
 </html>"""
 
 
+from app.services.browser_renderer import render_html_to_png
+
+
 async def render_pass_artwork_bytes(registration: dict, pass_data: dict, token: str | None = None) -> bytes:
     token = token or create_pass_token()[0]
     html_content = render_boarding_pass_html(registration, pass_data, token)
-    async with async_playwright() as playwright:
-        browser = await playwright.chromium.launch(args=["--no-sandbox"])
-        page = await browser.new_page(viewport={"width": PASS_WIDTH, "height": PASS_HEIGHT}, device_scale_factor=1)
-        await page.set_content(html_content, wait_until="load")
+
+    async def _prepare(page):
         await page.evaluate("fitAllText()")
-        await page.evaluate("document.fonts && document.fonts.ready")
-        output = await page.screenshot(type="png", clip={"x": 0, "y": 0, "width": PASS_WIDTH, "height": PASS_HEIGHT})
-        await browser.close()
-        return output
+
+    return await render_html_to_png(html_content, PASS_WIDTH, PASS_HEIGHT, prepare_fn=_prepare)
+
 
 
 async def validate_boarding_pass_layout(registration: dict, pass_data: dict) -> list[dict]:

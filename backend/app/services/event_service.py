@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from app.core.config import settings
 from app.db.memory_store import memory_events
 from app.db import mongo
+from app.db.sqlite_db import sqlite_db
 from app.events import EVENT_CATALOG
 
 VALID_STATUSES = {"open", "closed", "coming-soon"}
@@ -58,9 +59,18 @@ async def list_events() -> list[dict]:
                 rows = await mongo.db.events.find({}).sort("id", 1).to_list(length=100)
             return [serialize_event(row) for row in rows]
     except Exception as error:
-        print(f"Falling back to in-memory events: {error}")
+        print(f"Falling back to SQLite/memory events: {error}")
         mongo.client = None
         mongo.db = None
+
+    if sqlite_db.ready():
+        rows = await sqlite_db.list_all("events")
+        if not rows:
+            await seed_events()
+            rows = await sqlite_db.list_all("events")
+        if rows:
+            return [serialize_event(item) for item in rows]
+
     if not memory_events:
         memory_events.extend(_seed_events())
     return [serialize_event(item) for item in memory_events]
@@ -82,9 +92,16 @@ async def seed_events() -> None:
                     "date": event["date"],
                     "time": event["time"],
                     "gate": event["gate"],
+                    "teamMin": event["teamMin"],
+                    "teamMax": event["teamMax"],
                 }, "$setOnInsert": event},
                 upsert=True,
             )
+    elif sqlite_db.ready():
+        for event in seeded:
+            existing = await sqlite_db.get("events", event["id"])
+            if not existing:
+                await sqlite_db.upsert("events", event["id"], event)
     elif not memory_events:
         memory_events.extend(seeded)
 
@@ -118,13 +135,15 @@ async def update_event(event_id: str, changes: dict, updated_by: str) -> dict | 
     current = await get_event(event_id)
     if not current:
         return None
-    merged = {**current, **update, "updatedBy": updated_by, "updatedAt": datetime.now(timezone.utc)}
+    merged = {**current, **update, "updatedBy": updated_by, "updatedAt": datetime.now(timezone.utc).isoformat()}
     if merged["teamMin"] > merged["teamMax"]:
         raise ValueError("Team minimum cannot exceed team maximum.")
     if mongo.mongo_ready():
         clean_merged = dict(merged)
         clean_merged.pop("_id", None)
         await mongo.db.events.replace_one({"id": event_id}, clean_merged)
+    elif sqlite_db.ready():
+        await sqlite_db.upsert("events", event_id, merged)
     else:
         current.clear()
         current.update(merged)
@@ -133,11 +152,19 @@ async def update_event(event_id: str, changes: dict, updated_by: str) -> dict | 
 
 async def admin_events() -> list[dict]:
     events = await list_events()
+    from app.services.registration_service import load_registrations
+    all_registrations = await load_registrations()
+    
     result = []
     for event in events:
-        if mongo.mongo_ready():
-            count = await mongo.db.registrations.count_documents({"eventRegistrations.eventId": event["id"]})
-        else:
-            count = 0
-        result.append(serialize_event({**event, "registrationCount": count, "effectiveStatus": "closed" if _is_closed(event) else event.get("status")}))
+        eid = event["id"]
+        count = sum(
+            1 for r in all_registrations
+            if any(e.get("eventId") == eid for e in r.get("eventRegistrations", [])) or eid in (r.get("event_ids") or [])
+        )
+        result.append(serialize_event({
+            **event,
+            "registrationCount": count,
+            "effectiveStatus": "closed" if _is_closed(event) else event.get("status"),
+        }))
     return result

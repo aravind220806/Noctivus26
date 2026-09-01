@@ -23,53 +23,32 @@ def get_client():
 
 
 # ---------------------------------------------------------------------------
-# P0.1 — CORS: untrusted origins must be rejected in production mode
+# P0.1 — CORS: untrusted origins must be rejected in all modes
 # ---------------------------------------------------------------------------
 
 def test_cors_rejects_untrusted_origin_in_production():
     """
-    In production, allow_origin_regex=None so evil.vercel.app is blocked.
-    We create a temporary app matching main.py's production CORS configuration.
+    allow_origin_regex=None so evil.vercel.app is strictly blocked.
+    We verify against main.py's CORS configuration.
     """
-    from fastapi import FastAPI
-    from fastapi.middleware.cors import CORSMiddleware
-    from app.main import _dev_origin_regex
-
-    prod_app = FastAPI()
-    prod_app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["https://noctivus26.vercel.app"],
-        allow_origin_regex=None,  # what main.py sets in production
-        allow_credentials=True,
-        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        allow_headers=["*"],
-    )
-
-    @prod_app.get("/probe")
-    async def probe():
-        return {}
-
-    tc = TestClient(prod_app, raise_server_exceptions=False)
-    resp = tc.options(
-        "/probe",
+    client = get_client()
+    resp = client.options(
+        "/api/events",
         headers={"Origin": "https://evil.vercel.app", "Access-Control-Request-Method": "GET"},
     )
     acao = resp.headers.get("access-control-allow-origin", "")
-    assert acao != "https://evil.vercel.app", f"CORS allowed untrusted origin in production mode: {acao}"
+    assert acao != "https://evil.vercel.app", f"CORS allowed untrusted origin: {acao}"
 
 
 def test_cors_regex_is_none_in_production_config():
-    """The CORSMiddleware is configured with allow_origin_regex=None when environment=production."""
-    from app.main import _dev_origin_regex, settings
+    """CORSMiddleware is configured with explicit allowlist and no wildcard regex."""
+    from app.main import app
+    from fastapi.middleware.cors import CORSMiddleware
 
-    production_regex = None if settings.environment == "production" else _dev_origin_regex
-    if settings.environment == "production":
-        assert production_regex is None
-    else:
-        # Development: regex is active (intentional staging convenience)
-        assert production_regex is not None
-        # Ensure the gate logic itself is correct
-        assert (None if "production" == "production" else _dev_origin_regex) is None
+    cors_middleware = next((m for m in app.user_middleware if m.cls == CORSMiddleware), None)
+    assert cors_middleware is not None, "CORSMiddleware not found in app"
+    assert cors_middleware.kwargs.get("allow_origin_regex") is None, "allow_origin_regex must be None"
+    assert cors_middleware.kwargs.get("allow_credentials") is True
 
 
 def test_cors_allows_trusted_origin():

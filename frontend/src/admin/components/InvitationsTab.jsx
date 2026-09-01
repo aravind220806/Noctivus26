@@ -28,7 +28,10 @@ export function InvitationsTab({ authHeaders, onSent }) {
     fetchStats();
   }, [fetchStats]);
 
+  const [previewRetryCount, setPreviewRetryCount] = useState(0);
+
   useEffect(() => {
+    let isMounted = true;
     const controller = new AbortController();
     setPreviewMessage('Generating boarding pass preview...');
 
@@ -43,6 +46,7 @@ export function InvitationsTab({ authHeaders, onSent }) {
         throw new Error(data.detail || data.message || `Preview unavailable (${response.status}).`);
       })
       .then((blob) => {
+        if (!isMounted) return;
         const url = URL.createObjectURL(blob);
         setPassPreviewUrl((current) => {
           if (current) URL.revokeObjectURL(current);
@@ -51,15 +55,20 @@ export function InvitationsTab({ authHeaders, onSent }) {
         setPreviewMessage('');
       })
       .catch((previewError) => {
-        if (controller.signal.aborted) return;
+        if (!isMounted || controller.signal.aborted || previewError.name === 'AbortError') return;
         setPassPreviewUrl((current) => {
           if (current) URL.revokeObjectURL(current);
           return '';
         });
-        setPreviewMessage(previewError.message || 'Boarding pass preview unavailable.');
+        const isNetworkErr = String(previewError.message || '').toLowerCase().includes('network') || String(previewError.message || '').toLowerCase().includes('failed to fetch');
+        setPreviewMessage(isNetworkErr ? 'Preview temporarily unavailable. Reconnecting...' : (previewError.message || 'Boarding pass preview unavailable.'));
       });
-    return () => controller.abort();
-  }, [authHeaders]);
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
+  }, [authHeaders, previewRetryCount]);
 
   const handleSendBatch = async () => {
     const count = parseInt(batchCount, 10);
@@ -137,8 +146,12 @@ export function InvitationsTab({ authHeaders, onSent }) {
         </p>
 
         <div className="batch-stats-summary">
+          <div className="batch-stat-box stat-registered">
+            <span>Total Registered</span>
+            <strong>{stats.totalRegistered ?? stats.totalEligible ?? 0}</strong>
+          </div>
           <div className="batch-stat-box stat-eligible">
-            <span>Eligible Confirmed</span>
+            <span>Eligible (Confirmed)</span>
             <strong>{stats.totalEligible}</strong>
           </div>
           <div className="batch-stat-box stat-sent">
@@ -154,6 +167,12 @@ export function InvitationsTab({ authHeaders, onSent }) {
             <strong>{stats.failedCount}</strong>
           </div>
         </div>
+
+        {stats.totalEligible === 0 && (stats.totalRegistered || 0) > 0 && (
+          <div style={{ marginTop: '12px', padding: '10px 14px', borderRadius: '8px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.25)', color: '#fbbf24', fontSize: '13px' }}>
+            💡 <strong>Note:</strong> You have {stats.totalRegistered} registered participant(s) awaiting payment confirmation. Go to <strong>Verify Members</strong> to verify and confirm their payment before boarding passes can be generated.
+          </div>
+        )}
 
         <div className="batch-send-form">
           <label className="field">
@@ -273,7 +292,19 @@ export function InvitationsTab({ authHeaders, onSent }) {
           {passPreviewUrl && (
             <img className="boarding-pass-render" src={passPreviewUrl} alt="Personalized symposium boarding pass sample" />
           )}
-          {!passPreviewUrl && <div className="boarding-pass-empty">{previewMessage}</div>}
+          {!passPreviewUrl && (
+            <div className="boarding-pass-empty">
+              <p>{previewMessage}</p>
+              <button
+                type="button"
+                className="button button-secondary button-small"
+                style={{ marginTop: 12 }}
+                onClick={() => setPreviewRetryCount((c) => c + 1)}
+              >
+                Reload Preview
+              </button>
+            </div>
+          )}
         </div>
       </section>
     </div>

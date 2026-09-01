@@ -6,8 +6,10 @@
     "frontend"
   ],
   "scripts": {
-    "dev": "npm run dev --workspace frontend",
+    "dev": "concurrently -k -n \"api,web\" -c \"blue,magenta\" \"npm:dev:api\" \"npm:dev:web\"",
     "dev:api": "cd backend && python3 run.py",
+    "dev:web": "npm run dev --workspace frontend",
+    "dev:frontend": "npm run dev --workspace frontend",
     "build": "npm run build --workspace frontend",
     "start": "cd backend && python3 run.py",
     "test": "python3 -m compileall backend/app backend/run.py"
@@ -15,5 +17,8 @@
   "dependencies": {
     "lucide-react": "^1.37.0",
     "recharts": "^3.10.1"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5"
   }
 }

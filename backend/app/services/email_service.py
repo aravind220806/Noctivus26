@@ -128,32 +128,83 @@ async def generatePassImage(member: dict) -> str:
     return file_path
 
 
-from app.services.receipt_service import generateReceiptImage
+from app.services.receipt_service import render_receipt_artwork_bytes, generateReceiptImage
 
 
-def build_confirmation_html(full_name: str, event_names_str: str) -> str:
+def build_confirmation_html(full_name: str, event_names_str: str, cid: str | None = None) -> str:
+    receipt_img_tag = ""
+    if cid:
+        receipt_img_tag = f"""
+        <div style="margin: 24px 0; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #1f2937;">
+          <img src="cid:{cid}" alt="Noctivus '26 Official Payment Receipt" style="display: block; width: 100%; max-width: 600px; margin: 0 auto;" />
+        </div>
+        """
+
+    # Google Calendar link for 26 Sep 2026 8:30 AM – 6 PM IST (UTC+5:30)
+    # 20260926T030000Z = 08:30 IST, 20260926T123000Z = 18:00 IST
+    gcal_url = (
+        "https://calendar.google.com/calendar/render?action=TEMPLATE"
+        "&text=Noctivus+%2726+%E2%80%94+National+Symposium"
+        "&dates=20260926T030000Z%2F20260926T123000Z"
+        "&details=I+am+registered+for+Noctivus+%2726+%E2%80%94+National+Level+Technical+Symposium+by+Department+of+CSE+(Cyber+Security)%2C+Velammal+Engineering+College."
+        "&location=Velammal+Engineering+College%2C+Ambattur-Redhills+Road%2C+Surapet%2C+Chennai+%E2%80%94+600066"
+        "&sf=true&output=xml"
+    )
+    # ICS data URI for generic calendar apps (Outlook, Apple Calendar, etc.)
+    ics_content = (
+        "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Noctivus 26//EN\r\n"
+        "BEGIN:VEVENT\r\n"
+        "DTSTART:20260926T030000Z\r\n"
+        "DTEND:20260926T123000Z\r\n"
+        "SUMMARY:Noctivus '26 — National Symposium\r\n"
+        "DESCRIPTION:I am registered for Noctivus '26 — National Level Technical Symposium by Department of CSE (Cyber Security)\\, Velammal Engineering College.\r\n"
+        "LOCATION:Velammal Engineering College\\, Ambattur-Redhills Road\\, Surapet\\, Chennai — 600066\r\n"
+        "STATUS:CONFIRMED\r\n"
+        "END:VEVENT\r\n"
+        "END:VCALENDAR"
+    )
+    import base64 as _b64
+    ics_data_uri = "data:text/calendar;charset=utf-8;base64," + _b64.b64encode(ics_content.encode("utf-8")).decode("ascii")
+
     return f"""<!doctype html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Verification - Noctivus '26</title>
 </head>
 <body style="margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0b0f19; color: #f3f4f6;">
   <div style="max-width: 600px; margin: 0 auto; background: #111827; border: 1px solid #1f2937; border-radius: 12px; padding: 32px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
     <div style="margin-bottom: 24px; border-bottom: 1px solid #1f2937; padding-bottom: 16px;">
-      <h1 style="margin: 0; font-size: 24px; color: #f59e0b; font-weight: 800; letter-spacing: -0.02em;">NOCTIVUS '26</h1>
+      <h1 style="margin: 0; font-size: 24px; color: #00c8e0; font-weight: 800; letter-spacing: -0.02em;">NOCTIVUS '26</h1>
       <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #9ca3af;">Official Payment Verification</span>
     </div>
     <p style="font-size: 16px; line-height: 1.6; margin: 0 0 16px;">Hi <strong>{html.escape(full_name)}</strong>,</p>
-    <p style="font-size: 16px; line-height: 1.6; margin: 0 0 16px;">This is Noctivus '26. We've verified your payment for <strong>{html.escape(event_names_str)}</strong>.</p>
-    <p style="font-size: 16px; line-height: 1.6; margin: 0 0 16px;">Your official <strong>Payment Receipt</strong> is attached to this email as an image for your records.</p>
-    <div style="background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; border-radius: 6px; padding: 14px 16px; margin: 20px 0;">
-      <strong style="color: #93c5fd; display: block; font-size: 14px; margin-bottom: 4px;">✈ Boarding Pass Notice:</strong>
-      <span style="font-size: 13px; color: #cbd5e1; line-height: 1.4;">Your specific event time batch slot and official Symposium Boarding Pass will be dispatched via email once the event scheduler finalizes time allocations.</span>
+    <p style="font-size: 16px; line-height: 1.6; margin: 0 0 16px;">Welcome to <strong>Noctivus '26</strong>! We have verified your registration fee payment for <strong>{html.escape(event_names_str)}</strong>.</p>
+    
+    <div style="background: rgba(0, 200, 224, 0.08); border-left: 4px solid #00c8e0; border-radius: 6px; padding: 14px 16px; margin: 20px 0;">
+      <strong style="color: #67e8f9; display: block; font-size: 14px; margin-bottom: 4px;">📅 Next Steps &amp; Event Pass:</strong>
+      <span style="font-size: 13px; color: #cbd5e1; line-height: 1.5;">Your official <strong>Symposium Event Pass</strong> with check-in QR code will be dispatched in a separate email once scheduling is finalized.</span>
     </div>
-    <p style="font-size: 16px; line-height: 1.6; margin: 0 0 24px;">Thank you for registering, and see you at the symposium!</p>
-    <div style="border-top: 1px solid #1f2937; padding-top: 16px; font-size: 14px; color: #9ca3af;">
-      — Team Noctivus '26
+
+    <!-- Add to Calendar buttons -->
+    <div style="margin: 20px 0; display: flex; gap: 10px; flex-wrap: wrap;">
+      <a href="{gcal_url}" target="_blank"
+         style="display: inline-flex; align-items: center; gap: 7px; background: #1a73e8; color: #ffffff; text-decoration: none; padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600; letter-spacing: 0.01em;">
+        📅 Add to Google Calendar
+      </a>
+      <a href="{ics_data_uri}" download="Noctivus26.ics"
+         style="display: inline-flex; align-items: center; gap: 7px; background: #1e293b; color: #e2e8f0; text-decoration: none; padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600; border: 1px solid #334155; letter-spacing: 0.01em;">
+        📆 Add to Outlook / Apple Calendar
+      </a>
+    </div>
+
+    <p style="font-size: 14px; font-weight: 700; color: #e5e7eb; margin: 24px 0 8px; text-transform: uppercase; letter-spacing: 0.05em;">Official Payment Receipt:</p>
+    {receipt_img_tag}
+
+    <p style="font-size: 14px; line-height: 1.6; color: #9ca3af; margin: 24px 0 20px;">Thank you for registering. See you on <strong>26 September 2026</strong> at Velammal Engineering College!</p>
+    <div style="border-top: 1px solid #1f2937; padding-top: 16px; font-size: 13px; color: #6b7280;">
+      — Team Noctivus '26 &bull; Department of CSE (Cyber Security)
     </div>
   </div>
 </body>
@@ -175,7 +226,7 @@ async def send_smtp_email(
     from_header = formataddr((sender_name, sender_email))
 
     if inline_image_bytes and inline_image_cid:
-        # Build multipart/related so the image is embedded inline — no paperclip
+        # Build multipart/related so the image is embedded inline — no attachment paperclip
         outer = MIMEMultipart("mixed")
         outer["From"] = from_header
         outer["To"] = to_email
@@ -185,9 +236,9 @@ async def send_smtp_email(
         html_part = MIMEText(html_body, "html", "utf-8")
         related.attach(html_part)
 
-        img_part = MIMEImage(inline_image_bytes, name=inline_image_name or "boarding_pass.png")
+        img_part = MIMEImage(inline_image_bytes, name=inline_image_name or "image.png")
         img_part.add_header("Content-ID", f"<{inline_image_cid}>")
-        img_part.add_header("Content-Disposition", "inline", filename=inline_image_name or "boarding_pass.png")
+        img_part.add_header("Content-Disposition", "inline", filename=inline_image_name or "image.png")
         related.attach(img_part)
 
         outer.attach(related)
@@ -250,30 +301,32 @@ async def sendPaymentConfirmationEmail(member: dict) -> dict:
     else:
         event_names_str = "Noctivus '26 Events"
 
-    receipt_image_path = None
+    receipt_bytes = None
     receipt_gen_failed = False
     receipt_error_note = None
 
-    # Generate official Payment Receipt image
+    # Generate official Payment Receipt image bytes for inline embedding
     try:
-        receipt_image_path = await generateReceiptImage(member)
+        receipt_bytes = await render_receipt_artwork_bytes(member)
     except Exception as img_err:
         receipt_gen_failed = True
-        receipt_error_note = "Receipt image generation failed, email sent without attachment"
+        receipt_error_note = "Receipt image generation failed, email sent without inline image"
         print(f"[Receipt Gen Error for {reg_id}]: {img_err}")
 
     subject = "Noctivus '26 — Payment Verified & Receipt ✅"
-    html_content = build_confirmation_html(full_name, event_names_str)
+    cid = make_msgid(domain="noctivus.site").strip("<>")
+    html_content = build_confirmation_html(full_name, event_names_str, cid=cid if (receipt_bytes and not receipt_gen_failed) else None)
     safe_name = re.sub(r"[^\w\s-]", "", full_name).strip().replace(" ", "_") or "Member"
-    attachment_name = f"Noctivus26_Receipt_{safe_name}.png"
+    inline_name = f"Noctivus26_Receipt_{safe_name}.png"
 
     try:
         await send_smtp_email(
             to_email=email,
             subject=subject,
             html_body=html_content,
-            attachment_path=receipt_image_path if not receipt_gen_failed else None,
-            attachment_name=attachment_name,
+            inline_image_bytes=receipt_bytes if not receipt_gen_failed else None,
+            inline_image_cid=cid if not receipt_gen_failed else None,
+            inline_image_name=inline_name,
         )
 
         now = datetime.now(timezone.utc)
@@ -283,7 +336,7 @@ async def sendPaymentConfirmationEmail(member: dict) -> dict:
             "payment_email_error": receipt_error_note,
         }
         await update_registration(reg_id, status_updates)
-        print(f"[Payment Confirmation Receipt Email] Sent to {email} ({reg_id}) - Attached: {not receipt_gen_failed}")
+        print(f"[Payment Confirmation Receipt Email] Sent inline to {email} ({reg_id})")
         return {"success": True}
     except Exception as send_err:
         err_msg = str(send_err) or "SMTP delivery failed"
@@ -293,12 +346,6 @@ async def sendPaymentConfirmationEmail(member: dict) -> dict:
         })
         print(f"[Payment Confirmation Email Failed for {reg_id}]: {err_msg}")
         return {"success": False, "error": err_msg}
-    finally:
-        if receipt_image_path and os.path.exists(receipt_image_path):
-            try:
-                os.remove(receipt_image_path)
-            except Exception:
-                pass
 
 
 async def queue_email(kind: str, registration: dict, pass_data: dict | None = None) -> None:
@@ -479,89 +526,106 @@ async def send_announcement(registration: dict, data: dict) -> None:
     email = str(participant.get("email") or "").strip()
     if not email:
         return
-    subject = html.escape(str(data.get("subject") or "Noctivus announcement"))
-    message = html.escape(str(data.get("message") or "")).replace("\\n", "<br>")
     await send_smtp_email(email, subject, f"<h1>{subject}</h1><p>{message}</p>")
 
 
 def invitation_html(registration: dict, pass_data: dict, event_names: str, artwork: bytes | None = None, cid: str | None = None) -> str:
     participant = registration.get("participant") or {}
     name = html.escape(str(participant.get("name") or "Member"))
-    college = html.escape(str(participant.get("college") or ""))
+    college = html.escape(str(participant.get("college") or "Institution"))
     reg_id = html.escape(str(registration.get("registrationId") or ""))
-    event_esc = html.escape(str(event_names or ""))
-    date_esc = html.escape(str(pass_data.get("date") or "26 SEP 2026"))
+    event_esc = html.escape(str(event_names or "Noctivus '26 Events"))
+    date_esc = html.escape(str(pass_data.get("date") or "26 September 2026"))
     time_esc = html.escape(str(pass_data.get("time") or "09:00 AM"))
-    gate_esc = html.escape(str(pass_data.get("gate") or "Gate 1"))
-    terminal_esc = html.escape(str(pass_data.get("terminal") or "Main Hall"))
-    venue_esc = html.escape(str(pass_data.get("venue") or "Velammal Engineering College"))
-    title_esc = html.escape(str(pass_data.get("title") or "Noctivus '26 Boarding Pass"))
+    venue_esc = html.escape(str(pass_data.get("venue") or "Velammal Engineering College, Chennai"))
+    title_esc = html.escape(str(pass_data.get("title") or "Noctivus '26 Official Event Pass"))
 
-    # Board pass image — prefer CID inline embed, fall back to base64 data URI
+    # Event pass image — prefer CID inline embed, fall back to base64 data URI
     if cid:
-        img_tag = f'<img src="cid:{cid}" alt="Your Noctivus \'26 Boarding Pass" style="display:block;width:100%;max-width:600px;border-radius:12px;margin:0 auto;" />'
+        img_tag = f'<img src="cid:{cid}" alt="Your Noctivus \'26 Event Pass" style="display:block;width:100%;max-width:600px;border-radius:12px;margin:0 auto;" />'
     elif artwork:
         b64 = base64.b64encode(artwork).decode("ascii")
-        img_tag = f'<img src="data:image/png;base64,{b64}" alt="Your Noctivus \'26 Boarding Pass" style="display:block;width:100%;max-width:600px;border-radius:12px;margin:0 auto;" />'
+        img_tag = f'<img src="data:image/png;base64,{b64}" alt="Your Noctivus \'26 Event Pass" style="display:block;width:100%;max-width:600px;border-radius:12px;margin:0 auto;" />'
     else:
         img_tag = ""
 
-    info_rows = "".join(f"""
-      <tr>
-        <td style="padding:10px 14px;border-bottom:1px solid #2a2a3a;color:#8b9cb5;font-size:12px;white-space:nowrap;width:130px">{lbl}</td>
-        <td style="padding:10px 14px;border-bottom:1px solid #2a2a3a;color:#e8eaf6;font-size:13px;font-weight:600">{val}</td>
-      </tr>""" for lbl, val in [
-        ("Passenger", name),
-        ("College", college),
-        ("Event", event_esc),
-        ("Date", date_esc),
-        ("Time", time_esc),
-        ("Gate", gate_esc),
-        ("Terminal", terminal_esc),
-        ("Venue", venue_esc),
-        ("Registration ID", f'<span style="font-family:monospace;letter-spacing:.05em">{reg_id}</span>'),
-    ] if val)
-
     return f"""<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{title_esc}</title></head>
-<body style="margin:0;padding:0;background:#0a0a12;font-family:Inter,Arial,sans-serif">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a12;padding:32px 0">
-    <tr><td align="center">
-      <table role="presentation" width="100%" style="max-width:600px;margin:0 auto">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{title_esc}</title>
+</head>
+<body style="margin:0;padding:20px;background:#080b12;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#f3f4f6;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#080b12;padding:16px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" style="max-width:600px;margin:0 auto;background:#0f172a;border:1px solid #1e293b;border-radius:14px;padding:32px;box-shadow:0 12px 36px rgba(0,0,0,0.6);">
+          
+          <!-- Header Banner -->
+          <tr>
+            <td style="padding:0 0 20px;border-bottom:1px solid #1e293b;text-align:left;">
+              <span style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#00c8e0;font-weight:700;display:block;margin-bottom:4px;">DEPARTMENT OF CSE (CYBER SECURITY)</span>
+              <h1 style="margin:0;font-size:24px;font-weight:800;color:#f8fafc;letter-spacing:-0.02em;">NOCTIVUS &rsquo;26 &bull; OFFICIAL EVENT PASS</h1>
+            </td>
+          </tr>
 
-        <!-- Header -->
-        <tr><td style="padding:0 0 24px;text-align:center">
-          <p style="margin:0 0 6px;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#5b5ce2">NOCTIVUS &rsquo;26 &bull; SYMPOSIUM</p>
-          <h1 style="margin:0;font-size:26px;font-weight:800;color:#f0f4ff;letter-spacing:-.02em">Your Boarding Pass</h1>
-          <p style="margin:8px 0 0;font-size:14px;color:#8b9cb5">Present this at the check&#8209;in counter</p>
-        </td></tr>
+          <!-- Welcome Message -->
+          <tr>
+            <td style="padding:24px 0 16px;font-size:15px;line-height:1.6;color:#cbd5e1;">
+              <p style="margin:0 0 14px;font-size:16px;color:#f8fafc;">Dear <strong>{name}</strong>,</p>
+              <p style="margin:0 0 14px;">
+                Welcome to <strong>Noctivus &rsquo;26</strong>! We are thrilled to welcome you to the National Level Technical Symposium organized by the Department of Computer Science & Engineering (Cyber Security) at <strong>Velammal Engineering College</strong>, Chennai.
+              </p>
+              <p style="margin:0 0 14px;">
+                Your seat is confirmed for <strong>{event_esc}</strong>. Your official Registration ID is <strong style="color:#00c8e0;font-family:monospace;letter-spacing:0.05em;">{reg_id}</strong>.
+              </p>
+            </td>
+          </tr>
 
-        <!-- Boarding pass image — full width, inline -->  
-        <tr><td style="padding:0 0 24px">
-          <div style="border-radius:14px;overflow:hidden;box-shadow:0 8px 40px rgba(91,92,226,.25)">
-            {img_tag}
-          </div>
-        </td></tr>
+          <!-- Key Information Box -->
+          <tr>
+            <td style="padding:0 0 24px;">
+              <div style="background:rgba(0,200,224,0.06);border:1px solid rgba(0,200,224,0.2);border-radius:8px;padding:16px;">
+                <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#67e8f9;text-transform:uppercase;letter-spacing:1px;">Symposium Details & Reporting Time</p>
+                <table role="presentation" width="100%" style="font-size:13px;color:#cbd5e1;line-height:1.6;">
+                  <tr><td style="width:110px;color:#94a3b8;padding:3px 0;">📅 Date:</td><td><strong>{date_esc}</strong></td></tr>
+                  <tr><td style="color:#94a3b8;padding:3px 0;">⏰ Reporting:</td><td><strong>08:30 AM</strong> (Inauguration at 09:00 AM)</td></tr>
+                  <tr><td style="color:#94a3b8;padding:3px 0;">📍 Venue:</td><td>{venue_esc}</td></tr>
+                  <tr><td style="color:#94a3b8;padding:3px 0;">🎯 Events:</td><td><strong>{event_esc}</strong></td></tr>
+                </table>
+              </div>
+            </td>
+          </tr>
 
-        <!-- Details table -->
-        <tr><td style="background:#111127;border-radius:12px;overflow:hidden;border:1px solid #1e1e38">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-            <tr><td colspan="2" style="padding:14px 14px 10px;border-bottom:1px solid #2a2a3a">
-              <span style="font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:#5b5ce2;font-weight:700">Flight Details</span>
-            </td></tr>
-            {info_rows}
-          </table>
-        </td></tr>
+          <!-- Pass Section Header -->
+          <tr>
+            <td style="padding:0 0 12px;text-align:left;">
+              <span style="font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#94a3b8;">YOUR SYMPOSIUM ENTRY PASS</span>
+              <p style="margin:4px 0 0;font-size:13px;color:#64748b;">Present the QR code on your pass below at the registration desk / entry gate for fast check-in.</p>
+            </td>
+          </tr>
 
-        <!-- CTA -->
-        <tr><td style="padding:24px 0;text-align:center">
-          <p style="margin:0 0 16px;font-size:14px;color:#8b9cb5">Scan the QR code on your pass at the entry gate.</p>
-          <p style="margin:0;font-size:12px;color:#4a5568">This is an automated email from Noctivus &rsquo;26 &bull; Velammal Engineering College</p>
-        </td></tr>
+          <!-- Event Pass Artwork (Placed at bottom) -->
+          <tr>
+            <td style="padding:0 0 24px;">
+              <div style="border-radius:12px;overflow:hidden;box-shadow:0 8px 32px rgba(0,200,224,0.2);border:1px solid #334155;">
+                {img_tag}
+              </div>
+            </td>
+          </tr>
 
-      </table>
-    </td></tr>
+          <!-- Footer -->
+          <tr>
+            <td style="border-top:1px solid #1e293b;padding-top:20px;text-align:left;font-size:13px;color:#64748b;line-height:1.5;">
+              <p style="margin:0 0 4px;color:#94a3b8;font-weight:600;">We look forward to an electrifying symposium experience!</p>
+              <p style="margin:0;">&mdash; Team Noctivus &rsquo;26 &bull; Department of CSE (Cyber Security), Velammal Engineering College</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
   </table>
 </body>
 </html>"""

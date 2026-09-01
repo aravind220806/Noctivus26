@@ -12,13 +12,24 @@ const createPaymentReference = () => {
   return `NOC26-${timestamp}-${random}`.slice(0, 35);
 };
 
+const isCategoryTech = (cat) => {
+  const c = String(cat || '').toLowerCase().trim();
+  return c === 'technical' || c === 'tech';
+};
+
+const isCategoryNonTech = (cat) => {
+  const c = String(cat || '').toLowerCase().trim();
+  return c === 'non-technical' || c === 'non-tech' || c === 'non technical';
+};
+
 export default function RegistrationModal({ events, registrationOpen, initialEventId, onClose }) {
   const closeButtonRef = useRef(null);
   const [step, setStep] = useState(1);
   const [form, setForm] = useState(emptyForm);
   const initialEvent = events.find((event) => event.id === initialEventId);
-  const [technicalEventId, setTechnicalEventId] = useState(initialEvent?.category === 'Technical' ? initialEventId : '');
-  const [nonTechnicalEventId, setNonTechnicalEventId] = useState(initialEvent?.category === 'Non-technical' ? initialEventId : '');
+  const [technicalEventId, setTechnicalEventId] = useState(isCategoryTech(initialEvent?.category) ? initialEventId : '');
+  const [nonTechnicalEventId, setNonTechnicalEventId] = useState(isCategoryNonTech(initialEvent?.category) ? initialEventId : '');
+  const [igniteAbstract, setIgniteAbstract] = useState('');
   const [paymentReference] = useState(createPaymentReference);
   const [paymentStarted, setPaymentStarted] = useState(false);
   const [utr, setUtr] = useState('');
@@ -56,8 +67,8 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
     }
   };
 
-  const technicalEvents = useMemo(() => (events || []).filter((event) => event.category === 'Technical'), [events]);
-  const nonTechnicalEvents = useMemo(() => (events || []).filter((event) => event.category === 'Non-technical'), [events]);
+  const technicalEvents = useMemo(() => (events || []).filter((event) => isCategoryTech(event.category)), [events]);
+  const nonTechnicalEvents = useMemo(() => (events || []).filter((event) => isCategoryNonTech(event.category)), [events]);
   const selectedTechnicalEvent = useMemo(() => (events || []).find((event) => event.id === technicalEventId), [technicalEventId, events]);
   const selectedNonTechnicalEvent = useMemo(() => (events || []).find((event) => event.id === nonTechnicalEventId), [nonTechnicalEventId, events]);
   const ctfSelected = technicalEventId === 'ctf' || technicalEventId === 'cyber-heist-ctf';
@@ -164,6 +175,12 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
 
   const continueToReview = () => {
     if (!selectedEvents.length) return setError('Choose at least one event, or choose Nil only if you are not registering for events.');
+    if (technicalEventId === 'ignite' && !igniteAbstract.trim()) {
+      return setError('Please enter your project idea or abstract for IGNITE (up to 200 characters).');
+    }
+    if (technicalEventId === 'ignite' && igniteAbstract.length > 200) {
+      return setError('IGNITE abstract must not exceed 200 characters.');
+    }
     setError('');
     setStep(3);
   };
@@ -194,8 +211,14 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
             college: form.college.trim().toUpperCase(),
             phone: form.phone.replace(/\D/g, ''),
             email: form.email.trim().toLowerCase(),
+            igniteTopic: technicalEventId === 'ignite' ? igniteAbstract.trim() : '',
           },
-          events: selectedEvents.map((item) => ({ eventId: item.id, teamSize: 1, teamMembers: [] })),
+          events: selectedEvents.map((item) => ({
+            eventId: item.id,
+            teamSize: 1,
+            teamMembers: [],
+            abstract: item.id === 'ignite' ? igniteAbstract.trim() : undefined,
+          })),
           paymentReference,
           utrNumber: utr,
           claimedAmount: amount,
@@ -327,19 +350,66 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
               <div className="reg-field-grid">
                 <div className="reg-field">
                   <label className="reg-field-label">Technical Event</label>
-                  <select className="reg-input" value={technicalEventId} onChange={(e) => { setTechnicalEventId(e.target.value); if (e.target.value === 'ctf' || e.target.value === 'cyber-heist-ctf') setNonTechnicalEventId(''); }}>
+                  <select
+                    className="reg-input"
+                    value={technicalEventId}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setTechnicalEventId(val);
+                      if (val === 'ctf' || val === 'cyber-heist-ctf') setNonTechnicalEventId('');
+                      if (val !== 'ignite') setIgniteAbstract('');
+                      setError('');
+                    }}
+                  >
                     <option value="">Nil</option>
                     {technicalEvents.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
                   </select>
                 </div>
                 <div className="reg-field">
                   <label className="reg-field-label">Non-Technical Event</label>
-                  <select className="reg-input" value={ctfSelected ? '' : nonTechnicalEventId} disabled={ctfSelected} onChange={(e) => setNonTechnicalEventId(e.target.value)}>
+                  <select
+                    className="reg-input"
+                    value={ctfSelected ? '' : nonTechnicalEventId}
+                    disabled={ctfSelected}
+                    onChange={(e) => {
+                      setNonTechnicalEventId(e.target.value);
+                      setError('');
+                    }}
+                  >
                     <option value="">Nil</option>
                     {nonTechnicalEvents.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
                   </select>
                   {ctfSelected && <small style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>Disabled: CTF chosen.</small>}
                 </div>
+
+                {/* IGNITE 200 character abstract box - shown only when IGNITE is selected */}
+                {technicalEventId === 'ignite' && (
+                  <div className="reg-field reg-field--full">
+                    <div className="reg-field-header">
+                      <label className="reg-field-label" htmlFor="ignite-abstract">
+                        IGNITE Project Idea / Abstract <span className="reg-required-star">*</span>
+                      </label>
+                      <span className={`reg-char-count ${igniteAbstract.length >= 200 ? 'reg-char-count--limit' : ''}`}>
+                        {igniteAbstract.length}/200 chars
+                      </span>
+                    </div>
+                    <textarea
+                      id="ignite-abstract"
+                      className="reg-input reg-textarea"
+                      rows={3}
+                      maxLength={200}
+                      placeholder="Briefly state your project idea, problem statement, or PPT concept (max 200 characters)..."
+                      value={igniteAbstract}
+                      onChange={(e) => {
+                        setError('');
+                        setIgniteAbstract(e.target.value.slice(0, 200));
+                      }}
+                    />
+                    <span className="reg-field-hint">
+                      Maximum 200 characters limit. Pitch will be reviewed by the event coordinators.
+                    </span>
+                  </div>
+                )}
               </div>
 
               {error && <p className="reg-error" role="alert">{error}</p>}
@@ -399,6 +469,14 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
                     {ctfSelected ? 'Nil (CTF selected)' : selectedNonTechnicalEvent?.name || 'Nil'}
                   </strong>
                 </div>
+                {technicalEventId === 'ignite' && igniteAbstract.trim() && (
+                  <div className="reg-review-item reg-review-item--full">
+                    <span className="reg-review-label">IGNITE PROJECT IDEA / ABSTRACT</span>
+                    <strong className="reg-review-val reg-review-val--abstract">
+                      {igniteAbstract.trim()}
+                    </strong>
+                  </div>
+                )}
               </div>
 
               {error && <p className="reg-error" role="alert">{error}</p>}
