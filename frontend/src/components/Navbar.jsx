@@ -58,6 +58,28 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
     };
   }, [checkProximity]);
 
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileOpen]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setMobileOpen(false);
+        setActiveDropdown(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Nav items: HOME -> ABOUT -> EVENTS (with category sub-filters) -> TIMELINE -> COORDINATORS
   const navItems = [
     { id: 'home', label: 'HOME', href: '#home' },
@@ -224,69 +246,79 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
 
       {/* Mobile / Collapsed Drawer */}
       {mobileOpen && (
-        <div className="cyber-mobile-drawer">
-          <div className="drawer-inner">
-            <ul className="drawer-menu-list">
-              {navItems.map((item) => {
-                const hasChildren = Boolean(item.children?.length);
-                const isDropdownOpen = activeDropdown === item.id;
-                const isActive = activeSection === item.id;
+        <>
+          <div
+            className="cyber-drawer-backdrop"
+            onClick={() => {
+              setMobileOpen(false);
+              setActiveDropdown(null);
+            }}
+            aria-hidden="true"
+          />
+          <div className="cyber-mobile-drawer">
+            <div className="drawer-inner">
+              <ul className="drawer-menu-list">
+                {navItems.map((item) => {
+                  const hasChildren = Boolean(item.children?.length);
+                  const isDropdownOpen = activeDropdown === item.id;
+                  const isActive = activeSection === item.id;
 
-                return (
-                  <li key={item.id} className="drawer-menu-item">
-                    {hasChildren ? (
-                      <div className="drawer-group">
-                        <div
-                          className="drawer-group-header"
-                          onClick={(e) => handleDropdownToggle(item.id, e)}
-                        >
-                          <span className={`drawer-link ${isActive ? 'active' : ''}`}>{item.label}</span>
-                          <span className={`drawer-arrow ${isDropdownOpen ? 'open' : ''}`}>▼</span>
+                  return (
+                    <li key={item.id} className="drawer-menu-item">
+                      {hasChildren ? (
+                        <div className="drawer-group">
+                          <div
+                            className="drawer-group-header"
+                            onClick={(e) => handleDropdownToggle(item.id, e)}
+                          >
+                            <span className={`drawer-link ${isActive ? 'active' : ''}`}>{item.label}</span>
+                            <span className={`drawer-arrow ${isDropdownOpen ? 'open' : ''}`}>▼</span>
+                          </div>
+                          {isDropdownOpen && (
+                            <ul className="drawer-sub-list">
+                              {item.children.map((child) => (
+                                <li key={child.id}>
+                                  <a
+                                    href={child.href}
+                                    className="drawer-sub-link"
+                                    onClick={(e) => handleNavClick(e, child)}
+                                  >
+                                    {child.label}
+                                  </a>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
                         </div>
-                        {isDropdownOpen && (
-                          <ul className="drawer-sub-list">
-                            {item.children.map((child) => (
-                              <li key={child.id}>
-                                <a
-                                  href={child.href}
-                                  className="drawer-sub-link"
-                                  onClick={(e) => handleNavClick(e, child)}
-                                >
-                                  {child.label}
-                                </a>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    ) : (
-                      <a
-                        href={item.href}
-                        className={`drawer-link ${isActive ? 'active' : ''}`}
-                        onClick={(e) => handleNavClick(e, item)}
-                      >
-                        {item.label}
-                      </a>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
+                      ) : (
+                        <a
+                          href={item.href}
+                          className={`drawer-link ${isActive ? 'active' : ''}`}
+                          onClick={(e) => handleNavClick(e, item)}
+                        >
+                          {item.label}
+                        </a>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
 
-            <div className="drawer-actions">
-              <button
-                type="button"
-                className="drawer-cta-btn"
-                onClick={() => {
-                  setMobileOpen(false);
-                  onRegister?.();
-                }}
-              >
-                REGISTER NOW
-              </button>
+              <div className="drawer-actions">
+                <button
+                  type="button"
+                  className="drawer-cta-btn"
+                  onClick={() => {
+                    setMobileOpen(false);
+                    onRegister?.();
+                  }}
+                >
+                  REGISTER NOW
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </header>
   );
