@@ -2,10 +2,7 @@ import { getApiBase, apiUrl } from '../lib/api';
 
 export const apiBase = getApiBase();
 
-export const apiPath = (path) => {
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  return `${apiBase}${normalizedPath}`;
-};
+export const apiPath = (path) => apiUrl(path);
 
 export const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 

@@ -27,6 +27,7 @@ export default function AdminApp() {
   const [status, setStatus] = useState('');
   const [selected, setSelected] = useState([]);
   const [message, setMessage] = useState('');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefreshedAt, setLastRefreshedAt] = useState(new Date());
