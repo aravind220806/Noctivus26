@@ -108,16 +108,15 @@ export const events = [
     details: ['Solo registration', 'Non-technical strategy game', 'Round structure will be announced before the event'],
   },
   {
-    id: 'cyber-awareness-workshop',
-    name: 'Cyber Awareness Workshop',
-    category: 'Workshops',
-    fee: 0,
-    accent: 'cyan',
+    id: 'playground-of-hackers',
+    name: 'Playground of Hackers',
+    category: 'Workshop',
+    fee: 200,
+    accent: 'violet',
     image: eventImage,
     imagePosition: '50% 50%',
-    registerable: false,
-    format: 'A guided session on everyday cyber safety, responsible reporting, and student security careers.',
-    details: ['Open session', 'Limited seats based on hall capacity', 'Registration details will be announced separately'],
+    format: 'Hands-on offensive & defensive security workshop uncovering real-world exploit vectors, tooling, and live labs.',
+    details: ['Solo registration', 'Hands-on practical security & exploitation lab', 'Laptop recommended with virtualization/browser tools'],
   },
 ];
 
