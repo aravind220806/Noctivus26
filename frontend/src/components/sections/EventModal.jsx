@@ -4,13 +4,13 @@ import { site } from '../../data/site.js';
 import { NotchedButton } from '../ui/NotchedButton/NotchedButton';
 
 const EVENT_ORDER = [
-  'crime-investigation',
+  'mystery-hunt',
   'bug-hunt',
   'ctf',
   'secure-x-vibecode',
   'ignite',
-  'ipl-auction-2026',
-  'tune-tracker',
+  'ipl-auction',
+  'tune-trap',
   'prompt-heist',
 ];
 
