@@ -4,14 +4,14 @@ import { site } from '../../data/site.js';
 import { NotchedButton } from '../ui/NotchedButton/NotchedButton';
 
 const EVENT_ORDER = [
-  'mystery-hunt',
-  'bug-hunt',
   'ctf',
+  'bug-hunt',
+  'prompt-heist',
   'secure-x-vibecode',
   'ignite',
-  'ipl-auction',
+  'mystery-hunt',
   'tune-trap',
-  'prompt-heist',
+  'ipl-auction',
 ];
 
 export function EventModal({ event, onClose, onRegister }) {
