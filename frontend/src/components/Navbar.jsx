@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import './Navbar.css';
 
-export default function Navbar({ activeSection, onNavigate, onRegister }) {
+export default function Navbar({ activeSection, onNavigate, onRegister, onSelectEvent }) {
   const [scrolled, setScrolled] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -53,18 +53,37 @@ export default function Navbar({ activeSection, onNavigate, onRegister }) {
     };
   }, [checkProximity]);
 
-  // Nav items: HOME -> ABOUT -> EVENTS -> TIMELINE -> COORDINATORS
+  // Nav items: HOME -> ABOUT -> EVENTS (with category sub-filters) -> TIMELINE -> COORDINATORS
   const navItems = [
     { id: 'home', label: 'HOME', href: '#home' },
     { id: 'about', label: 'ABOUT', href: '#about' },
-    { id: 'events', label: 'EVENTS', href: '#events' },
+    {
+      id: 'events',
+      label: 'EVENTS',
+      href: '#events',
+      children: [
+        { id: 'events-all', label: 'ALL EVENTS', href: '#events', category: 'All' },
+        { id: 'events-tech', label: 'TECHNICAL', href: '#events', category: 'Technical' },
+        { id: 'events-nontech', label: 'NON-TECHNICAL', href: '#events', category: 'Non-technical' },
+        { id: 'events-workshop', label: 'WORKSHOP', href: '#events', category: 'Workshop' },
+      ],
+    },
     { id: 'schedule', label: 'TIMELINE', href: '#schedule' },
     { id: 'coordinators', label: 'COORDINATORS', href: '#coordinators' },
   ];
 
   const handleNavClick = (e, item) => {
     e.preventDefault();
-    if (onNavigate && item.id && item.href && item.href !== '#') {
+    if (item.eventId && onSelectEvent) {
+      if (onNavigate) onNavigate('events');
+      const target = document.querySelector('#events');
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+      onSelectEvent(item.eventId);
+    } else if (item.category) {
+      if (onNavigate) onNavigate('events', item.category);
+      const target = document.querySelector('#events');
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+    } else if (onNavigate && item.id && item.href && item.href !== '#') {
       onNavigate(item.id);
     } else if (item.href && item.href !== '#') {
       const target = document.querySelector(item.href);
@@ -154,12 +173,7 @@ export default function Navbar({ activeSection, onNavigate, onRegister }) {
                             <li key={child.id}>
                               <a
                                 href={child.href}
-                                onClick={(e) =>
-                                  handleNavClick(e, {
-                                    id: 'events',
-                                    href: child.href,
-                                  })
-                                }
+                                onClick={(e) => handleNavClick(e, child)}
                               >
                                 <span>{child.label}</span>
                               </a>
@@ -235,12 +249,7 @@ export default function Navbar({ activeSection, onNavigate, onRegister }) {
                                 <a
                                   href={child.href}
                                   className="drawer-sub-link"
-                                  onClick={(e) =>
-                                    handleNavClick(e, {
-                                      id: 'events',
-                                      href: child.href,
-                                    })
-                                  }
+                                  onClick={(e) => handleNavClick(e, child)}
                                 >
                                   {child.label}
                                 </a>

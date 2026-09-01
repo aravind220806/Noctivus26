@@ -237,6 +237,22 @@ export const events = [
       { name: 'Sabeetha D', phone: '9080001039' },
     ],
   },
+  {
+    id: 'playground-of-hackers',
+    name: 'Playground of Hackers',
+    category: 'Workshop',
+    teamSize: 'Individual',
+    fee: 200,
+    accent: 'violet',
+    image: eventImage,
+    imagePosition: '50% 50%',
+    format: 'Hands-on offensive & defensive security workshop uncovering real-world exploit vectors, tooling, and live labs.',
+    details: [
+      'Solo registration',
+      'Hands-on practical security & exploitation lab',
+      'Laptop recommended with virtualization/browser tools',
+    ],
+  },
 ];
 
 export const timeline = [

@@ -12,6 +12,7 @@ const EVENT_ORDER = [
   'ipl-auction-2026',
   'tune-tracker',
   'ai-jail-break',
+  'playground-of-hackers',
 ];
 
 export function EventModal({ event, onClose, onRegister }) {
