@@ -118,30 +118,6 @@
   opacity: 0.9;
 }
 
-/* Quiet Cut-Edge Boundary Numeral Indicator (Centered) */
-.hero-cut-boundary {
-  position: absolute;
-  bottom: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.78rem;
-  color: var(--lime);
-  letter-spacing: 0.12em;
-  z-index: 10;
-  pointer-events: none;
-}
-
-.hero-cut-chevron {
-  display: inline-flex;
-  align-items: center;
-  color: var(--lime);
-  opacity: 0.85;
-}
 
 .hero-meta-grid {
   display: flex;
