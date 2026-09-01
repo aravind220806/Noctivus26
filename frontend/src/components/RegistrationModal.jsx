@@ -60,10 +60,10 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
   const nonTechnicalEvents = useMemo(() => (events || []).filter((event) => event.category === 'Non-technical'), [events]);
   const selectedTechnicalEvent = useMemo(() => (events || []).find((event) => event.id === technicalEventId), [technicalEventId, events]);
   const selectedNonTechnicalEvent = useMemo(() => (events || []).find((event) => event.id === nonTechnicalEventId), [nonTechnicalEventId, events]);
-  const ctfSelected = technicalEventId === 'cyber-heist-ctf';
+  const ctfSelected = technicalEventId === 'ctf' || technicalEventId === 'cyber-heist-ctf';
   const selectedEvents = useMemo(() => [selectedTechnicalEvent, ctfSelected ? null : selectedNonTechnicalEvent].filter(Boolean), [ctfSelected, selectedNonTechnicalEvent, selectedTechnicalEvent]);
   const selectedEventNames = selectedEvents.map((event) => event.name).join(' + ');
-  const amount = selectedEvents.length ? 200 : 0;
+  const amount = selectedEvents.length ? 150 : 0;
   const upiId = (import.meta.env.VITE_UPI_ID || '').trim() || 'noctivus2026@okhdfcbank';
   const payee = (import.meta.env.VITE_UPI_PAYEE || '').trim() || 'Noctivus 26';
   const paymentConfigured = Boolean(upiId) || import.meta.env.DEV;
@@ -321,13 +321,13 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
                   <h4 className="reg-review-event-title" style={{ fontSize: '1rem' }}>TICKET DETAILS</h4>
                   <span className="reg-review-event-category">Admission for selected options</span>
                 </div>
-                <strong className="reg-review-amount">₹200</strong>
+                <strong className="reg-review-amount">₹150</strong>
               </div>
 
               <div className="reg-field-grid">
                 <div className="reg-field">
                   <label className="reg-field-label">Technical Event</label>
-                  <select className="reg-input" value={technicalEventId} onChange={(e) => { setTechnicalEventId(e.target.value); if (e.target.value === 'cyber-heist-ctf') setNonTechnicalEventId(''); }}>
+                  <select className="reg-input" value={technicalEventId} onChange={(e) => { setTechnicalEventId(e.target.value); if (e.target.value === 'ctf' || e.target.value === 'cyber-heist-ctf') setNonTechnicalEventId(''); }}>
                     <option value="">Nil</option>
                     {technicalEvents.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
                   </select>
@@ -338,7 +338,7 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
                     <option value="">Nil</option>
                     {nonTechnicalEvents.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
                   </select>
-                  {ctfSelected && <small style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>Disabled: Cyber Heist CTF chosen.</small>}
+                  {ctfSelected && <small style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>Disabled: CTF chosen.</small>}
                 </div>
               </div>
 
@@ -396,7 +396,7 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
                 <div className="reg-review-item">
                   <span className="reg-review-label">SELECTED NON-TECHNICAL</span>
                   <strong className="reg-review-val">
-                    {ctfSelected ? 'Nil (Cyber Heist CTF selected)' : selectedNonTechnicalEvent?.name || 'Nil'}
+                    {ctfSelected ? 'Nil (CTF selected)' : selectedNonTechnicalEvent?.name || 'Nil'}
                   </strong>
                 </div>
               </div>
