@@ -63,8 +63,39 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
     };
   }, [eventsData]);
 
+  const handlePrev = () => {
+    swiperInstanceRef.current?.slidePrev();
+  };
+
+  const handleNext = () => {
+    swiperInstanceRef.current?.slideNext();
+  };
+
   return (
     <div className="cyber-hero-carousel-section">
+      {/* Navigation Buttons (Semi-transparent HUD chevrons) */}
+      <button
+        type="button"
+        className="cyber-swiper-nav-btn cyber-swiper-prev"
+        onClick={handlePrev}
+        aria-label="Previous Event"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
+      <button
+        type="button"
+        className="cyber-swiper-nav-btn cyber-swiper-next"
+        onClick={handleNext}
+        aria-label="Next Event"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
       <div className="swiper" ref={swiperContainerRef}>
         <div className="swiper-wrapper">
           {eventsData.map((slide, index) => {

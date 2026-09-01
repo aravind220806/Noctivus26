@@ -30,7 +30,13 @@
 @media (max-width: 900px) {
   .crew-section {
     clip-path: polygon(0 0, 100% 0, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0 100%);
-    padding-bottom: 4rem;
+    padding: 3rem 1rem 3.5rem;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+  .crew-container {
+    padding: 0 4px;
   }
 }
 

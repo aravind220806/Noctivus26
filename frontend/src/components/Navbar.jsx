@@ -5,7 +5,12 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
   const [scrolled, setScrolled] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth <= 960;
+    }
+    return false;
+  });
 
   const headerRef = useRef(null);
   const logoRef = useRef(null);
@@ -118,111 +123,107 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
         </div>
 
         {/* Desktop Menu Strip */}
-        {!isCollapsed && (
-          <div ref={menuRef} className="menu" aria-label="Main Navigation">
-            <ul className="menu-list">
-              {navItems.map((item) => {
-                const hasChildren = Boolean(item.children?.length);
-                const isActive = activeSection === item.id;
-                const isDropdownOpen = activeDropdown === item.id;
+        <div ref={menuRef} className="menu" aria-label="Main Navigation">
+          <ul className="menu-list">
+            {navItems.map((item) => {
+              const hasChildren = Boolean(item.children?.length);
+              const isActive = activeSection === item.id;
+              const isDropdownOpen = activeDropdown === item.id;
 
-                return (
-                  <li
-                    key={item.id}
-                    className={`menu-item ${hasChildren ? 'menu-has-children' : ''} ${
-                      isDropdownOpen ? 'dropdown-open' : ''
-                    } ${isActive ? 'active' : ''}`}
-                    onMouseEnter={() => hasChildren && setActiveDropdown(item.id)}
-                    onMouseLeave={() => hasChildren && setActiveDropdown(null)}
-                  >
-                    {hasChildren ? (
-                      <span
-                        className="menu-sub"
-                        onClick={(e) => handleDropdownToggle(item.id, e)}
-                        role="button"
-                        tabIndex={0}
-                        aria-expanded={isDropdownOpen}
-                      >
-                        <span className="menu-sub-text">{item.label}</span>
-                        <svg
-                          className="caret-svg"
-                          width="10"
-                          height="6"
-                          viewBox="0 0 10 6"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </span>
-                    ) : (
-                      <a
-                        href={item.href}
-                        className={isActive ? 'active' : ''}
-                        onClick={(e) => handleNavClick(e, item)}
-                      >
-                        {item.label}
-                      </a>
-                    )}
-
-                    {/* Submenu Dropdown */}
-                    {hasChildren && (
-                      <div className={`menu-sub-list ${isDropdownOpen ? 'is-visible' : ''}`}>
-                        <ul>
-                          {item.children.map((child) => (
-                            <li key={child.id}>
-                              <a
-                                href={child.href}
-                                onClick={(e) => handleNavClick(e, child)}
-                              >
-                                <span>{child.label}</span>
-                              </a>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </li>
-                );
-              })}
-
-              {/* CTA Item inside menu */}
-              <li className="menu-item menu-item-buy">
-                <a
-                  href="#register"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    onRegister?.();
-                  }}
+              return (
+                <li
+                  key={item.id}
+                  className={`menu-item ${hasChildren ? 'menu-has-children' : ''} ${
+                    isDropdownOpen ? 'dropdown-open' : ''
+                  } ${isActive ? 'active' : ''}`}
+                  onMouseEnter={() => hasChildren && setActiveDropdown(item.id)}
+                  onMouseLeave={() => hasChildren && setActiveDropdown(null)}
                 >
-                  REGISTER NOW
-                </a>
-              </li>
-            </ul>
-          </div>
-        )}
+                  {hasChildren ? (
+                    <span
+                      className="menu-sub"
+                      onClick={(e) => handleDropdownToggle(item.id, e)}
+                      role="button"
+                      tabIndex={0}
+                      aria-expanded={isDropdownOpen}
+                    >
+                      <span className="menu-sub-text">{item.label}</span>
+                      <svg
+                        className="caret-svg"
+                        width="10"
+                        height="6"
+                        viewBox="0 0 10 6"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </span>
+                  ) : (
+                    <a
+                      href={item.href}
+                      className={isActive ? 'active' : ''}
+                      onClick={(e) => handleNavClick(e, item)}
+                    >
+                      {item.label}
+                    </a>
+                  )}
 
-        {/* Hamburger Button (Triggered when logo is near navbar or on mobile) */}
-        {isCollapsed && (
-          <button
-            type="button"
-            className={`cyber-hamburger-btn ${mobileOpen ? 'is-open' : ''}`}
-            onClick={() => setMobileOpen((prev) => !prev)}
-            aria-label="Toggle navigation menu"
-            aria-expanded={mobileOpen}
-          >
-            <span className="cyber-hamburger-inner">
-              <span className="bar bar-1" />
-              <span className="bar bar-2" />
-              <span className="bar bar-3" />
-            </span>
-            <span className="hamburger-label">{mobileOpen ? 'CLOSE' : 'MENU'}</span>
-          </button>
-        )}
+                  {/* Submenu Dropdown */}
+                  {hasChildren && (
+                    <div className={`menu-sub-list ${isDropdownOpen ? 'is-visible' : ''}`}>
+                      <ul>
+                        {item.children.map((child) => (
+                          <li key={child.id}>
+                            <a
+                              href={child.href}
+                              onClick={(e) => handleNavClick(e, child)}
+                            >
+                              <span>{child.label}</span>
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+
+            {/* CTA Item inside menu */}
+            <li className="menu-item menu-item-buy">
+              <a
+                href="#register"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onRegister?.();
+                }}
+              >
+                REGISTER NOW
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        {/* Hamburger Button */}
+        <button
+          type="button"
+          className={`cyber-hamburger-btn ${mobileOpen ? 'is-open' : ''}`}
+          onClick={() => setMobileOpen((prev) => !prev)}
+          aria-label="Toggle navigation menu"
+          aria-expanded={mobileOpen}
+        >
+          <span className="cyber-hamburger-inner">
+            <span className="bar bar-1" />
+            <span className="bar bar-2" />
+            <span className="bar bar-3" />
+          </span>
+          <span className="hamburger-label">{mobileOpen ? 'CLOSE' : 'MENU'}</span>
+        </button>
       </div>
 
       {/* Mobile / Collapsed Drawer */}
-      {isCollapsed && mobileOpen && (
+      {mobileOpen && (
         <div className="cyber-mobile-drawer">
           <div className="drawer-inner">
             <ul className="drawer-menu-list">

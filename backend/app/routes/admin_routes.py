@@ -578,12 +578,12 @@ async def invitations_preview(request: Request, _admin=Depends(require_admin_tab
                 "eventId": "ideathon",
                 "eventName": "Ideathon Challenge",
                 "category": "Technical",
-                "feeSnapshot": 200,
+                "feeSnapshot": 150,
                 "venue": "Main Auditorium",
                 "date": "26 SEP 2026",
                 "time": "09:00 AM",
             }],
-            "expectedAmount": 200,
+            "expectedAmount": 150,
         }
 
     events = registration.get("eventRegistrations") or []
