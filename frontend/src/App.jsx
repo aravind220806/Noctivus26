@@ -9,6 +9,7 @@ import { TickDivider } from './components/ui/TickDivider/TickDivider';
 import { HeroSection } from './components/sections/HeroSection.jsx';
 import { AboutSection } from './components/sections/AboutSection.jsx';
 import { EventsSection } from './components/sections/EventsSection.jsx';
+import { CyberHeroSwiper } from './components/sections/CyberHeroSwiper.jsx';
 import { EventModal } from './components/sections/EventModal.jsx';
 import { WebsiteIntro } from './components/intro/WebsiteIntro.jsx';
 import { TimelineSection } from './components/sections/TimelineSection.jsx';
@@ -101,10 +102,22 @@ export default function App() {
     };
   }, []);
 
-  const navigateToSection = (id) => {
+  const [selectedCategory, setSelectedCategory] = useState('All');
+
+  const navigateToSection = (id, category = null) => {
+    if (category) {
+      setSelectedCategory(category);
+    }
     const el = document.getElementById(id);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleSelectEventById = (eventId) => {
+    const ev = events.find((e) => e.id === eventId);
+    if (ev) {
+      setSelectedEvent(ev);
     }
   };
 
@@ -123,13 +136,19 @@ export default function App() {
         activeSection={activeSection} 
         onNavigate={navigateToSection} 
         onRegister={() => openRegistration()} 
+        onSelectEvent={handleSelectEventById}
       />
 
       <main className="main-container" id="main">
         <HeroSection onRegister={() => openRegistration()} />
         <AboutSection />
         <TickDivider />
-        <EventsSection onSelect={setSelectedEvent} />
+        <EventsSection 
+          onSelect={setSelectedEvent} 
+          onRegister={openRegistration}
+          selectedCategory={selectedCategory}
+          onSelectCategory={setSelectedCategory}
+        />
         <TickDivider />
         <TimelineSection />
         <TickDivider />
