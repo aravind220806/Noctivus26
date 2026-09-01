@@ -20,15 +20,15 @@ const eventImage = '/images/noctivus-students.webp';
 
 export const events = [
   {
-    id: 'crime-investigation',
-    name: 'Crime Investigation',
+    id: 'mystery-hunt',
+    name: 'Mystery Hunt',
     category: 'Non-technical',
     teamSize: '2–4 Members',
     fee: 150,
     accent: 'lime',
     image: eventImage,
     imagePosition: '50% 42%',
-    format: 'Solve a crime case using the clues and evidence given by the organizers. Complete the investigation within the given time.',
+    format: 'Solve a campus mystery case using the clues and evidence given by the organizers. Complete the investigation within the given time.',
     details: [
       'Use only the clues and evidence provided.',
       'Do not use mobile phones, internet, or AI tools.',
@@ -37,7 +37,7 @@ export const events = [
       'Cheating will lead to disqualification.',
       'Submit the final answer before time ends.',
       'A tie-breaker may be conducted if needed.',
-      "Judges' decision is final.",
+      'Judges or Coordinators decision is final.',
     ],
     coordinators: [
       { name: 'Madhumitha A', phone: '9788339084' },
@@ -90,7 +90,7 @@ export const events = [
       'Do not impersonate another participant.',
       'Brute-force attacks are not allowed unless the challenge permits them.',
       'Respect other participants, organizers, and judges.',
-      "Judges' decision is final.",
+      'Judges or Coordinators decision is final.',
     ],
     coordinators: [
       { name: 'Sherlin Antolina C', phone: '7200465240' },
@@ -117,7 +117,7 @@ export const events = [
       'Do not submit an old project as your own.',
       'Bring your own laptop and charger.',
       'Maintain professional behaviour.',
-      "Judges' decision is final.",
+      'Judges or Coordinators decision is final.',
     ],
     coordinators: [
       { name: 'Aravind V', phone: '8825979172' },
@@ -144,7 +144,7 @@ export const events = [
       'A prototype, demo, experimental result, screenshots, or detailed implementation roadmap is required.',
       'All team members should take part in the presentation or Q&A.',
       'Late submissions are not accepted.',
-      "Judges' decision is final.",
+      'Judges or Coordinators decision is final.',
     ],
     coordinators: [
       { name: 'Harinisha C', phone: '9655514532' },
@@ -152,8 +152,8 @@ export const events = [
     ],
   },
   {
-    id: 'ipl-auction-2026',
-    name: 'IPL Auction 2026',
+    id: 'ipl-auction',
+    name: 'IPL Auction',
     category: 'Non-technical',
     teamSize: '2–4 Members',
     fee: 150,
@@ -172,7 +172,7 @@ export const events = [
       'Do not exceed the ₹120 Crore budget.',
       'No phones, internet, notes, or outside help during the rounds.',
       "Follow the auctioneer's bidding rules.",
-      "Judges' decision is final.",
+      'Judges or Coordinators decision is final.',
     ],
     coordinators: [
       { name: 'Anisha K', phone: '6369108600' },
@@ -180,8 +180,8 @@ export const events = [
     ],
   },
   {
-    id: 'tune-tracker',
-    name: 'Tune Tracker',
+    id: 'tune-trap',
+    name: 'Tune Trap',
     category: 'Non-technical',
     teamSize: '2–4 Members',
     fee: 150,
@@ -201,11 +201,11 @@ export const events = [
       'Do not communicate with other teams during a round.',
       'Do not record or share the audio clues.',
       'Cheating will lead to disqualification.',
-      "Judges' decision is final.",
+      'Judges or Coordinators decision is final.',
     ],
     coordinators: [
       { name: 'Surya S P', phone: '9787155806' },
-      { name: 'Mirdhula T', phone: '9363974368' },
+      { name: 'Mridula T', phone: '9363974368' },
     ],
   },
   {
@@ -229,7 +229,7 @@ export const events = [
       'Scoring is based on completed challenges.',
       'Time taken will be used as a tie-breaker.',
       'Cheating or rule violations may lead to disqualification.',
-      "Judges' and organizers' decision is final.",
+      'Judges or Coordinators decision is final.',
     ],
     coordinators: [
       { name: 'Harshit JK', phone: '9952284514' },
@@ -242,7 +242,7 @@ export const timeline = [
   ['08:30 AM', 'Registration desk opens', 'Check in, collect your participant confirmation, and move to the inaugural venue.'],
   ['09:00 AM', 'Inauguration', 'Welcome address and Noctivus briefing in the main auditorium.'],
   ['09:30 AM', 'Technical events begin', 'CTF, Bug Hunt, Secure X Vibe Coding, IGNITE, and Prompt Heist move into round one.'],
-  ['11:30 AM', 'Non-technical rounds', 'Crime Investigation, Tune Tracker, and IPL Auction 2026 begin from their assigned venues.'],
+  ['11:30 AM', 'Non-technical rounds', 'Mystery Hunt, Tune Trap, and IPL Auction begin from their assigned venues.'],
   ['01:00 PM', 'Lunch break', 'Food counters open according to participant preference and event flow.'],
   ['02:00 PM', 'Final rounds', 'Shortlisted participants move into finals and judging.'],
   ['04:30 PM', 'Valedictory & awards', 'Winners, certificates, and closing ceremony.'],
