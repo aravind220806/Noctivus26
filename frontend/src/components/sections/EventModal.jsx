@@ -4,14 +4,14 @@ import { site } from '../../data/site.js';
 import { NotchedButton } from '../ui/NotchedButton/NotchedButton';
 
 const EVENT_ORDER = [
-  'ideathon',
-  'cyber-heist-ctf',
-  'iot-exploit',
+  'crime-investigation',
+  'bug-bounty-2026',
+  'ctf',
   'secure-x-vibecode',
-  'mind-cage',
-  'mystery-hunt',
-  'tune-trap',
-  'auction-arena',
+  'ppt-ideathon',
+  'ipl-auction-2026',
+  'tune-tracker',
+  'ai-jail-break',
   'playground-of-hackers',
 ];
 
@@ -22,8 +22,8 @@ export function EventModal({ event, onClose, onRegister }) {
 
   const pages = [
     { key: 'overview', title: 'OVERVIEW' },
-    { key: 'rules',    title: 'RULES & FORMAT' },
-    { key: 'info',     title: 'GOOD TO KNOW' },
+    { key: 'rules',    title: 'RULES & REGULATIONS' },
+    { key: 'coordinators', title: 'COORDINATORS' },
   ];
 
   const eventIndex = event.id ? EVENT_ORDER.indexOf(event.id) : -1;
@@ -104,12 +104,16 @@ export function EventModal({ event, onClose, onRegister }) {
                 <div className="em-meta-item">
                   <span className="em-meta-label">FEE</span>
                   <span className="em-meta-value">
-                    {event.fee === 0 ? 'FREE' : `Rs.${event.fee}`}
+                    {event.fee === 0 ? 'FREE' : `₹${event.fee}`}
                   </span>
                 </div>
                 <div className="em-meta-item">
                   <span className="em-meta-label">CATEGORY</span>
                   <span className="em-meta-value">{event.category}</span>
+                </div>
+                <div className="em-meta-item">
+                  <span className="em-meta-label">TEAM SIZE</span>
+                  <span className="em-meta-value">{event.teamSize || 'Individual'}</span>
                 </div>
                 <div className="em-meta-item">
                   <span className="em-meta-label">DATE</span>
@@ -124,8 +128,8 @@ export function EventModal({ event, onClose, onRegister }) {
               <ol className="em-rules-list">
                 {event.details?.map((item) => (
                   <li key={item} className="em-rule-item">
-                    <span className="em-rule-bullet" aria-hidden="true">--</span>
-                    {item}
+                    <span className="em-rule-bullet" aria-hidden="true">▸</span>
+                    <span>{item}</span>
                   </li>
                 ))}
               </ol>
@@ -134,12 +138,28 @@ export function EventModal({ event, onClose, onRegister }) {
 
           {page === 2 && (
             <div className="em-content">
-              <p className="em-desc">
-                {event.category} event. Solo registration.
-                Bring a valid college ID and follow the final reporting instructions shared by the organizing team.
-              </p>
-              <p className="em-desc em-desc--muted">
-                Contact: {site.contactEmail} or {site.contactPhone}.
+              {event.coordinators && event.coordinators.length > 0 && (
+                <div style={{ marginBottom: '1.25rem' }}>
+                  <h4 style={{ color: 'var(--accent, #00f0ff)', fontFamily: 'Aldrich, sans-serif', fontSize: '0.9rem', marginBottom: '0.75rem', letterSpacing: '0.08em' }}>
+                    STUDENT COORDINATORS
+                  </h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                    {event.coordinators.map((coord) => (
+                      <div key={coord.name} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.85rem' }}>
+                        <span style={{ color: '#EAF6F5', fontWeight: 600 }}>{coord.name}</span>
+                        <span style={{ color: '#7C8BA1' }}>—</span>
+                        <a href={`tel:${coord.phone}`} style={{ color: 'var(--accent, #00f0ff)', textDecoration: 'none' }}>
+                          +91 {coord.phone}
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <p className="em-desc em-desc--muted" style={{ fontSize: '0.8rem', marginTop: '1rem' }}>
+                Reporting time and venue details will be provided at the registration desk on event day.
+                General inquiries: {site.contactEmail} / {site.contactPhone}.
               </p>
             </div>
           )}

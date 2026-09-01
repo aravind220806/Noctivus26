@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════════
-   NOCTIVUS ’26 FOOTER — CYBER-HUD THEME (MAP RIGHT, DETAILS LEFT, SOCIAL CENTER)
+   NOCTIVUS ’26 FOOTER — COMPACT CYBER-HUD THEME
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 .footer-cyber-hud {
@@ -8,48 +8,48 @@
   background-color: #050B10;
   color: #7C8BA1;
   font-family: 'IBM Plex Mono', 'JetBrains Mono', monospace;
-  padding: 0 0 2.5rem 0;
+  padding: 0 0 1.25rem 0;
   box-sizing: border-box;
 }
 
 /* Full-width Top Tick Ruler */
 .footer-ruler-divider {
   width: 100%;
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .footer-ruler-divider .tick-divider {
   width: 100%;
-  height: 14px;
+  height: 10px;
   border-bottom: 1px solid rgba(0, 240, 255, 0.2);
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='14'%3E%3Crect x='0' y='0' width='1' height='14' fill='%2300f0ff' opacity='0.7'/%3E%3Crect x='30' y='7' width='1' height='7' fill='%2300f0ff' opacity='0.3'/%3E%3Crect x='60' y='7' width='1' height='7' fill='%2300f0ff' opacity='0.3'/%3E%3Crect x='90' y='7' width='1' height='7' fill='%2300f0ff' opacity='0.3'/%3E%3C/svg%3E") left bottom repeat-x;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='10'%3E%3Crect x='0' y='0' width='1' height='10' fill='%2300f0ff' opacity='0.7'/%3E%3Crect x='30' y='5' width='1' height='5' fill='%2300f0ff' opacity='0.3'/%3E%3Crect x='60' y='5' width='1' height='5' fill='%2300f0ff' opacity='0.3'/%3E%3Crect x='90' y='5' width='1' height='5' fill='%2300f0ff' opacity='0.3'/%3E%3C/svg%3E") left bottom repeat-x;
 }
 
 /* Inner Container */
 .footer-hud-container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 28px;
+  padding: 0 24px;
   position: relative;
   z-index: 10;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   MAIN FOOTER CONTENT LAYOUT (DETAILS LEFT, MAP RIGHT)
+   MAIN FOOTER CONTENT LAYOUT (COMPACT DETAILS LEFT, COMPACT MAP RIGHT)
    ───────────────────────────────────────────────────────────────────────────── */
 .footer-main-layout {
   display: flex;
   flex-direction: column;
-  gap: 2.5rem;
-  margin-bottom: 2.5rem;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
-@media (min-width: 992px) {
+@media (min-width: 900px) {
   .footer-main-layout {
     flex-direction: row;
     justify-content: space-between;
-    align-items: flex-start;
-    gap: 3rem;
+    align-items: center;
+    gap: 2rem;
   }
 }
 
@@ -57,51 +57,51 @@
 .footer-info-columns {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.75rem;
+  gap: 1.25rem;
   flex: 1;
 }
 
 @media (min-width: 600px) {
   .footer-info-columns {
     grid-template-columns: repeat(3, 1fr);
-    gap: 1.75rem;
+    gap: 1.25rem;
   }
 }
 
 .footer-info-block {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.35rem;
 }
 
 .footer-info-heading {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.4rem;
   font-family: 'Aldrich', 'Rajdhani', sans-serif;
-  font-size: 0.88rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: #00f0ff;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .footer-info-icon {
-  width: 1.1rem;
-  height: 1.1rem;
+  width: 0.95rem;
+  height: 0.95rem;
   color: #00f0ff;
   flex-shrink: 0;
 }
 
 .footer-info-body {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.8rem;
+  font-size: 0.74rem;
   color: #7C8BA1;
-  line-height: 1.55;
+  line-height: 1.4;
 }
 
 .footer-info-body p {
-  margin: 0 0 0.25rem 0;
+  margin: 0 0 0.15rem 0;
 }
 
 .footer-text-link {
@@ -119,12 +119,12 @@
 .footer-bus-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.3rem;
   background: transparent;
   border: none;
   padding: 0;
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.82rem;
+  font-size: 0.74rem;
   font-weight: 600;
   color: #00f0ff;
   cursor: pointer;
@@ -136,8 +136,8 @@
 }
 
 .footer-ext-icon {
-  width: 0.85rem;
-  height: 0.85rem;
+  width: 0.75rem;
+  height: 0.75rem;
 }
 
 /* Right Side: Compact Google Map */
@@ -146,21 +146,21 @@
   width: 100%;
 }
 
-@media (min-width: 992px) {
+@media (min-width: 900px) {
   .footer-map-side {
-    width: 300px;
+    width: 240px;
   }
 }
 
 .footer-compact-map {
   position: relative;
   width: 100%;
-  height: 175px;
-  border-radius: 8px;
-  border: 1px solid rgba(0, 240, 255, 0.4);
+  height: 135px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 240, 255, 0.35);
   background-color: #050E17;
   overflow: hidden;
-  box-shadow: 0 0 18px rgba(0, 240, 255, 0.15);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.12);
 }
 
 .footer-map-iframe {
@@ -173,18 +173,18 @@
 
 .footer-map-link {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 6px;
+  right: 6px;
   background: rgba(5, 15, 24, 0.85);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   border: 1px solid #00f0ff;
   color: #00f0ff;
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 700;
-  padding: 4px 8px;
-  border-radius: 3px;
+  padding: 2px 6px;
+  border-radius: 2px;
   text-decoration: none;
   transition: all 0.2s ease;
   z-index: 5;
@@ -193,23 +193,23 @@
 .footer-map-link:hover {
   background: #00f0ff;
   color: #000000;
-  box-shadow: 0 0 12px rgba(0, 240, 255, 0.6);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   CENTER BOTTOM: SOCIAL MEDIA ACTIONS
+   CENTER BOTTOM: COMPACT SOCIAL MEDIA ACTIONS
    ───────────────────────────────────────────────────────────────────────────── */
 .footer-social-center-wrap {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 1.5rem 0 2.5rem;
+  margin: 1rem 0 1.25rem;
 }
 
 .footer-social-actions {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 .footer-social-btn {
@@ -217,34 +217,34 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 3.1rem;
-  height: 3.1rem;
-  border-radius: 6px;
-  border: 1px solid rgba(0, 240, 255, 0.45);
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 240, 255, 0.4);
   background-color: rgba(5, 20, 28, 0.6);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   text-decoration: none;
   cursor: pointer;
 }
 
 .footer-social-btn:hover {
   border-color: #00f0ff;
-  box-shadow: 0 0 16px rgba(0, 240, 255, 0.55);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
   transform: translateY(-2px);
 }
 
 .footer-social-icon {
-  width: 1.3rem;
-  height: 1.3rem;
+  width: 1.05rem;
+  height: 1.05rem;
   fill: #00f0ff;
-  transition: transform 0.25s ease;
+  transition: transform 0.2s ease;
 }
 
 .footer-x-icon {
-  width: 1.1rem;
-  height: 1.1rem;
+  width: 0.9rem;
+  height: 0.9rem;
 }
 
 .footer-social-btn:hover .footer-social-icon {
@@ -259,12 +259,12 @@
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(0, 240, 255, 0.15);
-  font-size: 0.78rem;
-  line-height: 1.4;
-  letter-spacing: 0.04em;
+  gap: 0.6rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(0, 240, 255, 0.12);
+  font-size: 0.72rem;
+  line-height: 1.3;
+  letter-spacing: 0.03em;
   color: #7C8BA1;
 }
 
@@ -291,7 +291,7 @@
   text-decoration: none;
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.3rem;
   transition: color 0.2s ease;
   white-space: nowrap;
 }
@@ -301,7 +301,7 @@
 }
 
 .footer-hud-arrow {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   transition: transform 0.2s ease;
 }
 
@@ -328,11 +328,11 @@
 
 .bus-modal-panel {
   width: 100%;
-  max-width: 600px;
+  max-width: 540px;
   background-color: #050B10;
   border: 1px solid #00f0ff;
-  box-shadow: 0 0 30px rgba(0, 240, 255, 0.35);
-  padding: 1.75rem;
+  box-shadow: 0 0 25px rgba(0, 240, 255, 0.3);
+  padding: 1.5rem;
   box-sizing: border-box;
   animation: scaleUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -341,14 +341,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(0, 240, 255, 0.25);
-  padding-bottom: 0.75rem;
-  margin-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+  padding-bottom: 0.6rem;
+  margin-bottom: 0.75rem;
 }
 
 .bus-modal-title {
   font-family: 'Aldrich', sans-serif;
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   color: #00f0ff;
   margin: 0;
   letter-spacing: 0.05em;
@@ -358,9 +358,9 @@
   background: transparent;
   border: none;
   color: #7C8BA1;
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   cursor: pointer;
-  padding: 0.25rem 0.5rem;
+  padding: 0.2rem 0.4rem;
   transition: color 0.2s;
 }
 
@@ -370,65 +370,65 @@
 
 .bus-modal-subtitle {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   color: #7C8BA1;
-  line-height: 1.5;
-  margin: 0 0 1.25rem 0;
+  line-height: 1.45;
+  margin: 0 0 1rem 0;
 }
 
 .bus-routes-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  max-height: 320px;
+  gap: 0.6rem;
+  max-height: 280px;
   overflow-y: auto;
-  padding-right: 0.5rem;
+  padding-right: 0.4rem;
 }
 
 .bus-route-item {
   display: flex;
   align-items: flex-start;
-  gap: 1rem;
+  gap: 0.75rem;
   background: rgba(5, 20, 28, 0.7);
   border: 1px solid rgba(0, 240, 255, 0.2);
-  padding: 0.85rem 1rem;
+  padding: 0.75rem 0.85rem;
 }
 
 .bus-route-badge {
   background: #00f0ff;
   color: #000000;
   font-family: 'Aldrich', sans-serif;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  padding: 3px 8px;
+  padding: 2px 6px;
   white-space: nowrap;
 }
 
 .bus-route-info {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.2rem;
 }
 
 .bus-route-from {
   font-family: 'Aldrich', sans-serif;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   color: #EAF6F5;
 }
 
 .bus-route-via {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   color: #7C8BA1;
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
 .bus-modal-footer {
   display: flex;
   justify-content: flex-end;
-  margin-top: 1.5rem;
+  margin-top: 1.25rem;
   border-top: 1px solid rgba(0, 240, 255, 0.2);
-  padding-top: 1rem;
+  padding-top: 0.75rem;
 }
 
 .bus-modal-btn {
@@ -437,16 +437,16 @@
   border: none;
   font-family: 'Aldrich', sans-serif;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   letter-spacing: 0.1em;
-  padding: 8px 18px;
+  padding: 6px 14px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .bus-modal-btn:hover {
   background: #caff00;
-  box-shadow: 0 0 12px rgba(202, 255, 0, 0.6);
+  box-shadow: 0 0 10px rgba(202, 255, 0, 0.6);
 }
 
 @keyframes fadeIn {

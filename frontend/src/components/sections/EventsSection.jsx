@@ -54,12 +54,59 @@ export function EventsSection({ onSelect, onRegister, selectedCategory, onSelect
         })}
       </div>
 
+<<<<<<< HEAD
       {/* Interactive Swiper Carousel replacing old grid */}
       <CyberHeroSwiper 
         eventsData={visibleEvents}
         onSelect={onSelect}
         onRegister={onRegister}
       />
+=======
+      {/* Events Grid */}
+      <div className="events-grid">
+        {visibleEvents.map((event, index) => {
+          const spanClass = getGridSpanClass(index, visibleEvents.length);
+          const formattedIndex = String(index + 1).padStart(2, '0');
+
+          return (
+            <div 
+              key={event.id} 
+              className={`${spanClass}`}
+              onClick={() => onSelect(event)}
+            >
+              <HudCorners accent={event.accent || 'cyan'}>
+                <article 
+                  className="event-card panel scanlines"
+                  style={{ '--accent': `var(--${event.accent || 'cyan'})` }}
+                >
+                  <div className="event-card-header">
+                    <span className="event-card-index">{formattedIndex}</span>
+                    <span className="event-card-category">{event.category}</span>
+                  </div>
+                  
+                  <div className="event-card-body">
+                    <h3 className="event-card-title">{event.name}</h3>
+                    <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.75rem', color: 'var(--accent, #00f0ff)', opacity: 0.9 }}>
+                      TEAM: {event.teamSize || 'Individual'}
+                    </div>
+                    <p className="event-card-desc">{event.format}</p>
+                  </div>
+
+                  <div className="event-card-footer">
+                    <span className="event-card-meta">
+                      FEE: ₹{event.fee}
+                    </span>
+                    <span className="event-card-cta">
+                      VIEW DETAILS &gt;
+                    </span>
+                  </div>
+                </article>
+              </HudCorners>
+            </div>
+          );
+        })}
+      </div>
+>>>>>>> 58abbd5a1d0b1682e17663090580bb78bc9df626
     </section>
   );
 }
