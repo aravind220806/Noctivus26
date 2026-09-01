@@ -7,12 +7,13 @@
   background: var(--bg);
   border-bottom: 1px solid var(--line);
   box-sizing: border-box;
-  padding: 3rem 8px;
+  padding: 3rem 0;
+  position: relative;
 }
 
 @media (min-width: 768px) {
   .about-section {
-    padding: 4rem 40px;
+    padding: 4rem 0;
   }
 }
 
@@ -21,9 +22,14 @@
   flex-direction: column;
   gap: 3rem;
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
   box-sizing: border-box;
+  padding: 0 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .about-container {
+    padding: 0 3.5rem;
+  }
 }
 
 @media (min-width: 901px) {
@@ -31,6 +37,7 @@
     display: grid;
     grid-template-columns: 60% 40%;
     gap: 4rem;
+    padding: 0 3.5rem;
   }
 }
 

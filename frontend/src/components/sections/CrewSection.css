@@ -6,14 +6,19 @@
   position: relative;
   background: var(--bg);
   color: var(--text);
-  padding: 3rem 0;
+  border-bottom: 1px solid var(--line);
+  box-sizing: border-box;
+  padding: 4rem 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .crew-section {
+    padding: 4rem 3.5rem;
+  }
 }
 
 .crew-container {
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 40px;
   box-sizing: border-box;
 }
 
@@ -85,34 +90,4 @@
 .crew-contact:focus-visible {
   outline: 1px solid var(--cyan);
   outline-offset: 2px;
-}
-
-/* Mobile adjustments */
-@media (max-width: 767px) {
-  .crew-section {
-    padding: 2.5rem 0;
-  }
-
-  .crew-container {
-    padding: 0 8px;
-  }
-
-  .crew-card {
-    padding: 1.25rem;
-  }
-}
-
-/* Desktop adjustments */
-@media (min-width: 1200px) {
-  .crew-container {
-    padding: 0 2rem;
-  }
-
-  .crew-section {
-    padding: 4rem 0;
-  }
-
-  .crew-grid {
-    gap: 2.5rem;
-  }
 }

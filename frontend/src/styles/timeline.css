@@ -3,9 +3,19 @@
    --text --muted --error, and --display-font / --mono-font. */
 
 .timeline-section {
-  padding: 0 clamp(1rem, 5vw, 8rem);
+  padding: 4rem 1.5rem;
   color: var(--text);
   font-family: var(--mono-font);
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  box-sizing: border-box;
+  position: relative;
+}
+
+@media (min-width: 768px) {
+  .timeline-section {
+    padding: 4rem 3.5rem;
+  }
 }
 
 .timeline-title {

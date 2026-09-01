@@ -6,12 +6,13 @@
   background: var(--bg);
   border-bottom: 1px solid var(--line);
   box-sizing: border-box;
-  padding: 4rem 40px;
+  padding: 4rem 1.5rem;
+  position: relative;
 }
 
-@media (max-width: 900px) {
+@media (min-width: 768px) {
   .events-section {
-    padding: 3rem 8px;
+    padding: 4rem 3.5rem;
   }
 }
 

@@ -21,8 +21,8 @@
         100% 54%, calc(100% - 15px) 68%, 100% 82%, 100% 100%, 0 100%);
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  padding: 2rem 1.25rem;
+  justify-content: center;
+  padding: 2rem 1.5rem;
   box-sizing: border-box;
   position: relative;
   z-index: 2;
@@ -34,8 +34,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding-left: 2rem;
-  padding-right: 1.5rem;
+  padding: 2rem 3rem 2rem 3.5rem;
   box-sizing: border-box;
   position: relative;
   z-index: 2;
@@ -46,19 +45,18 @@
   .asym-section {
     flex-direction: column;
     min-height: auto;
-    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0 100%);
+    clip-path: none;
   }
 
   .asym-left {
     width: 100%;
-    min-height: 280px;
-    padding: 1.5rem;
+    min-height: auto;
+    padding: 2rem 1.25rem 1.25rem;
+    clip-path: none;
   }
 
   .asym-right {
     width: 100%;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-    padding-bottom: 2.5rem;
+    padding: 1rem 1.25rem 2.5rem;
   }
 }
