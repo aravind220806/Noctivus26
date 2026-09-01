@@ -74,6 +74,9 @@ export function EventsSection({ onSelect }) {
                   
                   <div className="event-card-body">
                     <h3 className="event-card-title">{event.name}</h3>
+                    <div style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.75rem', color: 'var(--accent, #00f0ff)', opacity: 0.9 }}>
+                      TEAM: {event.teamSize || 'Individual'}
+                    </div>
                     <p className="event-card-desc">{event.format}</p>
                   </div>
 
