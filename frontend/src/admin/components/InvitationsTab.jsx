@@ -94,7 +94,8 @@ export function InvitationsTab({ authHeaders, onSent }) {
         setError(data.detail || data.message || 'Failed to execute batch send.');
       }
     } catch (err) {
-      setError(err.message || 'Unable to connect to the pass dispatch service.');
+      const isNetErr = String(err?.message || '').toLowerCase().includes('network') || String(err?.message || '').toLowerCase().includes('failed to fetch');
+      setError(isNetErr ? 'Unable to reach backend server. Please verify backend is running on port 4000.' : (err?.message || 'Unable to connect to the pass dispatch service.'));
     } finally {
       setSending(false);
     }
@@ -131,7 +132,8 @@ export function InvitationsTab({ authHeaders, onSent }) {
         setError(data.detail || data.message || 'Failed to resend passes.');
       }
     } catch (err) {
-      setError(err.message || 'Unable to connect to the pass dispatch service.');
+      const isNetErr = String(err?.message || '').toLowerCase().includes('network') || String(err?.message || '').toLowerCase().includes('failed to fetch');
+      setError(isNetErr ? 'Unable to reach backend server. Please verify backend is running on port 4000.' : (err?.message || 'Unable to connect to the pass dispatch service.'));
     } finally {
       setResending(false);
     }
