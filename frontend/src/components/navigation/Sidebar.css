@@ -246,6 +246,6 @@
 @media (min-width: 901px) {
   .main-container {
     margin-right: 68px;
-    margin-left: 0;
+    margin-left: 68px;
   }
 }
