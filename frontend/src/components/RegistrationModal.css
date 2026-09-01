@@ -140,6 +140,52 @@
   letter-spacing: 0.05em;
 }
 
+.reg-field--full {
+  grid-column: 1 / -1;
+}
+
+.reg-field-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.reg-required-star {
+  color: var(--cyan);
+  margin-left: 0.2rem;
+}
+
+.reg-char-count {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  transition: color 0.2s ease;
+}
+
+.reg-char-count--limit {
+  color: var(--error, #ff4d4d);
+  font-weight: 600;
+}
+
+.reg-textarea {
+  width: 100%;
+  min-height: 86px;
+  height: auto;
+  padding: 0.75rem 0.8rem;
+  line-height: 1.5;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.reg-field-hint {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
 .reg-input {
   width: 100%;
   height: 42px;
@@ -292,6 +338,10 @@
   gap: 0.3rem;
 }
 
+.reg-review-item--full {
+  grid-column: 1 / -1;
+}
+
 .reg-review-label {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 0.75rem;
@@ -302,6 +352,20 @@
   font-family: 'IBM Plex Mono', monospace;
   font-size: 0.95rem;
   color: var(--text);
+}
+
+.reg-review-val--abstract {
+  word-break: break-word;
+  white-space: pre-wrap;
+  color: var(--cyan);
+  font-weight: 400;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  background: rgba(0, 200, 224, 0.05);
+  border: 1px dashed var(--line);
+  padding: 0.6rem 0.8rem;
+  margin-top: 0.2rem;
+  border-radius: 2px;
 }
 
 /* Success Receipt Step */

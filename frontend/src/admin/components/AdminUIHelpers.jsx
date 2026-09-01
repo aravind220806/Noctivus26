@@ -38,29 +38,40 @@ export function RegistrationTable({ registrations, selected, setSelected, render
   return (
     <div className="registration-table">
       {registrations.map((registration) => (
-        <article key={registration.registrationId}>
-          <label>
+        <article key={registration.registrationId} className="reg-card">
+          <label className="reg-card__header">
             <input
               type="checkbox"
               checked={selected.includes(registration.registrationId)}
               onChange={() => toggle(registration.registrationId)}
             />
-            <span>{registration.registrationId}</span>
+            <span className="reg-card__id">{registration.registrationId}</span>
           </label>
-          <div>
-            <strong>{registration.participant?.name}</strong>
-            <small>{registration.participant?.college}</small>
+          <div className="reg-card__participant">
+            <strong className="reg-card__name">{registration.participant?.name || '—'}</strong>
+            <small className="reg-card__college">{registration.participant?.college || '—'}</small>
           </div>
-          <div>
-            <strong>{registration.eventRegistrations?.map((event) => event.eventName).join(', ')}</strong>
-            <small>{registration.participant?.email}</small>
+          <div className="reg-card__events">
+            <strong className="reg-card__event-names">
+              {registration.eventRegistrations?.map((event) => event.eventName).join(', ') || 'No events'}
+            </strong>
+            <small className="reg-card__email">{registration.participant?.email || '—'}</small>
+            {(registration.abstract || registration.igniteTopic || registration.participant?.abstract || registration.participant?.igniteTopic) && (
+              <div className="reg-card__abstract">
+                💡 <em>{registration.abstract || registration.igniteTopic || registration.participant?.abstract || registration.participant?.igniteTopic}</em>
+              </div>
+            )}
           </div>
-          <Status value={registration.paymentStatus} />
-          <div>
-            <strong>Rs.{registration.expectedAmount}</strong>
-            <small>UTR {registration.utrNumber}</small>
+          <div className="reg-card__status-wrap">
+            <Status value={registration.paymentStatus} />
           </div>
-          {renderActions?.(registration)}
+          <div className="reg-card__payment-info">
+            <strong className="reg-card__amount">₹{registration.expectedAmount}</strong>
+            <small className="reg-card__utr">UTR {registration.utrNumber || '—'}</small>
+          </div>
+          <div className="reg-card__actions">
+            {renderActions?.(registration)}
+          </div>
         </article>
       ))}
     </div>

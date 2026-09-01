@@ -12,6 +12,7 @@ from slowapi import _rate_limit_exceeded_handler
 from app.core.config import settings
 from app.core.rate_limit import limiter
 from app.db.mongo import close_mongo, connect_mongo
+from app.db.sqlite_db import sqlite_db
 from app.routes.admin_routes import router as admin_router
 from app.routes.public_routes import router as public_router
 from app.services.email_service import email_worker
@@ -21,6 +22,9 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    # Always init SQLite for persistent local storage
+    await sqlite_db.init()
+
     email_stop = asyncio.Event()
     email_task = None
     try:
@@ -28,9 +32,14 @@ async def lifespan(_app: FastAPI):
         logger.info("Connected to MongoDB")
         email_task = asyncio.create_task(email_worker(email_stop))
     except Exception as error:
-        logger.error("MongoDB connection failed: %s", error)
+        logger.warning("MongoDB unavailable (%s) — using SQLite for persistence", error)
         if settings.node_env == "production":
             raise
+        # Still start email worker even without Mongo
+        try:
+            email_task = asyncio.create_task(email_worker(email_stop))
+        except Exception:
+            pass
     yield
     email_stop.set()
     if email_task:
@@ -46,12 +55,12 @@ app = FastAPI(title="Noctivus API", lifespan=lifespan)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(GZipMiddleware, minimum_size=1000)
-_dev_origin_regex = r"https://.*\.vercel\.app|https://.*\.ngrok-free\.app|https://.*\.ngrok-free\.dev|http://localhost:\d+|http://127\.0\.0\.1:\d+"
+
+# Secure CORS configuration: explicit allowlist only, no wildcard regex when credentials are enabled
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.frontend_origins,
-    # Permissive regex is only for local/staging convenience — never allowed in production.
-    allow_origin_regex=None if settings.environment == "production" else _dev_origin_regex,
+    allow_origin_regex=None,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
@@ -73,7 +82,7 @@ async def exception_handler(_request: Request, error: Exception):
     if settings.environment == "production":
         detail = "Internal server error."
     else:
-        detail = getattr(error, "detail", None) or str(error) or "Internal server error."
+        detail = getattr(error, "detail", None) or "Internal server error."
     return JSONResponse(status_code=status_code, content={"message": detail, "detail": detail})
 
 

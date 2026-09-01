@@ -4,10 +4,35 @@ from pymongo import ReturnDocument
 
 from app.db import mongo
 from app.db.memory_store import memory_event_slots
+from app.db.sqlite_db import sqlite_db
 from app.services.event_service import list_events
 from app.services.registration_service import load_registrations, update_registration
 
 _last_assignment_summary: dict | None = None
+
+
+def _get_event_ids(registration: dict) -> list[str]:
+    """Robustly extract event IDs from a registration record.
+
+    Checks `event_ids` (stored at creation) first, then falls back to reading
+    from `eventRegistrations[*].eventId`. Deduplicates and strips empty strings.
+    This ensures registrations always appear in scheduler counts regardless of
+    which field is populated.
+    """
+    # Primary: event_ids list stored at registration time
+    primary = [
+        str(eid).strip()
+        for eid in (registration.get("event_ids") or [])
+        if eid and str(eid).strip()
+    ]
+    if primary:
+        return primary
+    # Fallback: parse from eventRegistrations array
+    return [
+        str(e.get("eventId")).strip()
+        for e in (registration.get("eventRegistrations") or [])
+        if e.get("eventId") and str(e.get("eventId")).strip()
+    ]
 
 
 def _format_time_minutes(minutes_from_midnight: int) -> str:
@@ -65,9 +90,15 @@ async def load_all_slots() -> list[dict]:
             docs = await cursor.to_list(length=1000)
             return [serialize_slot(doc) for doc in docs]
     except Exception as error:
-        print(f"Falling back to in-memory slots: {error}")
+        print(f"Falling back to SQLite/memory slots: {error}")
         mongo.client = None
         mongo.db = None
+
+    if sqlite_db.ready():
+        rows = await sqlite_db.list_all("event_slots")
+        if rows:
+            return [serialize_slot(s) for s in sorted(rows, key=lambda x: x.get("start_time", ""))]
+
     return [serialize_slot(s) for s in memory_event_slots]
 
 
@@ -85,6 +116,11 @@ async def save_slot(slot: dict) -> None:
         print(f"Mongo slot save failed: {error}")
         mongo.client = None
         mongo.db = None
+
+    if sqlite_db.ready():
+        await sqlite_db.upsert("event_slots", clean_slot["id"], clean_slot)
+        return
+
     for i, s in enumerate(memory_event_slots):
         if s.get("id") == clean_slot["id"]:
             memory_event_slots[i] = clean_slot
@@ -197,6 +233,10 @@ async def delete_slot(slot_id: str) -> bool:
             return res.deleted_count > 0
     except Exception:
         pass
+
+    if sqlite_db.ready():
+        return await sqlite_db.delete("event_slots", slot_id)
+
     for i, s in enumerate(memory_event_slots):
         if s.get("id") == slot_id:
             memory_event_slots.pop(i)
@@ -263,12 +303,11 @@ async def generate_all_event_slots(regenerate: bool = False) -> dict:
     events = await list_events()
     existing_slots = await load_all_slots()
     all_registrations = await load_registrations()
-    
-    # Calculate registration count per event
-    reg_counts = {}
+
+    # Calculate registration count per event (all statuses — pending + confirmed)
+    reg_counts: dict[str, int] = {}
     for r in all_registrations:
-        eids = r.get("event_ids") or [e.get("eventId") for e in r.get("eventRegistrations", []) if e.get("eventId")]
-        for eid in eids:
+        for eid in _get_event_ids(r):
             reg_counts[eid] = reg_counts.get(eid, 0) + 1
 
     existing_by_event = set(s.get("event_id") for s in existing_slots)
@@ -280,6 +319,12 @@ async def generate_all_event_slots(regenerate: bool = False) -> dict:
                 await mongo.db.registrations.update_many({}, {"$set": {"assigned_slots": []}})
         except Exception:
             pass
+        if sqlite_db.ready():
+            await sqlite_db.delete_all("event_slots")
+            all_regs = await sqlite_db.list_all("registrations")
+            for reg in all_regs:
+                reg["assigned_slots"] = []
+                await sqlite_db.upsert("registrations", reg["registrationId"], reg)
         memory_event_slots.clear()
         for reg in memory_event_slots:
             reg["assigned_slots"] = []
@@ -340,10 +385,8 @@ async def assignMembersToSlots() -> dict:
         if not r.get("assigned_slots") or len(r.get("assigned_slots", [])) == 0
     ]
 
-    def get_event_ids(r: dict) -> list[str]:
-        if r.get("event_ids") and isinstance(r.get("event_ids"), list) and len(r.get("event_ids")) > 0:
-            return r["event_ids"]
-        return [e.get("eventId") for e in r.get("eventRegistrations", []) if e.get("eventId")]
+    # Reuse the module-level robust helper
+    get_event_ids = _get_event_ids
 
     group_a = []
     group_b = []
@@ -477,8 +520,7 @@ async def get_scheduler_dashboard_data() -> dict:
 
     reg_counts_by_event: dict[str, int] = {}
     for r in all_registrations:
-        eids = r.get("event_ids") or [e.get("eventId") for e in r.get("eventRegistrations", []) if e.get("eventId")]
-        for eid in eids:
+        for eid in _get_event_ids(r):
             reg_counts_by_event[eid] = reg_counts_by_event.get(eid, 0) + 1
 
     slots_by_event: dict[str, list[dict]] = {}

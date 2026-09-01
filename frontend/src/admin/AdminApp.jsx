@@ -27,7 +27,9 @@ export default function AdminApp() {
   const [status, setStatus] = useState('');
   const [selected, setSelected] = useState([]);
   const [message, setMessage] = useState('');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefreshedAt, setLastRefreshedAt] = useState(new Date());
 
   const authHeaders = useMemo(
     () => (csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
@@ -69,6 +71,17 @@ export default function AdminApp() {
     refresh();
   }, [session, eventId, status]);
 
+  // Background Auto-Refresh interval (every 15 seconds)
+  useEffect(() => {
+    if (!session || !autoRefresh) return undefined;
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        refresh(true);
+      }
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [session, autoRefresh, eventId, status, authHeaders]);
+
   const saveSession = (data) => {
     setSession(data);
     const token = data?.csrfToken || data?.user?.csrf || '';
@@ -90,8 +103,9 @@ export default function AdminApp() {
     window.location.replace('/login');
   };
 
-  const refresh = async () => {
-    setMessage('');
+  const refresh = async (silent = false) => {
+    if (!silent) setMessage('');
+    setIsRefreshing(true);
     try {
       const needsOverview = ['Dashboard', 'Verify Members', 'Invitations', 'AI Analysis', 'Export'].some(can);
       const needsRegistrations = ['Verify Members', 'Invitations', 'Export'].some(can);
@@ -112,12 +126,17 @@ export default function AdminApp() {
         const registrationsData = await registrationsResponse.json();
         setRegistrations(registrationsData.registrations || []);
       }
+      setLastRefreshedAt(new Date());
     } catch (error) {
-      const detail =
-        error instanceof Error
-          ? error.message
-          : 'Unable to load admin data. Check the API connection and try again.';
-      setMessage(detail);
+      if (!silent) {
+        const detail =
+          error instanceof Error
+            ? error.message
+            : 'Unable to load admin data. Check the API connection and try again.';
+        setMessage(detail);
+      }
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -145,9 +164,13 @@ export default function AdminApp() {
         setActiveTab(tab);
         setSidebarOpen(false);
       }}
-      onRefresh={refresh}
+      onRefresh={() => refresh(false)}
       onLogout={logout}
       onMenuToggle={() => setSidebarOpen((open) => !open)}
+      autoRefresh={autoRefresh}
+      onToggleAutoRefresh={() => setAutoRefresh((prev) => !prev)}
+      isRefreshing={isRefreshing}
+      lastRefreshedAt={lastRefreshedAt}
     >
       {message && <p className="admin-message">{message}</p>}
       {activeTab === 'Dashboard' && can('Dashboard') && (

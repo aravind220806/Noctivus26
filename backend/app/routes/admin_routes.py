@@ -63,6 +63,7 @@ async def google_auth(request: Request):
             samesite="lax",
             path="/",
         )
+        await record_admin_action(google_email, "auth.login", "admin_portal", {"method": "google_oauth"})
         return response
     except HTTPException:
         raise
@@ -95,6 +96,7 @@ async def dev_auth():
         samesite="lax",
         path="/api/admin",
     )
+    await record_admin_action(owner_email, "auth.dev_login", "admin_portal", {"method": "dev"})
     return response
 
 
@@ -104,7 +106,7 @@ async def me(admin=Depends(require_admin)):
 
 
 @router.post("/logout")
-async def logout():
+async def logout(admin=Depends(require_admin)):
     response = Response(content='{"ok":true}', media_type="application/json")
     cookie_options = {
         "secure": settings.environment == "production",
@@ -113,6 +115,8 @@ async def logout():
     }
     response.delete_cookie("noctivus_admin_session", path="/api/admin", **cookie_options)
     response.delete_cookie("noctivus_admin_session", path="/", **cookie_options)
+    if admin and admin.get("email"):
+        await record_admin_action(admin["email"], "auth.logout", "admin_portal")
     return response
 
 
@@ -293,18 +297,51 @@ async def check_in(request: Request, registration_id: str, admin=Depends(require
         checked = await update_registration(current["registrationId"], {"checkedIn": True, "checkedInAt": checked_at, "checkedInBy": admin["email"]})
     if not checked:
         return {"status": "already-checked-in", "checkedInAt": current.get("checkedInAt"), "registration": serialize_registration(current)}
-    await record_admin_action(admin["email"], "check-in", current["registrationId"])
+    await record_admin_action(
+        admin["email"],
+        "check-in",
+        current["registrationId"],
+        {
+            "name": (current.get("participant") or {}).get("name", ""),
+            "college": (current.get("participant") or {}).get("college", ""),
+            "events": ", ".join(e.get("eventName") or e.get("eventId") for e in current.get("eventRegistrations", [])),
+        },
+    )
     return {"status": "checked-in", "registration": serialize_registration(checked)}
 
 
 @router.get("/check-in/summary")
 async def check_in_summary(_admin=Depends(require_admin_tab("Check-in"))):
     if mongo.mongo_ready():
+        total_members = await mongo.db.registrations.count_documents({})
         confirmed = await mongo.db.registrations.count_documents({"paymentStatus": "confirmed"})
         checked_in = await mongo.db.registrations.count_documents({"paymentStatus": "confirmed", "checkedIn": True})
-        return {"confirmed": confirmed, "checkedIn": checked_in}
+        walk_ins = await mongo.db.registrations.count_documents({"isWalkIn": True})
+        recent_cursor = mongo.db.registrations.find({"checkedIn": True}).sort("checkedInAt", -1).limit(15)
+        recent_docs = await recent_cursor.to_list(length=15)
+        return {
+            "totalMembers": total_members,
+            "confirmed": confirmed,
+            "checkedIn": checked_in,
+            "walkIns": walk_ins,
+            "pendingCheckIn": max(0, confirmed - checked_in),
+            "recentCheckIns": [serialize_registration(d) for d in recent_docs],
+        }
     rows = await load_registrations()
-    return {"confirmed": sum(row.get("paymentStatus") == "confirmed" for row in rows), "checkedIn": sum(row.get("checkedIn") is True for row in rows)}
+    total_members = len(rows)
+    confirmed = sum(row.get("paymentStatus") == "confirmed" for row in rows)
+    checked_in = sum(row.get("checkedIn") is True for row in rows)
+    walk_ins = sum(row.get("isWalkIn") is True for row in rows)
+    checked_in_rows = [r for r in rows if r.get("checkedIn") is True]
+    checked_in_rows.sort(key=lambda x: str(x.get("checkedInAt") or ""), reverse=True)
+    return {
+        "totalMembers": total_members,
+        "confirmed": confirmed,
+        "checkedIn": checked_in,
+        "walkIns": walk_ins,
+        "pendingCheckIn": max(0, confirmed - checked_in),
+        "recentCheckIns": [serialize_registration(r) for r in checked_in_rows[:15]],
+    }
 
 
 @router.post("/walk-ins")
@@ -323,7 +360,12 @@ async def create_walk_in(request: Request, admin=Depends(require_admin_tab("Chec
         await mongo.db.registrations.insert_one(record)
     else:
         memory_registrations.append(record)
-    await record_admin_action(admin["email"], "walk-in.create", record["registrationId"], {"eventId": event_id})
+    await record_admin_action(
+        admin["email"],
+        "walk-in.create",
+        record["registrationId"],
+        {"name": name, "college": college, "eventId": event_id, "eventName": event["name"]},
+    )
     return {"registration": serialize_registration(record)}
 
 
@@ -344,6 +386,12 @@ async def put_access(email: str, request: Request, admin=Depends(require_admin_t
     if not tabs:
         raise HTTPException(status_code=400, detail="Select at least one tab.")
     user = await upsert_admin_access(normalized_email, body.get("name"), tabs, body.get("active") is not False, admin["email"])
+    await record_admin_action(
+        admin["email"],
+        "admin_access.upsert",
+        normalized_email,
+        {"tabs": ",".join(tabs), "name": str(body.get("name") or "")},
+    )
     return {"user": user}
 
 
@@ -353,6 +401,7 @@ async def delete_access(email: str, admin=Depends(require_admin_tab("Admin Acces
     if is_owner_admin(normalized_email):
         raise HTTPException(status_code=400, detail="Owner access is controlled from ADMIN_EMAILS.")
     await deactivate_admin_access(normalized_email, admin["email"])
+    await record_admin_action(admin["email"], "admin_access.deactivate", normalized_email)
     return {"ok": True}
 
 
@@ -439,14 +488,32 @@ async def resend_confirmation_email(registration_id: str, request: Request, admi
     return {"success": result.get("success", False), "result": result, "registration": serialize_registration(fresh_reg)}
 
 
+@router.post("/registrations/{registration_id}/resend-pass")
+@limiter.limit("20/minute")
+async def resend_member_pass(registration_id: str, request: Request, admin=Depends(require_admin_tab("Verify Members"))):
+    """Re-send the boarding pass invitation email for a specific registration (for testing or resends)."""
+    rows = await load_registrations()
+    registration = next((r for r in rows if r.get("registrationId") == registration_id), None)
+    if not registration:
+        raise HTTPException(status_code=404, detail="Registration not found.")
+    result = await send_member_pass(registration, admin_email=admin["email"])
+    fresh_rows = await load_registrations()
+    fresh_reg = next((r for r in fresh_rows if r.get("registrationId") == registration_id), registration)
+    await record_admin_action(admin["email"], "registration.resend_pass", registration_id, result)
+    return {"success": result.get("success", False), "result": result, "registration": serialize_registration(fresh_reg)}
+
+
 @router.get("/invitations/stats")
 async def invitations_stats(_admin=Depends(require_admin_tab("Invitations"))):
-    rows = await load_registrations({"status": "confirmed"})
+    all_rows = await load_registrations()
+    total_registered = len(all_rows)
+    rows = [r for r in all_rows if str(r.get("paymentStatus") or r.get("status") or "").lower() == "confirmed"]
     total_eligible = len(rows)
     sent_count = sum(1 for r in rows if r.get("pass_status") == "sent")
     failed_count = sum(1 for r in rows if r.get("pass_status") == "failed")
     unsent_count = sum(1 for r in rows if (r.get("pass_status") or "not_sent") != "sent")
     return {
+        "totalRegistered": total_registered,
         "totalEligible": total_eligible,
         "sentCount": sent_count,
         "failedCount": failed_count,
@@ -469,11 +536,18 @@ async def invitations_send_batch(request: Request, admin=Depends(require_admin_t
     eligible = [r for r in all_confirmed if (r.get("pass_status") or "not_sent") != "sent"]
     batch = eligible[:batch_size]
 
+    sem = asyncio.Semaphore(4)
+
+    async def _send_one(registration):
+        async with sem:
+            return await send_member_pass(registration, admin["email"])
+
+    results = await asyncio.gather(*[_send_one(r) for r in batch])
+
     successful = []
     failed_list = []
 
-    for registration in batch:
-        result = await send_member_pass(registration, admin["email"])
+    for result in results:
         if result["success"]:
             successful.append({
                 "registrationId": result["registrationId"],
@@ -515,11 +589,18 @@ async def invitations_resend_failed(request: Request, admin=Depends(require_admi
     all_confirmed = await load_registrations({"status": "confirmed"})
     targets = [r for r in all_confirmed if r.get("registrationId") in reg_ids]
 
+    sem = asyncio.Semaphore(4)
+
+    async def _send_one(registration):
+        async with sem:
+            return await send_member_pass(registration, admin["email"])
+
+    results = await asyncio.gather(*[_send_one(r) for r in targets])
+
     successful = []
     failed_list = []
 
-    for registration in targets:
-        result = await send_member_pass(registration, admin["email"])
+    for result in results:
         if result["success"]:
             successful.append({
                 "registrationId": result["registrationId"],
@@ -637,7 +718,7 @@ async def announcements_send(request: Request, admin=Depends(require_admin_tab("
 async def export(eventId: str | None = None, status: str | None = None, variant: str = "full", _admin=Depends(require_admin_tab("Export"))):
     admin = _admin
     sponsor_safe = variant == "sponsor"
-    csv = registrations_to_csv(await load_registrations({"eventId": eventId, "status": status}), sponsor_safe=sponsor_safe)
+    csv = registrations_to_csv(await load_registrations({"eventId": eventId, "status": status}), sponsor_safe=sponsor_safe, event_id=eventId)
     await record_admin_action(admin["email"], "export.csv", eventId or "all", {"status": status or "all", "variant": variant})
     filename_event = re.sub(r"[^a-zA-Z0-9_-]", "-", eventId or "all")[:80]
     return Response(content=csv, media_type="text/csv", headers={"Content-Disposition": f'attachment; filename="noctivus-{filename_event}-registrations.csv"'})

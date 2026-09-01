@@ -13,17 +13,59 @@ def _safe_csv_value(value):
     return value
 
 
-def registrations_to_csv(registrations: list[dict], sponsor_safe: bool = False) -> str:
+def _get_abstract(registration: dict, event_id: str | None = None) -> str:
+    if not registration:
+        return ""
+    event_regs = registration.get("eventRegistrations") or []
+    if event_id:
+        for ev in event_regs:
+            if ev.get("eventId") == event_id and ev.get("abstract"):
+                return ev["abstract"]
+    for ev in event_regs:
+        if ev.get("abstract"):
+            return ev["abstract"]
+    participant = registration.get("participant") or {}
+    return (
+        registration.get("abstract")
+        or registration.get("igniteTopic")
+        or participant.get("abstract")
+        or participant.get("igniteTopic")
+        or ""
+    )
+
+
+def registrations_to_csv(registrations: list[dict], sponsor_safe: bool = False, event_id: str | None = None) -> str:
     output = io.StringIO()
     writer = csv.writer(output)
     if sponsor_safe:
-        writer.writerow(["Name", "College", "Events"])
+        writer.writerow(["Name", "College", "Events", "Abstract / Topic"])
     else:
-        writer.writerow(["Registration ID", "Name", "Email", "Phone", "College", "Food", "Events", "Status", "UTR", "Expected Amount", "Claimed Amount", "Checked In", "Checked In At", "Submitted At", "Verified At"])
+        writer.writerow([
+            "Registration ID",
+            "Name",
+            "Email",
+            "Phone",
+            "College",
+            "Food",
+            "Events",
+            "Abstract / Topic",
+            "Status",
+            "UTR",
+            "Expected Amount",
+            "Claimed Amount",
+            "Checked In",
+            "Checked In At",
+            "Submitted At",
+            "Verified At",
+        ])
     for registration in registrations:
         participant = registration.get("participant") or {}
+        abstract_val = _get_abstract(registration, event_id)
         values = [
-            participant.get("name"), participant.get("college"), "; ".join(event.get("eventName", "") for event in registration.get("eventRegistrations", [])),
+            participant.get("name"),
+            participant.get("college"),
+            "; ".join(event.get("eventName", "") for event in registration.get("eventRegistrations", [])),
+            abstract_val,
         ] if sponsor_safe else [
             registration.get("registrationId"),
             participant.get("name"),
@@ -32,6 +74,7 @@ def registrations_to_csv(registrations: list[dict], sponsor_safe: bool = False) 
             participant.get("college"),
             participant.get("foodPreference"),
             "; ".join(event.get("eventName", "") for event in registration.get("eventRegistrations", [])),
+            abstract_val,
             registration.get("paymentStatus"),
             registration.get("utrNumber"),
             registration.get("expectedAmount"),
@@ -214,6 +257,7 @@ def export_scheduler_to_excel(events: list[dict], slots: list[dict], registratio
         "Email",
         "College",
         "Registered Events",
+        "Abstract / Topic",
         "Assigned Slot IDs",
         "Slot Details (Window & Timing)",
     ]
@@ -249,6 +293,7 @@ def export_scheduler_to_excel(events: list[dict], slots: list[dict], registratio
             participant.get("email", ""),
             participant.get("college", ""),
             ", ".join(event_names),
+            _get_abstract(reg),
             ", ".join(assigned_slot_ids) if assigned_slot_ids else "Unassigned",
             "; ".join(slot_descriptions) if slot_descriptions else "Unassigned",
         ]

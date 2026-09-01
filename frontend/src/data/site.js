@@ -56,6 +56,7 @@ export const events = [
     imagePosition: '58% 45%',
     format: 'Find and report security vulnerabilities through live, hands-on cybersecurity challenges. Covers web security, infrastructure security, authentication, authorization, privilege escalation, and exploitation.',
     details: [
+      'Teams can be formed after joining the WhatsApp group.',
       'Test only the targets given by the organizers.',
       'Use ethical and legal methods only.',
       'Manual security testing is allowed.',

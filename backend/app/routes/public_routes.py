@@ -22,13 +22,19 @@ router = APIRouter()
 
 
 async def find_registration_by_qr_token(token: str) -> dict | None:
-    """Public lookup — accepts only high-entropy QR tokens, never registration IDs."""
+    """Public lookup — accepts only high-entropy QR tokens, never human registration IDs."""
     clean = token.strip()
+    if clean.upper().startswith("NOC26-") or len(clean) < 12:
+        return None
+
     parsed = urlparse(clean)
     if parsed.path:
         candidate = parsed.path.rstrip("/").split("/")[-1]
         if candidate:
+            if candidate.upper().startswith("NOC26-") or len(candidate) < 12:
+                return None
             clean = candidate
+
     token_hash = hashlib.sha256(clean.encode("utf-8")).hexdigest()
 
     if mongo.mongo_ready():
@@ -45,7 +51,7 @@ async def find_registration_by_qr_token(token: str) -> dict | None:
     for item in memory_registrations:
         qr_hash = str((item.get("invitation") or {}).get("qrHash") or item.get("qrHash") or "")
         qr_token = str((item.get("invitation") or {}).get("qrToken") or item.get("qrToken") or "")
-        if qr_hash == token_hash or qr_token == clean:
+        if (qr_hash and qr_hash == token_hash) or (qr_token and qr_token == clean):
             return item
     return None
 

@@ -51,7 +51,7 @@ def render_receipt_html(registration: dict) -> str:
 
     reg_id = html.escape(str(registration.get("registrationId") or "NOC26-XXXXXX"))
     utr = html.escape(str(registration.get("utrNumber") or registration.get("paymentReference") or "—"))
-    amount = str(registration.get("expectedAmount") or registration.get("claimedAmount") or "200")
+    amount = str(registration.get("expectedAmount") or registration.get("claimedAmount") or "150")
     
     verified_at_dt = registration.get("verifiedAt") or datetime.now(timezone.utc)
     if isinstance(verified_at_dt, str):
@@ -402,16 +402,13 @@ body {{
 </html>"""
 
 
+from app.services.browser_renderer import render_html_to_png
+
+
 async def render_receipt_artwork_bytes(registration: dict) -> bytes:
     html_content = render_receipt_html(registration)
-    async with async_playwright() as playwright:
-        browser = await playwright.chromium.launch(args=["--no-sandbox"])
-        page = await browser.new_page(viewport={"width": RECEIPT_WIDTH, "height": RECEIPT_HEIGHT}, device_scale_factor=1)
-        await page.set_content(html_content, wait_until="load")
-        await page.evaluate("document.fonts && document.fonts.ready")
-        output = await page.screenshot(type="png", clip={"x": 0, "y": 0, "width": RECEIPT_WIDTH, "height": RECEIPT_HEIGHT})
-        await browser.close()
-        return output
+    return await render_html_to_png(html_content, RECEIPT_WIDTH, RECEIPT_HEIGHT)
+
 
 
 async def generateReceiptImage(member: dict) -> str:

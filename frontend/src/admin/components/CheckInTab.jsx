@@ -4,7 +4,14 @@ import { adminFetch, apiPath } from '../adminUtils';
 export function CheckInTab({ authHeaders }) {
   const [registrationId, setRegistrationId] = useState('');
   const [result, setResult] = useState(null);
-  const [summary, setSummary] = useState({ confirmed: 0, checkedIn: 0 });
+  const [summary, setSummary] = useState({
+    totalMembers: 0,
+    confirmed: 0,
+    checkedIn: 0,
+    walkIns: 0,
+    pendingCheckIn: 0,
+    recentCheckIns: [],
+  });
   const [cameraOpen, setCameraOpen] = useState(false);
   const [walkIn, setWalkIn] = useState({ name: '', college: '', eventId: '' });
   const [verifiedModalData, setVerifiedModalData] = useState(null);
@@ -30,11 +37,16 @@ export function CheckInTab({ authHeaders }) {
 
   const load = async () => {
     const response = await adminFetch(apiPath('/api/admin/check-in/summary'), { headers: authHeaders });
-    if (response.ok) setSummary(await response.json());
+    if (response.ok) {
+      const data = await response.json();
+      setSummary(data);
+    }
   };
 
   useEffect(() => {
     load();
+    const interval = setInterval(load, 15000); // Poll summary every 15s
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -134,21 +146,77 @@ export function CheckInTab({ authHeaders }) {
         ? `Walk-in created: ${data.registration?.registrationId}`
         : data.detail || data.message || 'Unable to create walk-in.',
     });
-    if (response.ok) setWalkIn({ name: '', college: '', eventId: '' });
+    if (response.ok) {
+      setWalkIn({ name: '', college: '', eventId: '' });
+      load();
+    }
   };
+
+  const checkInRate = summary.confirmed > 0
+    ? Math.round((summary.checkedIn / summary.confirmed) * 100)
+    : 0;
 
   return (
     <section className="admin-panel check-in-panel">
-      <h2>Check-in desk</h2>
-      <p>Scan the registration QR code or enter the registration ID / token to check in participants.</p>
+      <div className="check-in-header">
+        <div>
+          <h2>Check-in Desk &amp; Member Entry</h2>
+          <p className="admin-help">
+            Scan the registration pass QR code or enter the registration ID to verify and admit participants to the symposium.
+          </p>
+        </div>
+        <button className="button button-secondary button-small" type="button" onClick={load}>
+          🔄 Refresh Counts
+        </button>
+      </div>
+
+      {/* Comprehensive Entry & Registration Metrics */}
+      <div className="admin-metrics check-in-metrics-grid">
+        <article className="metric-card metric-card--total">
+          <span className="metric-label">Total Registered Members</span>
+          <strong className="metric-val">{summary.totalMembers}</strong>
+          <small className="metric-sub">All submissions in system</small>
+        </article>
+
+        <article className="metric-card metric-card--confirmed">
+          <span className="metric-label">Confirmed &amp; Eligible</span>
+          <strong className="metric-val">{summary.confirmed}</strong>
+          <small className="metric-sub">Payment verified participants</small>
+        </article>
+
+        <article className="metric-card metric-card--entered">
+          <span className="metric-label">Entered (Checked In)</span>
+          <strong className="metric-val" style={{ color: 'var(--cyan, #00c8e0)' }}>
+            {summary.checkedIn}
+          </strong>
+          <small className="metric-sub">{checkInRate}% of confirmed participants</small>
+        </article>
+
+        <article className="metric-card metric-card--pending">
+          <span className="metric-label">Pending Entry</span>
+          <strong className="metric-val" style={{ color: '#f59e0b' }}>
+            {summary.pendingCheckIn ?? Math.max(0, summary.confirmed - summary.checkedIn)}
+          </strong>
+          <small className="metric-sub">Yet to arrive at reception</small>
+        </article>
+
+        <article className="metric-card metric-card--walkin">
+          <span className="metric-label">Walk-in Registrations</span>
+          <strong className="metric-val">{summary.walkIns || 0}</strong>
+          <small className="metric-sub">Spot desk entries</small>
+        </article>
+      </div>
+
       {cameraOpen && <div id="admin-qr-reader" className="check-in-camera" aria-label="QR scanner camera" />}
+      
       <div className="check-in-actions">
         <button className="button button-secondary" type="button" onClick={() => setCameraOpen((open) => !open)}>
-          {cameraOpen ? 'Close camera' : 'Open camera'}
+          {cameraOpen ? '📷 Close Camera' : '📷 Open Camera Scanner'}
         </button>
-        <small>Camera QR scanning loads only when opened</small>
+        <small style={{ color: '#94a3b8' }}>Camera QR scanning activates rear lens on mobile / webcam on laptop</small>
       </div>
-      <form onSubmit={scan} className="admin-form">
+
+      <form onSubmit={scan} className="admin-form check-in-scan-form">
         <input
           value={registrationId}
           onChange={(event) => setRegistrationId(event.target.value)}
@@ -156,42 +224,79 @@ export function CheckInTab({ authHeaders }) {
           autoFocus
         />
         <button className="button button-primary" disabled={!registrationId.trim()}>
-          Check in
+          Check In Member
         </button>
       </form>
+
       {result && (
         <div
           style={{
             marginTop: 14,
-            padding: '12px 16px',
+            padding: '14px 18px',
             borderRadius: 8,
             background: result.ok ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
             color: result.ok ? '#4ade80' : '#f87171',
             border: `1px solid ${result.ok ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
           }}
         >
-          <strong style={{ display: 'block', fontSize: 15 }}>{result.message}</strong>
+          <strong style={{ display: 'block', fontSize: 16 }}>{result.message}</strong>
           {result.registration && (
-            <div style={{ marginTop: 6, fontSize: 13, color: '#cbd5e1' }}>
-              <span>Events: {(result.registration.eventRegistrations || []).map((e) => e.eventName).join(', ')}</span>
-              <span style={{ marginLeft: 12 }}>ID: {result.registration.registrationId}</span>
+            <div style={{ marginTop: 8, fontSize: 13, color: '#cbd5e1', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+              <span><strong>Events:</strong> {(result.registration.eventRegistrations || []).map((e) => e.eventName).join(', ')}</span>
+              <span><strong>ID:</strong> {result.registration.registrationId}</span>
+              <span><strong>College:</strong> {result.registration.participant?.college || '—'}</span>
             </div>
           )}
         </div>
       )}
-      <div className="admin-metrics">
-        <article>
-          <span>Checked in</span>
-          <strong>{summary.checkedIn}</strong>
-        </article>
-        <article>
-          <span>Confirmed</span>
-          <strong>{summary.confirmed}</strong>
-        </article>
-      </div>
-      <details className="walk-in-form">
-        <summary>Manual walk-in registration</summary>
-        <form onSubmit={createWalkIn} className="admin-form">
+
+      {/* Live Feed: Recent Checked-in Members */}
+      {summary.recentCheckIns && summary.recentCheckIns.length > 0 && (
+        <div className="recent-checkins-section" style={{ marginTop: '28px' }}>
+          <h3 style={{ fontSize: '16px', color: '#e2e8f0', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span>⚡ Recent Check-ins</span>
+            <span style={{ fontSize: '12px', background: 'rgba(0,200,224,0.15)', color: '#00c8e0', padding: '2px 8px', borderRadius: '12px' }}>
+              Live Entry Stream
+            </span>
+          </h3>
+          <div className="admin-table-wrap">
+            <table className="admin-table" style={{ fontSize: '13px' }}>
+              <thead>
+                <tr>
+                  <th>Entry Time</th>
+                  <th>ID</th>
+                  <th>Participant Name</th>
+                  <th>College</th>
+                  <th>Registered Events</th>
+                </tr>
+              </thead>
+              <tbody>
+                {summary.recentCheckIns.map((item) => (
+                  <tr key={item.registrationId}>
+                    <td style={{ whiteSpace: 'nowrap', color: '#00c8e0', fontWeight: 600 }}>
+                      {item.checkedInAt
+                        ? new Date(item.checkedInAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                        : 'Just now'}
+                    </td>
+                    <td><code>{item.registrationId}</code></td>
+                    <td><strong>{item.participant?.name || '—'}</strong></td>
+                    <td style={{ color: '#94a3b8' }}>{item.participant?.college || '—'}</td>
+                    <td>
+                      {(item.eventRegistrations || []).map((e) => e.eventName || e.eventId).join(', ') || '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      <details className="walk-in-form" style={{ marginTop: '28px' }}>
+        <summary style={{ cursor: 'pointer', fontWeight: 700, color: '#38bdf8' }}>
+          + Manual Walk-in (Spot Registration)
+        </summary>
+        <form onSubmit={createWalkIn} className="admin-form" style={{ marginTop: '12px' }}>
           <input
             required
             value={walkIn.name}
@@ -208,9 +313,9 @@ export function CheckInTab({ authHeaders }) {
             required
             value={walkIn.eventId}
             onChange={(event) => setWalkIn({ ...walkIn, eventId: event.target.value })}
-            placeholder="Event ID e.g. ideathon"
+            placeholder="Event ID e.g. ignite, ideathon"
           />
-          <button className="button button-primary">Create walk-in</button>
+          <button className="button button-primary">Create Spot Walk-in</button>
         </form>
       </details>
 
