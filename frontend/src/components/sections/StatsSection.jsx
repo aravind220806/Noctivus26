@@ -1,8 +1,9 @@
 export function StatsSection() {
   const values = [
-    ['08', 'Events'],
+    ['09', 'Events'],
     ['05', 'Technical events'],
     ['03', 'Non-technical events'],
+    ['01', 'Workshop'],
     ['26 Sep', 'Event date'],
   ];
   return (

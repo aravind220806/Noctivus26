@@ -12,6 +12,7 @@ const EVENT_ORDER = [
   'mystery-hunt',
   'tune-trap',
   'auction-arena',
+  'playground-of-hackers',
 ];
 
 export function EventModal({ event, onClose, onRegister }) {
