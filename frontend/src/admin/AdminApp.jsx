@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '../dashboard-layout';
 import { apiUrl } from '../lib/api';
-import { adminFetch, tabs } from './adminUtils';
+import { adminFetch, setGlobalCsrf, tabs } from './adminUtils';
 import { AdminAccessTab } from './components/AdminAccessTab';
 import { AdminLogin } from './components/AdminLogin';
 import { AnalysisTab } from './components/AnalysisTab';
@@ -44,7 +44,14 @@ export default function AdminApp() {
       .then((response) => (response.ok ? response.json() : null))
       .then((data) => {
         if (!active) return;
-        if (data?.user) setSession({ user: data.user });
+        if (data?.user) {
+          setSession({ user: data.user });
+          const token = data.csrfToken || data.user?.csrf || '';
+          if (token) {
+            setCsrfToken(token);
+            setGlobalCsrf(token); // populate global store immediately
+          }
+        }
         setAuthChecked(true);
       })
       .catch(() => active && setAuthChecked(true));
@@ -64,7 +71,11 @@ export default function AdminApp() {
 
   const saveSession = (data) => {
     setSession(data);
-    if (data?.csrfToken) setCsrfToken(data.csrfToken);
+    const token = data?.csrfToken || data?.user?.csrf || '';
+    if (token) {
+      setCsrfToken(token);
+      setGlobalCsrf(token); // populate global store so all tabs get it immediately
+    }
   };
 
   const logout = async () => {

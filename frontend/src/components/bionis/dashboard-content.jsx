@@ -9,25 +9,19 @@ export function DashboardContent({
 }) {
   const usedBytes = overview.storage?.storageBytes || overview.storage?.dataBytes || 0;
   const usage = overview.storage?.available && overview.storage.limitBytes ? Math.min(100, Math.round((usedBytes / overview.storage.limitBytes) * 100)) : null;
-  const eventData = [...overview.events].sort((a, b) => eventOrder.indexOf(a.eventName) - eventOrder.indexOf(b.eventName));
-  const recentData = overview.recent.map((registration, index) => ({
-    name: registration.createdAt ? new Date(registration.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : `R${index + 1}`,
-    registrations: index + 1,
-  }));
+  const eventData = [...(overview.events || [])].sort((a, b) => eventOrder.indexOf(a.eventName) - eventOrder.indexOf(b.eventName));
+  const hasRegistrations = eventData.some((e) => (e.registrations || 0) > 0);
+  const chartHeight = eventData.length * 36; // ~288px for 8 rows
+  const recentList = overview.recent || [];
 
   return (
-    <>
-      <section className="bionis-overview">
-        <Card className="bionis-score-card">
-          <span className="bionis-section-label">Registrations Overview</span>
-          <div className="bionis-score"><strong>{overview.total}</strong><span>Total registrations</span></div>
-        </Card>
-        <div className="admin-metrics">
-          <MetricCard label="REGISTRATIONS" value={overview.total} tone="blue" />
-          <MetricCard label="PENDING" value={overview.statuses.pending} tone="orange" />
-          <MetricCard label="CONFIRMED" value={overview.statuses.confirmed} tone="green" />
-          <MetricCard label="REVENUE" value={`Rs.${overview.confirmedRevenue}`} tone="purple" />
-        </div>
+    <div className="dashboard-content-wrapper">
+      {/* Top Stat Cards */}
+      <section className="admin-metrics">
+        <MetricCard label="TOTAL REGISTRATIONS" value={overview.total ?? 0} subtext="Registered attendees" tone="blue" />
+        <MetricCard label="PENDING VERIFICATION" value={overview.statuses?.pending ?? 0} subtext="Awaiting admin approval" tone="orange" />
+        <MetricCard label="CONFIRMED PAYMENTS" value={overview.statuses?.confirmed ?? 0} subtext="Verified & confirmed" tone="green" />
+        <MetricCard label="TOTAL REVENUE" value={`Rs.${overview.confirmedRevenue ?? 0}`} subtext="Collected fees" tone="purple" />
       </section>
 
       {/* Events Control Panel */}
@@ -37,7 +31,7 @@ export function DashboardContent({
             <CardTitle>Events Control &amp; Venues</CardTitle>
             <p className="admin-help" style={{ margin: '4px 0 0' }}>Manage event status, active venues, and registration availability.</p>
           </div>
-          <span className="dashboard-event-count">{overview.events.length} Events Configured</span>
+          <span className="dashboard-event-count">{overview.events?.length || 0} Events Configured</span>
         </div>
         <div className="dashboard-events-grid">
           {eventData.map((event) => {
@@ -81,42 +75,90 @@ export function DashboardContent({
         </div>
       </Card>
 
+      {/* Analytics & Recent Activity Grid */}
       <div className="admin-grid bionis-dashboard-grid">
         <Card className="bionis-event-demand">
-          <CardTitle>Event demand</CardTitle>
-          <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={eventData} layout="vertical" margin={{ left: 8, right: 8, top: 10, bottom: 10 }}>
-              <CartesianGrid horizontal={false} stroke="#E5E7EB" />
-              <XAxis type="number" hide />
-              <YAxis type="category" dataKey="eventName" width={140} tick={{ fill: '#9CA3AF', fontSize: 12 }} axisLine={false} tickLine={false} />
-              <Tooltip cursor={{ fill: '#F3F4F6' }} />
-              <Bar dataKey="registrations" fill="#000000" radius={[0, 8, 8, 0]} barSize={12} />
-            </BarChart>
-          </ResponsiveContainer>
+          <CardTitle>Event Demand</CardTitle>
+          {hasRegistrations ? (
+            <div style={{ width: '100%', height: chartHeight }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={eventData} layout="vertical" margin={{ left: 8, right: 8, top: 10, bottom: 10 }}>
+                  <CartesianGrid horizontal={false} stroke="rgba(255, 255, 255, 0.08)" />
+                  <XAxis type="number" hide />
+                  <YAxis type="category" dataKey="eventName" width={140} tick={{ fill: '#94a3b8', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <Tooltip cursor={{ fill: 'rgba(255, 255, 255, 0.04)' }} />
+                  <Bar dataKey="registrations" fill="#38bdf8" radius={[0, 6, 6, 0]} barSize={14} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="chart-empty-state">
+              <p>No registrations yet — chart will populate once events open.</p>
+            </div>
+          )}
         </Card>
-        <Card>
-          <CardTitle>Recent registrations</CardTitle>
-          <ResponsiveContainer width="100%" height={180}>
-            <BarChart data={recentData}>
-              <XAxis dataKey="name" tick={{ fill: '#9CA3AF', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis hide />
-              <Tooltip cursor={{ fill: '#F3F4F6' }} />
-              <Bar dataKey="registrations" fill="#3B82F6" radius={[8, 8, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-          <div className="recent-list">{overview.recent.map((registration) => <div key={registration.registrationId}><span>{registration.registrationId}</span><strong>{registration.participant?.name}</strong><small>{registration.eventRegistrations?.map((event) => event.eventName).join(', ')}</small><span className={`status-pill status-pill--${registration.paymentStatus}`}>{registration.paymentStatus}</span></div>)}</div>
+
+        <Card className="bionis-recent-activity">
+          <CardTitle>Recent Activity</CardTitle>
+          {recentList.length > 0 ? (
+            <div className="recent-list">
+              {recentList.map((registration) => (
+                <div key={registration.registrationId} className="recent-item">
+                  <span>{registration.registrationId}</span>
+                  <strong>{registration.participant?.name}</strong>
+                  <small>{registration.eventRegistrations?.map((event) => event.eventName).join(', ')}</small>
+                  <span className={`status-pill status-pill--${registration.paymentStatus}`}>{registration.paymentStatus}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="recent-empty-state">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.4 }}>
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
+              <p>No recent registrations yet.</p>
+            </div>
+          )}
         </Card>
       </div>
+
+      {/* System Health & Storage */}
       <Card className="storage-monitor">
-        <div className="storage-monitor__heading"><div><span className="kicker">DATABASE STORAGE</span><h2>MongoDB capacity</h2></div><strong>{usage === null ? 'Unavailable' : `${usage}% used`}</strong></div>
-        {usage === null ? <p>Storage metrics are unavailable for this database role. Registration and email data remain operational.</p> : <><div className={`storage-meter ${usage >= 85 ? 'storage-meter--warning' : ''}`}><i style={{ width: `${usage}%` }} /></div><div className="storage-monitor__values"><span>{formatBytes(usedBytes)} used</span><span>{formatBytes(overview.storage?.limitBytes || 0)} limit</span><span>{formatBytes(overview.storage?.indexBytes || 0)} indexes</span></div></>}
+        <div className="storage-monitor__heading">
+          <div>
+            <span className="kicker">DATABASE STORAGE</span>
+            <h2>System Health &amp; Storage</h2>
+          </div>
+          <strong>{usage === null ? 'Operational' : `${usage}% used`}</strong>
+        </div>
+        {usage === null ? (
+          <p>Database connection and replica state are healthy. Registration, scheduling, and email workers are operational.</p>
+        ) : (
+          <>
+            <div className={`storage-meter ${usage >= 85 ? 'storage-meter--warning' : ''}`}>
+              <i style={{ width: `${usage}%` }} />
+            </div>
+            <div className="storage-monitor__values">
+              <span>{formatBytes(usedBytes)} used</span>
+              <span>{formatBytes(overview.storage?.limitBytes || 0)} limit</span>
+              <span>{formatBytes(overview.storage?.indexBytes || 0)} indexes</span>
+            </div>
+          </>
+        )}
       </Card>
-    </>
+    </div>
   );
 }
 
-function MetricCard({ label, value, tone }) {
-  return <article className={`metric-card metric-card--${tone}`}><span>{label}</span><strong>{value}</strong></article>;
+function MetricCard({ label, value, subtext, tone }) {
+  return (
+    <article className={`metric-card metric-card--${tone}`}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+      {subtext && <small>{subtext}</small>}
+    </article>
+  );
 }
 
 function formatBytes(value) {
