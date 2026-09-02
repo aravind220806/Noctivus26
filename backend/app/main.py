@@ -82,7 +82,7 @@ async def exception_handler(_request: Request, error: Exception):
     if settings.environment == "production":
         detail = "Internal server error."
     else:
-        detail = getattr(error, "detail", None) or "Internal server error."
+        detail = getattr(error, "detail", None) or str(error) or "Internal server error."
     return JSONResponse(status_code=status_code, content={"message": detail, "detail": detail})
 
 
