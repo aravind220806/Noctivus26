@@ -8,6 +8,7 @@
   box-sizing: border-box;
   padding: 4rem 1.5rem;
   position: relative;
+  scroll-margin-top: 70px;
 }
 
 @media (min-width: 768px) {

@@ -3,7 +3,6 @@ import './Navbar.css';
 
 export default function Navbar({ activeSection, onNavigate, onRegister, onSelectEvent }) {
   const [scrolled, setScrolled] = useState(false);
-  const [activeDropdown, setActiveDropdown] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -73,28 +72,17 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         setMobileOpen(false);
-        setActiveDropdown(null);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Nav items: HOME -> ABOUT -> EVENTS (with category sub-filters) -> TIMELINE -> COORDINATORS
+  // Clean nav items: HOME -> ABOUT -> EVENTS -> TIMELINE -> COORDINATORS
   const navItems = [
     { id: 'home', label: 'HOME', href: '#home' },
     { id: 'about', label: 'ABOUT', href: '#about' },
-    {
-      id: 'events',
-      label: 'EVENTS',
-      href: '#events',
-      children: [
-        { id: 'events-all', label: 'ALL EVENTS', href: '#events', category: 'All' },
-        { id: 'events-tech', label: 'TECHNICAL', href: '#events', category: 'Technical' },
-        { id: 'events-nontech', label: 'NON-TECHNICAL', href: '#events', category: 'Non-Technical' },
-        { id: 'events-workshop', label: 'WORKSHOP', href: '#events', category: 'Workshop' },
-      ],
-    },
+    { id: 'events', label: 'EVENTS', href: '#events' },
     { id: 'schedule', label: 'TIMELINE', href: '#schedule' },
     { id: 'coordinators', label: 'COORDINATORS', href: '#coordinators' },
   ];
@@ -116,13 +104,7 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
       const target = document.querySelector(item.href);
       if (target) target.scrollIntoView({ behavior: 'smooth' });
     }
-    setActiveDropdown(null);
     setMobileOpen(false);
-  };
-
-  const handleDropdownToggle = (id, e) => {
-    e.stopPropagation();
-    setActiveDropdown((prev) => (prev === id ? null : id));
   };
 
   return (
@@ -148,66 +130,20 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
         <div ref={menuRef} className="menu" aria-label="Main Navigation">
           <ul className="menu-list">
             {navItems.map((item) => {
-              const hasChildren = Boolean(item.children?.length);
               const isActive = activeSection === item.id;
-              const isDropdownOpen = activeDropdown === item.id;
 
               return (
                 <li
                   key={item.id}
-                  className={`menu-item ${hasChildren ? 'menu-has-children' : ''} ${
-                    isDropdownOpen ? 'dropdown-open' : ''
-                  } ${isActive ? 'active' : ''}`}
-                  onMouseEnter={() => hasChildren && setActiveDropdown(item.id)}
-                  onMouseLeave={() => hasChildren && setActiveDropdown(null)}
+                  className={`menu-item ${isActive ? 'active' : ''}`}
                 >
-                  {hasChildren ? (
-                    <span
-                      className="menu-sub"
-                      onClick={(e) => handleDropdownToggle(item.id, e)}
-                      role="button"
-                      tabIndex={0}
-                      aria-expanded={isDropdownOpen}
-                    >
-                      <span className="menu-sub-text">{item.label}</span>
-                      <svg
-                        className="caret-svg"
-                        width="10"
-                        height="6"
-                        viewBox="0 0 10 6"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </span>
-                  ) : (
-                    <a
-                      href={item.href}
-                      className={isActive ? 'active' : ''}
-                      onClick={(e) => handleNavClick(e, item)}
-                    >
-                      {item.label}
-                    </a>
-                  )}
-
-                  {/* Submenu Dropdown */}
-                  {hasChildren && (
-                    <div className={`menu-sub-list ${isDropdownOpen ? 'is-visible' : ''}`}>
-                      <ul>
-                        {item.children.map((child) => (
-                          <li key={child.id}>
-                            <a
-                              href={child.href}
-                              onClick={(e) => handleNavClick(e, child)}
-                            >
-                              <span>{child.label}</span>
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                  <a
+                    href={item.href}
+                    className={isActive ? 'active' : ''}
+                    onClick={(e) => handleNavClick(e, item)}
+                  >
+                    {item.label}
+                  </a>
                 </li>
               );
             })}
@@ -249,56 +185,24 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
         <>
           <div
             className="cyber-drawer-backdrop"
-            onClick={() => {
-              setMobileOpen(false);
-              setActiveDropdown(null);
-            }}
+            onClick={() => setMobileOpen(false)}
             aria-hidden="true"
           />
           <div className="cyber-mobile-drawer">
             <div className="drawer-inner">
               <ul className="drawer-menu-list">
                 {navItems.map((item) => {
-                  const hasChildren = Boolean(item.children?.length);
-                  const isDropdownOpen = activeDropdown === item.id;
                   const isActive = activeSection === item.id;
 
                   return (
                     <li key={item.id} className="drawer-menu-item">
-                      {hasChildren ? (
-                        <div className="drawer-group">
-                          <div
-                            className="drawer-group-header"
-                            onClick={(e) => handleDropdownToggle(item.id, e)}
-                          >
-                            <span className={`drawer-link ${isActive ? 'active' : ''}`}>{item.label}</span>
-                            <span className={`drawer-arrow ${isDropdownOpen ? 'open' : ''}`}>▼</span>
-                          </div>
-                          {isDropdownOpen && (
-                            <ul className="drawer-sub-list">
-                              {item.children.map((child) => (
-                                <li key={child.id}>
-                                  <a
-                                    href={child.href}
-                                    className="drawer-sub-link"
-                                    onClick={(e) => handleNavClick(e, child)}
-                                  >
-                                    {child.label}
-                                  </a>
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-                      ) : (
-                        <a
-                          href={item.href}
-                          className={`drawer-link ${isActive ? 'active' : ''}`}
-                          onClick={(e) => handleNavClick(e, item)}
-                        >
-                          {item.label}
-                        </a>
-                      )}
+                      <a
+                        href={item.href}
+                        className={`drawer-link ${isActive ? 'active' : ''}`}
+                        onClick={(e) => handleNavClick(e, item)}
+                      >
+                        {item.label}
+                      </a>
                     </li>
                   );
                 })}
