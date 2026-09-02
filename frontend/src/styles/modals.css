@@ -472,21 +472,24 @@
    ═══════════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 600px) {
   .event-modal-shell {
-    padding: 0.75rem;
-    align-items: flex-start;
+    padding: 0.5rem;
+    align-items: center;
   }
 
   .event-modal-panel {
     width: 100%;
+    max-height: 88vh;
     padding: 1.25rem 1rem;
     clip-path: none;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .em-header {
     flex-direction: row;
     align-items: flex-start;
     gap: 0.75rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
     padding-bottom: 0.75rem;
   }
 
@@ -518,7 +521,7 @@
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     gap: 0;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
     scrollbar-width: none;
   }
 
@@ -535,18 +538,22 @@
 
   .em-body {
     min-height: auto;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
   }
 
   .em-desc {
     font-size: 0.8rem;
     line-height: 1.5;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
   }
 
   .em-meta-row {
     grid-template-columns: 1fr 1fr;
     gap: 0.75rem;
     padding: 0.75rem;
+    overflow: hidden;
   }
 
   .em-meta-item {
@@ -563,7 +570,18 @@
 
   .em-footer {
     padding-top: 0.75rem;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
     gap: 0.75rem;
+  }
+
+  .em-footer .notched-button,
+  .em-footer button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .em-rule-item {
+    font-size: 0.75rem;
   }
 }
