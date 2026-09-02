@@ -4,14 +4,14 @@ import { site } from '../../data/site.js';
 import { NotchedButton } from '../ui/NotchedButton/NotchedButton';
 
 const EVENT_ORDER = [
-  'mystery-hunt',
-  'bug-hunt',
   'ctf',
+  'bug-hunt',
+  'prompt-heist',
   'secure-x-vibecode',
   'ignite',
-  'ipl-auction',
-  'tune-tracker',
-  'prompt-heist',
+  'mystery-hunt',
+  'tune-trap',
+  'ipl-bidverse',
 ];
 
 export function EventModal({ event, onClose, onRegister }) {
@@ -118,6 +118,12 @@ export function EventModal({ event, onClose, onRegister }) {
                   <span className="em-meta-label">DATE</span>
                   <span className="em-meta-value">26 SEP 2026</span>
                 </div>
+                {event.laptopRequirement && event.laptopRequirement !== 'None' && (
+                  <div className="em-meta-item" style={{ gridColumn: 'span 2' }}>
+                    <span className="em-meta-label">LAPTOP REQUIREMENT</span>
+                    <span className="em-meta-value" style={{ color: 'var(--accent, #00f0ff)' }}>{event.laptopRequirement}</span>
+                  </div>
+                )}
               </div>
             </div>
           )}
