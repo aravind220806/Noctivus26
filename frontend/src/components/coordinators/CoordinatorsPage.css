@@ -28,7 +28,7 @@
 .noc-db-hero {
   position: relative;
   padding: 2.5rem 0 3rem;
-  border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+  border-bottom: 1px solid rgba(167, 255, 24, 0.25);
   margin-bottom: 2.5rem;
 }
 
@@ -48,13 +48,13 @@
   align-items: center;
   gap: 0.4rem;
   background: rgba(4, 16, 24, 0.8);
-  border: 1px solid rgba(0, 240, 255, 0.2);
+  border: 1px solid rgba(167, 255, 24, 0.25);
   padding: 0.35rem 0.75rem;
 }
 
 .noc-telemetry-badge.is-live {
-  color: #00f0ff;
-  border-color: rgba(0, 240, 255, 0.4);
+  color: #A7FF18;
+  border-color: rgba(167, 255, 24, 0.5);
 }
 
 .noc-telemetry-badge.is-live::before {
@@ -62,15 +62,15 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #caff00;
-  box-shadow: 0 0 8px #caff00;
+  background: #A7FF18;
+  box-shadow: 0 0 8px #A7FF18;
   display: inline-block;
 }
 
 .noc-db-eyebrow {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 0.85rem;
-  color: #00f0ff;
+  color: #A7FF18;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   margin-bottom: 0.5rem;
@@ -88,7 +88,7 @@
 }
 
 .noc-db-cursor {
-  color: #caff00;
+  color: #A7FF18;
   animation: noc-cursor-blink 1s step-end infinite;
   display: inline-block;
 }
@@ -116,8 +116,8 @@
   background: rgba(2, 9, 13, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-top: 1px solid rgba(0, 240, 255, 0.15);
-  border-bottom: 1px solid rgba(0, 240, 255, 0.25);
+  border-top: 1px solid rgba(167, 255, 24, 0.2);
+  border-bottom: 1px solid rgba(167, 255, 24, 0.3);
   padding: 0.85rem 0;
   margin: 0 -1.5rem 3.5rem;
   padding-left: 1.5rem;
@@ -155,7 +155,7 @@
   color: #7C8BA1;
   text-decoration: none;
   padding: 0.5rem 1.1rem;
-  border: 1px solid rgba(0, 240, 255, 0.25);
+  border: 1px solid rgba(167, 255, 24, 0.3);
   background: rgba(4, 16, 24, 0.6);
   letter-spacing: 0.12em;
   transition: all 0.2s ease;
@@ -163,16 +163,16 @@
 }
 
 .noc-cat-btn:hover {
-  color: #00f0ff;
-  border-color: rgba(0, 240, 255, 0.6);
-  box-shadow: 0 0 12px rgba(0, 240, 255, 0.2);
+  color: #A7FF18;
+  border-color: rgba(167, 255, 24, 0.7);
+  box-shadow: 0 0 12px rgba(167, 255, 24, 0.25);
 }
 
 .noc-cat-btn.is-active {
   color: #02090D;
-  background: #caff00;
-  border-color: #caff00;
-  box-shadow: 0 0 16px rgba(202, 255, 0, 0.45);
+  background: #A7FF18;
+  border-color: #A7FF18;
+  box-shadow: 0 0 16px rgba(167, 255, 24, 0.45);
 }
 
 .noc-cat-btn.is-active .noc-cat-bracket {
@@ -180,7 +180,7 @@
 }
 
 .noc-cat-bracket {
-  color: #00f0ff;
+  color: #A7FF18;
   transition: color 0.2s ease;
 }
 
@@ -194,19 +194,21 @@
 
 /* ── Section Structure ── */
 .noc-coord-section {
-  scroll-margin-top: 130px;
+  scroll-margin-top: 180px;
+  padding-top: 1.5rem;
   padding-bottom: 5rem;
 }
 
 .noc-coord-section-header {
   margin-bottom: 2.5rem;
+  padding-top: 0.5rem;
 }
 
 .noc-coord-section-idx {
   display: block;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 0.85rem;
-  color: #caff00;
+  color: #A7FF18;
   letter-spacing: 0.16em;
   margin-bottom: 0.35rem;
   font-weight: 600;
@@ -231,7 +233,7 @@
 }
 
 .noc-coord-cursor {
-  color: #00f0ff;
+  color: #A7FF18;
 }
 
 .noc-coord-header-line {
@@ -245,7 +247,7 @@
 .noc-line-head {
   width: 12px;
   height: 6px;
-  background: #00f0ff;
+  background: #A7FF18;
   clip-path: polygon(0 0, 100% 50%, 0 100%);
   margin-right: 4px;
 }
@@ -255,8 +257,8 @@
   height: 1px;
   background: linear-gradient(
     90deg,
-    rgba(0, 240, 255, 0.8) 0%,
-    rgba(0, 240, 255, 0.2) 60%,
+    rgba(167, 255, 24, 0.8) 0%,
+    rgba(167, 255, 24, 0.2) 60%,
     transparent 100%
   );
 }
@@ -284,7 +286,7 @@
   margin: 3.5rem 0 5rem;
   position: relative;
   height: 14px;
-  color: rgba(0, 240, 255, 0.3);
+  color: rgba(167, 255, 24, 0.4);
   font-family: 'IBM Plex Mono', monospace;
   font-size: 0.65rem;
 }
@@ -294,8 +296,8 @@
   height: 1px;
   background: repeating-linear-gradient(
     90deg,
-    rgba(0, 240, 255, 0.3) 0px,
-    rgba(0, 240, 255, 0.3) 12px,
+    rgba(167, 255, 24, 0.35) 0px,
+    rgba(167, 255, 24, 0.35) 12px,
     transparent 12px,
     transparent 18px
   );
@@ -303,6 +305,6 @@
 
 .noc-tech-divider-mark {
   padding: 0 0.8rem;
-  color: #00f0ff;
+  color: #A7FF18;
   letter-spacing: 0.2em;
 }

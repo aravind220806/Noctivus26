@@ -10,6 +10,12 @@ export function MemberCard({ member }) {
 
   return (
     <article className="noc-member-card" id={`card-${member.id}`}>
+      {/* 4 HUD Reticle Corner Brackets in Neon Green (#c4f542) */}
+      <span className="noc-card-corner noc-card-corner--tl" aria-hidden="true" />
+      <span className="noc-card-corner noc-card-corner--tr" aria-hidden="true" />
+      <span className="noc-card-corner noc-card-corner--bl" aria-hidden="true" />
+      <span className="noc-card-corner noc-card-corner--br" aria-hidden="true" />
+
       {/* Header */}
       <CardHeader type={member.type} />
 
