@@ -90,7 +90,8 @@
   margin-bottom: 12px;
 }
 
-.cyber-hero-carousel-section .item-category-tag[data-category="Non-technical"] {
+.cyber-hero-carousel-section .item-category-tag[data-category="Non-technical"],
+.cyber-hero-carousel-section .item-category-tag[data-category="Non-Technical"] {
   color: #a3e635;
   background: rgba(163, 230, 53, 0.1);
   border-color: rgba(163, 230, 53, 0.3);

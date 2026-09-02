@@ -243,6 +243,28 @@ export const events = [
       { name: 'Sabeetha D', phone: '9080001039' },
     ],
   },
+  {
+    id: 'art-of-hacking',
+    name: 'The Art of Hacking',
+    category: 'Workshop',
+    teamSize: 'Individual / Open',
+    fee: 150,
+    accent: 'violet',
+    image: eventImage,
+    imagePosition: '50% 50%',
+    format: 'An intensive hands-on cybersecurity workshop covering modern ethical hacking, penetration testing techniques, and live demonstration of vulnerabilities.',
+    details: [
+      'Interactive hands-on session with industry experts.',
+      'Covers web vulnerability assessment, ethical hacking fundamentals, and defense strategies.',
+      'Open to all registered symposium participants.',
+      'Bring your laptop for live demo exercises.',
+      'Certificate of participation provided upon completion.',
+    ],
+    coordinators: [
+      { name: 'Madhumitha T', phone: '7200291695' },
+      { name: 'Kalaiyarasan C', phone: '8248916863' },
+    ],
+  },
 ];
 
 export const timeline = [

@@ -14,15 +14,17 @@ export function EventsSection({ onSelect, onRegister, selectedCategory, onSelect
     }
   }, [selectedCategory]);
   
-  const categories = ['All', 'Technical', 'Non-technical', 'Workshop'];
+  const categories = ['All', 'Technical', 'Non-Technical', 'Workshop'];
 
   const authoritativeEvents = useMemo(() => {
     return events;
   }, []);
 
   const visibleEvents = useMemo(() => {
-    if (filter === 'All') return authoritativeEvents;
-    return authoritativeEvents.filter(e => e.category === filter);
+    if (!filter || filter === 'All') return authoritativeEvents;
+    return authoritativeEvents.filter(
+      (e) => e.category?.toLowerCase() === filter.toLowerCase()
+    );
   }, [filter, authoritativeEvents]);
 
   const handleFilterChange = (cat) => {
@@ -37,8 +39,9 @@ export function EventsSection({ onSelect, onRegister, selectedCategory, onSelect
       {/* Categories / Filters */}
       <div className="event-filters" role="group" aria-label="Filter events">
         {categories.map((cat) => {
-          const isActive = filter === cat;
-          const filterAccent = cat === 'Non-technical' ? 'lime' : cat === 'Workshop' ? 'violet' : 'cyan';
+          const isActive = filter.toLowerCase() === cat.toLowerCase();
+          const catLower = cat.toLowerCase();
+          const filterAccent = catLower === 'non-technical' ? 'lime' : catLower === 'workshop' ? 'violet' : 'cyan';
           return (
             <NotchedButton
               key={cat}

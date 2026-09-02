@@ -10,6 +10,7 @@ EVENT_CATALOG = [
     {"id": "mystery-hunt", "name": "Crime Investigation", "category": "non-tech", "duration_minutes": 90, "is_ctf": False, "fee": 150, "teamMin": 1, "teamMax": 4, "detailsComplete": True, "status": "open", "venue": "Seminar Hall A", "date": "2026-09-26", "time": "11:30", "gate": "VEC Gate 1"},
     {"id": "tune-trap", "name": "Tune Tracker", "category": "non-tech", "duration_minutes": 60, "is_ctf": False, "fee": 150, "teamMin": 1, "teamMax": 4, "detailsComplete": True, "status": "open", "venue": "Open Air Theatre", "date": "2026-09-26", "time": "11:30", "gate": "VEC Gate 1"},
     {"id": "ipl-auction", "name": "IPL Auction 2026", "category": "non-tech", "duration_minutes": 90, "is_ctf": False, "fee": 150, "teamMin": 1, "teamMax": 4, "detailsComplete": True, "status": "open", "venue": "Mini Auditorium", "date": "2026-09-26", "time": "11:30", "gate": "VEC Gate 1"},
+    {"id": "art-of-hacking", "name": "The Art of Hacking", "category": "workshop", "duration_minutes": 165, "is_ctf": False, "fee": 150, "teamMin": 1, "teamMax": 1, "detailsComplete": True, "status": "open", "venue": "Cyber Security Lab", "date": "2026-09-26", "time": "10:00", "gate": "VEC Gate 1"},
 ]
 
 EVENTS_BY_ID = {event["id"]: event for event in EVENT_CATALOG}

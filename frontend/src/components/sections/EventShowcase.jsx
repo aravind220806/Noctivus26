@@ -9,6 +9,7 @@ import './EventShowcase.css';
 const CATEGORY_ACCENT = {
   Technical: 'cyan',
   'Non-technical': 'lime',
+  'Non-Technical': 'lime',
   Workshop: 'violet',
 };
 

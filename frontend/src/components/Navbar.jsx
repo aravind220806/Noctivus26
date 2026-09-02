@@ -91,7 +91,7 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
       children: [
         { id: 'events-all', label: 'ALL EVENTS', href: '#events', category: 'All' },
         { id: 'events-tech', label: 'TECHNICAL', href: '#events', category: 'Technical' },
-        { id: 'events-nontech', label: 'NON-TECHNICAL', href: '#events', category: 'Non-technical' },
+        { id: 'events-nontech', label: 'NON-TECHNICAL', href: '#events', category: 'Non-Technical' },
         { id: 'events-workshop', label: 'WORKSHOP', href: '#events', category: 'Workshop' },
       ],
     },
