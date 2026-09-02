@@ -526,7 +526,9 @@ async def send_announcement(registration: dict, data: dict) -> None:
     email = str(participant.get("email") or "").strip()
     if not email:
         return
-    await send_smtp_email(email, subject, f"<h1>{subject}</h1><p>{message}</p>")
+    subject = str(data.get("subject") or "Noctivus '26 Announcement").strip()
+    message = str(data.get("message") or "").strip()
+    await send_smtp_email(email, subject, f"<h1>{html.escape(subject)}</h1><p>{html.escape(message)}</p>")
 
 
 def invitation_html(registration: dict, pass_data: dict, event_names: str, artwork: bytes | None = None, cid: str | None = None) -> str:
