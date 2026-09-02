@@ -18,9 +18,9 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
     if (total <= 1) return;
 
     if (swiper.activeIndex <= 0) {
-      swiper.slideTo(total - 1, 600);
+      swiper.slideTo(total - 1, 800);
     } else {
-      swiper.slidePrev(600);
+      swiper.slidePrev(800);
     }
   }, [eventsData.length]);
 
@@ -31,9 +31,9 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
     if (total <= 1) return;
 
     if (swiper.activeIndex >= total - 1) {
-      swiper.slideTo(0, 600);
+      swiper.slideTo(0, 800);
     } else {
-      swiper.slideNext(600);
+      swiper.slideNext(800);
     }
   }, [eventsData.length]);
 
@@ -55,22 +55,23 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
     const hasMultiple = eventsData.length > 1;
     const paginationEl = swiperContainerRef.current.querySelector('.swiper-pagination');
 
-    // Initialize Swiper instance with initialSlide 0
+    // Initialize Swiper instance with initialSlide 0 and continuous rewind loop
     const instance = new Swiper(swiperContainerRef.current, {
       modules: [Pagination, Autoplay],
       initialSlide: 0,
       slidesPerView: hasMultiple ? 1.25 : 1,
       centeredSlides: true,
+      rewind: hasMultiple,
       loop: false,
       spaceBetween: 20,
-      speed: 600,
+      speed: 800,
       observer: true,
       observeParents: true,
       autoplay: hasMultiple
         ? {
-            delay: 4000,
+            delay: 5000,
             disableOnInteraction: false,
-            pauseOnMouseEnter: true,
+            pauseOnMouseEnter: false,
           }
         : false,
       pagination: {
@@ -85,17 +86,6 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
         901: {
           slidesPerView: hasMultiple ? 1.25 : 1,
           spaceBetween: 20,
-        },
-      },
-      on: {
-        reachEnd(swiper) {
-          if (swiper.autoplay && swiper.autoplay.running && hasMultiple) {
-            setTimeout(() => {
-              if (swiper && !swiper.destroyed && swiper.activeIndex >= eventsData.length - 1) {
-                swiper.slideTo(0, 600);
-              }
-            }, 4000);
-          }
         },
       },
     });

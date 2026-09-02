@@ -14,7 +14,7 @@ export function EventsSection({ onSelect, onRegister, selectedCategory, onSelect
     }
   }, [selectedCategory]);
   
-  const categories = ['All', 'Technical', 'Non-Technical', 'Workshop'];
+  const categories = ['All', 'Technical', 'Non-Technical'];
 
   const authoritativeEvents = useMemo(() => {
     return events;
