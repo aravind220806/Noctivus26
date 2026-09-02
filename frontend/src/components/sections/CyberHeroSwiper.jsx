@@ -35,7 +35,7 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
     if (!eventsData || eventsData.length === 0) return;
 
     const hasMultiple = eventsData.length > 1;
-    const paginationEl = swiperContainerRef.current.querySelector('.swiper-pagination');
+    const paginationEl = swiperContainerRef.current?.closest('.cyber-hero-carousel-section')?.querySelector('.swiper-pagination');
 
     // Initialize Swiper instance with initialSlide 0 and continuous rewind loop
     const instance = new Swiper(swiperContainerRef.current, {
@@ -114,33 +114,6 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
 
   return (
     <div className="cyber-hero-carousel-section" key={carouselKey}>
-      {/* Navigation Buttons (Semi-transparent HUD chevrons with wrap-around handlers) */}
-      {eventsData.length > 1 && (
-        <>
-          <button
-            type="button"
-            className="cyber-swiper-nav-btn cyber-swiper-prev"
-            onClick={handlePrev}
-            aria-label="Previous Event"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-
-          <button
-            type="button"
-            className="cyber-swiper-nav-btn cyber-swiper-next"
-            onClick={handleNext}
-            aria-label="Next Event"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-        </>
-      )}
-
       <div className="swiper" ref={swiperContainerRef}>
         <div className="swiper-wrapper">
           {eventsData.map((slide, index) => {
@@ -193,10 +166,36 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
             );
           })}
         </div>
-
-        {/* Pagination Dots */}
-        <div className="swiper-pagination"></div>
       </div>
+
+      {/* Bottom controls: prev / pagination / next */}
+      {eventsData.length > 1 && (
+        <div className="cyber-swiper-bottom-bar">
+          <button
+            type="button"
+            className="cyber-swiper-nav-btn cyber-swiper-prev"
+            onClick={handlePrev}
+            aria-label="Previous Event"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+
+          <div className="swiper-pagination"></div>
+
+          <button
+            type="button"
+            className="cyber-swiper-nav-btn cyber-swiper-next"
+            onClick={handleNext}
+            aria-label="Next Event"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
+      )}
     </div>
   );
 }
