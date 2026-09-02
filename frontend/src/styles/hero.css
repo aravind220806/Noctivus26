@@ -81,6 +81,22 @@
   white-space: nowrap;
 }
 
+@media (max-width: 700px) {
+  .hero-title {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .hero-meta-grid {
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .hero-meta-item {
+    min-width: 0;
+  }
+}
+
 .hero-title span {
   color: var(--lime);
   position: relative;
