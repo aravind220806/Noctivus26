@@ -14,7 +14,7 @@ const createPaymentReference = () => {
 
 const isCategoryTech = (cat) => {
   const c = String(cat || '').toLowerCase().trim();
-  return c === 'technical' || c === 'tech';
+  return c === 'technical' || c === 'tech' || c === 'workshop';
 };
 
 const isCategoryNonTech = (cat) => {
