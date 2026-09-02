@@ -12,30 +12,12 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
   const swiperInstanceRef = useRef(null);
 
   const handlePrev = useCallback(() => {
-    const swiper = swiperInstanceRef.current;
-    if (!swiper) return;
-    const total = eventsData.length;
-    if (total <= 1) return;
-
-    if (swiper.activeIndex <= 0) {
-      swiper.slideTo(total - 1, 800);
-    } else {
-      swiper.slidePrev(800);
-    }
-  }, [eventsData.length]);
+    swiperInstanceRef.current?.slidePrev(800);
+  }, []);
 
   const handleNext = useCallback(() => {
-    const swiper = swiperInstanceRef.current;
-    if (!swiper) return;
-    const total = eventsData.length;
-    if (total <= 1) return;
-
-    if (swiper.activeIndex >= total - 1) {
-      swiper.slideTo(0, 800);
-    } else {
-      swiper.slideNext(800);
-    }
-  }, [eventsData.length]);
+    swiperInstanceRef.current?.slideNext(800);
+  }, []);
 
   useEffect(() => {
     if (!swiperContainerRef.current) return;
@@ -61,8 +43,8 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
       initialSlide: 0,
       slidesPerView: hasMultiple ? 1.25 : 1,
       centeredSlides: true,
-      rewind: hasMultiple,
-      loop: false,
+      rewind: false,
+      loop: hasMultiple,
       spaceBetween: 20,
       speed: 800,
       observer: true,
