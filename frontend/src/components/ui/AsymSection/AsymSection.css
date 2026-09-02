@@ -51,12 +51,21 @@
   .asym-left {
     width: 100%;
     min-height: auto;
-    padding: 2rem 1.25rem 1.25rem;
+    padding: 1.5rem 1.25rem 1rem;
     clip-path: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
 
   .asym-right {
     width: 100%;
     padding: 1rem 1.25rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
   }
 }

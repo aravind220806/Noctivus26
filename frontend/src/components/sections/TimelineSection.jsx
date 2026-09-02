@@ -1,15 +1,16 @@
 import { useMemo } from 'react';
 import {
   User,
-  Cpu,
   Shield,
-  AlertTriangle,
+  Search,
+  Bot,
   Code,
+  Lightbulb,
   Music,
-  FileText,
-  Unlock,
-  Smartphone,
+  Trophy,
   Coffee,
+  CheckCircle,
+  Award,
 } from 'lucide-react';
 import { HeadingBar } from '../ui/HeadingBar/HeadingBar';
 import { TickDivider } from '../ui/TickDivider/TickDivider';
@@ -17,26 +18,24 @@ import { TickDivider } from '../ui/TickDivider/TickDivider';
 const RAIL_COLORS = ['cyan', 'teal', 'lime'];
 
 const events = [
-  { title: 'Inauguration', start: 8, end: 9.75, icon: User },
-  { title: 'The Art of Hacking (Workshop)', start: 10, end: 12.75, icon: Cpu },
-  { title: 'Null Core', start: 10, end: 12.75, icon: Shield },
-  { title: 'GlitchGround', start: 10, end: 12.75, icon: AlertTriangle },
-  { title: 'Beat Overflow', start: 10, end: 12.75, icon: Code },
-  { title: 'Tune Tracker', start: 10, end: 11.25, icon: Music },
-  { title: 'Tune Tracker', start: 11.5, end: 12.75, icon: Music },
-  { title: 'Paper to Pixel', start: 10, end: 11.25, icon: FileText },
-  { title: 'Paper to Pixel', start: 11.5, end: 12.75, icon: FileText },
-  { title: 'Escape Room', start: 10, end: 11.25, icon: Unlock },
-  { title: 'Escape Room', start: 11.5, end: 12.75, icon: Unlock },
-  { title: 'Beyond Screen', start: 10, end: 11.25, icon: Smartphone },
-  { title: 'Beyond Screen', start: 11.5, end: 12.75, icon: Smartphone },
-  { title: 'Lunch', start: 12.75, end: 13.75, icon: Coffee },
-  { title: 'The Art of Hacking (Workshop)', start: 13.75, end: 15.5, icon: Cpu },
+  { title: 'Registration & Check-in', start: 8.5, end: 9.0, icon: User },
+  { title: 'Inauguration Ceremony', start: 9.0, end: 10.0, icon: User },
+  { title: 'NULL CORE 2.0 CTF', start: 10.0, end: 13.0, icon: Shield },
+  { title: 'Bug Hunt', start: 10.0, end: 13.0, icon: Search },
+  { title: 'Prompt Heist', start: 10.0, end: 13.0, icon: Bot },
+  { title: 'Secure X Vibe Coding', start: 10.0, end: 13.0, icon: Code },
+  { title: 'IGNITE (Idea Pitch)', start: 10.0, end: 13.0, icon: Lightbulb },
+  { title: 'Mystery Hunt', start: 10.0, end: 13.0, icon: Search },
+  { title: 'Tune Trap', start: 10.0, end: 13.0, icon: Music },
+  { title: 'IPL Bidverse', start: 10.0, end: 13.0, icon: Trophy },
+  { title: 'Lunch Break', start: 13.0, end: 14.0, icon: Coffee },
+  { title: 'Finals & Project Evaluations', start: 14.0, end: 15.0, icon: CheckCircle },
+  { title: 'Valedictory & Awards Ceremony', start: 15.0, end: 16.0, icon: Award },
 ];
 
-const startHour = 8;
-const endHour = 15.5;
-const totalHalfHours = (endHour - startHour) * 2;
+const startHour = 8.5;
+const endHour = 16.0;
+const totalHalfHours = Math.round((endHour - startHour) * 2);
 const rowHeight = 48;
 
 function assignRows(eventsList) {
@@ -59,7 +58,8 @@ function formatTime(hour24) {
   const h = Math.floor(hour24);
   const min = hour24 % 1 === 0 ? '00' : '30';
   const h12 = h % 12 === 0 ? 12 : h % 12;
-  return `${h12}:${min}`;
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  return `${h12}:${min} ${ampm}`;
 }
 
 function formatTimeRange(hour24) {

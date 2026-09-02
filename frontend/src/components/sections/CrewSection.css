@@ -151,8 +151,94 @@
   text-decoration: none;
   word-break: break-all;
   transition: color 0.2s ease;
+  display: inline-block;
+  margin-bottom: 1.5rem;
 }
 
 .crew-card-link:hover {
   color: #caff00;
 }
+
+/* ── VIEW COORDINATORS Button ── */
+.crew-card-action {
+  margin-top: auto;
+  width: 100%;
+}
+
+.crew-view-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.75rem 1.1rem;
+  background: transparent;
+  border: 1px solid rgba(0, 240, 255, 0.45);
+  color: #00f0ff;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  box-sizing: border-box;
+  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.crew-view-btn:hover {
+  background-color: #00f0ff;
+  color: #02090D;
+  border-color: #00f0ff;
+  box-shadow: 0 0 18px rgba(0, 240, 255, 0.45);
+}
+
+.crew-btn-arrow {
+  display: inline-block;
+  font-size: 1rem;
+  line-height: 1;
+  transition: transform 0.18s ease;
+}
+
+.crew-view-btn:hover .crew-btn-arrow {
+  transform: translateX(5px);
+}
+
+.crew-btn-corner {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  pointer-events: none;
+}
+
+.crew-btn-corner.tl {
+  top: -1px;
+  left: -1px;
+  border-top: 1px solid #00f0ff;
+  border-left: 1px solid #00f0ff;
+}
+
+.crew-btn-corner.tr {
+  top: -1px;
+  right: -1px;
+  border-top: 1px solid #00f0ff;
+  border-right: 1px solid #00f0ff;
+}
+
+.crew-btn-corner.bl {
+  bottom: -1px;
+  left: -1px;
+  border-bottom: 1px solid #00f0ff;
+  border-left: 1px solid #00f0ff;
+}
+
+.crew-btn-corner.br {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 1px solid #00f0ff;
+  border-right: 1px solid #00f0ff;
+}
+
+.crew-view-btn:hover .crew-btn-corner {
+  border-color: #02090D;
+}
+

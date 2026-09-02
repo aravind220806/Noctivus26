@@ -89,6 +89,24 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
 
   const handleNavClick = (e, item) => {
     e.preventDefault();
+    const isCoordinatorsPage = typeof window !== 'undefined' && window.location.pathname.toLowerCase().startsWith('/coordinators');
+
+    if (item.id === 'coordinators') {
+      if (isCoordinatorsPage) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        window.location.href = '/coordinators';
+      }
+      setMobileOpen(false);
+      return;
+    }
+
+    if (isCoordinatorsPage) {
+      window.location.href = `/${item.href}`;
+      setMobileOpen(false);
+      return;
+    }
+
     if (item.eventId && onSelectEvent) {
       if (onNavigate) onNavigate('events');
       const target = document.querySelector('#events');
@@ -118,8 +136,15 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
         <div ref={logoRef} className="navbar-brand-wrap">
           <a
             className="navbar-brand"
-            href="#home"
-            onClick={(e) => handleNavClick(e, { id: 'home', href: '#home' })}
+            href="/"
+            onClick={(e) => {
+              e.preventDefault();
+              if (typeof window !== 'undefined' && window.location.pathname.toLowerCase().startsWith('/coordinators')) {
+                window.location.href = '/#home';
+              } else {
+                handleNavClick(e, { id: 'home', href: '#home' });
+              }
+            }}
           >
             <span className="brand-wordmark">NOCTIVUS</span>
             <span className="brand-badge">'26</span>
