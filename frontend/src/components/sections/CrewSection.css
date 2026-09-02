@@ -69,10 +69,11 @@
 }
 
 /* Individual Cyber Coordinator Card */
+/* Individual Cyber Coordinator Card */
 .cyber-crew-card {
   position: relative;
   background-color: rgba(5, 20, 28, 0.7);
-  border: 1px solid rgba(0, 240, 255, 0.25);
+  border: 1px solid rgba(167, 255, 24, 0.3);
   padding: 2rem 1.5rem 1.75rem;
   display: flex;
   flex-direction: column;
@@ -83,8 +84,8 @@
 }
 
 .cyber-crew-card:hover {
-  border-color: rgba(0, 240, 255, 0.6);
-  box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+  border-color: rgba(167, 255, 24, 0.75);
+  box-shadow: 0 0 20px rgba(167, 255, 24, 0.25);
   transform: translateY(-3px);
 }
 
@@ -99,29 +100,29 @@
 .card-corner-tl {
   top: -1px;
   left: -1px;
-  border-top: 2px solid #00f0ff;
-  border-left: 2px solid #00f0ff;
+  border-top: 2px solid #A7FF18;
+  border-left: 2px solid #A7FF18;
 }
 
 .card-corner-tr {
   top: -1px;
   right: -1px;
-  border-top: 2px solid #00f0ff;
-  border-right: 2px solid #00f0ff;
+  border-top: 2px solid #A7FF18;
+  border-right: 2px solid #A7FF18;
 }
 
 .card-corner-bl {
   bottom: -1px;
   left: -1px;
-  border-bottom: 2px solid #00f0ff;
-  border-left: 2px solid #00f0ff;
+  border-bottom: 2px solid #A7FF18;
+  border-left: 2px solid #A7FF18;
 }
 
 .card-corner-br {
   bottom: -1px;
   right: -1px;
-  border-bottom: 2px solid #00f0ff;
-  border-right: 2px solid #00f0ff;
+  border-bottom: 2px solid #A7FF18;
+  border-right: 2px solid #A7FF18;
 }
 
 .crew-card-title {
@@ -129,7 +130,7 @@
   font-size: 1.55rem;
   line-height: 1.15;
   font-weight: 700;
-  color: #00f0ff;
+  color: #EAF6F5;
   letter-spacing: 0.03em;
   margin: 0 0 1.25rem 0;
   text-transform: none;
@@ -147,7 +148,7 @@
   font-family: 'IBM Plex Mono', monospace;
   font-size: 0.85rem;
   font-weight: 600;
-  color: #00f0ff;
+  color: #A7FF18;
   text-decoration: none;
   word-break: break-all;
   transition: color 0.2s ease;
@@ -156,7 +157,7 @@
 }
 
 .crew-card-link:hover {
-  color: #caff00;
+  color: #ffffff;
 }
 
 /* ── VIEW COORDINATORS Button ── */
@@ -173,8 +174,8 @@
   width: 100%;
   padding: 0.75rem 1.1rem;
   background: transparent;
-  border: 1px solid rgba(0, 240, 255, 0.45);
-  color: #00f0ff;
+  border: 1px solid rgba(167, 255, 24, 0.45);
+  color: #A7FF18;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 0.78rem;
   font-weight: 700;
@@ -186,10 +187,10 @@
 }
 
 .crew-view-btn:hover {
-  background-color: #00f0ff;
+  background-color: #A7FF18;
   color: #02090D;
-  border-color: #00f0ff;
-  box-shadow: 0 0 18px rgba(0, 240, 255, 0.45);
+  border-color: #A7FF18;
+  box-shadow: 0 0 18px rgba(167, 255, 24, 0.45);
 }
 
 .crew-btn-arrow {
@@ -213,29 +214,29 @@
 .crew-btn-corner.tl {
   top: -1px;
   left: -1px;
-  border-top: 1px solid #00f0ff;
-  border-left: 1px solid #00f0ff;
+  border-top: 1px solid #A7FF18;
+  border-left: 1px solid #A7FF18;
 }
 
 .crew-btn-corner.tr {
   top: -1px;
   right: -1px;
-  border-top: 1px solid #00f0ff;
-  border-right: 1px solid #00f0ff;
+  border-top: 1px solid #A7FF18;
+  border-right: 1px solid #A7FF18;
 }
 
 .crew-btn-corner.bl {
   bottom: -1px;
   left: -1px;
-  border-bottom: 1px solid #00f0ff;
-  border-left: 1px solid #00f0ff;
+  border-bottom: 1px solid #A7FF18;
+  border-left: 1px solid #A7FF18;
 }
 
 .crew-btn-corner.br {
   bottom: -1px;
   right: -1px;
-  border-bottom: 1px solid #00f0ff;
-  border-right: 1px solid #00f0ff;
+  border-bottom: 1px solid #A7FF18;
+  border-right: 1px solid #A7FF18;
 }
 
 .crew-view-btn:hover .crew-btn-corner {

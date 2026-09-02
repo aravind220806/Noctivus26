@@ -19,7 +19,9 @@
   --surface: #0A0F0F;
   --text: #EAF6F5;
   --muted: #7E9096;
-  --line: rgba(0, 221, 242, 0.14);
+  --line: rgba(167, 255, 24, 0.22);
+  --border-green: #A7FF18;
+  --border-green-dim: rgba(167, 255, 24, 0.35);
   --cyan: #00DDF2;
   --teal: #00E6B8;
   --lime: #A7FF18;
