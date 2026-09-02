@@ -172,42 +172,4 @@
   margin: 2rem 0;
 }
 
-/* 6. AsymSection */
-.asym-section {
-  display: flex;
-  width: 100%;
-  min-height: 400px;
-}
-.asym-left {
-  width: 40%;
-  background: var(--surface);
-  clip-path: polygon(0 0, 100% 0, 100% 28%, calc(100% - 25px) 42%,
-        100% 54%, calc(100% - 15px) 68%, 100% 82%, 100% 100%, 0 100%);
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-}
-.asym-right {
-  width: 60%;
-  background: transparent;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding-left: 2rem;
-}
-
-@media (max-width: 700px) {
-  .asym-section {
-    flex-direction: column;
-  }
-  .asym-left {
-    width: 100%;
-    min-height: 300px;
-    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 30px), calc(100% - 30px) 100%, 0 100%);
-  }
-  .asym-right {
-    width: 100%;
-    padding-left: 0;
-    padding-top: 2rem;
-  }
-}
+/* 6. AsymSection — defined in AsymSection.css component file */
