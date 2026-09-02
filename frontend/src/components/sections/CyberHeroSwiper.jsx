@@ -1,8 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import Swiper from 'swiper';
-import { Pagination, Autoplay } from 'swiper/modules';
+import { Pagination, Autoplay, Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
+import 'swiper/css/navigation';
 import { events as defaultEvents } from '../../data/site.js';
 import { NotchedButton } from '../ui/NotchedButton/NotchedButton';
 import './CyberHeroSwiper.css';
@@ -10,22 +11,27 @@ import './CyberHeroSwiper.css';
 export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegister }) {
   const swiperContainerRef = useRef(null);
   const swiperInstanceRef = useRef(null);
+  const prevBtnRef = useRef(null);
+  const nextBtnRef = useRef(null);
 
   useEffect(() => {
     if (!swiperContainerRef.current) return;
 
-    const canLoop = eventsData.length > 1;
-
     // Destroy existing instance before re-initializing to avoid stuck slides on filter changes
     if (swiperInstanceRef.current) {
       swiperInstanceRef.current.destroy(true, true);
+      swiperInstanceRef.current = null;
     }
 
+    if (!eventsData || eventsData.length === 0) return;
+
+    const canLoop = eventsData.length > 1;
     const paginationEl = swiperContainerRef.current.querySelector('.swiper-pagination');
 
-    // Initialize Swiper v11 instance with Pagination + Automatic Smooth Autoplay
-    swiperInstanceRef.current = new Swiper(swiperContainerRef.current, {
-      modules: [Pagination, Autoplay],
+    // Initialize Swiper v11 instance starting at initialSlide 0
+    const instance = new Swiper(swiperContainerRef.current, {
+      modules: [Pagination, Autoplay, Navigation],
+      initialSlide: 0,
       slidesPerView: canLoop ? 1.25 : 1,
       centeredSlides: true,
       loop: canLoop,
@@ -44,6 +50,10 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
         el: paginationEl,
         clickable: true,
       },
+      navigation: {
+        prevEl: prevBtnRef.current,
+        nextEl: nextBtnRef.current,
+      },
       breakpoints: {
         320: {
           slidesPerView: 1,
@@ -56,28 +66,25 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
       },
     });
 
+    swiperInstanceRef.current = instance;
+
     return () => {
       if (swiperInstanceRef.current) {
         swiperInstanceRef.current.destroy(true, true);
+        swiperInstanceRef.current = null;
       }
     };
   }, [eventsData]);
 
-  const handlePrev = () => {
-    swiperInstanceRef.current?.slidePrev();
-  };
-
-  const handleNext = () => {
-    swiperInstanceRef.current?.slideNext();
-  };
+  const carouselKey = eventsData.map((e) => e.id).join('_');
 
   return (
-    <div className="cyber-hero-carousel-section">
+    <div className="cyber-hero-carousel-section" key={carouselKey}>
       {/* Navigation Buttons (Semi-transparent HUD chevrons) */}
       <button
+        ref={prevBtnRef}
         type="button"
         className="cyber-swiper-nav-btn cyber-swiper-prev"
-        onClick={handlePrev}
         aria-label="Previous Event"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -86,9 +93,9 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
       </button>
 
       <button
+        ref={nextBtnRef}
         type="button"
         className="cyber-swiper-nav-btn cyber-swiper-next"
-        onClick={handleNext}
         aria-label="Next Event"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
