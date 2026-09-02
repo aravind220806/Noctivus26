@@ -3,14 +3,14 @@ export const site = {
   date: '26 September 2026',
   eventStart: '2026-09-26T09:00:00+05:30',
   contactEmail: 'noctivus26@velammal.edu.in',
-  contactPhone: '+91 88259 79172',
+  contactPhone: '+91 98840 17375',
   address: 'Velammal Engineering College, Ambattur-Red Hills Road, Surapet, Chennai, Tamil Nadu 600066',
   coordinates: {
     latitude: 13.1483288,
     longitude: 80.1916095,
   },
   social: {
-    Instagram: 'https://www.instagram.com/noctivus_25',
+    Instagram: 'https://www.instagram.com/noctivus_26',
     LinkedIn: 'https://www.linkedin.com/company/noctivus-symposium/',
     X: 'https://x.com/noctivussympo',
   },
@@ -266,13 +266,12 @@ export const events = [
 ];
 
 export const timeline = [
-  ['08:30 AM', 'Registration desk opens', 'Check in, collect your participant confirmation, and move to the inaugural venue.'],
-  ['09:00 AM', 'Inauguration', 'Welcome address and Noctivus briefing in the main auditorium.'],
-  ['09:30 AM', 'Technical events begin', 'NULL CORE 2.0 CTF, Bug Hunt, Prompt Heist, Secure X Vibe Coding, and IGNITE move into round one.'],
-  ['11:30 AM', 'Non-technical rounds', 'Mystery Hunt, Tune Trap, and IPL Bidverse begin from their assigned venues.'],
-  ['01:00 PM', 'Lunch break', 'Food counters open according to participant preference and event flow.'],
-  ['02:00 PM', 'Final rounds', 'Shortlisted participants move into finals and judging.'],
-  ['04:30 PM', 'Valedictory & awards', 'Winners, certificates, and closing ceremony.'],
+  ['08:30 AM', 'Registration desk opens', 'Check in, collect your participant confirmation badge, and proceed to the inaugural venue.'],
+  ['09:00 AM – 10:00 AM', 'Inauguration Ceremony', 'Welcome address, ceremonial lighting, and symposium briefing in the Main Auditorium.'],
+  ['10:00 AM – 01:00 PM', 'Technical & Non-Technical Events', 'All Technical (NULL CORE 2.0 CTF, Bug Hunt, Prompt Heist, Secure X Vibe Coding, IGNITE) and Non-Technical (Mystery Hunt, Tune Trap, IPL Bidverse) events commence simultaneously.'],
+  ['01:00 PM – 02:00 PM', 'Lunch Break', 'Lunch and refreshments served at the designated campus dining areas.'],
+  ['02:00 PM – 03:00 PM', 'Final Rounds & Evaluation', 'Shortlisted finalists compete in project demonstrations and final rounds before the judging panel.'],
+  ['03:00 PM – 04:00 PM', 'Valedictory & Awards Ceremony', 'Announcement of winners, trophy and cash prize distribution, and closing valedictory.'],
 ];
 
 export const brochure = {
@@ -301,6 +300,6 @@ export const posters = [
 
 export const crew = [
   ['Faculty Coordinator', 'Department of CSE (Cyber Security)', 'faculty@velammal.edu.in'],
-  ['Student Coordinator', 'Noctivus Organizing Team', '+91 88259 79172'],
+  ['Student Coordinator', 'Noctivus Organizing Team', '+91 98840 17375'],
   ['Registration Desk', 'Payments and confirmations', 'noctivus26@velammal.edu.in'],
 ];
