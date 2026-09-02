@@ -1,6 +1,7 @@
+from __future__ import annotations
 import asyncio
 import logging
-from typing import Callable
+from typing import Callable, Any
 
 try:
     from playwright.async_api import async_playwright, Browser, BrowserContext, Page, Playwright

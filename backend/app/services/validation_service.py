@@ -83,7 +83,7 @@ def validate_registration(input_data: dict | None, configured_events: list[dict]
     non_tech_count = sum(1 for e in selected_configs if e.get("category") in ("non-tech", "Non-technical"))
 
     if has_ctf and (non_tech_count > 0 or len(selected_configs) > 1):
-        errors.append("Cyber Heist CTF is a dedicated competition and cannot be combined with other events.")
+        errors.append("NULL CORE 2.0 CTF is a dedicated competition and cannot be combined with other events.")
 
     if tech_count > 1:
         errors.append("Maximum 1 technical event allowed per registration.")
