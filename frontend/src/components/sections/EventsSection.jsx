@@ -39,7 +39,7 @@ export function EventsSection({ onSelect, onRegister, selectedCategory, onSelect
 
   return (
     <section className="events-section" id="events">
-      <HeadingBar level="h2" text="CHOOSE YOUR EVENT" sectionIndex="03 / 05" />
+      <HeadingBar level="h2" text="CHOOSE YOUR EVENT" />
 
       {/* Categories / Filters */}
       <div className="event-filters" role="group" aria-label="Filter events">

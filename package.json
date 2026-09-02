@@ -15,7 +15,7 @@
     "test": "python3 -m compileall backend/app backend/run.py"
   },
   "dependencies": {
-    "lucide-react": "^1.37.0",
+    "lucide-react": "^1.39.0",
     "recharts": "^3.10.1"
   },
   "devDependencies": {
