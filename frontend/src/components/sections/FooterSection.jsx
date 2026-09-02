@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { TickDivider } from '../ui/TickDivider/TickDivider';
 import { site } from '../../data/site.js';
 import './FooterSection.css';
 
 export function FooterSection() {
   const [showBusRouteModal, setShowBusRouteModal] = useState(false);
+  const mapContainerRef = useRef(null);
+  const mapRef = useRef(null);
 
   const linkedinUrl = site?.social?.LinkedIn || 'https://linkedin.com';
   const instagramUrl = site?.social?.Instagram || 'https://instagram.com';
@@ -17,6 +19,47 @@ export function FooterSection() {
     { routeNo: 'Route 4', from: 'Koyambedu (CMBT)', via: 'Thirumangalam, Mogappair, Ambattur Estate, Surapet' },
     { routeNo: 'Route 5', from: 'Tiruvallur', via: 'Tiruninravur, Avadi, Ambattur, Surapet' },
   ];
+
+  useEffect(() => {
+    if (!mapContainerRef.current || mapRef.current) return;
+
+    const initMap = async () => {
+      const { Map, NavigationControl } = await import('maplibre-gl');
+      await import('maplibre-gl/dist/maplibre-gl.css');
+
+      const map = new Map({
+        container: mapContainerRef.current,
+        style: {
+          version: 8,
+          sources: {
+            openstreetmap: {
+              type: 'raster',
+              tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+              tileSize: 256,
+              attribution: '',
+            },
+          },
+          layers: [{ id: 'openstreetmap', type: 'raster', source: 'openstreetmap' }],
+        },
+        center: [80.1916095, 13.1483288],
+        zoom: 15,
+        attributionControl: false,
+        interactive: false,
+      });
+
+      map.addControl(new NavigationControl({ showCompass: false, visualizePitch: false }), 'top-right');
+      mapRef.current = map;
+    };
+
+    initMap();
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, []);
 
   return (
     <footer className="footer-cyber-hud" id="footer">
@@ -104,16 +147,10 @@ export function FooterSection() {
 
           </div>
 
-          {/* RIGHT SIDE: Compact Google Map */}
+          {/* RIGHT SIDE: Compact OpenStreetMap */}
           <div className="footer-map-side">
             <div className="footer-compact-map">
-              <iframe
-                title="Velammal Engineering College Location Map"
-                src="https://maps.google.com/maps?q=Velammal+Engineering+College%2C+Surapet%2C+Chennai&t=&z=15&ie=UTF8&iwloc=&output=embed"
-                className="footer-map-iframe"
-                loading="lazy"
-                allowFullScreen
-              />
+              <div ref={mapContainerRef} className="footer-map-container" />
               <a
                 href="https://www.google.com/maps/dir/?api=1&destination=Velammal+Engineering+College%2C+Surapet%2C+Chennai+600066"
                 target="_blank"
