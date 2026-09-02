@@ -19,6 +19,19 @@ from app.services.email_service import email_worker
 
 logger = logging.getLogger(__name__)
 
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        response: Response = await call_next(request)
+        response.headers["Content-Security-Policy"] = "default-src 'self';"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        if request.url.scheme == "https":
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        return response
+
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -65,6 +78,9 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
+
+# Security headers middleware
+app.add_middleware(SecurityHeadersMiddleware)
 
 # Mount primary routes with /api prefix
 app.include_router(public_router, prefix="/api")
