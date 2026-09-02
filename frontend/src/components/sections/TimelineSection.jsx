@@ -110,7 +110,7 @@ export function TimelineSection() {
 
   return (
     <section className="timeline-section" id="schedule">
-      <HeadingBar level="h2" text="SCHEDULE" sectionIndex="04 / 05" />
+      <HeadingBar level="h2" text="SCHEDULE" />
 
       {/* Mobile Agenda List View (Default < 701px) */}
       <div className="timeline-agenda">

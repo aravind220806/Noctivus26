@@ -32,21 +32,6 @@
   }
 }
 
-@media (min-width: 901px) {
-  .about-container {
-    display: grid;
-    grid-template-columns: 60% 40%;
-    gap: 4rem;
-    padding: 0 3.5rem;
-  }
-}
-
-.about-left {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
 .about-manifesto-text {
   font-family: 'IBM Plex Mono', monospace;
   font-size: clamp(1.2rem, 2vw, 1.8rem);
@@ -73,36 +58,6 @@
   width: 100%;
   height: auto;
   display: block;
-}
-
-.about-right {
-  display: flex;
-  flex-direction: column;
-  gap: 2.5rem;
-}
-
-.about-host-box {
-  background: var(--surface);
-  padding: 2rem;
-  border: 1px solid var(--line);
-}
-
-.about-host-title {
-  font-family: 'Aldrich', sans-serif;
-  font-size: 0.8rem;
-  color: var(--cyan);
-  letter-spacing: 0.15em;
-  margin: 0 0 1rem 0;
-  text-transform: uppercase;
-}
-
-.about-host-item {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: var(--text);
-  margin: 0 0 0.5rem 0;
-  line-height: 1.2;
 }
 
 /* Stats Section Styles */
@@ -347,17 +302,6 @@ footer {
 }
 
 @media (min-width: 981px) {
-  .about-grid {
-    display: grid;
-    grid-template-columns: 1fr .86fr;
-    gap: var(--sp-8);
-  }
-
-  .about-manifesto {
-    padding: 30px 0 20px 36px;
-    border-left: 1px solid var(--line);
-  }
-
   .crew-grid, .social-link-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--sp-6);
@@ -390,24 +334,6 @@ footer {
   border-radius: 50%;
   opacity: 0.5;
   z-index: 5;
-}
-
-/* About host box with coordinate tag enhancement */
-.about-host-box {
-  clip-path: polygon(0 12px, 12px 0, 100% 0, 100% 100%, 0 100%);
-  position: relative;
-}
-
-.about-host-box::before {
-  content: '';
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 8px;
-  height: 8px;
-  border: 1px solid var(--muted);
-  opacity: 0.3;
-  z-index: 3;
 }
 
 /* Crew cards with node markers */
