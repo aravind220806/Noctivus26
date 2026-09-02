@@ -118,12 +118,6 @@ export function EventModal({ event, onClose, onRegister }) {
                   <span className="em-meta-label">DATE</span>
                   <span className="em-meta-value">26 SEP 2026</span>
                 </div>
-                {event.laptopRequirement && event.laptopRequirement !== 'None' && (
-                  <div className="em-meta-item" style={{ gridColumn: 'span 2' }}>
-                    <span className="em-meta-label">LAPTOP REQUIREMENT</span>
-                    <span className="em-meta-value" style={{ color: 'var(--accent, #00f0ff)' }}>{event.laptopRequirement}</span>
-                  </div>
-                )}
               </div>
             </div>
           )}
@@ -149,15 +143,21 @@ export function EventModal({ event, onClose, onRegister }) {
                     STUDENT COORDINATORS
                   </h4>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                    {event.coordinators.map((coord) => (
-                      <div key={coord.name} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.85rem' }}>
-                        <span style={{ color: '#EAF6F5', fontWeight: 600 }}>{coord.name}</span>
-                        <span style={{ color: '#7C8BA1' }}>—</span>
-                        <a href={`tel:${coord.phone}`} style={{ color: 'var(--accent, #00f0ff)', textDecoration: 'none' }}>
-                          +91 {coord.phone}
-                        </a>
-                      </div>
-                    ))}
+                    {event.coordinators.map((coord) => {
+                      const cleanPhone = String(coord.phone || '').replace(/\D/g, '');
+                      const tenDigits = cleanPhone.length === 12 && cleanPhone.startsWith('91') ? cleanPhone.slice(2) : cleanPhone;
+                      const telHref = `tel:+91${tenDigits}`;
+                      const phoneDisplay = `+91 ${tenDigits}`;
+                      return (
+                        <div key={coord.name} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.85rem' }}>
+                          <span style={{ color: '#EAF6F5', fontWeight: 600 }}>{coord.name}</span>
+                          <span style={{ color: '#7C8BA1' }}>—</span>
+                          <a href={telHref} style={{ color: 'var(--accent, #00f0ff)', textDecoration: 'none' }}>
+                            {phoneDisplay}
+                          </a>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
