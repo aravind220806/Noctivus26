@@ -240,6 +240,29 @@ export const events = [
       { name: 'Ajith Abhinav RG', phone: '9363569974' },
     ],
   },
+  {
+    id: 'playground-of-hackers',
+    name: 'Playground of Hackers',
+    category: 'Workshop',
+    teamSize: 'Individual / Open',
+    fee: 150,
+    laptopRequirement: 'Laptop is recommended for live demo exercises.',
+    accent: 'violet',
+    image: eventImage,
+    imagePosition: '50% 50%',
+    format: 'An intensive hands-on offensive & defensive cybersecurity workshop uncovering real-world exploit vectors, ethical hacking techniques, and live labs.',
+    details: [
+      'Interactive hands-on session with industry experts.',
+      'Covers web vulnerability assessment, ethical hacking fundamentals, and defense strategies.',
+      'Open to all registered symposium participants.',
+      'Bring your laptop for live demo exercises.',
+      'Certificate of participation provided upon completion.',
+    ],
+    coordinators: [
+      { name: 'Jawahar', phone: '7603946117' },
+      { name: 'Priyadharshini', phone: '8248460938' },
+    ],
+  },
 ];
 
 export const timeline = [

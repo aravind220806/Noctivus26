@@ -13,8 +13,8 @@ export function EventsSection({ onSelect, onRegister, selectedCategory, onSelect
       setFilter(selectedCategory);
     }
   }, [selectedCategory]);
-  
-  const categories = ['All', 'Technical', 'Non-Technical'];
+
+  const categories = ['All', 'Technical', 'Non-Technical', 'Workshop'];
 
   const authoritativeEvents = useMemo(() => {
     return events;
@@ -22,9 +22,14 @@ export function EventsSection({ onSelect, onRegister, selectedCategory, onSelect
 
   const visibleEvents = useMemo(() => {
     if (!filter || filter === 'All') return authoritativeEvents;
-    return authoritativeEvents.filter(
-      (e) => e.category?.toLowerCase() === filter.toLowerCase()
-    );
+    const filterLower = filter.toLowerCase();
+    return authoritativeEvents.filter((e) => {
+      const catLower = e.category?.toLowerCase();
+      if (filterLower === 'technical') {
+        return catLower === 'technical' || catLower === 'workshop';
+      }
+      return catLower === filterLower;
+    });
   }, [filter, authoritativeEvents]);
 
   const handleFilterChange = (cat) => {
@@ -35,7 +40,7 @@ export function EventsSection({ onSelect, onRegister, selectedCategory, onSelect
   return (
     <section className="events-section" id="events">
       <HeadingBar level="h2" text="CHOOSE YOUR EVENT" sectionIndex="03 / 05" />
-      
+
       {/* Categories / Filters */}
       <div className="event-filters" role="group" aria-label="Filter events">
         {categories.map((cat) => {
@@ -58,7 +63,7 @@ export function EventsSection({ onSelect, onRegister, selectedCategory, onSelect
       </div>
 
       {/* Interactive Swiper Carousel replacing old grid */}
-      <CyberHeroSwiper 
+      <CyberHeroSwiper
         eventsData={visibleEvents}
         onSelect={onSelect}
         onRegister={onRegister}
