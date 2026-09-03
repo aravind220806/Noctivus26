@@ -29,11 +29,6 @@ export function MemberPortrait({ image, name, role }) {
       {/* Invisible security shield overlay blocking direct clicks/saves */}
       <div className="noc-portrait-security-shield" aria-hidden="true" />
 
-      {/* Subtle security watermark overlay */}
-      <div className="noc-portrait-watermark-overlay" aria-hidden="true">
-        <span className="noc-watermark-tag">NOCTIVUS '26 // PROTECTED</span>
-      </div>
-
       <img
         src={image}
         alt={`${name} - ${role}`}
