@@ -24,7 +24,7 @@ export function CrewSection() {
       id: 'registration',
       title: 'Registration\nDesk',
       role: 'Payments and confirmations',
-      contact: 'noctivus26@velammal.edu.in',
+      contact: 'ajaikaliyamoorthy@gmail.com',
       contactType: 'email',
       href: '/coordinators#registration',
     },

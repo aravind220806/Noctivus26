@@ -301,5 +301,5 @@ export const posters = [
 export const crew = [
   ['Dr S Rajalakshmi (HOD), Ruba A & Pramila K', 'Department of CSE (Cyber Security)', 'hod.cyber@velammal.edu.in'],
   ['Student Coordinator', 'Noctivus Organizing Team', '+91 98840 17375'],
-  ['Registration Desk', 'Payments and confirmations', 'noctivus26@velammal.edu.in'],
+  ['Registration Desk (Ajai K & Adirai V S)', 'Payments and confirmations', 'ajaikaliyamoorthy@gmail.com / adrai5031205@gmail.com'],
 ];
