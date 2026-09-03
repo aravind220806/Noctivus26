@@ -248,8 +248,8 @@ export const events = [
     fee: 300,
     laptopRequirement: 'Laptop is recommended for live demo exercises.',
     accent: 'violet',
-    image: eventImage,
-    imagePosition: '50% 50%',
+    image: '/images/workshop-gamkers.webp',
+    imagePosition: 'center center',
     format: 'An intensive hands-on offensive & defensive cybersecurity workshop uncovering real-world exploit vectors, ethical hacking techniques, and live labs.',
     details: [
       'Interactive hands-on session with industry experts.',
