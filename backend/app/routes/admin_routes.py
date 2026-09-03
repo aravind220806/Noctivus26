@@ -73,8 +73,9 @@ async def google_auth(request: Request):
         raise HTTPException(status_code=502, detail="The server could not complete Google admin authentication. Check the backend logs.") from error
 
 
+@limiter.limit("5/minute")
 @router.post("/auth/dev")
-async def dev_auth():
+async def dev_auth(request: Request):
     if settings.environment == "production":
         raise HTTPException(status_code=403, detail="Dev login is disabled in production.")
     owner_email = settings.admin_emails[0] if settings.admin_emails else "admin@noctivus.site"
@@ -89,14 +90,14 @@ async def dev_auth():
     token, csrf = sign_admin_token(user)
     response = Response(content=json.dumps({"user": user, "csrfToken": csrf}, separators=(",", ":")), media_type="application/json")
     response.set_cookie(
-        "noctivus_admin_session",
-        token,
-        max_age=8 * 60 * 60,
-        httponly=True,
-        secure=False,
-        samesite="lax",
-        path="/api/admin",
-    )
+                "noctivus_admin_session",
+                token,
+                max_age=8 * 60 * 60,
+                httponly=True,
+                secure=False,
+                samesite="lax",
+                path="/",
+            )
     await record_admin_action(owner_email, "auth.dev_login", "admin_portal", {"method": "dev"})
     return response
 
@@ -121,8 +122,9 @@ async def logout(admin=Depends(require_admin)):
     return response
 
 
+@limiter.limit("10/minute")
 @router.get("/events")
-async def events(_admin=Depends(require_any_admin_tab(["Events", "Invitations"]))):
+async def events(request: Request, _admin=Depends(require_any_admin_tab(["Events", "Invitations"]))):
     return {"events": await admin_events()}
 
 
