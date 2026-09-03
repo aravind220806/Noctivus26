@@ -7,7 +7,7 @@ const RANDOM_CHARS = '0123456789XYZA#%&$@!';
 
 export function WebsiteIntro({ onComplete }) {
   const [phase, setPhase] = useState(0); // 0: ticking, 1: locked NOCTIVUS, 2: meta, 3: scroll/ready
-  const [tickerTime, setTickerTime] = useState('00:03.00');
+  const [tickerTime, setTickerTime] = useState('00:01.50');
   const [titleDisplay, setTitleDisplay] = useState('00:00:00');
   const [isLocked, setIsLocked] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
@@ -23,7 +23,7 @@ export function WebsiteIntro({ onComplete }) {
     }
     setTimeout(() => {
       onComplete?.();
-    }, 700);
+    }, 400);
   }, [isExiting, onComplete]);
 
   useEffect(() => {
@@ -34,12 +34,13 @@ export function WebsiteIntro({ onComplete }) {
       setTitleDisplay(TARGET_TEXT);
       setIsLocked(true);
       setPhase(3);
-      return;
+      const timer = setTimeout(() => handleFinish(), 1500);
+      return () => clearTimeout(timer);
     }
 
-    // Ticking countdown effect (2.8 seconds ticking):
+    // Ticking countdown sequence: resolves at 900ms, then metadata reveals, finishes at 1.5s
     const startTime = Date.now();
-    const duration = 2800;
+    const duration = 900;
 
     const tickInterval = setInterval(() => {
       const elapsed = Date.now() - startTime;
@@ -70,11 +71,11 @@ export function WebsiteIntro({ onComplete }) {
         setIsLocked(true);
         setPhase(1);
       }
-    }, 45);
+    }, 40);
 
-    const t2 = setTimeout(() => setPhase(2), 3400);
-    const t3 = setTimeout(() => setPhase(3), 4400);
-    const t4 = setTimeout(() => handleFinish(), 7000);
+    const t2 = setTimeout(() => setPhase(2), 1000);
+    const t3 = setTimeout(() => setPhase(3), 1250);
+    const t4 = setTimeout(() => handleFinish(), 1500);
 
     return () => {
       clearInterval(tickInterval);
@@ -116,7 +117,7 @@ export function WebsiteIntro({ onComplete }) {
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.7, ease: 'easeInOut' }}
+          transition={{ duration: 0.4, ease: 'easeInOut' }}
           role="region"
           aria-label="System Intro"
         >
