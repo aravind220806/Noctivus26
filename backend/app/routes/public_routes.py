@@ -8,11 +8,11 @@ from pymongo import ReturnDocument
 
 from app.core.rate_limit import limiter
 from app.db import mongo
-from app.db.memory_store import memory_registrations
 from app.services.event_service import list_events
 from app.services.registration_service import (
     check_utr_availability,
     create_registration,
+    load_registrations,
     registration_status,
     serialize_registration,
     update_registration,
@@ -48,7 +48,8 @@ async def find_registration_by_qr_token(token: str) -> dict | None:
             ]
         })
 
-    for item in memory_registrations:
+    rows = await load_registrations()
+    for item in rows:
         qr_hash = str((item.get("invitation") or {}).get("qrHash") or item.get("qrHash") or "")
         qr_token = str((item.get("invitation") or {}).get("qrToken") or item.get("qrToken") or "")
         if (qr_hash and qr_hash == token_hash) or (qr_token and qr_token == clean):
