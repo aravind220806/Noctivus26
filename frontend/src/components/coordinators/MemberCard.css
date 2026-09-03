@@ -197,6 +197,78 @@
   image-rendering: auto;
   position: relative;
   z-index: 1;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+}
+
+/* ── Placeholder Badge (when image is null) ── */
+.noc-member-portrait-empty {
+  background: radial-gradient(circle at center, #0d222e 0%, #03070a 100%);
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid rgba(140, 165, 178, 0.3);
+}
+
+.noc-portrait-placeholder-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 28px 14px;
+  gap: 14px;
+}
+
+.noc-portrait-placeholder-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(167, 255, 24, 0.08);
+  border: 1px solid rgba(167, 255, 24, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #A7FF18;
+  box-shadow: 0 0 20px rgba(167, 255, 24, 0.2);
+}
+
+.noc-portrait-placeholder-badge {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #02090D;
+  background: #A7FF18;
+  border: 1px solid #A7FF18;
+  padding: 6px 14px;
+  text-align: center;
+}
+
+.noc-portrait-placeholder-code {
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #A7FF18;
+}
+
+.noc-portrait-placeholder-sub {
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  color: #a4c2d4;
+  max-width: 180px;
+  line-height: 1.5;
+}
+
+/* ── Security Shield Overlay (anti-download) ── */
+.noc-portrait-security-shield {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  background: transparent;
+  pointer-events: auto;
+  cursor: default;
 }
 
 /* ── Member Details Panel ── */
