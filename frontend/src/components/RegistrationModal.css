@@ -2,7 +2,7 @@
 
 .reg-modal-shell {
   position: fixed;
-  z-index: 200;
+  z-index: 10000;
   inset: 0;
   padding: 1.5rem;
   display: grid;
