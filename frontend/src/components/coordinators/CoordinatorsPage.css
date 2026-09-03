@@ -232,6 +232,29 @@
   white-space: nowrap;
 }
 
+@media (max-width: 700px) {
+  .noc-coord-heading-row {
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .noc-coord-section-title {
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.15;
+  }
+
+  .noc-coord-header-line {
+    min-width: 24px;
+    margin-top: 0.6rem;
+  }
+
+  .noc-coord-section-header {
+    margin-bottom: 1.5rem;
+  }
+}
+
 .noc-coord-cursor {
   color: #A7FF18;
 }
@@ -266,15 +289,16 @@
 /* ── Cards Grid ── */
 .noc-coord-cards-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 2.5rem;
+  grid-template-columns: minmax(0, 530px);
+  justify-content: center;
+  gap: 2.75rem;
   justify-items: center;
 }
 
-@media (min-width: 992px) {
+@media (min-width: 1150px) {
   .noc-coord-cards-grid {
-    grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
-    gap: 3rem;
+    grid-template-columns: repeat(2, minmax(0, 530px));
+    gap: 3rem 4.25rem;
   }
 }
 

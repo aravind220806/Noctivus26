@@ -95,13 +95,13 @@ export function FooterSection() {
               </div>
               <div className="footer-info-body">
                 <p>
-                  <a href="mailto:noctivus26@velammal.edu.in" className="footer-text-link">
-                    noctivus26@velammal.edu.in
+                  <a href="mailto:noctivus2026@gmail.com" className="footer-text-link">
+                    noctivus2026@gmail.com
                   </a>
                 </p>
                 <p>
-                  <a href="tel:+919876543210" className="footer-text-link">
-                    +91 98765 43210
+                  <a href="tel:+919884017375" className="footer-text-link">
+                    +91 98840 17375
                   </a>
                 </p>
               </div>
@@ -203,7 +203,7 @@ export function FooterSection() {
         {/* Footer Bottom Copyright Bar */}
         <div className="footer-hud-bottom">
           <p className="footer-hud-copyright">
-            &copy; 2026 Noctivus ’26. Department of CSE, Velammal Engineering College. All rights reserved.
+            &copy; 2026 Noctivus ’26. Department of CSE (Cyber Security), Velammal Engineering College. All rights reserved.
           </p>
 
           <a href="#home" className="footer-hud-back-to-top">
