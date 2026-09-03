@@ -252,7 +252,7 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
               </h2>
             </div>
             <button ref={closeButtonRef} className="reg-close" onClick={onClose} aria-label="Close registration">
-              <span className="reg-close-label">CLOSE</span> [X]
+              <span>CLOSE</span> [X]
             </button>
           </header>
 

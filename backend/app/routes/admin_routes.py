@@ -14,11 +14,10 @@ from app.core.rate_limit import limiter
 from app.middleware.admin_auth import require_admin, require_admin_tab, require_any_admin_tab, sign_admin_token
 from app.services.admin_access_service import ADMIN_TABS, deactivate_admin_access, is_owner_admin, list_admin_access, normalize_admin_tabs, resolve_admin_access, upsert_admin_access
 from app.services.analysis_service import build_overview, create_ai_analysis
-from app.services.event_service import list_events
 from app.services.boarding_pass_service import create_pass_token, render_pass_artwork_bytes
 from app.services.email_service import normalize_pass_template, queue_email, send_confirmation, send_invitation, send_member_pass, sendPaymentConfirmationEmail
-from app.services.export_service import export_scheduler_to_excel, registrations_to_csv
-from app.services.event_service import admin_events, update_event, get_event
+from app.services.event_service import admin_events, get_event, list_events, update_event
+from app.services.export_service import export_attendance_to_excel, export_scheduler_to_excel, registrations_to_csv
 from app.services.audit_service import list_admin_actions, record_admin_action
 from app.services.google_auth_service import verify_google_credential
 from app.services.registration_service import create_registration_id, load_registrations, serialize_registration, update_registration
@@ -731,3 +730,433 @@ async def export(eventId: str | None = None, status: str | None = None, variant:
 async def analysis(_request: Request, _admin=Depends(require_admin_tab("AI Analysis"))):
     overview = build_overview(await load_registrations(), await list_events())
     return {"analysis": await create_ai_analysis(overview), "generatedAt": datetime.now(timezone.utc).isoformat(), "mode": "offline"}
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ATTENDANCE TRACKING & BOARDING PASS LOOKUP (EVENT-WISE & E-CERTIFICATE)
+# ══════════════════════════════════════════════════════════════════════════════
+
+async def find_registration_flexible(query_str: str) -> dict | None:
+    raw = str(query_str or "").strip()
+    if not raw:
+        return None
+    scanned = raw
+    parsed = urlparse(raw)
+    if parsed.path:
+        candidate = parsed.path.rstrip("/").split("/")[-1]
+        if candidate and candidate != raw:
+            scanned = candidate
+    token_hash = hashlib.sha256(scanned.encode("utf-8")).hexdigest()
+
+    if mongo.mongo_ready():
+        match = await mongo.db.registrations.find_one({
+            "$or": [
+                {"registrationId": {"$regex": f"^{re.escape(scanned)}$", "$options": "i"}},
+                {"invitation.qrHash": token_hash},
+                {"invitation.qrHash": scanned},
+                {"invitation.qrToken": scanned},
+                {"qrHash": token_hash},
+                {"qrToken": scanned},
+                {"normalized.email": scanned.lower()},
+                {"participant.email": {"$regex": f"^{re.escape(scanned)}$", "$options": "i"}},
+                {"participant.phone": scanned},
+                {"normalizedUtr": scanned},
+            ]
+        })
+        if match:
+            return match
+
+    all_rows = await load_registrations()
+    for row in all_rows:
+        reg_id = str(row.get("registrationId") or "").strip()
+        p = row.get("participant") or {}
+        inv = row.get("invitation") or {}
+        if (
+            reg_id.lower() == scanned.lower()
+            or inv.get("qrHash") == token_hash
+            or inv.get("qrToken") == scanned
+            or row.get("qrHash") == token_hash
+            or row.get("qrToken") == scanned
+            or str(p.get("email") or "").strip().lower() == scanned.lower()
+            or str(p.get("phone") or "").strip() == scanned
+            or str(row.get("normalizedUtr") or "").strip() == scanned
+        ):
+            return row
+    return None
+
+
+def extract_event_members_with_attendance(reg: dict, event_id: str) -> list[dict]:
+    p = reg.get("participant") or {}
+    event_regs = reg.get("eventRegistrations") or []
+    ev_item = next((e for e in event_regs if e.get("eventId") == event_id), None)
+    if not ev_item:
+        return []
+
+    att_data = ev_item.get("attendance") or (reg.get("attendance") or {}).get(event_id) or {}
+    members_att = {
+        (m.get("name") or "").strip().upper(): m.get("present", False)
+        for m in att_data.get("members", [])
+        if isinstance(m, dict)
+    }
+
+    leader_name = (p.get("name") or "").strip().upper()
+    leader_present = members_att.get(leader_name, att_data.get("present", False) if "members" not in att_data else False)
+
+    members_list = [
+        {
+            "name": leader_name,
+            "role": "Team Leader",
+            "rollNo": p.get("rollNo") or p.get("collegeId") or "",
+            "isLeader": True,
+            "present": bool(leader_present),
+            "locked": bool(leader_present),
+        }
+    ]
+
+    raw_team_members = ev_item.get("teamMembers") or []
+    for tm in raw_team_members:
+        if not isinstance(tm, dict):
+            continue
+        tm_name = (tm.get("name") or "").strip().upper()
+        if not tm_name:
+            continue
+        tm_present = members_att.get(tm_name, False)
+        members_list.append({
+            "name": tm_name,
+            "role": "Team Member",
+            "rollNo": tm.get("rollNo") or "",
+            "isLeader": False,
+            "present": bool(tm_present),
+            "locked": bool(tm_present),
+        })
+
+    return members_list
+
+
+def format_registration_for_attendance(reg: dict, selected_event_id: str | None = None) -> dict:
+    base = serialize_registration(reg)
+    event_regs = reg.get("eventRegistrations") or []
+
+    events_attendance_info = []
+    for ev in event_regs:
+        eid = ev.get("eventId")
+        ename = ev.get("eventName") or eid
+        members = extract_event_members_with_attendance(reg, eid)
+        att_data = ev.get("attendance") or (reg.get("attendance") or {}).get(eid) or {}
+        present_count = sum(1 for m in members if m.get("present"))
+        total_count = len(members)
+
+        events_attendance_info.append({
+            "eventId": eid,
+            "eventName": ename,
+            "category": ev.get("category", "tech"),
+            "teamSize": ev.get("teamSize") or total_count,
+            "members": members,
+            "presentCount": present_count,
+            "totalCount": total_count,
+            "attended": att_data.get("attended", present_count > 0),
+            "allPresent": present_count == total_count and total_count > 0,
+            "isPartial": present_count > 0 and present_count < total_count,
+            "isAbsent": present_count == 0,
+            "markedAt": att_data.get("markedAt"),
+            "markedBy": att_data.get("markedBy"),
+            "notes": att_data.get("notes", ""),
+        })
+
+    base["eventAttendanceList"] = events_attendance_info
+    return base
+
+
+@router.get("/attendance/summary")
+async def get_attendance_summary(_admin=Depends(require_admin_tab("Attendance"))):
+    configured_events = await list_events()
+    all_regs = await load_registrations()
+    confirmed = [r for r in all_regs if r.get("paymentStatus") == "confirmed"]
+
+    total_confirmed_teams = len(confirmed)
+    total_confirmed_members = 0
+    total_present_members = 0
+
+    events_summary = []
+
+    for ev in configured_events:
+        eid = ev["id"]
+        ename = ev["name"]
+        ev_regs = [r for r in confirmed if any(e.get("eventId") == eid for e in r.get("eventRegistrations", []))]
+
+        ev_total_teams = len(ev_regs)
+        ev_total_members = 0
+        ev_present_members = 0
+
+        for r in ev_regs:
+            m_list = extract_event_members_with_attendance(r, eid)
+            ev_total_members += len(m_list)
+            ev_present_members += sum(1 for m in m_list if m.get("present"))
+
+        rate = round((ev_present_members / ev_total_members * 100), 1) if ev_total_members > 0 else 0.0
+
+        total_confirmed_members += ev_total_members
+        total_present_members += ev_present_members
+
+        events_summary.append({
+            "eventId": eid,
+            "eventName": ename,
+            "category": ev.get("category", "tech"),
+            "venue": ev.get("venue", "TBD"),
+            "date": ev.get("date", "2026-09-26"),
+            "time": ev.get("time", "10:00 AM"),
+            "totalTeams": ev_total_teams,
+            "totalMembers": ev_total_members,
+            "presentMembers": ev_present_members,
+            "absentMembers": max(0, ev_total_members - ev_present_members),
+            "attendanceRate": rate,
+        })
+
+    overall_rate = round((total_present_members / total_confirmed_members * 100), 1) if total_confirmed_members > 0 else 0.0
+
+    return {
+        "totalTeams": total_confirmed_teams,
+        "totalMembers": total_confirmed_members,
+        "totalPresent": total_present_members,
+        "totalAbsent": max(0, total_confirmed_members - total_present_members),
+        "overallAttendanceRate": overall_rate,
+        "events": events_summary,
+    }
+
+
+@router.get("/attendance/list")
+async def get_attendance_list(
+    eventId: str | None = None,
+    search: str | None = None,
+    status: str | None = None,
+    _admin=Depends(require_admin_tab("Attendance")),
+):
+    all_regs = await load_registrations()
+    confirmed = [r for r in all_regs if r.get("paymentStatus") == "confirmed"]
+
+    if eventId:
+        confirmed = [r for r in confirmed if any(e.get("eventId") == eventId for e in r.get("eventRegistrations", []))]
+
+    if search:
+        term = search.strip().lower()
+        filtered = []
+        for r in confirmed:
+            p = r.get("participant") or {}
+            reg_id = str(r.get("registrationId") or "").lower()
+            name = str(p.get("name") or "").lower()
+            college = str(p.get("college") or "").lower()
+            email = str(p.get("email") or "").lower()
+            phone = str(p.get("phone") or "")
+            ev_regs = r.get("eventRegistrations") or []
+            tm_names = " ".join(
+                str(tm.get("name") or "").lower()
+                for ev in ev_regs
+                for tm in ev.get("teamMembers", [])
+                if isinstance(tm, dict)
+            )
+            if term in f"{reg_id} {name} {college} {email} {phone} {tm_names}":
+                filtered.append(r)
+        confirmed = filtered
+
+    results = []
+    for r in confirmed:
+        formatted = format_registration_for_attendance(r, eventId)
+
+        if status and eventId:
+            ev_att = next((item for item in formatted.get("eventAttendanceList", []) if item.get("eventId") == eventId), None)
+            if status == "present" and not (ev_att and ev_att.get("allPresent")):
+                continue
+            if status == "partial" and not (ev_att and ev_att.get("isPartial")):
+                continue
+            if status == "absent" and not (ev_att and ev_att.get("isAbsent")):
+                continue
+
+        results.append(formatted)
+
+    return {"registrations": results, "count": len(results)}
+
+
+@router.get("/attendance/lookup/{query}")
+@limiter.limit("120/minute")
+async def lookup_attendance_registration(request: Request, query: str, _admin=Depends(require_admin_tab("Attendance"))):
+    reg = await find_registration_flexible(query)
+    if not reg:
+        raise HTTPException(status_code=404, detail="Registration or Boarding Pass not found. Enter registration ID manually.")
+
+    formatted = format_registration_for_attendance(reg)
+    return {"registration": formatted}
+
+
+@router.post("/attendance/mark")
+@limiter.limit("60/minute")
+async def mark_event_attendance(request: Request, admin=Depends(require_admin_tab("Attendance"))):
+    body = await request.json()
+    registration_id = str(body.get("registrationId") or "").strip()
+    event_id = str(body.get("eventId") or "").strip()
+    members_payload = body.get("members") if isinstance(body.get("members"), list) else []
+    notes = str(body.get("notes") or "").strip()[:200]
+
+    if not registration_id or not event_id:
+        raise HTTPException(status_code=400, detail="Registration ID and Event ID are required.")
+
+    reg = await find_registration_flexible(registration_id)
+    if not reg:
+        raise HTTPException(status_code=404, detail="Registration not found.")
+
+    event_regs = reg.get("eventRegistrations") or []
+    target_ev_index = next((i for i, e in enumerate(event_regs) if e.get("eventId") == event_id), None)
+    if target_ev_index is None:
+        raise HTTPException(status_code=400, detail=f"Participant is not registered for event '{event_id}'.")
+
+    # Load existing attendance to enforce "once marked present, cannot be changed back to absent"
+    existing_members = extract_event_members_with_attendance(reg, event_id)
+    already_present_names = {
+        m["name"] for m in existing_members if m.get("present")
+    }
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    final_members = []
+    for m in members_payload:
+        if not isinstance(m, dict):
+            continue
+        m_name = str(m.get("name") or "").strip().upper()
+        # Enforce locked present: once marked present, always present
+        is_pres = bool(m.get("present", False)) or (m_name in already_present_names)
+        final_members.append({
+            "name": m_name,
+            "rollNo": str(m.get("rollNo") or "").strip(),
+            "role": m.get("role", "Team Member"),
+            "isLeader": bool(m.get("isLeader", False)),
+            "present": is_pres,
+            "locked": is_pres,
+        })
+
+    present_count = sum(1 for m in final_members if m.get("present"))
+    is_attended = present_count > 0
+
+    attendance_record = {
+        "attended": is_attended,
+        "markedAt": now_iso,
+        "markedBy": admin["email"],
+        "notes": notes,
+        "members": final_members,
+    }
+
+    # Update eventRegistrations[target_ev_index].attendance
+    event_regs[target_ev_index]["attendance"] = attendance_record
+
+    # Update top-level attendance map
+    top_attendance = reg.get("attendance") or {}
+    top_attendance[event_id] = attendance_record
+
+    update_payload = {
+        "eventRegistrations": event_regs,
+        "attendance": top_attendance,
+        "updatedAt": now_iso,
+    }
+
+    if mongo.mongo_ready():
+        updated = await mongo.db.registrations.find_one_and_update(
+            {"registrationId": reg["registrationId"]},
+            {"$set": update_payload},
+            return_document=ReturnDocument.AFTER,
+        )
+    else:
+        updated = await update_registration(reg["registrationId"], update_payload)
+
+    await record_admin_action(
+        admin["email"],
+        "attendance.mark",
+        reg["registrationId"],
+        {
+            "eventId": event_id,
+            "presentCount": present_count,
+            "totalMembers": len(final_members),
+            "notes": notes,
+        },
+    )
+
+    formatted = format_registration_for_attendance(updated or reg, event_id)
+    return {"message": "Attendance marked successfully.", "registration": formatted}
+
+
+@router.post("/attendance/quick-toggle")
+@limiter.limit("120/minute")
+async def quick_toggle_attendance(request: Request, admin=Depends(require_admin_tab("Attendance"))):
+    body = await request.json()
+    registration_id = str(body.get("registrationId") or "").strip()
+    event_id = str(body.get("eventId") or "").strip()
+    member_name = str(body.get("memberName") or "").strip().upper()
+    new_present = bool(body.get("present", False))
+
+    if not registration_id or not event_id or not member_name:
+        raise HTTPException(status_code=400, detail="Missing required parameters.")
+
+    reg = await find_registration_flexible(registration_id)
+    if not reg:
+        raise HTTPException(status_code=404, detail="Registration not found.")
+
+    members = extract_event_members_with_attendance(reg, event_id)
+    for m in members:
+        if m.get("name") == member_name:
+            # Enforce lock: If already marked present, cannot be un-marked
+            if m.get("present") and not new_present:
+                # Locked - cannot revert to absent
+                m["present"] = True
+                m["locked"] = True
+            else:
+                m["present"] = new_present
+                m["locked"] = bool(new_present)
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    present_count = sum(1 for m in members if m.get("present"))
+    is_attended = present_count > 0
+
+    attendance_record = {
+        "attended": is_attended,
+        "markedAt": now_iso,
+        "markedBy": admin["email"],
+        "members": members,
+    }
+
+    event_regs = reg.get("eventRegistrations") or []
+    target_ev_index = next((i for i, e in enumerate(event_regs) if e.get("eventId") == event_id), None)
+    if target_ev_index is not None:
+        event_regs[target_ev_index]["attendance"] = attendance_record
+
+    top_attendance = reg.get("attendance") or {}
+    top_attendance[event_id] = attendance_record
+
+    update_payload = {
+        "eventRegistrations": event_regs,
+        "attendance": top_attendance,
+        "updatedAt": now_iso,
+    }
+
+    if mongo.mongo_ready():
+        updated = await mongo.db.registrations.find_one_and_update(
+            {"registrationId": reg["registrationId"]},
+            {"$set": update_payload},
+            return_document=ReturnDocument.AFTER,
+        )
+    else:
+        updated = await update_registration(reg["registrationId"], update_payload)
+
+    formatted = format_registration_for_attendance(updated or reg, event_id)
+    return {"message": "Attendance updated.", "registration": formatted}
+
+
+@router.get("/attendance/export-excel")
+async def export_attendance_excel(_admin=Depends(require_admin_tab("Attendance"))):
+    configured_events = await list_events()
+    all_regs = await load_registrations()
+    excel_bytes = export_attendance_to_excel(configured_events, all_regs)
+
+    return Response(
+        content=excel_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": "attachment; filename=noctivus_event_wise_attendance.xlsx",
+            "Cache-Control": "no-cache",
+        },
+    )

@@ -1,12 +1,56 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { TickDivider } from '../ui/TickDivider/TickDivider';
 import { site } from '../../data/site.js';
 import './FooterSection.css';
 
 export function FooterSection() {
+  const mapContainerRef = useRef(null);
+  const mapRef = useRef(null);
+
   const linkedinUrl = site?.social?.LinkedIn || 'https://linkedin.com';
   const instagramUrl = site?.social?.Instagram || 'https://instagram.com';
   const xUrl = site?.social?.X || 'https://x.com';
+
+  useEffect(() => {
+    if (!mapContainerRef.current || mapRef.current) return;
+
+    const initMap = async () => {
+      const { Map, NavigationControl } = await import('maplibre-gl');
+      await import('maplibre-gl/dist/maplibre-gl.css');
+
+      const map = new Map({
+        container: mapContainerRef.current,
+        style: {
+          version: 8,
+          sources: {
+            openstreetmap: {
+              type: 'raster',
+              tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+              tileSize: 256,
+              attribution: '',
+            },
+          },
+          layers: [{ id: 'openstreetmap', type: 'raster', source: 'openstreetmap' }],
+        },
+        center: [80.1916095, 13.1483288],
+        zoom: 15,
+        attributionControl: false,
+        interactive: false,
+      });
+
+      map.addControl(new NavigationControl({ showCompass: false, visualizePitch: false }), 'top-right');
+      mapRef.current = map;
+    };
+
+    initMap();
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, []);
 
   return (
     <footer className="footer-cyber-hud" id="footer">
@@ -95,25 +139,20 @@ export function FooterSection() {
 
           </div>
 
-          {/* RIGHT SIDE: Satellite Location Map */}
+          {/* RIGHT SIDE: Compact OpenStreetMap */}
           <div className="footer-map-side">
-            <a
-              href="https://www.google.com/maps/dir/?api=1&destination=Velammal+Engineering+College%2C+Surapet%2C+Chennai+600066"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="footer-compact-map"
-              aria-label="Open directions to Velammal Engineering College in Google Maps"
-            >
-              <img
-                src="/images/college-map.jpg"
-                alt="Velammal Engineering College Satellite Map"
-                className="footer-map-image"
-                loading="lazy"
-              />
-              <span className="footer-map-link">
+            <div className="footer-compact-map">
+              <div ref={mapContainerRef} className="footer-map-container" />
+              <a
+                href="https://www.google.com/maps/dir/?api=1&destination=Velammal+Engineering+College%2C+Surapet%2C+Chennai+600066"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="footer-map-link"
+                aria-label="Open directions in Google Maps"
+              >
                 Maps ↗
-              </span>
-            </a>
+              </a>
+            </div>
           </div>
 
         </div>

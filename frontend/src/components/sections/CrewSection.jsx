@@ -79,6 +79,22 @@ export function CrewSection() {
                   </a>
                 )}
               </div>
+
+              {/* VIEW COORDINATORS Button */}
+              <div className="crew-card-action">
+                <a
+                  href={card.href}
+                  className="crew-view-btn"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <span className="crew-btn-corner tl" aria-hidden="true" />
+                  <span className="crew-btn-corner tr" aria-hidden="true" />
+                  <span className="crew-btn-corner bl" aria-hidden="true" />
+                  <span className="crew-btn-corner br" aria-hidden="true" />
+                  <span className="crew-btn-text">VIEW COORDINATORS</span>
+                  <span className="crew-btn-arrow" aria-hidden="true">→</span>
+                </a>
+              </div>
             </article>
           ))}
         </div>
