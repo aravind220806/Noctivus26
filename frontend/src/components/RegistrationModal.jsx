@@ -77,9 +77,8 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
   const hasWorkshop = selectedEvents.some(
     (event) => (event.category || '').toLowerCase() === 'workshop' || event.id === 'playground-of-hackers' || event.id === 'art-of-hacking' || event.fee === 300
   );
-  const amount = !selectedEvents.length ? 0 : hasWorkshop ? 300 : 150;
-  const upiId = (import.meta.env.VITE_UPI_ID || '').trim() || 'noctivus2026@okhdfcbank';
-  const payee = (import.meta.env.VITE_UPI_PAYEE || '').trim() || 'Noctivus 26';
+  const upiId = (import.meta.env.VITE_UPI_ID || '').trim() || '7695827158@okbizaxis';
+  const payee = (import.meta.env.VITE_UPI_PAYEE || '').trim() || 'balakumaran';
   const paymentConfigured = Boolean(upiId) || import.meta.env.DEV;
   const upiLink = useMemo(() => {
     if (!selectedEvents.length || !amount || !upiId) return '';
