@@ -1,13 +1,26 @@
 import { Logo } from './logo';
 import { navigationGroups } from './navigation';
 import { cn } from './shared';
+import { BionisIcons } from './icons';
 
-export function Sidebar({ activeTab, visibleTabs, onTabChange, user, onLogout }) {
+export function Sidebar({ activeTab, visibleTabs, onTabChange, user, onLogout, onClose }) {
   const allowed = new Set(visibleTabs);
 
   return (
     <aside className="admin-sidebar bionis-sidebar">
-      <Logo />
+      <div className="admin-sidebar-header">
+        <Logo />
+        {onClose && (
+          <button
+            className="sidebar-close-btn"
+            type="button"
+            onClick={onClose}
+            aria-label="Close admin menu"
+          >
+            <BionisIcons.close size={20} />
+          </button>
+        )}
+      </div>
       <nav className="bionis-nav">
         {navigationGroups.map((group) => {
           const items = group.items.filter((item) => allowed.has(item.label));

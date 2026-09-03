@@ -3405,68 +3405,170 @@
 @media (max-width: 640px) {
   .admin-shell {
     display: block;
+    width: 100%;
+    min-height: 100vh;
   }
 
   .admin-main {
-    padding: 76px 12px 32px;
+    padding: 0 10px 40px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   .admin-menu-toggle {
-    position: fixed;
-    z-index: 60;
-    top: 14px;
-    left: 14px;
-    width: 44px;
-    height: 44px;
-    display: grid;
-    place-items: center;
-    border: 0;
-    border-radius: 12px;
-    color: #FFFFFF;
-    background: #000000;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.18);
+    position: static !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    border: 1px solid #1e293b !important;
+    border-radius: 8px !important;
+    color: #f1f5f9 !important;
+    background: #141b26 !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    box-shadow: none !important;
   }
 
   .admin-sidebar {
     position: fixed;
-    z-index: 50;
+    z-index: 100;
     inset: 0 auto 0 0;
-    width: min(82vw, 300px);
+    width: min(82vw, 290px);
     transform: translateX(-105%);
     transition: transform .24s ease;
+    box-shadow: 10px 0 40px rgba(0, 0, 0, 0.9);
   }
 
   .admin-shell--nav-open .admin-sidebar {
     transform: translateX(0);
   }
 
-  .admin-topbar {
-    align-items: stretch;
-    flex-direction: column;
+  .admin-topbar,
+  .admin-topbar.bionis-topbar {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 40 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    padding: 10px 12px !important;
+    margin: 0 -10px 16px !important;
+    background: rgba(10, 15, 22, 0.96) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    width: calc(100% + 20px) !important;
+    box-sizing: border-box !important;
   }
 
-  .admin-topbar h1 {
-    font-size: 36px;
+  .admin-topbar-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    min-width: 0 !important;
+    flex: 1 !important;
   }
 
-  .admin-topbar-actions,
-  .admin-topbar-actions .button {
-    width: 100%;
+  .admin-topbar-title-wrap {
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+  }
+
+  .admin-topbar-title-wrap .kicker {
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.08em !important;
+    color: #38bdf8 !important;
+    text-transform: uppercase !important;
+    margin: 0 0 1px !important;
+  }
+
+  .admin-topbar h1,
+  .admin-topbar-title-wrap h1 {
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    color: #f8fafc !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.2 !important;
+  }
+
+  .admin-topbar-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    width: auto !important;
+    flex-shrink: 0 !important;
   }
 
   .admin-metrics {
-    gap: 10px;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    margin-bottom: 14px !important;
   }
 
   .admin-metrics article,
   .metric-card {
-    min-height: 112px;
-    padding: 14px;
+    min-height: auto !important;
+    padding: 12px 10px !important;
+    border-radius: 10px !important;
+  }
+
+  .metric-card::before,
+  .metric-card::after {
+    display: none !important;
+  }
+
+  .metric-card span {
+    font-size: 9.5px !important;
+    letter-spacing: 0.04em !important;
   }
 
   .admin-metrics strong,
   .metric-card strong {
-    font-size: 27px;
+    font-size: 19px !important;
+    margin: 4px 0 2px !important;
+  }
+
+  .metric-card small {
+    font-size: 9.5px !important;
+  }
+
+  .dashboard-events-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .dashboard-event-row {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    padding: 12px 10px !important;
+  }
+
+  .dashboard-event-actions {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+    padding-top: 8px !important;
+  }
+
+  .dashboard-event-actions .button {
+    min-height: 36px !important;
+    padding: 6px 12px !important;
+    font-size: 12px !important;
   }
 
   .event-bars > div {
@@ -6217,23 +6319,40 @@ html, body, #root {
   box-shadow: none !important;
 }
 
-.sidebar-header {
+.sidebar-header,
+.admin-sidebar-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding-bottom: 16px;
   border-bottom: 1px solid #1e293b;
   margin-bottom: 16px;
+  width: 100%;
 }
 
 .sidebar-close-btn {
   display: none;
-  background: transparent;
-  border: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #1e293b;
   color: #94a3b8;
-  padding: 6px;
-  border-radius: 6px;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  border-radius: 8px;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidebar-close-btn:hover {
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: #38bdf8;
+}
+
+.sidebar-close-btn:active {
+  transform: scale(0.95);
 }
 
 .bionis-nav {
@@ -7328,7 +7447,7 @@ html, body, #root {
 }
 
 .admin-shell .admin-menu-toggle {
-  display: inline-flex !important;
+  display: none !important;
   align-items: center !important;
   justify-content: center !important;
   width: 40px !important;
@@ -7339,6 +7458,12 @@ html, body, #root {
   color: #f8fafc !important;
   cursor: pointer !important;
   flex-shrink: 0 !important;
+}
+
+@media (max-width: 900px) {
+  .admin-shell .admin-menu-toggle {
+    display: inline-flex !important;
+  }
 }
 
 .admin-shell .admin-topbar-title-wrap {
@@ -8707,5 +8832,18 @@ html, body, #root {
     width: 100%;
     min-height: 48px;
     font-size: 15px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   DESKTOP ADAPTIVE RULES (>= 901px) — Strictly hide mobile toggles & close buttons
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 901px) {
+  .admin-menu-toggle,
+  .admin-shell .admin-menu-toggle,
+  .sidebar-close-btn,
+  .admin-sidebar-header .sidebar-close-btn,
+  .admin-sidebar .sidebar-close-btn {
+    display: none !important;
   }
 }

@@ -13,10 +13,10 @@ import { FooterSection } from './components/sections/FooterSection.jsx';
 import useReveal from './hooks/useReveal.js';
 import { getApiBase } from './lib/api';
 
-const RegistrationModal = lazy(() => import('./components/RegistrationModal.jsx'));
-const EventModal = lazy(() => import('./components/sections/EventModal.jsx'));
-const TimelineSection = lazy(() => import('./components/sections/TimelineSection.jsx').then(m => ({ default: m.TimelineSection })));
-const WebsiteIntro = lazy(() => import('./components/intro/WebsiteIntro.jsx').then(m => ({ default: m.WebsiteIntro })));
+const RegistrationModal = lazy(() => import('./components/RegistrationModal.jsx').then(m => ({ default: m.default || m.RegistrationModal })));
+const EventModal = lazy(() => import('./components/sections/EventModal.jsx').then(m => ({ default: m.default || m.EventModal })));
+const TimelineSection = lazy(() => import('./components/sections/TimelineSection.jsx').then(m => ({ default: m.default || m.TimelineSection })));
+const WebsiteIntro = lazy(() => import('./components/intro/WebsiteIntro.jsx').then(m => ({ default: m.default || m.WebsiteIntro })));
 
 const sectionsList = ['home', 'about', 'events', 'schedule', 'coordinators', 'footer'];
 
