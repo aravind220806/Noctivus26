@@ -194,8 +194,8 @@ export const events = [
     fee: 150,
     laptopRequirement: 'None',
     accent: 'lime',
-    image: eventImage,
-    imagePosition: '42% 46%',
+    image: '/images/tune-trap.webp',
+    imagePosition: 'center center',
     format: 'A multi-round music challenge testing song identification, lyrics recall, and theme matching under time pressure.',
     details: [
       'No Shazam, SoundHound, or music identification apps.',
