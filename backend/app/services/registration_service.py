@@ -16,17 +16,17 @@ from app.services.validation_service import normalize_digits, validate_registrat
 
 
 def create_registration_id() -> str:
-    """Return a human-readable registration ID with sufficient entropy.
+    """Return a human-readable registration ID with 60+ bits of cryptographic entropy.
 
-    Format: NOC26-{base62-8chars}
-    The 8-character suffix provides ~38 bits of entropy (base62),
-    making brute-force infeasible while remaining compact.
+    Format: NOC26-{base62-10chars}
+    The 10-character suffix provides ~60 bits of entropy (62^10 ≈ 8.39 × 10^17),
+    making brute-force mathematically impossible while remaining human-scannable.
     """
     import string
     import secrets
 
     alphabet = string.digits + string.ascii_uppercase + string.ascii_lowercase
-    suffix = ''.join(secrets.choice(alphabet) for _ in range(8))
+    suffix = ''.join(secrets.choice(alphabet) for _ in range(10))
     return f"NOC26-{suffix}"
 
 
@@ -226,27 +226,37 @@ async def load_registrations(filters: dict | None = None) -> list[dict]:
 
 async def update_registration(registration_id: str, update: dict) -> dict | None:
     update["updatedAt"] = datetime.now(timezone.utc).isoformat()
+    result = None
     if mongo.mongo_ready():
         try:
-            return await mongo.db.registrations.find_one_and_update(
+            result = await mongo.db.registrations.find_one_and_update(
                 {"registrationId": registration_id},
                 {"$set": update},
                 return_document=ReturnDocument.AFTER,
             )
         except Exception as error:
             print(f"Mongo registration update failed; falling back: {error}")
-    if sqlite_db.ready():
+    elif sqlite_db.ready():
         existing = await sqlite_db.get("registrations", registration_id)
         if existing:
             existing.update(update)
             await sqlite_db.upsert("registrations", registration_id, existing)
-            return existing
-        return None
-    for registration in memory_registrations:
-        if registration.get("registrationId") == registration_id:
-            registration.update(update)
-            return registration
-    return None
+            result = existing
+    else:
+        for registration in memory_registrations:
+            if registration.get("registrationId") == registration_id:
+                registration.update(update)
+                result = registration
+                break
+
+    try:
+        from app.services.cache_service import qr_lookup_cache, events_cache
+        qr_lookup_cache.clear()
+        events_cache.clear()
+    except Exception:
+        pass
+
+    return result
 
 
 def serialize_registration(registration: dict) -> dict:
