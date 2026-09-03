@@ -392,6 +392,7 @@ const styles = {
     borderRadius: 12,
     padding: 16,
     display: 'flex',
+    flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 12,
@@ -403,6 +404,7 @@ const styles = {
     borderRadius: 12,
     padding: 16,
     display: 'flex',
+    flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 12,
@@ -418,6 +420,7 @@ const styles = {
     fontWeight: 700,
     cursor: 'pointer',
     whiteSpace: 'nowrap',
+    minHeight: 44,
     transition: 'background 0.2s',
   },
   actionBtn: {

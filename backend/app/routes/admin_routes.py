@@ -537,6 +537,18 @@ async def claim_food(request: Request, registration_id: str, admin=Depends(requi
         },
     )
 
+    try:
+        from app.services.google_sheets_service import google_sheets_service
+        from app.services.event_service import list_events
+        events = await list_events()
+        all_regs = await load_registrations()
+        slots = []
+        if sqlite_db.ready():
+            slots = await sqlite_db.list_all("event_slots")
+        asyncio.create_task(google_sheets_service.sync_full_database(events, all_regs, slots))
+    except Exception as sync_err:
+        logger.warning("Google sheets food sync notice: %s", sync_err)
+
     return {
         "status": "claimed",
         "message": f"{food_pref.upper()} LUNCH CLAIMED",
@@ -719,18 +731,13 @@ async def verify_registration(registration_id: str, request: Request, admin=Depe
         raise HTTPException(status_code=404, detail="Registration not found.")
 
     if update["paymentStatus"] == "confirmed" and body.get("sendEmail") is not False:
-        try:
-            await sendPaymentConfirmationEmail(registration)
-        except Exception as err:
-            logger.error(f"Error sending payment confirmation email: {err}")
+        asyncio.create_task(sendPaymentConfirmationEmail(registration))
 
     if update["paymentStatus"] == "confirmed":
         asyncio.create_task(google_sheets_service.sync_verified_registration(registration))
 
-    rows = await load_registrations()
-    fresh_reg = next((r for r in rows if r.get("registrationId") == registration_id), registration)
     await record_admin_action(admin["email"], f"registration.{update['paymentStatus']}", registration_id, {"notes": update["verificationNotes"]})
-    return {"registration": serialize_registration(fresh_reg)}
+    return {"registration": serialize_registration(registration)}
 
 
 @router.post("/registrations/{registration_id}/resend-confirmation-email")

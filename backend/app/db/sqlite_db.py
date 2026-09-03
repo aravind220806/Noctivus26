@@ -177,16 +177,19 @@ class _SQLiteDB:
             await db.commit()
 
     async def list_all(self, table: str, order: str = "asc") -> list[dict]:
-        """Return all rows for *table*, ordered by insertion time."""
+        """Return all rows for *table*."""
         if not self._ready:
             return []
         direction = "ASC" if order.lower() == "asc" else "DESC"
         async with aiosqlite.connect(DB_PATH) as db:
-            async with db.execute(
-                f"SELECT data FROM {table} ORDER BY updated {direction}"
-            ) as cur:
-                rows = await cur.fetchall()
-                return [_loads(r[0]) for r in rows]
+            try:
+                async with db.execute(f"SELECT data FROM {table} ORDER BY updated {direction}") as cur:
+                    rows = await cur.fetchall()
+                    return [_loads(r[0]) for r in rows]
+            except Exception:
+                async with db.execute(f"SELECT data FROM {table}") as cur:
+                    rows = await cur.fetchall()
+                    return [_loads(r[0]) for r in rows]
 
     async def find_one(self, table: str, field: str, value: Any) -> dict | None:
         """Return the first record where record[field] == value."""

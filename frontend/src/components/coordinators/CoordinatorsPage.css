@@ -127,6 +127,13 @@
   white-space: nowrap;
 }
 
+@media (max-width: 480px) {
+  .noc-cat-btn {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.75rem;
+  }
+}
+
 .noc-cat-btn:hover {
   color: #A7FF18;
   border-color: rgba(167, 255, 24, 0.7);

@@ -304,6 +304,7 @@ class GoogleSheetsService:
         p = reg.get("participant") or {}
         event_names = [e.get("eventName") or e.get("eventId") for e in reg.get("eventRegistrations", [])]
         is_checked_in = bool(reg.get("checkedIn"))
+        is_food_claimed = bool(reg.get("foodClaimed"))
         p_status = (reg.get("paymentStatus") or "pending").capitalize()
         abstract_val = (
             reg.get("abstract")
@@ -323,6 +324,8 @@ class GoogleSheetsService:
             p.get("department", ""),
             p.get("year", ""),
             p.get("foodPreference", ""),
+            "YES" if is_food_claimed else "NO",
+            reg.get("foodClaimedAt", ""),
             "; ".join(event_names),
             abstract_val,
             p_status,
@@ -340,6 +343,7 @@ class GoogleSheetsService:
         p = reg.get("participant") or {}
         event_names = [e.get("eventName") or e.get("eventId") for e in reg.get("eventRegistrations", [])]
         is_checked_in = bool(reg.get("checkedIn"))
+        is_food_claimed = bool(reg.get("foodClaimed"))
 
         return [
             idx if idx is not None else "",
@@ -351,11 +355,14 @@ class GoogleSheetsService:
             p.get("department", ""),
             p.get("year", ""),
             p.get("foodPreference", ""),
+            "YES" if is_food_claimed else "NO",
+            reg.get("foodClaimedAt", ""),
             "; ".join(event_names),
             reg.get("utrNumber", ""),
             reg.get("expectedAmount", 0),
             reg.get("verifiedAt", ""),
             "YES" if is_checked_in else "NO",
+            reg.get("checkedInAt", ""),
         ]
 
     @staticmethod
@@ -376,6 +383,24 @@ class GoogleSheetsService:
             (reg.get("paymentStatus") or "pending").capitalize(),
             reg.get("checkedInAt", ""),
             reg.get("checkedInBy", "Gate Desk"),
+        ]
+
+    @staticmethod
+    def _format_food_row(reg: dict, idx: int | None = None) -> list[Any]:
+        p = reg.get("participant") or {}
+        pref = (reg.get("foodPreference") or p.get("foodPreference") or "Veg").capitalize()
+        return [
+            idx if idx is not None else "",
+            reg.get("registrationId") or reg.get("member_id", ""),
+            p.get("name", ""),
+            p.get("email", ""),
+            p.get("phone", ""),
+            p.get("college", ""),
+            pref,
+            "YES" if reg.get("foodClaimed") else "NO",
+            reg.get("foodClaimedAt", ""),
+            reg.get("foodClaimedBy", "Food Desk"),
+            (reg.get("paymentStatus") or "pending").capitalize(),
         ]
 
     # ================= LIVE EVENT SYNC HOOKS =================
@@ -454,8 +479,8 @@ class GoogleSheetsService:
             # 1. Prepare 'Registered' sheet
             reg_headers = [
                 "S.No", "Registration ID", "Participant Name", "Email", "Phone",
-                "College", "Department", "Year", "Food Preference", "Registered Events",
-                "Abstract / Topic", "Payment Status", "UTR Number", "Expected Amount",
+                "College", "Department", "Year", "Food Preference", "Food Claimed?", "Food Claimed At",
+                "Registered Events", "Abstract / Topic", "Payment Status", "UTR Number", "Expected Amount",
                 "Claimed Amount", "Gate Check-In", "Checked In At", "Submitted At", "Verified At"
             ]
             reg_rows = [reg_headers]
@@ -466,8 +491,8 @@ class GoogleSheetsService:
             # 2. Prepare 'Verified' sheet
             ver_headers = [
                 "S.No", "Registration ID", "Participant Name", "Email", "Phone",
-                "College", "Department", "Year", "Food", "Registered Events",
-                "UTR Number", "Verified Amount", "Verified At", "Gate Check-In"
+                "College", "Department", "Year", "Food Preference", "Food Claimed?", "Food Claimed At",
+                "Registered Events", "UTR Number", "Verified Amount", "Verified At", "Gate Check-In", "Checked In At"
             ]
             verified_regs = [r for r in registrations if (r.get("paymentStatus") or "").lower() == "confirmed"]
             ver_rows = [ver_headers]
@@ -487,7 +512,18 @@ class GoogleSheetsService:
                 chk_rows.append(self._format_checkin_row(r, idx))
             all_sheets_payload["Check-In List"] = chk_rows
 
-            # 4. Prepare 'Master Event Slots' sheet
+            # 4. Prepare 'Food Distribution' sheet
+            food_headers = [
+                "S.No", "Registration ID", "Participant Name", "Email", "Phone",
+                "College", "Food Preference", "Food Claimed?", "Claimed At", "Claimed By Desk", "Payment Status"
+            ]
+            food_claimed_regs = [r for r in registrations if bool(r.get("foodClaimed"))]
+            food_rows = [food_headers]
+            for idx, r in enumerate(food_claimed_regs, 1):
+                food_rows.append(self._format_food_row(r, idx))
+            all_sheets_payload["Food Distribution"] = food_rows
+
+            # 5. Prepare 'Master Event Slots' sheet
             slots_headers = [
                 "Event Name", "Category", "Window", "Date", "Start Time", "End Time",
                 "Slot Timing", "Capacity", "Assigned Count", "Available", "Assigned Member IDs", "Assigned Member Names"
