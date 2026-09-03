@@ -1,58 +1,84 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { TickDivider } from '../ui/TickDivider/TickDivider';
 import { site } from '../../data/site.js';
 import './FooterSection.css';
 
 export function FooterSection() {
-  const [showBusRouteModal, setShowBusRouteModal] = useState(false);
+  const mapContainerRef = useRef(null);
+  const mapRef = useRef(null);
 
   const linkedinUrl = site?.social?.LinkedIn || 'https://linkedin.com';
   const instagramUrl = site?.social?.Instagram || 'https://instagram.com';
   const xUrl = site?.social?.X || 'https://x.com';
 
-  const busRoutes = [
-    { routeNo: 'Route 1', from: 'Central / Broadway', via: 'Vyasarpadi, MKB Nagar, Madhavaram, Red Hills Road' },
-    { routeNo: 'Route 2', from: 'Tambaram', via: 'Chromepet, Guindy, Koyambedu, Ambattur OT, Surapet' },
-    { routeNo: 'Route 3', from: 'Avadi', via: 'Pattabiram, Thirumullaivoyal, Ambattur OT, Surapet' },
-    { routeNo: 'Route 4', from: 'Koyambedu (CMBT)', via: 'Thirumangalam, Mogappair, Ambattur Estate, Surapet' },
-    { routeNo: 'Route 5', from: 'Tiruvallur', via: 'Tiruninravur, Avadi, Ambattur, Surapet' },
-  ];
+  useEffect(() => {
+    if (!mapContainerRef.current || mapRef.current) return;
+
+    const initMap = async () => {
+      const { Map, NavigationControl } = await import('maplibre-gl');
+      await import('maplibre-gl/dist/maplibre-gl.css');
+
+      const map = new Map({
+        container: mapContainerRef.current,
+        style: {
+          version: 8,
+          sources: {
+            openstreetmap: {
+              type: 'raster',
+              tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+              tileSize: 256,
+              attribution: '',
+            },
+          },
+          layers: [{ id: 'openstreetmap', type: 'raster', source: 'openstreetmap' }],
+        },
+        center: [80.1916095, 13.1483288],
+        zoom: 15,
+        attributionControl: false,
+        interactive: false,
+      });
+
+      map.addControl(new NavigationControl({ showCompass: false, visualizePitch: false }), 'top-right');
+      mapRef.current = map;
+    };
+
+    initMap();
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, []);
 
   return (
-    <footer className="footer-section" id="footer">
-      <div className="footer-container">
-
-        {/* TOP ROW: Brand Header */}
-        <div className="footer-brand-row">
-          <div className="footer-brand-title">
-            <span className="brand-word">NOCTIVUS</span>
-            <span className="brand-year">'26</span>
-          </div>
-          <p className="footer-brand-tagline">
-            NATIONAL LEVEL TECHNICAL SYMPOSIUM &bull; VELAMMAL ENGINEERING COLLEGE
-          </p>
-        </div>
-
+    <footer className="footer-cyber-hud" id="footer">
+      {/* Full-width Top Tick Divider */}
+      <div className="footer-ruler-divider">
         <TickDivider />
+      </div>
 
-        {/* MAIN HUD GRID: Info Panels (Left) & Compact Google Map (Right) */}
-        <div className="footer-hud-main">
+      <div className="footer-hud-container">
 
-          {/* LEFT SIDE: 3 Info Blocks */}
+        {/* Main Content: Info on Left, Map on Right */}
+        <div className="footer-main-layout">
+
+          {/* LEFT SIDE: Venue, Contact, Bus Route */}
           <div className="footer-info-columns">
 
             {/* Venue */}
             <div className="footer-info-block">
               <div className="footer-info-heading">
                 <svg className="footer-info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                  <circle cx="12" cy="10" r="3" />
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+                  <circle cx="12" cy="9" r="2.5" />
                 </svg>
                 <span>VENUE</span>
               </div>
               <div className="footer-info-body">
-                <p>Velammal Engineering College</p>
-                <p>Ambattur–Red Hills Road,</p>
+                <p>Velammal Engineering College,</p>
+                <p>Ambattur-Red Hills Road,</p>
                 <p>Surapet, Chennai,</p>
                 <p>Tamil Nadu 600066</p>
               </div>
@@ -95,10 +121,11 @@ export function FooterSection() {
                 <span>BUS ROUTE</span>
               </div>
               <div className="footer-info-body">
-                <button
-                  type="button"
+                <a
+                  href="/busroutes.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="footer-bus-btn"
-                  onClick={() => setShowBusRouteModal(true)}
                 >
                   <span>View Bus Route</span>
                   <svg className="footer-ext-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -106,22 +133,16 @@ export function FooterSection() {
                     <polyline points="15 3 21 3 21 9" />
                     <line x1="10" y1="14" x2="21" y2="3" />
                   </svg>
-                </button>
+                </a>
               </div>
             </div>
 
           </div>
 
-          {/* RIGHT SIDE: Compact Google Map */}
+          {/* RIGHT SIDE: Compact OpenStreetMap */}
           <div className="footer-map-side">
             <div className="footer-compact-map">
-              <iframe
-                title="Velammal Engineering College Location Map"
-                src="https://maps.google.com/maps?q=Velammal+Engineering+College%2C+Surapet%2C+Chennai&t=&z=15&ie=UTF8&iwloc=&output=embed"
-                className="footer-map-iframe"
-                loading="lazy"
-                allowFullScreen
-              />
+              <div ref={mapContainerRef} className="footer-map-container" />
               <a
                 href="https://www.google.com/maps/dir/?api=1&destination=Velammal+Engineering+College%2C+Surapet%2C+Chennai+600066"
                 target="_blank"
@@ -193,57 +214,6 @@ export function FooterSection() {
 
       </div>
 
-      {/* Bus Route Modal */}
-      {showBusRouteModal && (
-        <div className="bus-modal-backdrop" onClick={() => setShowBusRouteModal(false)}>
-          <div className="bus-modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="bus-modal-header">
-              <h3>CAMPUS BUS ROUTES</h3>
-              <button
-                type="button"
-                className="bus-modal-close"
-                onClick={() => setShowBusRouteModal(false)}
-                aria-label="Close Bus Routes Modal"
-              >
-                &times;
-              </button>
-            </div>
-            <p className="bus-modal-desc">
-              College buses will operate on symposium day (26 Sept 2026) across key routes in Chennai.
-            </p>
-            <div className="bus-routes-table-wrap">
-              <table className="bus-routes-table">
-                <thead>
-                  <tr>
-                    <th>ROUTE</th>
-                    <th>STARTING POINT</th>
-                    <th>VIA KEY STOPS</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {busRoutes.map((r, i) => (
-                    <tr key={i}>
-                      <td className="bus-route-no">{r.routeNo}</td>
-                      <td className="bus-route-from">{r.from}</td>
-                      <td className="bus-route-via">{r.via}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="bus-modal-footer">
-              <a
-                href="/bus-routes.pdf"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bus-download-btn"
-              >
-                Download Official Bus Schedule (PDF) ↗
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
     </footer>
   );
 }

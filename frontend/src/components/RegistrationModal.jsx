@@ -78,7 +78,7 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
     (event) => (event.category || '').toLowerCase() === 'workshop' || event.id === 'playground-of-hackers' || event.id === 'art-of-hacking' || event.fee === 300
   );
   const amount = !selectedEvents.length ? 0 : hasWorkshop ? 300 : 150;
-  const upiId = (import.meta.env.VITE_UPI_ID || '').trim() || '7695827158@okbizaxis';
+  const upiId = (import.meta.env.VITE_UPI_ID || '').trim() || 'noctivus2026@okhdfcbank';
   const payee = (import.meta.env.VITE_UPI_PAYEE || '').trim() || 'Noctivus 26';
   const paymentConfigured = Boolean(upiId) || import.meta.env.DEV;
   const upiLink = useMemo(() => {
@@ -252,7 +252,7 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
               </h2>
             </div>
             <button ref={closeButtonRef} className="reg-close" onClick={onClose} aria-label="Close registration">
-              <span className="reg-close-label">CLOSE</span> [X]
+              <span>CLOSE</span> [X]
             </button>
           </header>
 

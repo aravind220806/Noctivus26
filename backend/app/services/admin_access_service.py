@@ -5,7 +5,7 @@ from app.db.memory_store import memory_admin_access
 from app.db import mongo
 from app.db.sqlite_db import sqlite_db
 
-ADMIN_TABS = ["Dashboard", "Verify Members", "Check-in", "Attendance", "Events", "Event Scheduler", "Invitations", "AI Analysis", "Export", "Audit Log", "Admin Access"]
+ADMIN_TABS = ["Dashboard", "Verify Members", "Check-in", "Events", "Event Scheduler", "Invitations", "Announcements", "AI Analysis", "Export", "Audit Log", "Admin Access"]
 
 
 def owner_emails() -> list[str]:

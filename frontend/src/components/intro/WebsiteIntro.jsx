@@ -7,7 +7,7 @@ const RANDOM_CHARS = '0123456789XYZA#%&$@!';
 
 export function WebsiteIntro({ onComplete }) {
   const [phase, setPhase] = useState(0); // 0: ticking, 1: locked NOCTIVUS, 2: meta, 3: scroll/ready
-  const [tickerTime, setTickerTime] = useState('00:01.50');
+  const [tickerTime, setTickerTime] = useState('00:03.00');
   const [titleDisplay, setTitleDisplay] = useState('00:00:00');
   const [isLocked, setIsLocked] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
@@ -23,7 +23,7 @@ export function WebsiteIntro({ onComplete }) {
     }
     setTimeout(() => {
       onComplete?.();
-    }, 300);
+    }, 700);
   }, [isExiting, onComplete]);
 
   useEffect(() => {
@@ -37,9 +37,9 @@ export function WebsiteIntro({ onComplete }) {
       return;
     }
 
-    // Ticking countdown effect (0.8s ticking, completes in 1.5s total):
+    // Ticking countdown effect (2.8 seconds ticking):
     const startTime = Date.now();
-    const duration = 800;
+    const duration = 2800;
 
     const tickInterval = setInterval(() => {
       const elapsed = Date.now() - startTime;
@@ -50,7 +50,7 @@ export function WebsiteIntro({ onComplete }) {
       setTickerTime(`00:${secFormatted}.${msFormatted}`);
 
       if (remaining > 0) {
-        // Scramble title text like a digital lock sequence
+        // Scramble title text like a digital bomb lock sequence
         const progress = elapsed / duration;
         const revealCount = Math.floor(progress * TARGET_TEXT.length);
         
@@ -70,11 +70,11 @@ export function WebsiteIntro({ onComplete }) {
         setIsLocked(true);
         setPhase(1);
       }
-    }, 30);
+    }, 45);
 
-    const t2 = setTimeout(() => setPhase(2), 950);
-    const t3 = setTimeout(() => setPhase(3), 1150);
-    const t4 = setTimeout(() => handleFinish(), 1500);
+    const t2 = setTimeout(() => setPhase(2), 3400);
+    const t3 = setTimeout(() => setPhase(3), 4400);
+    const t4 = setTimeout(() => handleFinish(), 7000);
 
     return () => {
       clearInterval(tickInterval);

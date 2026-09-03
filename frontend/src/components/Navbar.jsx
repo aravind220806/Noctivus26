@@ -1,48 +1,62 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import './Navbar.css';
 
 export default function Navbar({ activeSection, onNavigate, onRegister, onSelectEvent }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [currentPath, setCurrentPath] = useState(
-    typeof window !== 'undefined' ? window.location.pathname.toLowerCase() : '/'
-  );
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth <= 960;
+    }
+    return false;
+  });
 
-  const isCoordinatorsPage = currentPath.startsWith('/coordinators');
+  const headerRef = useRef(null);
+  const logoRef = useRef(null);
+  const menuRef = useRef(null);
 
-  const handleScroll = useCallback(() => {
-    setScrolled(window.scrollY > 25);
+  // Proximity / Collision detection: check if Noctivus logo is getting close to navbar container
+  const checkProximity = useCallback(() => {
+    setScrolled(window.scrollY > 30);
+
+    if (window.innerWidth <= 960) {
+      setIsCollapsed(true);
+      return;
+    }
+
+    if (logoRef.current && menuRef.current) {
+      const logoRect = logoRef.current.getBoundingClientRect();
+      const menuRect = menuRef.current.getBoundingClientRect();
+      const gap = menuRect.left - logoRect.right;
+      if (gap < 35) {
+        setIsCollapsed(true);
+      } else {
+        setIsCollapsed(false);
+      }
+    } else {
+      setIsCollapsed(window.innerWidth <= 960);
+    }
   }, []);
 
   useEffect(() => {
-    handleScroll();
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [handleScroll]);
+    checkProximity();
 
-  // Track route/path changes
-  useEffect(() => {
-    const updatePath = () => {
-      if (typeof window !== 'undefined') {
-        setCurrentPath(window.location.pathname.toLowerCase());
-      }
+    window.addEventListener('resize', checkProximity, { passive: true });
+    window.addEventListener('scroll', checkProximity, { passive: true });
+
+    let resizeObserver = null;
+    if (headerRef.current && typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => checkProximity());
+      resizeObserver.observe(headerRef.current);
+    }
+
+    return () => {
+      window.removeEventListener('resize', checkProximity);
+      window.removeEventListener('scroll', checkProximity);
+      if (resizeObserver) resizeObserver.disconnect();
     };
-    window.addEventListener('popstate', updatePath);
-    return () => window.removeEventListener('popstate', updatePath);
-  }, []);
+  }, [checkProximity]);
 
-  // Auto-close mobile drawer when window is resized to desktop width
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth > 960 && mobileOpen) {
-        setMobileOpen(false);
-      }
-    };
-    window.addEventListener('resize', handleResize, { passive: true });
-    return () => window.removeEventListener('resize', handleResize);
-  }, [mobileOpen]);
-
-  // Lock body scroll when mobile menu is open
   useEffect(() => {
     if (mobileOpen) {
       document.body.style.overflow = 'hidden';
@@ -54,16 +68,15 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
     };
   }, [mobileOpen]);
 
-  // Close on Escape key
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && mobileOpen) {
+      if (e.key === 'Escape') {
         setMobileOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [mobileOpen]);
+  }, []);
 
   // Clean nav items: HOME -> ABOUT -> EVENTS -> TIMELINE -> COORDINATORS
   const navItems = [
@@ -74,16 +87,9 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
     { id: 'coordinators', label: 'COORDINATORS', href: '#coordinators' },
   ];
 
-  const computeIsActive = (itemId) => {
-    if (isCoordinatorsPage) {
-      return itemId === 'coordinators';
-    }
-    return (activeSection || 'home') === itemId;
-  };
-
   const handleNavClick = (e, item) => {
     e.preventDefault();
-    setMobileOpen(false);
+    const isCoordinatorsPage = typeof window !== 'undefined' && window.location.pathname.toLowerCase().startsWith('/coordinators');
 
     if (item.id === 'coordinators') {
       if (isCoordinatorsPage) {
@@ -91,11 +97,13 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
       } else {
         window.location.href = '/coordinators';
       }
+      setMobileOpen(false);
       return;
     }
 
     if (isCoordinatorsPage) {
       window.location.href = `/${item.href}`;
+      setMobileOpen(false);
       return;
     }
 
@@ -110,25 +118,28 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
       if (target) target.scrollIntoView({ behavior: 'smooth' });
     } else if (onNavigate && item.id && item.href && item.href !== '#') {
       onNavigate(item.id);
-      const target = document.querySelector(item.href);
-      if (target) target.scrollIntoView({ behavior: 'smooth' });
     } else if (item.href && item.href !== '#') {
       const target = document.querySelector(item.href);
       if (target) target.scrollIntoView({ behavior: 'smooth' });
     }
+    setMobileOpen(false);
   };
 
   return (
-    <header className={`noctivus-navbar ${scrolled ? 'is-scrolled' : ''}`}>
+    <header
+      ref={headerRef}
+      className={`noctivus-navbar ${scrolled ? 'is-scrolled' : ''} ${isCollapsed ? 'is-collapsed-mode' : ''}`}
+    >
       <div className="navbar-container">
+
         {/* Left: Noctivus Brand Logo */}
-        <div className="navbar-brand-wrap">
+        <div ref={logoRef} className="navbar-brand-wrap">
           <a
             className="navbar-brand"
             href="/"
             onClick={(e) => {
               e.preventDefault();
-              if (isCoordinatorsPage) {
+              if (typeof window !== 'undefined' && window.location.pathname.toLowerCase().startsWith('/coordinators')) {
                 window.location.href = '/#home';
               } else {
                 handleNavClick(e, { id: 'home', href: '#home' });
@@ -141,10 +152,10 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
         </div>
 
         {/* Desktop Menu Strip */}
-        <nav className="menu" aria-label="Main Navigation">
+        <div ref={menuRef} className="menu" aria-label="Main Navigation">
           <ul className="menu-list">
             {navItems.map((item) => {
-              const isActive = computeIsActive(item.id);
+              const isActive = activeSection === item.id;
 
               return (
                 <li
@@ -162,7 +173,7 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
               );
             })}
 
-            {/* CTA Item inside desktop menu */}
+            {/* CTA Item inside menu */}
             <li className="menu-item menu-item-buy">
               <a
                 href="#register"
@@ -175,9 +186,9 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
               </a>
             </li>
           </ul>
-        </nav>
+        </div>
 
-        {/* Cyberpunk Mobile Hamburger Toggle Button */}
+        {/* Hamburger Button */}
         <button
           type="button"
           className={`cyber-hamburger-btn ${mobileOpen ? 'is-open' : ''}`}
@@ -194,7 +205,7 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
         </button>
       </div>
 
-      {/* Mobile Drawer Overlay */}
+      {/* Mobile / Collapsed Drawer */}
       {mobileOpen && (
         <>
           <div
@@ -206,7 +217,7 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
             <div className="drawer-inner">
               <ul className="drawer-menu-list">
                 {navItems.map((item) => {
-                  const isActive = computeIsActive(item.id);
+                  const isActive = activeSection === item.id;
 
                   return (
                     <li key={item.id} className="drawer-menu-item">

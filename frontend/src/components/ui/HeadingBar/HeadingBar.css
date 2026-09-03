@@ -5,16 +5,6 @@
   position: relative;
 }
 
-.heading-section-index {
-  display: block;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.85rem;
-  color: var(--lime);
-  letter-spacing: 0.15em;
-  margin-bottom: 0.4rem;
-  font-weight: 500;
-}
-
 .heading-container h1,
 .heading-container h2,
 .heading-container h3 {

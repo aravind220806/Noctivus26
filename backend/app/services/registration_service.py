@@ -259,6 +259,5 @@ def serialize_registration(registration: dict) -> dict:
         "isWalkIn": registration.get("isWalkIn", False),
         "verificationNotes": registration.get("verificationNotes"),
         "invitation": registration.get("invitation"),
-        "attendance": registration.get("attendance"),
         "createdAt": registration.get("createdAt"),
     }

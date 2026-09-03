@@ -8,7 +8,7 @@ export function CrewSection() {
       id: 'faculty',
       title: 'Faculty\nCoordinator',
       role: 'Department of CSE (Cyber Security)',
-      contact: 'hod.cyber@velammal.edu.in',
+      contact: 'faculty@velammal.edu.in',
       contactType: 'email',
       href: '/coordinators#faculty',
     },
@@ -24,7 +24,7 @@ export function CrewSection() {
       id: 'registration',
       title: 'Registration\nDesk',
       role: 'Payments and confirmations',
-      contact: 'ajaikaliyamoorthy@gmail.com',
+      contact: 'noctivus26@velammal.edu.in',
       contactType: 'email',
       href: '/coordinators#registration',
     },
@@ -33,7 +33,7 @@ export function CrewSection() {
   return (
     <section className="crew-section" id="coordinators">
       <div className="crew-container">
-        <HeadingBar level="h2" text="COORDINATORS" sectionIndex="05 / 05" />
+        <HeadingBar level="h2" text="COORDINATORS" />
 
         {/* 3 Coordinator Cards across full width */}
         <div className="crew-cards-grid">
@@ -78,6 +78,22 @@ export function CrewSection() {
                     {card.contact}
                   </a>
                 )}
+              </div>
+
+              {/* VIEW COORDINATORS Button */}
+              <div className="crew-card-action">
+                <a
+                  href={card.href}
+                  className="crew-view-btn"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <span className="crew-btn-corner tl" aria-hidden="true" />
+                  <span className="crew-btn-corner tr" aria-hidden="true" />
+                  <span className="crew-btn-corner bl" aria-hidden="true" />
+                  <span className="crew-btn-corner br" aria-hidden="true" />
+                  <span className="crew-btn-text">VIEW COORDINATORS</span>
+                  <span className="crew-btn-arrow" aria-hidden="true">→</span>
+                </a>
               </div>
             </article>
           ))}
