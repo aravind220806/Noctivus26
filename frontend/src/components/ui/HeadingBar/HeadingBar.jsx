@@ -7,9 +7,6 @@ export function HeadingBar({ level = 'h1', text, sectionIndex, children, classNa
 
   return (
     <div className={`heading-container ${className}`}>
-      {sectionIndex && (
-        <span className="heading-section-index">{sectionIndex}</span>
-      )}
       <Component>
         {content}
         <span className="heading-cursor">_</span>

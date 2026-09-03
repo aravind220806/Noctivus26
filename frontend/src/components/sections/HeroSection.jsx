@@ -25,7 +25,6 @@ export function HeroSection({ onRegister }) {
         }
         rightContent={
           <div className="hero-info-wrapper">
-            <span className="hero-eyebrow">{site.eyebrow}</span>
             <h1 className="hero-title">
               NOCTIVUS <span>'26</span>
             </h1>

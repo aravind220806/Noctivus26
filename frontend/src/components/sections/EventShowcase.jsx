@@ -90,7 +90,7 @@ export function EventShowcase({ onSelect, onRegister }) {
       aria-label="Event showcase navigator"
     >
       <div className="showcase-inner">
-        <HeadingBar level="h2" text="EVENT DOSSIER" sectionIndex="03 / 05" />
+        <HeadingBar level="h2" text="EVENT DOSSIER" />
 
         {/* ── Border wrapper (clip-path eats CSS border — use padding + bg instead) ── */}
         <div
