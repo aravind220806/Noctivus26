@@ -1,0 +1,198 @@
+<svg viewBox="0 0 1600 640" xmlns="http://www.w3.org/2000/svg" font-family="Arial, Helvetica, sans-serif">
+  <defs>
+    <clipPath id="footerClip">
+      <path d="M 20 12 L 1120 12 L 1220 65 L 1580 65 L 1600 90 L 1600 628 L 20 628 Z"/>
+    </clipPath>
+    <radialGradient id="mapFade" cx="35%" cy="45%" r="65%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#e0e0e0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- outer crop marks -->
+  <g stroke="#000000" stroke-width="1">
+    <line x1="0" y1="0" x2="0" y2="10"/>
+    <line x1="0" y1="0" x2="10" y2="0"/>
+    <line x1="1600" y1="0" x2="1600" y2="10"/>
+    <line x1="1590" y1="0" x2="1600" y2="0"/>
+    <line x1="0" y1="640" x2="0" y2="630"/>
+    <line x1="0" y1="640" x2="10" y2="640"/>
+    <line x1="1600" y1="640" x2="1600" y2="630"/>
+    <line x1="1590" y1="640" x2="1600" y2="640"/>
+    <line x1="798" y1="0" x2="798" y2="10"/>
+    <line x1="798" y1="630" x2="798" y2="640"/>
+    <line x1="0" y1="320" x2="10" y2="320"/>
+    <line x1="1590" y1="320" x2="1600" y2="320"/>
+  </g>
+
+  <!-- Main footer panel with diagonal top-right and top-left corner cuts -->
+  <g clip-path="url(#footerClip)">
+    <rect x="0" y="0" width="1600" height="640" fill="#050607"/>
+
+    <!-- lighter map area gradient -->
+    <rect x="380" y="0" width="1220" height="640" fill="url(#mapFade)" opacity="0.55"/>
+
+    <!-- hexagon wireframe -->
+    <g stroke="#ffffff" stroke-width="1.2" fill="none" opacity="0.4">
+      <polygon points="795,55 1150,65 1240,320 1150,555 795,545 705,320"/>
+      <line x1="795" y1="55" x2="795" y2="545"/>
+    </g>
+
+    <!-- crosshair plus grid (dot matrix map) -->
+    <g stroke="#ffffff" stroke-width="1.6" opacity="0.85">
+      <!-- rows approximating landmass shape -->
+      <g>
+        <line x1="1022" y1="228" x2="1030" y2="228"/><line x1="1026" y1="224" x2="1026" y2="232"/>
+        <line x1="952" y1="238" x2="960" y2="238"/><line x1="956" y1="234" x2="956" y2="242"/>
+        <line x1="980" y1="238" x2="988" y2="238"/><line x1="984" y1="234" x2="984" y2="242"/>
+        <line x1="1010" y1="238" x2="1018" y2="238"/><line x1="1014" y1="234" x2="1014" y2="242"/>
+
+        <line x1="804" y1="258" x2="812" y2="258"/><line x1="808" y1="254" x2="808" y2="262"/>
+        <line x1="832" y1="258" x2="840" y2="258"/><line x1="836" y1="254" x2="836" y2="262"/>
+        <line x1="860" y1="258" x2="868" y2="258"/><line x1="864" y1="254" x2="864" y2="262"/>
+        <line x1="944" y1="258" x2="952" y2="258"/><line x1="948" y1="254" x2="948" y2="262"/>
+        <line x1="972" y1="258" x2="980" y2="258"/><line x1="976" y1="254" x2="976" y2="262"/>
+
+        <line x1="828" y1="278" x2="836" y2="278"/><line x1="832" y1="274" x2="832" y2="282"/>
+        <line x1="856" y1="278" x2="864" y2="278"/><line x1="860" y1="274" x2="860" y2="282"/>
+        <line x1="884" y1="278" x2="892" y2="278"/><line x1="888" y1="274" x2="888" y2="282"/>
+        <line x1="912" y1="278" x2="920" y2="278"/><line x1="916" y1="274" x2="916" y2="282"/>
+        <line x1="940" y1="278" x2="948" y2="278"/><line x1="944" y1="274" x2="944" y2="282"/>
+
+        <line x1="800" y1="298" x2="808" y2="298"/><line x1="804" y1="294" x2="804" y2="302"/>
+        <line x1="828" y1="298" x2="836" y2="298"/><line x1="832" y1="294" x2="832" y2="302"/>
+        <line x1="856" y1="298" x2="864" y2="298"/><line x1="860" y1="294" x2="860" y2="302"/>
+        <line x1="884" y1="298" x2="892" y2="298"/><line x1="888" y1="294" x2="888" y2="302"/>
+        <line x1="912" y1="298" x2="920" y2="298"/><line x1="916" y1="294" x2="916" y2="302"/>
+        <line x1="940" y1="298" x2="948" y2="298"/><line x1="944" y1="294" x2="944" y2="302"/>
+        <line x1="968" y1="298" x2="976" y2="298"/><line x1="972" y1="294" x2="972" y2="302"/>
+        <line x1="996" y1="298" x2="1004" y2="298"/><line x1="1000" y1="294" x2="1000" y2="302"/>
+        <line x1="1024" y1="298" x2="1032" y2="298"/><line x1="1028" y1="294" x2="1028" y2="302"/>
+
+        <line x1="800" y1="318" x2="808" y2="318"/><line x1="804" y1="314" x2="804" y2="322"/>
+        <line x1="828" y1="318" x2="836" y2="318"/><line x1="832" y1="314" x2="832" y2="322"/>
+        <line x1="856" y1="318" x2="864" y2="318"/><line x1="860" y1="314" x2="860" y2="322"/>
+        <line x1="884" y1="318" x2="892" y2="318"/><line x1="888" y1="314" x2="888" y2="322"/>
+        <line x1="912" y1="318" x2="920" y2="318"/><line x1="916" y1="314" x2="916" y2="322"/>
+        <line x1="940" y1="318" x2="948" y2="318"/><line x1="944" y1="314" x2="944" y2="322"/>
+        <line x1="968" y1="318" x2="976" y2="318"/><line x1="972" y1="314" x2="972" y2="322"/>
+        <line x1="996" y1="318" x2="1004" y2="318"/><line x1="1000" y1="314" x2="1000" y2="322"/>
+
+        <line x1="828" y1="338" x2="836" y2="338"/><line x1="832" y1="334" x2="832" y2="342"/>
+        <line x1="856" y1="338" x2="864" y2="338"/><line x1="860" y1="334" x2="860" y2="342"/>
+        <line x1="884" y1="338" x2="892" y2="338"/><line x1="888" y1="334" x2="888" y2="342"/>
+        <line x1="912" y1="338" x2="920" y2="338"/><line x1="916" y1="334" x2="916" y2="342"/>
+        <line x1="940" y1="338" x2="948" y2="338"/><line x1="944" y1="334" x2="944" y2="342"/>
+        <line x1="968" y1="338" x2="976" y2="338"/><line x1="972" y1="334" x2="972" y2="342"/>
+
+        <line x1="856" y1="358" x2="864" y2="358"/><line x1="860" y1="354" x2="860" y2="362"/>
+        <line x1="884" y1="358" x2="892" y2="358"/><line x1="888" y1="354" x2="888" y2="362"/>
+        <line x1="912" y1="358" x2="920" y2="358"/><line x1="916" y1="354" x2="916" y2="362"/>
+        <line x1="940" y1="358" x2="948" y2="358"/><line x1="944" y1="354" x2="944" y2="362"/>
+
+        <line x1="884" y1="378" x2="892" y2="378"/><line x1="888" y1="374" x2="888" y2="382"/>
+        <line x1="912" y1="378" x2="920" y2="378"/><line x1="916" y1="374" x2="916" y2="382"/>
+        <line x1="940" y1="378" x2="948" y2="378"/><line x1="944" y1="374" x2="944" y2="382"/>
+
+        <line x1="912" y1="398" x2="920" y2="398"/><line x1="916" y1="394" x2="916" y2="402"/>
+        <line x1="940" y1="398" x2="948" y2="398"/><line x1="944" y1="394" x2="944" y2="402"/>
+
+        <line x1="912" y1="418" x2="920" y2="418"/><line x1="916" y1="414" x2="916" y2="422"/>
+      </g>
+    </g>
+
+    <!-- small square telemetry marks -->
+    <g fill="none" stroke="#ffffff" opacity="0.35">
+      <rect x="592" y="223" width="8" height="8"/>
+      <rect x="342" y="450" width="8" height="8"/>
+      <rect x="494" y="505" width="8" height="8"/>
+      <rect x="1200" y="437" width="8" height="8"/>
+      <rect x="1340" y="480" width="8" height="8"/>
+    </g>
+    <g stroke="#ffffff" stroke-width="1" opacity="0.4">
+      <line x1="565" y1="220" x2="590" y2="220"/>
+      <line x1="565" y1="228" x2="590" y2="228"/>
+      <line x1="565" y1="236" x2="590" y2="236"/>
+      <line x1="315" y1="447" x2="340" y2="447"/>
+      <line x1="315" y1="455" x2="340" y2="455"/>
+      <line x1="315" y1="463" x2="340" y2="463"/>
+      <line x1="467" y1="502" x2="492" y2="502"/>
+      <line x1="467" y1="510" x2="492" y2="510"/>
+      <line x1="1173" y1="434" x2="1198" y2="434"/>
+      <line x1="1173" y1="442" x2="1198" y2="442"/>
+      <line x1="1313" y1="477" x2="1338" y2="477"/>
+      <line x1="1313" y1="485" x2="1338" y2="485"/>
+    </g>
+
+    <!-- vertical bar element -->
+    <rect x="1063" y="255" width="8" height="35" fill="#ffffff" opacity="0.6"/>
+
+    <!-- small colored accent dot -->
+    <circle cx="1390" cy="291" r="4" fill="#ffffff"/>
+
+    <!-- faint circle -->
+    <circle cx="1345" cy="565" r="30" fill="#ffffff" opacity="0.1"/>
+
+    <!-- logo mark (angular bird/shield) -->
+    <g transform="translate(28,28)" fill="#ffffff">
+      <path d="M0,0 L55,0 L67,90 L82,45 L100,90 L112,0 L167,0 L133,168 L100,110 L67,168 Z"/>
+    </g>
+
+    <!-- headline -->
+    <text x="30" y="315" fill="#ffffff" font-size="66" font-weight="900" font-style="italic" letter-spacing="-1">FOREVER</text>
+    <text x="30" y="378" fill="#ffffff" font-size="66" font-weight="900" font-style="italic" letter-spacing="-1">FEARLESS</text>
+
+    <!-- more telemetry marks lower left -->
+    <g stroke="#ffffff" stroke-width="1" opacity="0.4">
+      <line x1="303" y1="452" x2="328" y2="452"/>
+      <line x1="303" y1="460" x2="328" y2="460"/>
+      <line x1="303" y1="468" x2="328" y2="468"/>
+    </g>
+    <rect x="330" y="450" width="8" height="8" fill="none" stroke="#ffffff" opacity="0.4"/>
+    <g stroke="#ffffff" stroke-width="1" opacity="0.4">
+      <line x1="463" y1="500" x2="488" y2="500"/>
+      <line x1="463" y1="508" x2="488" y2="508"/>
+    </g>
+    <rect x="490" y="498" width="8" height="8" fill="none" stroke="#ffffff" opacity="0.4"/>
+    <g stroke="#ffffff" stroke-width="1" opacity="0.4">
+      <line x1="1183" y1="432" x2="1208" y2="432"/>
+      <line x1="1183" y1="440" x2="1208" y2="440"/>
+    </g>
+    <rect x="1210" y="430" width="8" height="8" fill="none" stroke="#ffffff" opacity="0.4"/>
+    <g stroke="#ffffff" stroke-width="1" opacity="0.4">
+      <line x1="1323" y1="475" x2="1348" y2="475"/>
+      <line x1="1323" y1="483" x2="1348" y2="483"/>
+    </g>
+    <rect x="1350" y="473" width="8" height="8" fill="none" stroke="#ffffff" opacity="0.4"/>
+
+    <!-- mouse cursor -->
+    <path d="M1233,95 L1233,120 L1240,113 L1245,124 L1250,122 L1245,111 L1254,111 Z" fill="#ffffff"/>
+
+    <!-- copyright text -->
+    <text x="800" y="625" fill="#ffffff" font-size="14" letter-spacing="1" text-anchor="middle" font-family="'Courier New', monospace" opacity="0.5">&#169; 2026 REBELLION INDUSTRIES // BUILD 04.26</text>
+
+    <!-- social icon buttons -->
+    <rect x="1275" y="550" width="90" height="72" fill="#ffffff" opacity="0.1"/>
+    <rect x="1373" y="550" width="90" height="72" fill="#ffffff" opacity="0.1"/>
+    <rect x="1471" y="550" width="90" height="72" fill="#ffffff" opacity="0.1"/>
+
+    <!-- X icon -->
+    <g transform="translate(1305,573)" fill="#ffffff">
+      <path d="M2,0 L11,0 L15,7 L20,0 L24,0 L17,10 L25,26 L16,26 L11,17 L5,26 L0,26 L8,15 Z"/>
+    </g>
+    <!-- LinkedIn icon -->
+    <g transform="translate(1400,573)">
+      <rect x="0" y="0" width="26" height="26" rx="4" fill="#ffffff" opacity="0"/>
+      <rect x="1" y="8" width="6" height="18" fill="#ffffff"/>
+      <circle cx="4" cy="2.5" r="3.5" fill="#ffffff"/>
+      <path d="M11,8 h6 v3 c1.5,-2.5 4,-3.5 7,-3.5 c5,0 7,3 7,8.5 V26 h-6 V17 c0,-2.5 -0.8,-4 -3,-4 c-2.2,0 -3.5,1.5 -3.5,4.3 V26 h-6 Z" fill="#ffffff"/>
+    </g>
+    <!-- YouTube icon -->
+    <g transform="translate(1498,565)">
+      <rect x="0" y="8" width="42" height="26" rx="7" fill="#ffffff"/>
+      <path d="M17,15 L28,21 L17,27 Z" fill="#050607"/>
+    </g>
+  </g>
+
+  <path d="M 20 12 L 1120 12 L 1220 65 L 1580 65 L 1600 90 L 1600 628 L 20 628 Z" fill="none" stroke="#000000" stroke-width="1"/>
+</svg>

@@ -119,6 +119,15 @@ def validate_registration(input_data: dict | None, configured_events: list[dict]
                 errors.append(f"Every {configured['name']} team member needs a name.")
             if too_long(member_name, 80) or too_long(member_roll, 40):
                 errors.append(f"{configured['name']} team member details are too long.")
+        ev_abstract = normalize_text(
+            (submitted or {}).get("abstract")
+            or (submitted or {}).get("igniteTopic")
+            or participant.get("igniteTopic")
+            or participant.get("abstract")
+            or data.get("igniteTopic")
+            or data.get("abstract")
+            or ""
+        )[:200]
         event_registrations.append({
             "eventId": configured["id"],
             "eventName": configured["name"],
@@ -127,12 +136,22 @@ def validate_registration(input_data: dict | None, configured_events: list[dict]
             "teamSize": team_size,
             "teamSizeMin": configured["teamMin"],
             "teamSizeMax": configured["teamMax"],
+            "abstract": ev_abstract if (configured["id"] == "ignite" or ev_abstract) else "",
             "teamMembers": [{"name": normalize_text(member.get("name")).upper(), "rollNo": normalize_text(member.get("rollNo")).upper()} for member in members if isinstance(member, dict)],
         })
 
-    expected_amount = sum(event["feeSnapshot"] for event in event_registrations)
+    # Flat registration fee of ₹150 covers symposium admission for up to 2 events
+    expected_amount = 150 if event_registrations else 0
     if data.get("claimedAmount") != expected_amount:
         errors.append("Registration amount does not match the configured event fees.")
+
+    overall_abstract = normalize_text(
+        data.get("abstract")
+        or data.get("igniteTopic")
+        or participant.get("abstract")
+        or participant.get("igniteTopic")
+        or next((e["abstract"] for e in event_registrations if e.get("abstract")), "")
+    )[:200]
 
     return {
         "valid": not errors,
@@ -144,7 +163,11 @@ def validate_registration(input_data: dict | None, configured_events: list[dict]
                 "phone": phone,
                 "college": college,
                 "foodPreference": food_preference,
+                "igniteTopic": overall_abstract,
+                "abstract": overall_abstract,
             },
+            "abstract": overall_abstract,
+            "igniteTopic": overall_abstract,
             "normalized": {"email": email, "phone": phone, "rollNo": ""},
             "eventRegistrations": event_registrations,
             "utrNumber": utr_number,

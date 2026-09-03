@@ -1,0 +1,208 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   EVENTS SECTION & CARDS STYLES
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.events-section {
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  box-sizing: border-box;
+  padding: 4rem 1.5rem;
+  position: relative;
+  scroll-margin-top: 70px;
+}
+
+@media (min-width: 768px) {
+  .events-section {
+    padding: 4rem 3.5rem;
+  }
+}
+
+/* --- Filter Bar --- */
+.event-filters {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 3rem;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+}
+
+/* --- Events Grid --- */
+.events-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+@media (min-width: 701px) and (max-width: 980px) {
+  .events-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 981px) {
+  .events-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .grid-span-2 {
+    grid-column: span 2;
+  }
+
+  .grid-span-3 {
+    grid-column: span 3;
+  }
+}
+
+/* --- Event Card --- */
+.event-card {
+  background: var(--surface);
+  border: 1px solid var(--accent, var(--cyan));
+  box-shadow: 0 0 16px -4px var(--accent, var(--cyan)), inset 0 0 24px -12px var(--accent, var(--cyan));
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  text-decoration: none;
+  color: var(--text);
+  box-sizing: border-box;
+}
+
+.event-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 24px var(--accent, var(--cyan));
+}
+
+.event-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 1.5rem 0.5rem;
+}
+
+.event-card-index {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.event-card-category {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--accent, var(--cyan));
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.event-card-body {
+  padding: 0.5rem 1.5rem 1.5rem;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.event-card-title {
+  font-family: 'Aldrich', sans-serif;
+  font-weight: 400;
+  font-size: 1.5rem;
+  margin: 0;
+  color: var(--text);
+  text-transform: uppercase;
+}
+
+.event-card-desc {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.event-card-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.event-card-meta {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--text);
+}
+
+.event-card-cta {
+  font-family: 'Aldrich', sans-serif;
+  font-size: 0.8rem;
+  color: var(--accent, var(--cyan));
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SVG DESIGN PATTERNS — Diagonal Clips, Node Markers, Coordinate Tags
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.event-card {
+  clip-path: polygon(0 0, 95% 0, 100% 5%, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+  position: relative;
+}
+
+/* Node marker at card top-right corner */
+.event-card::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 4px;
+  height: 4px;
+  background: var(--accent, var(--cyan));
+  border-radius: 50%;
+  opacity: 0.6;
+  z-index: 5;
+}
+
+/* Coordinate tag (event index as micro-label) */
+.event-card-index::after {
+  content: attr(data-coord);
+  display: block;
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+/* Events section divider with grid break */
+.events-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -24px;
+  right: -24px;
+  height: 1px;
+  background: var(--line);
+  z-index: 2;
+}
+
+/* Telemetry mark scattered in section (faint, decorative) */
+.events-section::after {
+  content: '';
+  position: absolute;
+  top: 8%;
+  right: 3%;
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--muted);
+  opacity: 0.3;
+  z-index: 1;
+}

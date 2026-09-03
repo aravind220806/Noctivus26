@@ -1,0 +1,36 @@
+.text-type {
+  display: block;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: inherit;
+  font-size: inherit;
+  color: var(--text);
+}
+
+.text-type__content {
+  display: inline;
+  color: inherit;
+}
+
+.text-type__cursor {
+  margin-left: 0.15rem;
+  display: inline-block;
+  opacity: 0.8;
+  color: var(--text);
+  text-shadow: 0 0 8px rgba(232, 237, 232, 0.4);
+  animation: cursor-blink 0.8s ease-in-out infinite;
+  font-weight: normal;
+}
+
+.text-type__cursor--hidden {
+  display: none;
+}
+
+@keyframes cursor-blink {
+  0%, 49% {
+    opacity: 1;
+  }
+  50%, 100% {
+    opacity: 0;
+  }
+}

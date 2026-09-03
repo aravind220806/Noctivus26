@@ -1,9 +1,9 @@
 import hashlib
-import re
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 
 from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi.responses import JSONResponse
 from pymongo import ReturnDocument
 
 from app.core.rate_limit import limiter
@@ -21,19 +21,25 @@ from app.services.registration_service import (
 router = APIRouter()
 
 
-async def find_registration_by_token_or_id(token_or_id: str) -> dict | None:
-    clean = token_or_id.strip()
+async def find_registration_by_qr_token(token: str) -> dict | None:
+    """Public lookup — accepts only high-entropy QR tokens, never human registration IDs."""
+    clean = token.strip()
+    if clean.upper().startswith("NOC26-") or len(clean) < 12:
+        return None
+
     parsed = urlparse(clean)
     if parsed.path:
         candidate = parsed.path.rstrip("/").split("/")[-1]
         if candidate:
+            if candidate.upper().startswith("NOC26-") or len(candidate) < 12:
+                return None
             clean = candidate
+
     token_hash = hashlib.sha256(clean.encode("utf-8")).hexdigest()
 
     if mongo.mongo_ready():
-        reg = await mongo.db.registrations.find_one({
+        return await mongo.db.registrations.find_one({
             "$or": [
-                {"registrationId": {"$regex": f"^{re.escape(clean)}$", "$options": "i"}},
                 {"invitation.qrHash": token_hash},
                 {"invitation.qrHash": clean},
                 {"invitation.qrToken": clean},
@@ -41,21 +47,25 @@ async def find_registration_by_token_or_id(token_or_id: str) -> dict | None:
                 {"qrToken": clean},
             ]
         })
-        return reg
 
-    clean_lower = clean.lower()
     for item in memory_registrations:
-        reg_id = str(item.get("registrationId") or "").lower()
         qr_hash = str((item.get("invitation") or {}).get("qrHash") or item.get("qrHash") or "")
         qr_token = str((item.get("invitation") or {}).get("qrToken") or item.get("qrToken") or "")
-        if reg_id == clean_lower or qr_hash == token_hash or qr_token == clean:
+        if (qr_hash and qr_hash == token_hash) or (qr_token and qr_token == clean):
             return item
     return None
 
 
 @router.get("/health")
 async def health():
-    return {"ok": True, "database": "mongo" if mongo_ready() else "memory"}
+    if not mongo.mongo_ready():
+        return {"status": "ok", "database": "memory"}
+    if not await mongo.ping_mongo():
+        return JSONResponse(
+            status_code=503,
+            content={"status": "degraded", "database": "unavailable"},
+        )
+    return {"status": "ok", "database": "mongo"}
 
 
 @router.get("/events")
@@ -64,7 +74,7 @@ async def events():
 
 
 @router.post("/utr/check")
-@limiter.limit("1200/minute")
+@limiter.limit("60/minute")
 async def utr_check(request: Request, response: Response):
     payload = await request.json()
     status_code, body = await check_utr_availability((payload or {}).get("utrNumber"))
@@ -73,9 +83,10 @@ async def utr_check(request: Request, response: Response):
 
 
 @router.post("/register")
-@limiter.limit("1000/minute")
+@limiter.limit("30/minute")
 async def register(request: Request, response: Response):
-    status_code, body = await create_registration(await request.json())
+    idempotency_key = request.headers.get("idempotency-key") or None
+    status_code, body = await create_registration(await request.json(), idempotency_key=idempotency_key)
     response.status_code = status_code
     return body
 
@@ -83,7 +94,7 @@ async def register(request: Request, response: Response):
 @router.get("/p/{token_or_id}")
 @limiter.limit("60/minute")
 async def get_pass_details(request: Request, token_or_id: str):
-    reg = await find_registration_by_token_or_id(token_or_id)
+    reg = await find_registration_by_qr_token(token_or_id)
     if not reg:
         raise HTTPException(status_code=404, detail="Boarding pass not found or invalid.")
 
@@ -124,7 +135,7 @@ async def get_pass_details(request: Request, token_or_id: str):
 @router.post("/p/{token_or_id}/check-in")
 @limiter.limit("20/minute")
 async def public_check_in(request: Request, token_or_id: str):
-    reg = await find_registration_by_token_or_id(token_or_id)
+    reg = await find_registration_by_qr_token(token_or_id)
     if not reg:
         raise HTTPException(status_code=404, detail="Registration not found.")
     if reg.get("paymentStatus") != "confirmed":

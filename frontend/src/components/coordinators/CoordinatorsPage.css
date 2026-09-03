@@ -1,0 +1,334 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   NOCTIVUS ’26 — COORDINATORS PERSONNEL DATABASE PAGE STYLES
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.noc-database-page {
+  min-height: 100vh;
+  background: var(--bg, #02090D);
+  color: var(--text, #EAF6F5);
+  position: relative;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.noc-database-main {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 100px 1.5rem 6rem;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .noc-database-main {
+    padding: 120px 3rem 8rem;
+  }
+}
+
+/* ── Page Hero ── */
+.noc-db-hero {
+  position: relative;
+  padding: 2.5rem 0 3rem;
+  border-bottom: 1px solid rgba(167, 255, 24, 0.25);
+  margin-bottom: 2.5rem;
+}
+
+.noc-db-telemetry-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  color: #62758d;
+  letter-spacing: 0.12em;
+  margin-bottom: 1.25rem;
+}
+
+.noc-telemetry-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(4, 16, 24, 0.8);
+  border: 1px solid rgba(167, 255, 24, 0.25);
+  padding: 0.35rem 0.75rem;
+}
+
+.noc-telemetry-badge.is-live {
+  color: #A7FF18;
+  border-color: rgba(167, 255, 24, 0.5);
+}
+
+.noc-telemetry-badge.is-live::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #A7FF18;
+  box-shadow: 0 0 8px #A7FF18;
+  display: inline-block;
+}
+
+.noc-db-eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
+  color: #A7FF18;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.noc-db-title {
+  font-family: 'Aldrich', sans-serif;
+  font-size: clamp(2.2rem, 5.5vw, 4.2rem);
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.05;
+  letter-spacing: 0.03em;
+  margin: 0 0 0.75rem 0;
+  text-transform: uppercase;
+}
+
+.noc-db-cursor {
+  color: #A7FF18;
+  animation: noc-cursor-blink 1s step-end infinite;
+  display: inline-block;
+}
+
+@keyframes noc-cursor-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.noc-db-subtitle {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: clamp(0.85rem, 1.4vw, 1.05rem);
+  color: #7C8BA1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+/* ── Category Navigation Bar ── */
+.noc-cat-nav-wrapper {
+  position: sticky;
+  top: 70px;
+  z-index: 40;
+  background: rgba(2, 9, 13, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(167, 255, 24, 0.2);
+  border-bottom: 1px solid rgba(167, 255, 24, 0.3);
+  padding: 0.85rem 0;
+  margin: 0 -1.5rem 3.5rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .noc-cat-nav-wrapper {
+    margin: 0 -3rem 4rem;
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+}
+
+.noc-cat-nav-strip {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.noc-cat-nav-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.noc-cat-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #7C8BA1;
+  text-decoration: none;
+  padding: 0.5rem 1.1rem;
+  border: 1px solid rgba(167, 255, 24, 0.3);
+  background: rgba(4, 16, 24, 0.6);
+  letter-spacing: 0.12em;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.noc-cat-btn:hover {
+  color: #A7FF18;
+  border-color: rgba(167, 255, 24, 0.7);
+  box-shadow: 0 0 12px rgba(167, 255, 24, 0.25);
+}
+
+.noc-cat-btn.is-active {
+  color: #02090D;
+  background: #A7FF18;
+  border-color: #A7FF18;
+  box-shadow: 0 0 16px rgba(167, 255, 24, 0.45);
+}
+
+.noc-cat-btn.is-active .noc-cat-bracket {
+  color: #02090D;
+}
+
+.noc-cat-bracket {
+  color: #A7FF18;
+  transition: color 0.2s ease;
+}
+
+.noc-cat-active-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #02090D;
+  display: inline-block;
+}
+
+/* ── Section Structure ── */
+.noc-coord-section {
+  scroll-margin-top: 180px;
+  padding-top: 1.5rem;
+  padding-bottom: 5rem;
+}
+
+.noc-coord-section-header {
+  margin-bottom: 2.5rem;
+  padding-top: 0.5rem;
+}
+
+.noc-coord-section-idx {
+  display: block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
+  color: #A7FF18;
+  letter-spacing: 0.16em;
+  margin-bottom: 0.35rem;
+  font-weight: 600;
+}
+
+.noc-coord-heading-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.noc-coord-section-title {
+  font-family: 'Aldrich', sans-serif;
+  font-size: clamp(1.6rem, 3.2vw, 2.6rem);
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.04em;
+  margin: 0;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .noc-coord-heading-row {
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .noc-coord-section-title {
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.15;
+  }
+
+  .noc-coord-header-line {
+    min-width: 24px;
+    margin-top: 0.6rem;
+  }
+
+  .noc-coord-section-header {
+    margin-bottom: 1.5rem;
+  }
+}
+
+.noc-coord-cursor {
+  color: #A7FF18;
+}
+
+.noc-coord-header-line {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  position: relative;
+  height: 6px;
+}
+
+.noc-line-head {
+  width: 12px;
+  height: 6px;
+  background: #A7FF18;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+  margin-right: 4px;
+}
+
+.noc-line-body {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(167, 255, 24, 0.8) 0%,
+    rgba(167, 255, 24, 0.2) 60%,
+    transparent 100%
+  );
+}
+
+/* ── Cards Grid ── */
+.noc-coord-cards-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 530px);
+  justify-content: center;
+  gap: 2.75rem;
+  justify-items: center;
+}
+
+@media (min-width: 1150px) {
+  .noc-coord-cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 530px));
+    gap: 3rem 4.25rem;
+  }
+}
+
+/* ── Technical Divider between sections ── */
+.noc-technical-divider {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 3.5rem 0 5rem;
+  position: relative;
+  height: 14px;
+  color: rgba(167, 255, 24, 0.4);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+}
+
+.noc-tech-divider-line {
+  flex: 1;
+  height: 1px;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(167, 255, 24, 0.35) 0px,
+    rgba(167, 255, 24, 0.35) 12px,
+    transparent 12px,
+    transparent 18px
+  );
+}
+
+.noc-tech-divider-mark {
+  padding: 0 0.8rem;
+  color: #A7FF18;
+  letter-spacing: 0.2em;
+}

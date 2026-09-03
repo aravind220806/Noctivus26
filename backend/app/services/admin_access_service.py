@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from app.core.config import settings
 from app.db.memory_store import memory_admin_access
 from app.db import mongo
+from app.db.sqlite_db import sqlite_db
 
 ADMIN_TABS = ["Dashboard", "Verify Members", "Check-in", "Events", "Event Scheduler", "Invitations", "Announcements", "AI Analysis", "Export", "Audit Log", "Admin Access"]
 
@@ -38,9 +39,17 @@ async def resolve_admin_access(email: str) -> dict | None:
                 if tabs:
                     return {"email": normalized, "tabs": tabs, "owner": False, "active": True}
     except Exception as error:
-        print(f"Mongo admin access lookup failed; using memory fallback: {error}")
+        print(f"Mongo admin access lookup failed; using SQLite/memory: {error}")
         mongo.client = None
         mongo.db = None
+
+    if sqlite_db.ready():
+        access = await sqlite_db.get("admin_access", normalized)
+        if access and access.get("active", True):
+            tabs = normalize_admin_tabs(access.get("tabs"))
+            if tabs:
+                return {"email": normalized, "tabs": tabs, "owner": False, "active": True}
+
     access = next((item for item in memory_admin_access if item.get("email") == normalized and item.get("active", True)), None)
     if not access:
         return None
@@ -65,9 +74,22 @@ async def list_admin_access() -> list[dict]:
                 "updatedBy": item.get("updatedBy"),
             } for item in delegated]
     except Exception as error:
-        print(f"Mongo admin access list failed; using memory fallback: {error}")
+        print(f"Mongo admin access list failed; using SQLite/memory: {error}")
         mongo.client = None
         mongo.db = None
+
+    if sqlite_db.ready():
+        delegated = await sqlite_db.list_all("admin_access", order="desc")
+        return owner_users + [{
+            "email": item.get("email"),
+            "name": item.get("name") or "",
+            "tabs": normalize_admin_tabs(item.get("tabs")),
+            "active": item.get("active", True) is not False,
+            "owner": False,
+            "updatedAt": item.get("updatedAt"),
+            "updatedBy": item.get("updatedBy"),
+        } for item in delegated]
+
     delegated = sorted(memory_admin_access, key=lambda item: item.get("updatedAt") or datetime.min.replace(tzinfo=timezone.utc), reverse=True)
     return owner_users + [{
         "email": item.get("email"),
@@ -81,17 +103,29 @@ async def list_admin_access() -> list[dict]:
 
 
 async def upsert_admin_access(email: str, name: str, tabs: list[str], active: bool, actor: str) -> dict:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).isoformat()
     record = {"email": email, "name": str(name or "")[:80], "tabs": tabs, "active": active, "updatedBy": actor, "updatedAt": now}
-    try:
-        if mongo.mongo_ready():
+    if mongo.mongo_ready():
+        try:
             await mongo.db.admin_access.update_one({"email": email}, {"$set": record, "$setOnInsert": {"createdBy": actor, "createdAt": now}}, upsert=True)
             user = await mongo.db.admin_access.find_one({"email": email})
             return {**user, "tabs": normalize_admin_tabs(user.get("tabs")), "owner": False}
-    except Exception as error:
-        print(f"Mongo admin access save failed; using memory fallback: {error}")
-        mongo.client = None
-        mongo.db = None
+        except Exception as error:
+            print(f"Mongo admin access save failed: {error}")
+            mongo.client = None
+            mongo.db = None
+
+    if sqlite_db.ready():
+        existing = await sqlite_db.get("admin_access", email)
+        if not existing:
+            record["createdBy"] = actor
+            record["createdAt"] = now
+        else:
+            record["createdBy"] = existing.get("createdBy", actor)
+            record["createdAt"] = existing.get("createdAt", now)
+        await sqlite_db.upsert("admin_access", email, record)
+        return {**record, "tabs": normalize_admin_tabs(record.get("tabs")), "owner": False}
+
     user = next((item for item in memory_admin_access if item.get("email") == email), None)
     if user:
         user.update(record)
@@ -102,14 +136,23 @@ async def upsert_admin_access(email: str, name: str, tabs: list[str], active: bo
 
 
 async def deactivate_admin_access(email: str, actor: str) -> None:
-    try:
-        if mongo.mongo_ready():
-            await mongo.db.admin_access.update_one({"email": email}, {"$set": {"active": False, "updatedBy": actor, "updatedAt": datetime.now(timezone.utc)}})
+    now = datetime.now(timezone.utc).isoformat()
+    if mongo.mongo_ready():
+        try:
+            await mongo.db.admin_access.update_one({"email": email}, {"$set": {"active": False, "updatedBy": actor, "updatedAt": now}})
             return
-    except Exception as error:
-        print(f"Mongo admin access deletion failed; using memory fallback: {error}")
-        mongo.client = None
-        mongo.db = None
+        except Exception as error:
+            print(f"Mongo admin access deletion failed: {error}")
+            mongo.client = None
+            mongo.db = None
+
+    if sqlite_db.ready():
+        existing = await sqlite_db.get("admin_access", email)
+        if existing:
+            existing.update({"active": False, "updatedBy": actor, "updatedAt": now})
+            await sqlite_db.upsert("admin_access", email, existing)
+            return
+
     existing = next((item for item in memory_admin_access if item.get("email") == email), None)
     if existing:
-        existing.update({"active": False, "updatedBy": actor, "updatedAt": datetime.now(timezone.utc)})
+        existing.update({"active": False, "updatedBy": actor, "updatedAt": now})

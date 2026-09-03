@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import Icon from './Icon.jsx';
 import { getApiBase } from '../lib/api';
+import { NotchedButton } from './ui/NotchedButton/NotchedButton';
+import { HudCorners } from './ui/HudCorners/HudCorners';
+import './RegistrationModal.css';
 
 const emptyForm = { name: '', college: '', phone: '', email: '', foodPreference: '' };
 
@@ -10,13 +12,24 @@ const createPaymentReference = () => {
   return `NOC26-${timestamp}-${random}`.slice(0, 35);
 };
 
+const isCategoryTech = (cat) => {
+  const c = String(cat || '').toLowerCase().trim();
+  return c === 'technical' || c === 'tech' || c === 'workshop';
+};
+
+const isCategoryNonTech = (cat) => {
+  const c = String(cat || '').toLowerCase().trim();
+  return c === 'non-technical' || c === 'non-tech' || c === 'non technical';
+};
+
 export default function RegistrationModal({ events, registrationOpen, initialEventId, onClose }) {
   const closeButtonRef = useRef(null);
   const [step, setStep] = useState(1);
   const [form, setForm] = useState(emptyForm);
   const initialEvent = events.find((event) => event.id === initialEventId);
-  const [technicalEventId, setTechnicalEventId] = useState(initialEvent?.category === 'Technical' ? initialEventId : '');
-  const [nonTechnicalEventId, setNonTechnicalEventId] = useState(initialEvent?.category === 'Non-technical' ? initialEventId : '');
+  const [technicalEventId, setTechnicalEventId] = useState(isCategoryTech(initialEvent?.category) ? initialEventId : '');
+  const [nonTechnicalEventId, setNonTechnicalEventId] = useState(isCategoryNonTech(initialEvent?.category) ? initialEventId : '');
+  const [igniteAbstract, setIgniteAbstract] = useState('');
   const [paymentReference] = useState(createPaymentReference);
   const [paymentStarted, setPaymentStarted] = useState(false);
   const [utr, setUtr] = useState('');
@@ -54,14 +67,14 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
     }
   };
 
-  const technicalEvents = useMemo(() => (events || []).filter((event) => event.category === 'Technical'), [events]);
-  const nonTechnicalEvents = useMemo(() => (events || []).filter((event) => event.category === 'Non-technical'), [events]);
+  const technicalEvents = useMemo(() => (events || []).filter((event) => isCategoryTech(event.category)), [events]);
+  const nonTechnicalEvents = useMemo(() => (events || []).filter((event) => isCategoryNonTech(event.category)), [events]);
   const selectedTechnicalEvent = useMemo(() => (events || []).find((event) => event.id === technicalEventId), [technicalEventId, events]);
   const selectedNonTechnicalEvent = useMemo(() => (events || []).find((event) => event.id === nonTechnicalEventId), [nonTechnicalEventId, events]);
-  const ctfSelected = technicalEventId === 'cyber-heist-ctf';
+  const ctfSelected = technicalEventId === 'ctf' || technicalEventId === 'cyber-heist-ctf';
   const selectedEvents = useMemo(() => [selectedTechnicalEvent, ctfSelected ? null : selectedNonTechnicalEvent].filter(Boolean), [ctfSelected, selectedNonTechnicalEvent, selectedTechnicalEvent]);
   const selectedEventNames = selectedEvents.map((event) => event.name).join(' + ');
-  const amount = selectedEvents.length ? 200 : 0;
+  const amount = selectedEvents.length ? 150 : 0;
   const upiId = (import.meta.env.VITE_UPI_ID || '').trim() || 'noctivus2026@okhdfcbank';
   const payee = (import.meta.env.VITE_UPI_PAYEE || '').trim() || 'Noctivus 26';
   const paymentConfigured = Boolean(upiId) || import.meta.env.DEV;
@@ -97,7 +110,7 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
       width: 260,
       margin: 2,
       errorCorrectionLevel: 'M',
-      color: { dark: '#0a1224', light: '#ffffff' },
+      color: { dark: '#0c0a09', light: '#ffffff' },
     })).then((url) => active && setQrDataUrl(url)).catch(() => active && setError('The payment QR could not be generated. Use the UPI app button instead.'));
     return () => { active = false; };
   }, [step, upiLink]);
@@ -109,7 +122,7 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
     import('qrcode').then(({ toDataURL }) => toDataURL(receipt.registrationId, {
       width: 180,
       margin: 1,
-      color: { dark: rootStyles.getPropertyValue('--bg').trim(), light: rootStyles.getPropertyValue('--text').trim() },
+      color: { dark: '#0c0a09', light: '#e8ede8' },
     })).then((url) => active && setReceiptQrDataUrl(url)).catch(() => {});
     return () => { active = false; };
   }, [receipt]);
@@ -162,6 +175,12 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
 
   const continueToReview = () => {
     if (!selectedEvents.length) return setError('Choose at least one event, or choose Nil only if you are not registering for events.');
+    if (technicalEventId === 'ignite' && !igniteAbstract.trim()) {
+      return setError('Please enter your project idea or abstract for IGNITE (up to 200 characters).');
+    }
+    if (technicalEventId === 'ignite' && igniteAbstract.length > 200) {
+      return setError('IGNITE abstract must not exceed 200 characters.');
+    }
     setError('');
     setStep(3);
   };
@@ -192,8 +211,14 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
             college: form.college.trim().toUpperCase(),
             phone: form.phone.replace(/\D/g, ''),
             email: form.email.trim().toLowerCase(),
+            igniteTopic: technicalEventId === 'ignite' ? igniteAbstract.trim() : '',
           },
-          events: selectedEvents.map((item) => ({ eventId: item.id, teamSize: 1, teamMembers: [] })),
+          events: selectedEvents.map((item) => ({
+            eventId: item.id,
+            teamSize: 1,
+            teamMembers: [],
+            abstract: item.id === 'ignite' ? igniteAbstract.trim() : undefined,
+          })),
           paymentReference,
           utrNumber: utr,
           claimedAmount: amount,
@@ -211,253 +236,382 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
   };
 
   return (
-    <div className="modal-shell" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-      <section className="registration-modal" role="dialog" aria-modal="true" aria-labelledby="registration-title">
-        <header className="registration-modal__header">
-          <div><span className="kicker">EVENT REGISTRATION</span><h2 id="registration-title">{receipt ? 'Registration received.' : step === 1 ? 'Fill details.' : step === 2 ? 'Choose events.' : step === 3 ? 'Verify details.' : 'Complete payment.'}</h2></div>
-          <button ref={closeButtonRef} className="icon-button" onClick={onClose} aria-label="Close registration"><Icon name="close" /></button>
-        </header>
-
-        {!receipt && <div className="registration-progress" aria-label={`Registration step ${step} of 4`}><span className={step >= 1 ? 'active' : ''}>Details</span><span className={step >= 2 ? 'active' : ''}>Events</span><span className={step >= 3 ? 'active' : ''}>Verify</span><span className={step >= 4 ? 'active' : ''}>Payment</span></div>}
-
-        {!registrationOpen && <div className="registration-body registration-closed"><span className="kicker">Registration status</span><h3>Entries open soon.</h3><p>The form is ready, but organizers have not enabled live submissions yet.</p><button className="button button-primary" type="button" onClick={onClose}>Return to events <Icon name="arrow" /></button></div>}
-
-        {registrationOpen && !receipt && step === 1 && (
-          <div className="registration-body registration-details">
-            <div className="field-grid registration-field-grid">
-              <Field label="Full name" value={form.name} onChange={(value) => update('name', value.toUpperCase())} autoComplete="name"/>
-              <Field label="College name" value={form.college} onChange={(value) => update('college', value.toUpperCase())} autoComplete="organization"/>
-              <Field label="Phone number" type="tel" inputMode="numeric" value={form.phone} onChange={(value) => update('phone', value.replace(/\D/g, '').slice(0, 10))} autoComplete="tel"/>
-              <div className="email-field-wrapper">
-                <Field label="Email ID" type="email" value={form.email} onChange={(value) => { setError(''); update('email', value); }} autoComplete="email"/>
-                {/[A-Z]/.test(form.email) && (
-                  <div className="email-caps-warning">
-                    <span>⚠️ Capital letters detected. Please type email in small letters.</span>
-                    <button
-                      type="button"
-                      className="convert-lowercase-btn"
-                      onClick={() => update('email', form.email.toLowerCase())}
-                    >
-                      Convert to lowercase
-                    </button>
-                  </div>
-                )}
-              </div>
+    <div className="reg-modal-shell" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
+      <HudCorners accent="cyan">
+        <section className="reg-modal-panel panel" role="dialog" aria-modal="true" aria-labelledby="registration-title">
+          
+          {/* Header */}
+          <header className="reg-header">
+            <div className="reg-title-wrap">
+              <span className="reg-kicker">EVENT REGISTRATION</span>
+              <h2 className="reg-title" id="registration-title">
+                {receipt ? 'CONFIRMED' : step === 1 ? 'DETAILS' : step === 2 ? 'EVENTS' : step === 3 ? 'VERIFY' : 'PAYMENT'}
+              </h2>
             </div>
-            <fieldset className="food-preference">
-              <legend>Food preference</legend>
-              <div>
-                <FoodOption label="Vegetarian" value="veg" selected={form.foodPreference} onSelect={(value) => update('foodPreference', value)}/>
-                <FoodOption label="Non-vegetarian" value="non-veg" selected={form.foodPreference} onSelect={(value) => update('foodPreference', value)}/>
-              </div>
-            </fieldset>
-            {error && <p className="form-error" role="alert">{error}</p>}
-            <div className="registration-actions">
-              <button className="button button-primary" type="button" onClick={continueToEvents}>
-                Choose events <Icon name="arrow" />
-              </button>
+            <button ref={closeButtonRef} className="reg-close" onClick={onClose} aria-label="Close registration">
+              <span>CLOSE</span> [X]
+            </button>
+          </header>
+
+          {/* Progress node line */}
+          {!receipt && (
+            <div className="reg-progress" aria-label={`Registration step ${step} of 4`}>
+              <span className={`reg-step-node ${step >= 1 ? 'active' : ''}`}>01 DETAILS</span>
+              <span className="reg-step-line" />
+              <span className={`reg-step-node ${step >= 2 ? 'active' : ''}`}>02 EVENTS</span>
+              <span className="reg-step-line" />
+              <span className={`reg-step-node ${step >= 3 ? 'active' : ''}`}>03 VERIFY</span>
+              <span className="reg-step-line" />
+              <span className={`reg-step-node ${step >= 4 ? 'active' : ''}`}>04 PAYMENT</span>
             </div>
-          </div>
-        )}
+          )}
 
-        {registrationOpen && !receipt && step === 2 && (
-          <div className="registration-body registration-events">
-            <div className="entry-fee-card"><span>Entry fees</span><strong>₹200</strong><small>Select a technical event, a non-technical event, or one from each. Cyber Heist CTF is a focused event, so non-technical selection is disabled when it is chosen.</small></div>
-            <div className="event-choice-grid">
-              <EventSelectCard title="Technical event" value={technicalEventId} events={technicalEvents} onChange={(value) => { setTechnicalEventId(value); if (value === 'cyber-heist-ctf') setNonTechnicalEventId(''); }} />
-              <EventSelectCard title="Non-technical event" value={ctfSelected ? '' : nonTechnicalEventId} events={nonTechnicalEvents} disabled={ctfSelected} note={ctfSelected ? 'Nil - disabled because Cyber Heist CTF is selected.' : 'Choose Nil if you only want a technical event.'} onChange={setNonTechnicalEventId} />
+          {!registrationOpen && (
+            <div className="reg-body" style={{ textAlign: 'center', padding: '2rem 0' }}>
+              <h3 className="reg-title" style={{ fontSize: '1.4rem', marginBottom: '1rem' }}>SUBMISSIONS TEMPORARILY LOCKED</h3>
+              <p style={{ color: 'var(--muted)', fontFamily: 'IBM Plex Mono', fontSize: '0.9rem', marginBottom: '2rem' }}>
+                Registration is closed. Submissions have not been activated by college coordinators.
+              </p>
+              <NotchedButton variant="primary" onClick={onClose}>
+                RETURN TO LOBBY
+              </NotchedButton>
             </div>
-            {error && <p className="form-error" role="alert">{error}</p>}
-            <div className="registration-actions registration-actions--split"><button className="button button-secondary" type="button" onClick={() => setStep(1)}>Back</button><button className="button button-primary" type="button" onClick={continueToReview}>Verify details <Icon name="arrow" /></button></div>
-          </div>
-        )}
+          )}
 
-        {registrationOpen && !receipt && step === 3 && (
-          <div className="registration-body registration-review">
-            <div className="review-event">
-              <div>
-                <span className="kicker">SELECTED EVENTS</span>
-                <h3>{selectedEventNames}</h3>
-                <small>{selectedEvents.map((event) => event.category).join(' + ')}</small>
-              </div>
-              <strong>₹{amount}</strong>
-            </div>
-
-            <div className="registration-review-card">
-              <div className="review-section-header">
-                <span>PARTICIPANT DETAILS</span>
-              </div>
-              <div className="review-fields-grid">
-                <div className="review-field-item">
-                  <span className="review-field-label">FULL NAME</span>
-                  <strong className="review-field-value">{form.name || '—'}</strong>
+          {/* Step 1: Details */}
+          {registrationOpen && !receipt && step === 1 && (
+            <div className="reg-body">
+              <div className="reg-field-grid">
+                <div className="reg-field">
+                  <label className="reg-field-label">Full name</label>
+                  <input className="reg-input" type="text" value={form.name} onChange={(e) => update('name', e.target.value.toUpperCase())} autoComplete="name" />
                 </div>
-                <div className="review-field-item">
-                  <span className="review-field-label">COLLEGE / INSTITUTION</span>
-                  <strong className="review-field-value">{form.college || '—'}</strong>
+                <div className="reg-field">
+                  <label className="reg-field-label">College name</label>
+                  <input className="reg-input" type="text" value={form.college} onChange={(e) => update('college', e.target.value.toUpperCase())} autoComplete="organization" />
                 </div>
-                <div className="review-field-item">
-                  <span className="review-field-label">PHONE NUMBER</span>
-                  <strong className="review-field-value">{form.phone || '—'}</strong>
+                <div className="reg-field">
+                  <label className="reg-field-label">Phone number</label>
+                  <input className="reg-input" type="tel" inputMode="numeric" value={form.phone} onChange={(e) => update('phone', e.target.value.replace(/\D/g, '').slice(0, 10))} autoComplete="tel" />
                 </div>
-                <div className="review-field-item">
-                  <span className="review-field-label">EMAIL ADDRESS</span>
-                  <strong className="review-field-value">{form.email || '—'}</strong>
-                </div>
-                <div className="review-field-item">
-                  <span className="review-field-label">FOOD PREFERENCE</span>
-                  <strong className="review-field-value">
-                    {form.foodPreference === 'veg' ? '🥗 Vegetarian' : form.foodPreference === 'non-veg' ? '🍗 Non-vegetarian' : '—'}
-                  </strong>
-                </div>
-                <div className="review-field-item">
-                  <span className="review-field-label">TECHNICAL EVENT</span>
-                  <strong className="review-field-value">{selectedTechnicalEvent?.name || 'Nil'}</strong>
-                </div>
-                <div className="review-field-item">
-                  <span className="review-field-label">NON-TECHNICAL EVENT</span>
-                  <strong className="review-field-value">
-                    {ctfSelected ? 'Nil (Cyber Heist CTF selected)' : selectedNonTechnicalEvent?.name || 'Nil'}
-                  </strong>
-                </div>
-              </div>
-            </div>
-
-            <p className="review-note">
-              <Icon name="check" size={17}/> Check every detail carefully. Your official payment receipt & updates will be sent to this email address.
-            </p>
-            <div className="registration-actions registration-actions--split">
-              <button className="button button-secondary" type="button" onClick={() => setStep(2)}>Edit events</button>
-              <button className="button button-primary" type="button" onClick={continueToPayment}>Continue to payment <Icon name="arrow" /></button>
-            </div>
-          </div>
-        )}
-
-        {registrationOpen && !receipt && step === 4 && (
-          <form className="registration-body payment-step" onSubmit={submitRegistration}>
-            <div className="payment-summary">
-              <div>
-                <span>AMOUNT TO PAY</span>
-                <strong>₹{amount}</strong>
-                <small>{selectedEventNames}</small>
-              </div>
-              <button type="button" className="text-button" onClick={() => setStep(3)}>Edit details</button>
-            </div>
-
-            <div className="payment-layout">
-              {!isMobile ? (
-                <div className="qr-panel">
-                  {qrDataUrl ? (
-                    <img src={qrDataUrl} width="220" height="220" alt={`UPI QR code to pay ₹${amount} for ${selectedEventNames}`} />
-                  ) : (
-                    <div className="qr-loading">Generating payment QR…</div>
-                  )}
-                  <span>Scan & pay with any UPI app</span>
-                </div>
-              ) : (
-                <div className="mobile-upi-panel">
-                  <a
-                    className="button button-primary button-large pay-upi-btn"
-                    href={upiLink}
-                    onClick={handleUpiClick}
-                  >
-                    PAY IN UPI APP
-                  </a>
-                  <p className="upi-helper-text">This will open your UPI app to complete the payment.</p>
-
-                  {showUpiFallback && (
-                    <div className="upi-fallback-box">
-                      <span>Having trouble? Note the UPI ID below and pay manually:</span>
-                      <button type="button" className="upi-copy-chip" onClick={copyUpiId}>
-                        <code>{upiId}</code>
-                        <small>{copiedUpi ? '✓ Copied' : 'Tap to copy'}</small>
+                <div className="reg-field">
+                  <label className="reg-field-label">Email ID</label>
+                  <input className="reg-input" type="email" value={form.email} onChange={(e) => { setError(''); update('email', e.target.value); }} autoComplete="email" />
+                  {/[A-Z]/.test(form.email) && (
+                    <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                      <span className="reg-error">⚠️ Lowercase characters expected.</span>
+                      <button
+                        type="button"
+                        style={{ background: 'transparent', border: 'none', color: 'var(--cyan)', cursor: 'pointer', textAlign: 'left', fontSize: '0.8rem', padding: 0, textDecoration: 'underline' }}
+                        onClick={() => update('email', form.email.toLowerCase())}
+                      >
+                        Convert to lowercase
                       </button>
                     </div>
                   )}
                 </div>
-              )}
+              </div>
 
-              <div className="payment-instructions">
-                <span className="kicker">PAYMENT DETAILS</span>
-                <h3>Pay ₹{amount}</h3>
-                <dl>
-                  <div><dt>UPI ID</dt><dd>{upiId}</dd></div>
-                  <div><dt>Payee</dt><dd>{payee}</dd></div>
-                  <div><dt>Reference</dt><dd>{paymentReference}</dd></div>
-                  <div><dt>Events</dt><dd>{selectedEventNames}</dd></div>
-                </dl>
-                <p className="payment-safety">After completing payment in your UPI app, enter the 12-digit UTR below.</p>
+              <fieldset className="reg-food-fieldset">
+                <legend className="reg-food-legend">Food Preference</legend>
+                <div className="reg-food-options">
+                  <label className="reg-food-label">
+                    <input className="reg-food-input" type="radio" name="food-preference" value="veg" checked={form.foodPreference === 'veg'} onChange={() => update('foodPreference', 'veg')} />
+                    <span>VEGETARIAN</span>
+                  </label>
+                  <label className="reg-food-label">
+                    <input className="reg-food-input" type="radio" name="food-preference" value="non-veg" checked={form.foodPreference === 'non-veg'} onChange={() => update('foodPreference', 'non-veg')} />
+                    <span>NON-VEGETARIAN</span>
+                  </label>
+                </div>
+              </fieldset>
+
+              {error && <p className="reg-error" role="alert">{error}</p>}
+
+              <div className="reg-actions">
+                <NotchedButton variant="primary" onClick={continueToEvents}>
+                  CHOOSE EVENTS &gt;
+                </NotchedButton>
               </div>
             </div>
+          )}
 
-            <label className={`field utr-field utr-field--${utrStatus.state}`}>
-              <span>12-digit UTR / Payment Reference</span>
-              <input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]{12}"
-                minLength="12"
-                maxLength="12"
-                autoComplete="off"
-                placeholder="Enter 12 digits after payment"
-                value={utr}
-                aria-invalid={utrStatus.state === 'duplicate'}
-                aria-describedby="utr-status"
-                onChange={(event) => {
-                  setError('');
-                  setUtr(event.target.value.replace(/\D/g, '').slice(0, 12));
-                }}
-              />
-              <small id="utr-status" className="utr-status" aria-live="polite">{utrStatus.message}</small>
-            </label>
+          {/* Step 2: Choose Events */}
+          {registrationOpen && !receipt && step === 2 && (
+            <div className="reg-body">
+              <div className="reg-review-event-card">
+                <div>
+                  <h4 className="reg-review-event-title" style={{ fontSize: '1rem' }}>TICKET DETAILS</h4>
+                  <span className="reg-review-event-category">Admission for selected options</span>
+                </div>
+                <strong className="reg-review-amount">₹150</strong>
+              </div>
 
-            <label className="check-field">
-              <input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} />
-              <span>I confirm that I paid the exact amount and consent to these details being stored for event registration and payment verification.</span>
-            </label>
+              <div className="reg-field-grid">
+                <div className="reg-field">
+                  <label className="reg-field-label">Technical Event</label>
+                  <select
+                    className="reg-input"
+                    value={technicalEventId}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setTechnicalEventId(val);
+                      if (val === 'ctf' || val === 'cyber-heist-ctf') setNonTechnicalEventId('');
+                      if (val !== 'ignite') setIgniteAbstract('');
+                      setError('');
+                    }}
+                  >
+                    <option value="">Nil</option>
+                    {technicalEvents.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                  </select>
+                </div>
+                <div className="reg-field">
+                  <label className="reg-field-label">Non-Technical Event</label>
+                  <select
+                    className="reg-input"
+                    value={ctfSelected ? '' : nonTechnicalEventId}
+                    disabled={ctfSelected}
+                    onChange={(e) => {
+                      setNonTechnicalEventId(e.target.value);
+                      setError('');
+                    }}
+                  >
+                    <option value="">Nil</option>
+                    {nonTechnicalEvents.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                  </select>
+                  {ctfSelected && <small style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>Disabled: CTF chosen.</small>}
+                </div>
 
-            {error && <p className="form-error" role="alert">{error}</p>}
+                {/* IGNITE 200 character abstract box - shown only when IGNITE is selected */}
+                {technicalEventId === 'ignite' && (
+                  <div className="reg-field reg-field--full">
+                    <div className="reg-field-header">
+                      <label className="reg-field-label" htmlFor="ignite-abstract">
+                        IGNITE Project Idea / Abstract <span className="reg-required-star">*</span>
+                      </label>
+                      <span className={`reg-char-count ${igniteAbstract.length >= 200 ? 'reg-char-count--limit' : ''}`}>
+                        {igniteAbstract.length}/200 chars
+                      </span>
+                    </div>
+                    <textarea
+                      id="ignite-abstract"
+                      className="reg-input reg-textarea"
+                      rows={3}
+                      maxLength={200}
+                      placeholder="Briefly state your project idea, problem statement, or PPT concept (max 200 characters)..."
+                      value={igniteAbstract}
+                      onChange={(e) => {
+                        setError('');
+                        setIgniteAbstract(e.target.value.slice(0, 200));
+                      }}
+                    />
+                    <span className="reg-field-hint">
+                      Maximum 200 characters limit. Pitch will be reviewed by the event coordinators.
+                    </span>
+                  </div>
+                )}
+              </div>
 
-            <div className="registration-actions registration-actions--split payment-confirm-actions">
-              <button className="button button-secondary" type="button" onClick={() => setStep(3)}>Back</button>
-              <button
-                className="button button-primary"
-                disabled={submitting || !consent || utr.length !== 12 || utrStatus.state === 'checking' || utrStatus.state === 'duplicate'}
-                type="submit"
-              >
-                {submitting ? 'Submitting…' : utrStatus.state === 'checking' ? 'Checking UTR…' : 'Confirm registration'} <Icon name="arrow" />
-              </button>
+              {error && <p className="reg-error" role="alert">{error}</p>}
+
+              <div className="reg-actions reg-actions--split">
+                <NotchedButton variant="ghost" onClick={() => setStep(1)}>
+                  &lt; BACK
+                </NotchedButton>
+                <NotchedButton variant="primary" onClick={continueToReview}>
+                  VERIFY DETAILS &gt;
+                </NotchedButton>
+              </div>
             </div>
-          </form>
-        )}
+          )}
 
-        {registrationOpen && receipt && <div className="registration-body receipt-step"><div className="celebration-burst" aria-hidden="true"><i/><i/><i/><i/><i/><i/></div><div className="success-box"><div className="success-mark"><Icon name="check" size={34}/></div><span className="kicker">SUCCESSFULLY REGISTERED</span><h3>Successfully registered!</h3><p>Your entry has been received. Organizers will verify the UTR before confirming the registration.</p><div className="receipt-card">{receiptQrDataUrl && <img className="receipt-qr" src={receiptQrDataUrl} width="180" height="180" alt="Registration QR code"/>}<span>Registration ID</span><strong>{receipt.registrationId}</strong><small>Show this QR at the check-in desk.</small></div><button className="button button-primary" type="button" onClick={onClose}>Return to Noctivus <Icon name="arrow" /></button></div></div>}
-      </section>
+          {/* Step 3: Verify Details */}
+          {registrationOpen && !receipt && step === 3 && (
+            <div className="reg-body">
+              <div className="reg-review-event-card">
+                <div>
+                  <span className="reg-kicker">CONFIRMED SELECTIONS</span>
+                  <h3 className="reg-review-event-title">{selectedEventNames || 'No events selected'}</h3>
+                </div>
+                <strong className="reg-review-amount">₹{amount}</strong>
+              </div>
+
+              <div className="reg-review-grid">
+                <div className="reg-review-item">
+                  <span className="reg-review-label">FULL NAME</span>
+                  <strong className="reg-review-val">{form.name || '—'}</strong>
+                </div>
+                <div className="reg-review-item">
+                  <span className="reg-review-label">COLLEGE / INSTITUTION</span>
+                  <strong className="reg-review-val">{form.college || '—'}</strong>
+                </div>
+                <div className="reg-review-item">
+                  <span className="reg-review-label">PHONE NUMBER</span>
+                  <strong className="reg-review-val">{form.phone || '—'}</strong>
+                </div>
+                <div className="reg-review-item">
+                  <span className="reg-review-label">EMAIL ADDRESS</span>
+                  <strong className="reg-review-val">{form.email || '—'}</strong>
+                </div>
+                <div className="reg-review-item">
+                  <span className="reg-review-label">FOOD PREFERENCE</span>
+                  <strong className="reg-review-val">
+                    {form.foodPreference === 'veg' ? 'VEGETARIAN' : form.foodPreference === 'non-veg' ? 'NON-VEGETARIAN' : '—'}
+                  </strong>
+                </div>
+                <div className="reg-review-item">
+                  <span className="reg-review-label">SELECTED TECHNICAL</span>
+                  <strong className="reg-review-val">{selectedTechnicalEvent?.name || 'Nil'}</strong>
+                </div>
+                <div className="reg-review-item">
+                  <span className="reg-review-label">SELECTED NON-TECHNICAL</span>
+                  <strong className="reg-review-val">
+                    {ctfSelected ? 'Nil (CTF selected)' : selectedNonTechnicalEvent?.name || 'Nil'}
+                  </strong>
+                </div>
+                {technicalEventId === 'ignite' && igniteAbstract.trim() && (
+                  <div className="reg-review-item reg-review-item--full">
+                    <span className="reg-review-label">IGNITE PROJECT IDEA / ABSTRACT</span>
+                    <strong className="reg-review-val reg-review-val--abstract">
+                      {igniteAbstract.trim()}
+                    </strong>
+                  </div>
+                )}
+              </div>
+
+              {error && <p className="reg-error" role="alert">{error}</p>}
+
+              <div className="reg-actions reg-actions--split">
+                <NotchedButton variant="ghost" onClick={() => setStep(2)}>
+                  EDIT EVENTS
+                </NotchedButton>
+                <NotchedButton variant="primary" onClick={continueToPayment}>
+                  CONTINUE TO PAYMENT &gt;
+                </NotchedButton>
+              </div>
+            </div>
+          )}
+
+          {/* Step 4: Complete Payment */}
+          {registrationOpen && !receipt && step === 4 && (
+            <form className="reg-body" onSubmit={submitRegistration}>
+              <div className="reg-review-event-card">
+                <div>
+                  <span className="reg-kicker">BILLING SUMMARY</span>
+                  <h3 className="reg-review-event-title">{selectedEventNames}</h3>
+                </div>
+                <strong className="reg-review-amount">₹{amount}</strong>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '260px 1fr', gap: '2rem', border: '1px solid var(--line)', padding: '1.5rem', background: 'rgba(0, 0, 0, 0.2)' }}>
+                {!isMobile ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', background: '#fff', padding: '1rem', boxSizing: 'border-box' }}>
+                    {qrDataUrl ? (
+                      <img src={qrDataUrl} width="220" height="220" alt="UPI Pay QR" />
+                    ) : (
+                      <div style={{ color: 'var(--bg)', fontFamily: 'IBM Plex Mono', fontSize: '0.8rem', height: '220px', display: 'flex', alignItems: 'center' }}>Generating QR…</div>
+                    )}
+                    <span style={{ color: 'var(--bg)', fontFamily: 'IBM Plex Mono', fontSize: '0.75rem', fontWeight: 600 }}>SCAN WITH UPI APP</span>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <a className="button button-primary pay-upi-btn" href={upiLink} onClick={handleUpiClick} style={{ textAlign: 'center', display: 'block', padding: '1rem' }}>
+                      OPEN IN PAYMENTS APP
+                    </a>
+                    {showUpiFallback && (
+                      <div style={{ border: '1px dashed var(--line)', padding: '1rem' }}>
+                        <span style={{ color: 'var(--muted)', fontSize: '0.8rem', fontFamily: 'IBM Plex Mono' }}>UPI Address:</span>
+                        <button type="button" onClick={copyUpiId} style={{ background: 'var(--surface)', border: '1px solid var(--line)', color: 'var(--text)', width: '100%', padding: '0.5rem', cursor: 'pointer', marginTop: '0.5rem', fontFamily: 'IBM Plex Mono' }}>
+                          <code>{upiId}</code> — {copiedUpi ? 'COPIED' : 'TAP TO COPY'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div style={{ fontFamily: 'IBM Plex Mono', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                  <span className="reg-kicker">UPI CREDENTIALS</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>UPI ID:</span><span style={{ color: 'var(--cyan)' }}>{upiId}</span></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>PAYEE:</span><span>{payee}</span></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>REFERENCE:</span><span>{paymentReference}</span></div>
+                </div>
+              </div>
+
+              <div className="reg-field">
+                <label className="reg-field-label">12-Digit Transaction UTR</label>
+                <input
+                  className="reg-input"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]{12}"
+                  minLength="12"
+                  maxLength="12"
+                  autoComplete="off"
+                  placeholder="Enter UTR reference after paying"
+                  value={utr}
+                  aria-invalid={utrStatus.state === 'duplicate'}
+                  onChange={(e) => {
+                    setError('');
+                    setUtr(e.target.value.replace(/\D/g, '').slice(0, 12));
+                  }}
+                />
+                <small style={{ color: utrStatus.state === 'duplicate' ? 'var(--error)' : 'var(--muted)', fontFamily: 'IBM Plex Mono', fontSize: '0.75rem', marginTop: '0.3rem' }}>
+                  {utrStatus.message}
+                </small>
+              </div>
+
+              <label className="reg-food-label" style={{ alignItems: 'flex-start', gap: '0.8rem', marginTop: '1rem' }}>
+                <input className="reg-food-input" type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} style={{ marginTop: '0.2rem' }} />
+                <span style={{ fontSize: '0.8rem', color: 'var(--muted)', lineHeight: '1.4' }}>
+                  I declare that I have made the payment of ₹{amount} and all details are correct.
+                </span>
+              </label>
+
+              {error && <p className="reg-error" role="alert">{error}</p>}
+
+              <div className="reg-actions reg-actions--split">
+                <NotchedButton variant="ghost" onClick={() => setStep(3)}>
+                  &lt; BACK
+                </NotchedButton>
+                <NotchedButton
+                  variant="primary"
+                  type="submit"
+                  disabled={submitting || !consent || utr.length !== 12 || utrStatus.state === 'checking' || utrStatus.state === 'duplicate'}
+                >
+                  {submitting ? 'PROCESSING...' : 'CONFIRM ENTRY'}
+                </NotchedButton>
+              </div>
+            </form>
+          )}
+
+          {/* Success Step */}
+          {registrationOpen && receipt && (
+            <div className="reg-body reg-success-box">
+              <div style={{ color: 'var(--cyan)', border: '1px solid var(--line)', padding: '1rem 2rem', background: 'rgba(0, 200, 224, 0.1)', fontFamily: 'Aldrich', letterSpacing: '0.1em' }}>
+                REGISTRATION RECEIVED
+              </div>
+
+              <p style={{ color: 'var(--muted)', fontFamily: 'IBM Plex Mono', fontSize: '0.9rem', maxWidth: '420px', lineHeight: '1.6' }}>
+                Your request has been filed. Coordinators will review your UTR transaction code to finalize verification.
+              </p>
+
+              <div className="reg-receipt-card">
+                {receiptQrDataUrl && <img className="reg-receipt-qr" src={receiptQrDataUrl} width="180" height="180" alt="Ticket Check-in QR" />}
+                <span style={{ fontFamily: 'IBM Plex Mono', fontSize: '0.8rem', color: 'var(--muted)' }}>TICKET IDENTIFICATION</span>
+                <strong className="reg-receipt-id">{receipt.registrationId}</strong>
+                <small style={{ fontFamily: 'IBM Plex Mono', fontSize: '0.75rem', color: 'var(--muted)', textAlign: 'center' }}>
+                  Present this QR check-in voucher at the help desk.
+                </small>
+              </div>
+
+              <NotchedButton variant="primary" onClick={onClose}>
+                CLOSE CONSOLE
+              </NotchedButton>
+            </div>
+          )}
+
+        </section>
+      </HudCorners>
     </div>
   );
-}
-
-function Field({ label, value, onChange, type = 'text', autoComplete, inputMode }) {
-  return <label className="field"><span>{label}</span><input type={type} inputMode={inputMode} value={value} onChange={(event) => onChange(event.target.value)} autoComplete={autoComplete}/></label>;
-}
-
-function FoodOption({ label, value, selected, onSelect }) {
-  return <label className={selected === value ? 'selected' : ''}><input type="radio" name="food-preference" value={value} checked={selected === value} onChange={() => onSelect(value)}/><span><i/><strong>{label}</strong></span></label>;
-}
-
-function EventSelectCard({ title, value, events, disabled = false, note = 'Choose Nil if you do not want this option.', onChange }) {
-  return (
-    <label className={`field event-select-card ${disabled ? 'event-select-card--disabled' : ''}`}>
-      <span>{title}</span>
-      <select value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)}>
-        <option value="">Nil</option>
-        {events.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-      </select>
-      <small>{note}</small>
-    </label>
-  );
-}
-
-function ReviewItem({ label, value }) {
-  return <div><dt>{label}</dt><dd>{value}</dd></div>;
 }

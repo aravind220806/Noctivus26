@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NOCTIVUS '26 — Frontend Task Tracker</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #050607;
+    --surface: #0A0F0F;
+    --line: rgba(0, 221, 242, 0.14);
+    --cyan: #00DDF2;
+    --teal: #00E6B8;
+    --lime: #A7FF18;
+    --text: #EAF6F5;
+    --muted: #7E9096;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 32px 16px 96px;
+    min-height: 100vh;
+  }
+
+  .wrap { max-width: 860px; margin: 0 auto; }
+
+  header {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 24px;
+    margin-bottom: 32px;
+    position: relative;
+  }
+
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 120px;
+    height: 2px;
+    background: var(--cyan);
+    box-shadow: 0 0 12px var(--cyan);
+  }
+
+  .eyebrow {
+    color: var(--cyan);
+    font-size: 11px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: clamp(28px, 5vw, 42px);
+    margin: 8px 0 4px;
+    letter-spacing: -0.02em;
+  }
+
+  .subtitle { color: var(--muted); font-size: 13px; }
+
+  .progress-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 20px;
+  }
+
+  .progress-track {
+    flex: 1;
+    height: 6px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--teal), var(--cyan));
+    box-shadow: 0 0 10px var(--cyan);
+    width: 0%;
+    transition: width .3s ease;
+  }
+
+  .progress-label {
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .phase {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    margin-bottom: 16px;
+    clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%);
+  }
+
+  .phase.done {
+    border-color: rgba(167, 255, 24, 0.35);
+  }
+
+  .phase-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .phase-title {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .phase-num {
+    color: var(--cyan);
+    font-size: 13px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .phase-count {
+    font-size: 12px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .phase-body {
+    padding: 0 20px 18px;
+    display: none;
+  }
+
+  .phase-body.open { display: block; }
+
+  .checkpoint {
+    font-size: 11px;
+    color: var(--lime);
+    border-top: 1px dashed var(--line);
+    margin-top: 12px;
+    padding-top: 10px;
+    letter-spacing: .04em;
+  }
+
+  .task {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 7px 0;
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+
+  .task input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    margin-top: 2px;
+    border: 1px solid var(--muted);
+    background: var(--bg);
+    cursor: pointer;
+    position: relative;
+  }
+
+  .task input[type="checkbox"]:checked {
+    border-color: var(--lime);
+    background: rgba(167, 255, 24, 0.12);
+  }
+
+  .task input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 4px;
+    height: 8px;
+    border: solid var(--lime);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  .task label {
+    cursor: pointer;
+  }
+
+  .task.checked label {
+    color: var(--muted);
+    text-decoration: line-through;
+  }
+
+  .chevron {
+    color: var(--muted);
+    font-size: 12px;
+    transition: transform .2s ease;
+  }
+
+  .phase-header.open .chevron { transform: rotate(90deg); }
+
+  footer {
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .reset-btn {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+
+  .reset-btn:hover {
+    color: var(--cyan);
+    border-color: var(--cyan);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Frontend Rebuild</div>
+    <h1>NOCTIVUS '26 — Task Tracker</h1>
+    <div class="subtitle">Phase-gated. Each phase has a checkpoint — don't start the next until it's cleared.</div>
+    <div class="progress-row">
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-label" id="progressLabel">0 / 0</div>
+    </div>
+  </header>
+
+  <div id="phases"></div>
+
+  <footer>
+    <span id="loadState">Loading saved progress…</span>
+    <button class="reset-btn" id="resetBtn">Reset all</button>
+  </footer>
+</div>
+
+<script>
+const PHASES = [
+  {
+    title: "Phase 0 — Cleanup / groundwork",
+    checkpoint: "Show route inventory + content audit + color-usage audit. Wait for cut/keep/fold decisions before Phase 1.",
+    tasks: [
+      "Land the overflow fix (hero + any other 100svh + centered-flex sections) — verify no overflow at desktop and short-viewport heights",
+      "Inventory every current route/page file in the repo. Post the list.",
+      "Inventory experience-grid/feature-panel, faq-item, and Contact section content — report real content vs placeholder",
+      "Audit variables.css for --violet / --amber / --coral usages — list every place they're used"
+    ]
+  },
+  {
+    title: "Phase 1 — Foundation: palette + fonts",
+    checkpoint: "Show variables.css diff + a couple of screenshots with new colors/fonts before continuing.",
+    tasks: [
+      "Update variables.css to the locked palette (bg/surface/line/cyan/teal/lime/text/muted)",
+      "Replace --violet/--amber/--coral usages (semantic red for real errors only, else cyan/teal/lime)",
+      "Add Chakra Petch as display font (h1/h2, oversized numerals); keep mono stack for body/nav/labels/data",
+      "Confirm three font roles total, no creep — don't touch layout/spacing/shapes yet"
+    ]
+  },
+  {
+    title: "Phase 2 — Sidebar nav",
+    checkpoint: "Show desktop + mobile nav before proceeding — structural change worth a look before it ripples further.",
+    tasks: [
+      "Convert top pill nav to persistent vertical sidebar (desktop) — logo, anchor links, Register CTA, scrollspy",
+      "Define and build mobile behavior (drawer or icon rail) — pick one, state which and why",
+      "Verify sidebar doesn't collide with --page max-width container math — main content needs its own effective width"
+    ]
+  },
+  {
+    title: "Phase 3 — Hero",
+    checkpoint: "Hero alone, desktop + mobile, before touching any other section.",
+    tasks: [
+      "Build notched hero panel shape — chamfered corner, jagged step-notch, bottom tick-mark bar",
+      "Rebuild countdown as hero's signature moment — bigger digits, Chakra Petch, glow/tick accent on unit change",
+      "Confirm hero content unchanged: eyebrow, title, tagline, when/where, countdown, CTAs — shape/type only is new",
+      "Mobile pass: simplify notch if it clips content at 375px"
+    ]
+  },
+  {
+    title: "Phase 4 — Remaining sections",
+    checkpoint: "Full single-page scroll, desktop, before mobile pass.",
+    tasks: [
+      "About — chamfered-corner cards/stats per approved motif",
+      "Events — grid + filters + cards with shape motifs, event numerals in display font",
+      "Event modal, registration modal (config-driven fields per event)",
+      "Payment modal — UPI QR + UTR entry (NOT Razorpay) with honest 'pending verification' state",
+      "Event day schedule/timeline",
+      "Coordinators (crew grid)",
+      "Footer — venue callout, links, tick-mark divider motif",
+      "Apply Phase 0's cut/keep/fold decisions for Experience/FAQ/Contact"
+    ]
+  },
+  {
+    title: "Phase 5 — Mobile + QA pass",
+    checkpoint: "Final review before calling this done.",
+    tasks: [
+      "Full page at mobile width: sidebar, hero notch, all section shapes, modals (registration/payment especially)",
+      "Confirm no 100svh-centered-flex overflow reintroduced anywhere",
+      "Confirm every color traces to the locked palette — no stray hues",
+      "Confirm no fabricated/filler copy was added anywhere"
+    ]
+  }
+];
+
+const STORAGE_KEY = 'noctivus-tracker-state';
+let state = {};
+
+function taskId(pIdx, tIdx) { return `p${pIdx}-t${tIdx}`; }
+
+function render() {
+  const container = document.getElementById('phases');
+  container.innerHTML = '';
+  let totalDone = 0, totalTasks = 0;
+
+  PHASES.forEach((phase, pIdx) => {
+    const doneCount = phase.tasks.filter((_, tIdx) => state[taskId(pIdx, tIdx)]).length;
+    totalDone += doneCount;
+    totalTasks += phase.tasks.length;
+    const allDone = doneCount === phase.tasks.length;
+
+    const phaseEl = document.createElement('div');
+    phaseEl.className = 'phase' + (allDone ? ' done' : '');
+
+    const header = document.createElement('div');
+    header.className = 'phase-header';
+    header.innerHTML = `
+      <div class="phase-title">
+        <span class="chevron">▶</span>
+        <span>${phase.title}</span>
+      </div>
+      <div class="phase-count">${doneCount} / ${phase.tasks.length}</div>
+    `;
+
+    const body = document.createElement('div');
+    body.className = 'phase-body';
+
+    phase.tasks.forEach((task, tIdx) => {
+      const id = taskId(pIdx, tIdx);
+      const checked = !!state[id];
+      const row = document.createElement('div');
+      row.className = 'task' + (checked ? ' checked' : '');
+      row.innerHTML = `
+        <input type="checkbox" id="${id}" ${checked ? 'checked' : ''}>
+        <label for="${id}">${task}</label>
+      `;
+      row.querySelector('input').addEventListener('change', (e) => {
+        state[id] = e.target.checked;
+        save();
+        render();
+      });
+      body.appendChild(row);
+    });
+
+    const cp = document.createElement('div');
+    cp.className = 'checkpoint';
+    cp.textContent = '◆ Checkpoint: ' + phase.checkpoint;
+    body.appendChild(cp);
+
+    header.addEventListener('click', () => {
+      const isOpen = body.classList.toggle('open');
+      header.classList.toggle('open', isOpen);
+    });
+
+    phaseEl.appendChild(header);
+    phaseEl.appendChild(body);
+    container.appendChild(phaseEl);
+  });
+
+  document.getElementById('progressLabel').textContent = `${totalDone} / ${totalTasks}`;
+  document.getElementById('progressFill').style.width =
+    totalTasks ? `${(totalDone / totalTasks) * 100}%` : '0%';
+}
+
+async function save() {
+  try {
+    await window.storage.set(STORAGE_KEY, JSON.stringify(state), false);
+  } catch (err) {
+    console.error('Save failed:', err);
+  }
+}
+
+async function load() {
+  const loadState = document.getElementById('loadState');
+  try {
+    const result = await window.storage.get(STORAGE_KEY, false);
+    if (result && result.value) {
+      state = JSON.parse(result.value);
+    }
+    loadState.textContent = 'Progress saved automatically.';
+  } catch (err) {
+    loadState.textContent = 'Starting fresh — progress will save automatically.';
+  }
+  render();
+}
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  state = {};
+  save();
+  render();
+});
+
+load();
+</script>
+</body>
+</html>

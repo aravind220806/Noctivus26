@@ -1,0 +1,71 @@
+/* AsymSection Component Styles — Full-Bleed Geometric Cut Plane */
+
+.asym-section {
+  display: flex;
+  width: 100%;
+  min-height: 520px;
+  position: relative;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  clip-path: polygon(
+    0 0, 100% 0, 100% calc(100% - 40px), calc(100% - 60px) 100%,
+    40% 100%, calc(40% - 30px) calc(100% - 16px), 0 calc(100% - 16px)
+  );
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+}
+
+.asym-left {
+  width: 40%;
+  background: var(--surface);
+  clip-path: polygon(0 0, 100% 0, 100% 28%, calc(100% - 25px) 42%,
+        100% 54%, calc(100% - 15px) 68%, 100% 82%, 100% 100%, 0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 2;
+}
+
+.asym-right {
+  width: 60%;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2rem 3rem 2rem 3.5rem;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 2;
+}
+
+/* Mobile responsiveness (375px+) */
+@media (max-width: 900px) {
+  .asym-section {
+    flex-direction: column;
+    min-height: auto;
+    clip-path: none;
+  }
+
+  .asym-left {
+    width: 100%;
+    min-height: auto;
+    padding: 1.5rem 1.25rem 1rem;
+    clip-path: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .asym-right {
+    width: 100%;
+    padding: 1rem 1.25rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+}

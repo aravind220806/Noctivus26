@@ -1,0 +1,59 @@
+@font-face {
+  font-family: 'Aldrich';
+  src: url('/fonts/Aldrich/Aldrich-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Samarkan';
+  src: url('/fonts/Samarkan.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --bg: #050607;
+  --surface: #0A0F0F;
+  --text: #EAF6F5;
+  --muted: #7E9096;
+  --line: rgba(167, 255, 24, 0.22);
+  --border-green: #A7FF18;
+  --border-green-dim: rgba(167, 255, 24, 0.35);
+  --cyan: #00DDF2;
+  --teal: #00E6B8;
+  --lime: #A7FF18;
+  --violet: #B57BFF;
+  --error: #FF786A; /* Semantic red for form errors only */
+  color-scheme: dark;
+
+  /* Typography */
+  --mono-font: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
+  --body-font: 'IBM Plex Mono', monospace;
+  --display-font: 'Aldrich', var(--mono-font);
+  --display-accent-font: 'Samarkan';
+  font-family: var(--body-font);
+  font-optical-sizing: auto;
+  font-synthesis: none;
+
+  /* ── Spacing scale (4px-based) ── */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+  --sp-24: 96px;
+  --sp-32: 128px;
+
+  /* ── Layout tokens (mobile-first defaults) ── */
+  --page-max: 1200px;
+  --page-gutter-desktop: 40px;  /* 40px */
+  --page-gutter-mobile: 8px;    /* 8px */
+  --page: calc(100% - var(--page-gutter-mobile) * 2);
+  --space-section: var(--sp-12);       /* 48px mobile default */
+}

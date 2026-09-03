@@ -4,58 +4,62 @@
 
 ```
 Visit site → Browse events → Pick event → Fill registration form
-   → Submit → Backend creates "pending" registration in DB
-   → Backend creates Razorpay order → returns order_id
-   → Razorpay Checkout modal opens
-   → User pays
-   → Razorpay redirects/callbacks frontend with payment_id + signature
-   → Frontend sends these to backend /verify endpoint
-   → Backend verifies signature
-   → Backend also gets webhook (async, authoritative) confirming payment.captured
-   → Registration marked "paid" in DB
-   → Background job pushes row to:
-        - Master Google Sheet (all events)
-        - Event-specific Google Sheet tab
-   → User sees confirmation page / gets email (future automation)
+   → Submit → Backend validates, creates "pending" registration in MongoDB
+   → Backend generates a high-entropy QR token stored on the record
+   → User pays via UPI (QR code or UPI deep-link shown on confirmation page)
+   → User submits their 12-digit UTR reference number with registration
+   → Admin logs into dashboard, opens Verify Members tab
+   → Admin checks UTR against bank/UPI statement
+   → Admin marks payment: confirmed / mismatch / duplicate
+   → Confirmation email sent via Resend (async, does not block the flow)
+   → Pass/invitation email sent when admin triggers it from Invitations tab
+   → Participant receives QR-coded boarding pass
+   → At venue: scanner reads QR → POST /api/p/{qrToken}/check-in
+   → Registration marked checked-in in real time
 ```
+
+**Payment gateway:** Manual UPI + UTR reconciliation. There is no Razorpay
+or other third-party payment gateway in this project. The frontend generates
+a UPI QR/deep-link; payment verification is a manual admin step.
 
 ## 2. Development Workflow (Team)
 
-Phase 1 — Foundation
-- Finalize event list + fee structure + fields needed per event (some events may need extra fields — keep form config-driven, not hardcoded)
-- Set up FastAPI skeleton + Postgres/SQLite + basic event CRUD
-- Set up React skeleton, routing, event listing page
+Phase 1 — Foundation ✅
+- Finalize event list + fee structure + fields (config-driven)
+- FastAPI backend + MongoDB + React/Vite frontend
 
-Phase 2 — Registration + Payment
-- Build registration form (config-driven per event)
-- Integrate Razorpay order creation + checkout
-- Implement signature verification endpoint
-- Implement Razorpay webhook endpoint (separate from frontend verify — belt and suspenders)
+Phase 2 — Registration + Payment ✅
+- Config-driven registration form with server-side validation
+- UPI QR display + UTR submission on confirmation page
+- Admin dashboard: verify UTR, confirm/reject, mark duplicate
 
-Phase 3 — Sheets Automation
-- Service account setup, share sheet access
-- Build sync service: append to Master + event tab
-- Add retry/dead-letter handling so failed Sheets writes don't get silently lost
-- Manual "resync" endpoint/admin action for recovering from a Sheets outage
+Phase 3 — Invitations + Pass System ✅
+- Admin triggers invitation emails with boarding-pass QR
+- Public pass page at /p/{qrToken} shows event details
+- QR-based check-in via /p/{qrToken}/check-in
 
-Phase 4 — Polish + Extra Automations (future)
-- Email/WhatsApp confirmation on successful payment
-- Certificate generation
-- QR-based check-in
+Phase 4 — Polish + Future Work
+- Google Sheets mirror (described in BACKEND.md as not yet implemented)
+- Capacity/concurrency load testing
+- Redis-backed rate limiting for multi-worker deployments
+- Admin session revocation per-token
 
-## 3. Branching / Repo Workflow (suggestion)
+## 3. Branching / Repo Workflow
 - `main` — production
-- `dev` — integration branch
-- Feature branches: `feat/registration-form`, `feat/razorpay-integration`, `feat/sheets-sync`
-- Backend and frontend can live in one monorepo (`/backend`, `/frontend`) for a symposium-scale project — simpler deploy, one PR can touch both sides when API contracts change
+- Feature branches off main; one PR per feature
+
+Backend and frontend live in one monorepo (`/backend`, `/frontend`).
 
 ## 4. Environments
-- Local dev: SQLite + Razorpay test mode + a test Google Sheet
-- Staging: mirrors prod, Razorpay test keys, separate Sheet
-- Prod: Postgres, Razorpay live keys, real Sheet, webhook URL registered in Razorpay dashboard
+- Local dev: `ALLOW_MEMORY_DB=true`, no MongoDB required, dev-login shortcut
+- Staging: real MongoDB Atlas, `ENVIRONMENT=staging`, test Google OAuth
+- Prod: MongoDB Atlas, `ENVIRONMENT=production`, real Google OAuth, Resend email
 
-## 5. Failure Modes to Design For
-- Payment succeeds but signature verify request fails (network) → webhook must be the safety net
-- Sheets API down/rate-limited → job retries, doesn't block user-facing flow
-- Duplicate registration submission (double-click, refresh) → idempotency key on registration create
-- Event fills up mid-payment → capacity check before order creation, re-check before confirming paid
+## 5. Failure Modes Addressed
+- Duplicate registration (double-click/refresh) → `Idempotency-Key` header
+- Duplicate UTR → unique sparse MongoDB index + application check
+- Duplicate email+event → unique compound index
+- Event fills up mid-registration → atomic capacity counter with rollback
+- Mongo unreachable → `/health` returns 503 degraded; production crashes at startup
+- Admin session replay → HMAC-signed 8-hour tokens, re-resolved access on each request
+- CSRF → synchronizer token in session; required as `X-CSRF-Token` on mutating admin routes

@@ -1,0 +1,245 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   NOCTIVUS ’26 — COORDINATORS SECTION (CYBER-HUD)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.crew-section {
+  margin-top: 3rem;
+  margin-bottom: 3rem;
+  position: relative;
+  background: var(--surface, #050B10);
+  color: var(--text, #7C8BA1);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  box-sizing: border-box;
+  padding: 4rem 1.5rem 5rem;
+  clip-path: polygon(
+    0 0, 100% 0,
+    100% calc(100% - 40px), calc(100% - 60px) 100%,
+    40% 100%, calc(40% - 30px) calc(100% - 16px),
+    0 calc(100% - 16px)
+  );
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+}
+
+@media (min-width: 768px) {
+  .crew-section {
+    padding: 4rem 3.5rem 5.5rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .crew-section {
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0 100%);
+    padding: 3rem 1rem 3.5rem;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+  .crew-container {
+    padding: 0 4px;
+  }
+}
+
+.crew-container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 28px;
+  box-sizing: border-box;
+}
+
+/* Section heading — crisp white title, exact same size and typography as all other sections */
+.crew-section .heading-container h2 {
+  color: #ffffff;
+}
+
+/* 3 Cards Row across full width */
+.crew-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .crew-cards-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.75rem;
+  }
+}
+
+/* Individual Cyber Coordinator Card */
+/* Individual Cyber Coordinator Card */
+.cyber-crew-card {
+  position: relative;
+  background-color: rgba(5, 20, 28, 0.7);
+  border: 1px solid rgba(167, 255, 24, 0.3);
+  padding: 2rem 1.5rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 220px;
+  box-sizing: border-box;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.cyber-crew-card:hover {
+  border-color: rgba(167, 255, 24, 0.75);
+  box-shadow: 0 0 20px rgba(167, 255, 24, 0.25);
+  transform: translateY(-3px);
+}
+
+/* Corner Ticks */
+.card-corner {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  pointer-events: none;
+}
+
+.card-corner-tl {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid #A7FF18;
+  border-left: 2px solid #A7FF18;
+}
+
+.card-corner-tr {
+  top: -1px;
+  right: -1px;
+  border-top: 2px solid #A7FF18;
+  border-right: 2px solid #A7FF18;
+}
+
+.card-corner-bl {
+  bottom: -1px;
+  left: -1px;
+  border-bottom: 2px solid #A7FF18;
+  border-left: 2px solid #A7FF18;
+}
+
+.card-corner-br {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid #A7FF18;
+  border-right: 2px solid #A7FF18;
+}
+
+.crew-card-title {
+  font-family: 'Aldrich', 'Rajdhani', sans-serif;
+  font-size: 1.55rem;
+  line-height: 1.15;
+  font-weight: 700;
+  color: #EAF6F5;
+  letter-spacing: 0.03em;
+  margin: 0 0 1.25rem 0;
+  text-transform: none;
+}
+
+.crew-card-role {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.82rem;
+  color: #7C8BA1;
+  line-height: 1.45;
+  margin: 0 0 1.5rem 0;
+}
+
+.crew-card-link {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #A7FF18;
+  text-decoration: none;
+  word-break: break-all;
+  transition: color 0.2s ease;
+  display: inline-block;
+  margin-bottom: 1.5rem;
+}
+
+.crew-card-link:hover {
+  color: #ffffff;
+}
+
+/* ── VIEW COORDINATORS Button ── */
+.crew-card-action {
+  margin-top: auto;
+  width: 100%;
+}
+
+.crew-view-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.75rem 1.1rem;
+  background: transparent;
+  border: 1px solid rgba(167, 255, 24, 0.45);
+  color: #A7FF18;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  box-sizing: border-box;
+  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.crew-view-btn:hover {
+  background-color: #A7FF18;
+  color: #02090D;
+  border-color: #A7FF18;
+  box-shadow: 0 0 18px rgba(167, 255, 24, 0.45);
+}
+
+.crew-btn-arrow {
+  display: inline-block;
+  font-size: 1rem;
+  line-height: 1;
+  transition: transform 0.18s ease;
+}
+
+.crew-view-btn:hover .crew-btn-arrow {
+  transform: translateX(5px);
+}
+
+.crew-btn-corner {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  pointer-events: none;
+}
+
+.crew-btn-corner.tl {
+  top: -1px;
+  left: -1px;
+  border-top: 1px solid #A7FF18;
+  border-left: 1px solid #A7FF18;
+}
+
+.crew-btn-corner.tr {
+  top: -1px;
+  right: -1px;
+  border-top: 1px solid #A7FF18;
+  border-right: 1px solid #A7FF18;
+}
+
+.crew-btn-corner.bl {
+  bottom: -1px;
+  left: -1px;
+  border-bottom: 1px solid #A7FF18;
+  border-left: 1px solid #A7FF18;
+}
+
+.crew-btn-corner.br {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 1px solid #A7FF18;
+  border-right: 1px solid #A7FF18;
+}
+
+.crew-view-btn:hover .crew-btn-corner {
+  border-color: #02090D;
+}
+

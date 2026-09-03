@@ -1,0 +1,251 @@
+/* --- Desktop Slim Rail Sidebar (Fixed Right, Lime Primary Accent) --- */
+.desktop-sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 68px;
+  height: 100vh;
+  background: rgba(8, 12, 14, 0.92);
+  backdrop-filter: blur(12px);
+  border-left: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 0;
+  z-index: 100;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+@media (max-width: 900px) {
+  .desktop-sidebar {
+    display: none !important;
+  }
+}
+
+/* Up/Down Arrow Section Nav Buttons */
+.rail-nav-arrows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rail-arrow-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--muted);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.2s ease;
+}
+
+.rail-arrow-btn:hover {
+  color: var(--lime);
+  border-color: rgba(167, 255, 24, 0.3);
+  background: rgba(167, 255, 24, 0.06);
+}
+
+.rail-arrow-btn:active {
+  transform: scale(0.95);
+}
+
+/* Position Indicator "01 / 05" */
+.rail-position {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-family: 'Aldrich', sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  margin: 0.5rem 0;
+}
+
+.rail-pos-current {
+  color: var(--lime);
+  font-weight: 400;
+  text-shadow: 0 0 8px rgba(167, 255, 24, 0.4);
+}
+
+.rail-pos-divider {
+  width: 14px;
+  height: 1px;
+  background: var(--line);
+  margin: 2px 0;
+}
+
+.rail-pos-total {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+/* Vertical Progress Spine & Section Items */
+.rail-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+  padding: 1rem 0;
+}
+
+.rail-progress-track {
+  position: absolute;
+  top: 10%;
+  bottom: 10%;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 1px;
+  z-index: 1;
+}
+
+.rail-progress-fill {
+  position: absolute;
+  top: 10%;
+  width: 2px;
+  background: var(--lime);
+  box-shadow: 0 0 8px var(--lime);
+  border-radius: 1px;
+  z-index: 2;
+  transition: height 0.15s ease-out;
+}
+
+.rail-items-list {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  height: 60%;
+  z-index: 3;
+  width: 100%;
+}
+
+.rail-item {
+  position: relative;
+  background: transparent;
+  border: none;
+  padding: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rail-item-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  transition: all 0.2s ease;
+}
+
+.rail-item:hover .rail-item-dot {
+  border-color: var(--lime);
+  background: rgba(167, 255, 24, 0.2);
+  transform: scale(1.25);
+}
+
+.rail-item.active .rail-item-dot {
+  background: var(--lime);
+  border-color: var(--lime);
+  box-shadow: 0 0 10px var(--lime);
+  transform: scale(1.35);
+}
+
+/* Hover Tooltip Label */
+.rail-item-tooltip {
+  position: absolute;
+  right: 100%;
+  margin-right: 12px;
+  background: var(--surface);
+  border: 1px solid var(--lime);
+  color: var(--lime);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  padding: 4px 8px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(8px);
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+}
+
+.rail-item:hover .rail-item-tooltip {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Social Icon Stack */
+.rail-social {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.rail-social-link {
+  color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+}
+
+.rail-social-link:hover {
+  color: var(--lime);
+  transform: translateY(-1px);
+}
+
+/* CTA at bottom */
+.rail-cta-wrap {
+  width: 100%;
+  padding: 0 8px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+}
+
+.rail-cta-btn {
+  width: 100%;
+  padding: 0.5rem 0 !important;
+  font-size: 0.68rem !important;
+  letter-spacing: 0.05em !important;
+}
+
+/* --- Layout Offset (reserved column for 68px rail sidebar) --- */
+.main-container {
+  min-height: 100vh;
+  box-sizing: border-box;
+  background: var(--bg);
+}
+
+@media (max-width: 900px) {
+  .main-container {
+    padding-top: 60px;
+    margin-right: 0;
+  }
+}
+
+@media (min-width: 901px) {
+  .main-container {
+    margin-right: 68px;
+    margin-left: 68px;
+  }
+}

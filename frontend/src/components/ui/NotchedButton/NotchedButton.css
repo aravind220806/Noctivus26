@@ -1,0 +1,102 @@
+/* NotchedButton Component Styles */
+
+.notched-button {
+  clip-path: polygon(0% 0%, calc(100% - 20px) 0%, 100% 20px, 100% 100%, 20px 100%, 0% calc(100% - 20px));
+  font-family: 'Aldrich', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 1rem 2rem;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+/* Primary variant */
+.btn-primary {
+  background: var(--accent, var(--cyan));
+  color: var(--bg);
+}
+
+.btn-primary:hover,
+.btn-primary:focus-visible {
+  animation: btn-glitch 0.3s linear infinite;
+  outline: none;
+}
+
+@keyframes btn-glitch {
+  0%, 58% {
+    transform: skew(0deg) translateX(0);
+  }
+  60%, 68% {
+    transform: skew(7deg) translateX(-2px);
+  }
+  70%, 100% {
+    transform: skew(0deg) translateX(0);
+  }
+}
+
+/* Ghost variant */
+.btn-ghost-wrapper {
+  display: inline-flex;
+  clip-path: polygon(0% 0%, calc(100% - 20px) 0%, 100% 20px, 100% 100%, 20px 100%, 0% calc(100% - 20px));
+  background: var(--accent, var(--cyan));
+  padding: 1px;
+  box-sizing: border-box;
+}
+
+.btn-ghost {
+  clip-path: polygon(0% 0%, calc(100% - 20px) 0%, 100% 20px, 100% 100%, 20px 100%, 0% calc(100% - 20px));
+  background: var(--surface);
+  color: var(--accent, var(--cyan));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  flex: 1 1 100%;
+  box-sizing: border-box;
+  font-family: 'Aldrich', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 1rem 2rem;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  text-align: center;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.btn-ghost:hover,
+.btn-ghost:focus-visible {
+  background: var(--accent, var(--cyan));
+  color: var(--bg);
+  box-shadow: 0 0 24px var(--accent, var(--cyan));
+  outline: none;
+}
+
+/* Mobile responsiveness (375px+) */
+@media (max-width: 700px) {
+  .notched-button {
+    clip-path: polygon(0% 0%, calc(100% - 16px) 0%, 100% 16px, 100% 100%, 16px 100%, 0% calc(100% - 16px));
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+  }
+
+  .btn-ghost-wrapper {
+    clip-path: polygon(0% 0%, calc(100% - 16px) 0%, 100% 16px, 100% 100%, 16px 100%, 0% calc(100% - 16px));
+  }
+
+  .btn-ghost {
+    clip-path: polygon(0% 0%, calc(100% - 16px) 0%, 100% 16px, 100% 100%, 16px 100%, 0% calc(100% - 16px));
+    padding: 0.75rem 1.5rem;
+  }
+}

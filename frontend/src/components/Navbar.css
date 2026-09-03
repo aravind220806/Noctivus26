@@ -1,0 +1,436 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   NOCTIVUS NAVBAR — CYBERPUNK LIME GREEN STYLING (USING ROOT VARIABLES)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Aldrich&family=Rajdhani:wght@600;700&display=swap');
+
+:root {
+  --nav-accent: var(--lime, #A7FF18);
+  --nav-accent-glow: rgba(167, 255, 24, 0.4);
+  --nav-accent-subtle: rgba(167, 255, 24, 0.15);
+  --nav-dark-bg: rgba(8, 11, 16, 0.85);
+  --nav-dark-solid: #050607;
+  --nav-border-dim: rgba(167, 255, 24, 0.3);
+}
+
+.noctivus-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background: transparent;
+  transition: background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  box-sizing: border-box;
+  padding: 12px 0;
+}
+
+.noctivus-navbar.is-scrolled {
+  background: rgba(5, 6, 7, 0.82);
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  border-bottom: 1px solid rgba(167, 255, 24, 0.2);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.85);
+}
+
+.navbar-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 0 28px;
+  box-sizing: border-box;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   BRAND LOGO (LEFT)
+   ───────────────────────────────────────────────────────────────────────────── */
+.navbar-brand-wrap {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.navbar-brand:hover {
+  transform: scale(1.02);
+  filter: drop-shadow(0 0 8px var(--nav-accent-glow));
+}
+
+.brand-wordmark {
+  font-family: var(--display-font, 'Aldrich'), sans-serif;
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: 0.15em;
+  color: var(--text, #EAF6F5);
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.25);
+}
+
+.brand-badge {
+  font-family: var(--display-font, 'Aldrich'), sans-serif;
+  font-weight: 700;
+  font-size: 0.72rem;
+  color: var(--nav-dark-solid);
+  background: var(--nav-accent);
+  padding: 2px 7px;
+  clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px));
+  letter-spacing: 0.05em;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   CYBERPUNK NAVBAR MENU CONTAINER (.menu)
+   ───────────────────────────────────────────────────────────────────────────── */
+.menu {
+  display: flex;
+  align-items: center;
+  background: var(--nav-dark-bg);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid var(--nav-accent);
+  box-shadow: 0 0 15px var(--nav-accent-subtle), 0 8px 32px rgba(0, 0, 0, 0.8);
+  /* Cyberpunk chamfered corners on top-left and bottom-right */
+  clip-path: polygon(
+    10px 0,
+    100% 0,
+    100% calc(100% - 10px),
+    calc(100% - 10px) 100%,
+    0 100%,
+    0 10px
+  );
+  padding: 0;
+  margin: 0;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.menu-list {
+  display: flex;
+  align-items: stretch;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  height: 38px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   MENU ITEM & HOVER ANIMATIONS
+   ───────────────────────────────────────────────────────────────────────────── */
+.menu-item {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  border-right: 1px solid var(--nav-border-dim);
+  box-sizing: border-box;
+}
+
+.menu-item:last-child {
+  border-right: none;
+}
+
+/* Base item links */
+.menu-item > a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 18px;
+  height: 100%;
+  font-family: var(--display-font, 'Aldrich'), 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--nav-accent);
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  background-color: transparent;
+  transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ★ HOVER STATE ANIMATION (Solid Accent Fill & Black Text) ★ */
+.menu-item:hover > a,
+.menu-item.active > a {
+  background-color: var(--nav-accent) !important;
+  color: #000000 !important;
+}
+
+/* Register CTA item inside navbar */
+.menu-item-buy > a {
+  background-color: rgba(167, 255, 24, 0.12);
+  color: var(--nav-accent);
+  font-weight: 700;
+}
+
+.menu-item-buy:hover > a {
+  background-color: var(--nav-accent) !important;
+  color: #000000 !important;
+  box-shadow: 0 0 15px var(--nav-accent-glow);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   CYBERPUNK HAMBURGER BUTTON
+   ───────────────────────────────────────────────────────────────────────────── */
+.cyber-hamburger-btn {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  background: var(--nav-dark-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--nav-accent);
+  color: var(--nav-accent);
+  padding: 6px 14px;
+  cursor: pointer;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  transition: all 0.2s ease;
+  box-shadow: 0 0 10px var(--nav-accent-subtle);
+}
+
+.noctivus-navbar.is-collapsed-mode .cyber-hamburger-btn {
+  display: inline-flex;
+}
+
+.noctivus-navbar.is-collapsed-mode .menu {
+  display: none;
+}
+
+@media (max-width: 960px) {
+  .noctivus-navbar {
+    padding: 8px 0;
+  }
+  .navbar-container {
+    padding: 0 16px;
+    max-width: 100vw;
+  }
+  .menu {
+    display: none !important;
+  }
+  .cyber-hamburger-btn {
+    display: inline-flex !important;
+  }
+}
+
+.cyber-hamburger-btn:hover,
+.cyber-hamburger-btn.is-open {
+  background: var(--nav-accent);
+  color: #000000;
+  box-shadow: 0 0 16px var(--nav-accent-glow);
+}
+
+.cyber-hamburger-inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 18px;
+  height: 14px;
+}
+
+.cyber-hamburger-btn .bar {
+  width: 100%;
+  height: 2px;
+  background-color: var(--nav-accent);
+  transition: transform 0.25s ease, opacity 0.25s ease, background-color 0.25s ease;
+}
+
+.cyber-hamburger-btn:hover .bar,
+.cyber-hamburger-btn.is-open .bar {
+  background-color: #000000;
+}
+
+.cyber-hamburger-btn.is-open .bar-1 {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.cyber-hamburger-btn.is-open .bar-2 {
+  opacity: 0;
+}
+
+.cyber-hamburger-btn.is-open .bar-3 {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+.hamburger-label {
+  font-family: var(--display-font, 'Aldrich'), 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   MOBILE & COLLAPSED DRAWER MENU
+   ───────────────────────────────────────────────────────────────────────────── */
+.cyber-drawer-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 9990;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.cyber-mobile-drawer {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
+  background: rgba(5, 8, 12, 0.98);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 2px solid var(--nav-accent, #00DDF2);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.95);
+  padding: 18px 20px 24px;
+  max-height: calc(100vh - 64px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  animation: slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 9998;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.drawer-inner {
+  max-width: 1360px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.drawer-menu-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.drawer-menu-item {
+  border-bottom: 1px solid rgba(0, 221, 242, 0.12);
+  padding: 4px 0;
+}
+
+.drawer-link {
+  font-family: var(--display-font, 'Aldrich'), 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: 0.12em;
+  color: var(--nav-accent, #00DDF2);
+  text-decoration: none;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  padding: 10px 4px;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.drawer-link:hover,
+.drawer-link.active {
+  color: #FFFFFF;
+  text-shadow: 0 0 10px var(--nav-accent-glow);
+  padding-left: 8px;
+}
+
+.drawer-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.drawer-arrow {
+  color: var(--nav-accent, #00DDF2);
+  font-size: 0.75rem;
+  transition: transform 0.25s ease;
+  padding: 8px;
+}
+
+.drawer-arrow.open {
+  transform: rotate(180deg);
+}
+
+.drawer-sub-list {
+  list-style: none;
+  margin: 4px 0 10px 10px;
+  padding: 0 0 0 14px;
+  border-left: 2px solid var(--nav-accent, #00DDF2);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.drawer-sub-link {
+  font-family: var(--display-font, 'Aldrich'), 'Rajdhani', sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--muted, #7E9096);
+  text-decoration: none;
+  text-transform: uppercase;
+  display: block;
+  padding: 8px 4px;
+  transition: all 0.2s ease;
+}
+
+.drawer-sub-link:hover,
+.drawer-sub-link.active {
+  color: #FFFFFF;
+  padding-left: 8px;
+}
+
+.drawer-actions {
+  margin-top: 12px;
+}
+
+.drawer-cta-btn {
+  width: 100%;
+  background: var(--nav-accent, #00DDF2);
+  color: #000000;
+  font-family: var(--display-font, 'Aldrich'), 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.15em;
+  padding: 14px 20px;
+  border: none;
+  cursor: pointer;
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  transition: all 0.2s ease;
+  box-shadow: 0 0 14px var(--nav-accent-glow);
+}
+
+.drawer-cta-btn:hover {
+  background: #FFFFFF;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+}

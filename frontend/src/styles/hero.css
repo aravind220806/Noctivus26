@@ -1,0 +1,435 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   HERO SECTION STYLES
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.hero-section {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 4rem 0 3rem;
+}
+
+
+
+/* --- Left Column Visuals --- */
+.hero-visual-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  position: relative;
+  gap: 1.25rem;
+}
+
+.hero-logo-img {
+  max-width: clamp(240px, 22vw, 360px);
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 0 24px rgba(0, 221, 242, 0.2));
+  z-index: 2;
+  transition: transform 0.3s ease;
+  margin: 0 auto;
+  display: block;
+}
+
+.hero-logo-img:hover {
+  transform: scale(1.03);
+}
+
+/* --- Right Column Info --- */
+.hero-info-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  z-index: 5;
+}
+
+.hero-eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: 0.75rem;
+}
+
+/* Oversized Title — Single Line Layout */
+.hero-title {
+  font-family: 'Aldrich', sans-serif;
+  font-weight: 400;
+  font-size: clamp(2.8rem, 5.5vw, 4.2rem);
+  line-height: 1.0;
+  color: var(--text);
+  margin: 0 0 1.25rem 0;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  position: relative;
+  z-index: 10;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .hero-title {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .hero-meta-grid {
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .hero-meta-item {
+    min-width: 0;
+  }
+}
+
+.hero-title span {
+  color: var(--lime);
+  position: relative;
+  text-shadow: 0 0 20px rgba(167, 255, 24, 0.35);
+}
+
+.hero-tagline {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: clamp(0.95rem, 1.5vw, 1.25rem);
+  color: var(--text);
+  margin-bottom: 2rem;
+  line-height: 1.5;
+  max-width: 540px;
+  opacity: 0.9;
+}
+
+
+.hero-meta-grid {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 2.5rem;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 1rem 0;
+}
+
+.hero-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.hero-meta-item label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.hero-meta-item span {
+  font-family: 'Aldrich', sans-serif;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.hero-actions-container {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+/* --- Countdown Overlay --- */
+.hero-countdown-wrap {
+  margin-top: 0.5rem;
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Existing Countdown Overrides */
+.hero-countdown {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: clamp(0.75rem, 1.5vw, 1.25rem);
+  display: inline-block;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.hero-countdown__units {
+  display: flex;
+  gap: clamp(0.5rem, 1.2vw, 1.2rem);
+  max-width: 100%;
+  flex-wrap: nowrap;
+}
+
+.hero-countdown__unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.digits {
+  display: flex;
+  gap: 3px;
+}
+
+.digit-cell {
+  position: relative;
+  width: clamp(24px, 2.4vw, 34px);
+  height: clamp(34px, 3.2vw, 46px);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.digit-cell .real,
+.digit-cell .ghost-cyan,
+.digit-cell .ghost-lime {
+  position: absolute;
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 500;
+  font-size: clamp(16px, 1.8vw, 24px);
+}
+
+.digit-cell .real {
+  color: var(--text);
+  z-index: 3;
+}
+
+.digit-cell .ghost-cyan {
+  color: var(--cyan);
+  opacity: 0.55;
+  z-index: 1;
+  transform: translate(-1px, 0);
+  mix-blend-mode: screen;
+}
+
+.digit-cell .ghost-lime {
+  color: var(--lime);
+  opacity: 0.45;
+  z-index: 2;
+  transform: translate(1px, 0);
+  mix-blend-mode: screen;
+}
+
+.hero-countdown__unit small {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+/* Brackets decoration */
+.hero-countdown::before, .hero-countdown::after,
+.hero-countdown__bl, .hero-countdown__br {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: var(--cyan);
+  opacity: 0.7;
+}
+
+.hero-countdown::before { top: -1px; left: -1px; border-top: 1px solid; border-left: 1px solid; }
+.hero-countdown::after { top: -1px; right: -1px; border-top: 1px solid; border-right: 1px solid; }
+.hero-countdown__bl { bottom: -1px; left: -1px; border-bottom: 1px solid; border-left: 1px solid; }
+.hero-countdown__br { bottom: -1px; right: -1px; border-bottom: 1px solid; border-right: 1px solid; }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SVG DESIGN PATTERNS — Grid Overlay, Node Markers, Telemetry
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Grid overlay on visual panel */
+
+.hero-visual-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 32px, rgba(0, 221, 242, 0.08) 32px, rgba(0, 221, 242, 0.08) 33px),
+    repeating-linear-gradient(90deg, transparent, transparent 32px, rgba(0, 221, 242, 0.08) 32px, rgba(0, 221, 242, 0.08) 33px);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Node markers at grid intersections (scattered, subtle) */
+.hero-visual-panel .node-marker {
+  --x: 24%;
+  --y: 18%;
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 3px;
+  height: 3px;
+  background: var(--cyan);
+  border-radius: 50%;
+  opacity: 0.5;
+  z-index: 3;
+}
+
+/* Telemetry mark (data indicator block) */
+.hero-telemetry {
+  position: absolute;
+  top: 3rem;
+  right: 2rem;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--muted);
+  opacity: 0.4;
+}
+
+.hero-telemetry::before {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 1px;
+  background: var(--muted);
+  top: 2px;
+  left: -26px;
+  opacity: 0.35;
+}
+
+.hero-telemetry::after {
+  content: '';
+  position: absolute;
+  width: 1px;
+  height: 16px;
+  background: var(--muted);
+  left: 2px;
+  top: -14px;
+  opacity: 0.35;
+}
+
+/* Off-grid section number (left side, bleeds into gutter) */
+.hero-section-number {
+  position: absolute;
+  left: -6rem;
+  top: 4rem;
+  font-family: var(--display-font);
+  font-size: clamp(2rem, 3vw, 3.5rem);
+  font-weight: normal;
+  color: rgba(0, 221, 242, 0.25);
+  letter-spacing: -0.04em;
+  z-index: 2;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Scan-line divider at bottom of hero */
+.hero-section::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 12px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='12'%3E%3Crect x='0' y='0' width='1' height='12' fill='%2300DDF2' opacity='0.6'/%3E%3Crect x='30' y='6' width='1' height='6' fill='%237E9096' opacity='0.4'/%3E%3Crect x='60' y='6' width='1' height='6' fill='%237E9096' opacity='0.4'/%3E%3Crect x='90' y='6' width='1' height='6' fill='%237E9096' opacity='0.4'/%3E%3C/svg%3E") left bottom repeat-x;
+  border-bottom: 1px solid var(--line);
+  opacity: 0.8;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Hero Mobile Responsive Overrides (max-width: 900px)
+   ───────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .hero-section {
+    padding: 70px 0 2.5rem;
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  .hero-section-number {
+    position: static;
+    font-size: 1.25rem;
+    color: rgba(0, 221, 242, 0.15);
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+  .hero-logo-img {
+    max-width: clamp(180px, 50vw, 250px);
+    width: 100%;
+    height: auto;
+    margin: 0 auto;
+  }
+  .hero-info-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+  }
+  .hero-eyebrow {
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    line-height: 1.4;
+    text-align: center;
+    margin: 0 auto 0.75rem;
+    max-width: 320px;
+  }
+  .hero-title {
+    font-size: clamp(2rem, 8.8vw, 3rem);
+    white-space: normal !important;
+    letter-spacing: 0.03em !important;
+    line-height: 1.1;
+    word-break: break-word;
+    text-align: center;
+    margin: 0 auto 1rem;
+  }
+  .hero-tagline {
+    font-size: 0.9rem;
+    max-width: 480px;
+    margin: 0 auto 1.5rem;
+    text-align: center;
+    line-height: 1.5;
+  }
+  .hero-actions-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin: 1.25rem auto 0;
+    width: 100%;
+    max-width: 360px;
+  }
+  .hero-actions-container .notched-button,
+  .hero-actions-container .btn-ghost-wrapper {
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    text-align: center;
+  }
+  .hero-meta-grid {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+}

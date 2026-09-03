@@ -1,0 +1,468 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   MODALS, NOTEBOOK VIEW & REGISTRATION WIZARD STYLES
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.modal-shell {
+  position: fixed;
+  z-index: 200;
+  inset: 0;
+  padding: var(--sp-6);
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  background: rgba(5, 8, 10, .78);
+  backdrop-filter: blur(10px);
+}
+
+.icon-button {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(0, 221, 242, .22);
+  border-radius: 50%;
+  color: var(--text);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+/* ── Night City Event Dossier Modal ── */
+.event-modal-shell {
+  position: fixed;
+  z-index: 200;
+  inset: 0;
+  padding: 1.5rem;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(8px);
+}
+
+.event-modal-panel {
+  position: relative;
+  width: min(600px, calc(100vw - 32px));
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+  padding: 2rem;
+  box-sizing: border-box;
+  color: var(--text);
+  font-family: var(--mono-font, 'JetBrains Mono', monospace);
+}
+
+/* Corner HUD Brackets */
+.em-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: var(--accent, var(--cyan));
+  border-style: solid;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.em-corner--tl { top: 8px; left: 8px; border-width: 2px 0 0 2px; }
+.em-corner--tr { top: 8px; right: 8px; border-width: 2px 2px 0 0; }
+.em-corner--bl { bottom: 8px; left: 8px; border-width: 0 0 2px 2px; }
+.em-corner--br { bottom: 8px; right: 8px; border-width: 0 2px 2px 0; }
+
+/* Header */
+.em-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px dashed var(--line);
+}
+
+.em-header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.em-index {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  color: var(--accent, var(--cyan));
+}
+
+.em-title {
+  font-family: 'Aldrich', sans-serif;
+  font-weight: 400;
+  font-size: clamp(1.4rem, 4vw, 1.85rem);
+  color: var(--cyan);
+  margin: 0;
+  letter-spacing: 0.08em;
+}
+
+.em-close {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  transition: all 0.15s ease;
+}
+
+.em-close:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+/* Tabs */
+.em-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.em-tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.em-tab:hover {
+  color: var(--text);
+}
+
+.em-tab.active {
+  color: var(--accent, var(--cyan));
+  border-bottom-color: var(--accent, var(--cyan));
+}
+
+/* Body Content */
+.em-body {
+  min-height: 160px;
+  margin-bottom: 1.5rem;
+}
+
+.em-desc {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--text);
+  margin-bottom: 1.25rem;
+}
+
+.em-desc--muted {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.em-meta-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--line);
+}
+
+.em-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.em-meta-label {
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+}
+
+.em-meta-value {
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.em-rules-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.em-rule-item {
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text);
+  display: flex;
+  gap: 0.6rem;
+}
+
+.em-rule-bullet {
+  color: var(--accent, var(--cyan));
+}
+
+/* Footer */
+.em-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--line);
+}
+
+.em-page-counter {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.em-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--line);
+  transition: all 0.15s ease;
+}
+
+.em-dot.active {
+  background: var(--accent, var(--cyan));
+  box-shadow: 0 0 6px var(--accent, var(--cyan));
+}
+
+/* ── Four-step Registration Modal ── */
+.registration-modal {
+  width: min(840px, calc(100vw - 32px));
+  max-height: min(92dvh, 860px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--bg);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95);
+  margin: auto;
+}
+
+.registration-modal__header {
+  flex: 0 0 auto;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: var(--sp-6) var(--sp-6) var(--sp-3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.registration-modal__header h2 {
+  color: var(--text);
+  font-size: 26px;
+  margin: 4px 0 0;
+}
+
+.registration-progress {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-6);
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+
+.registration-progress span {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: center;
+  padding: 4px 0;
+  border-bottom: 2px solid var(--line);
+  transition: all 0.2s ease;
+}
+
+.registration-progress span.active {
+  color: var(--cyan);
+  border-bottom-color: var(--cyan);
+}
+
+.registration-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: var(--sp-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.registration-field-grid, .event-choice-grid, .review-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-4);
+}
+
+.registration-modal .field input, .registration-modal .field select {
+  width: 100%;
+  height: 44px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  color: var(--text);
+  background: var(--surface);
+  font-size: 14px;
+}
+
+.registration-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-3);
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--line);
+}
+
+.payment-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: var(--sp-6);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: var(--sp-6);
+}
+
+.payment-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-4) var(--sp-6);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+}
+
+.qr-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--bg);
+  border-radius: 2px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SVG DESIGN PATTERNS — Diagonal Clips, Node Markers, HUD Styling
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Event modal panel with diagonal clip-path */
+.event-modal-panel {
+  clip-path: polygon(0 0, 98% 0, 100% 2%, 100% 100%, 4px 100%, 0 calc(100% - 4px));
+  position: relative;
+}
+
+/* Node marker on event modal title */
+.em-header::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 4px;
+  height: 4px;
+  background: var(--cyan);
+  border-radius: 50%;
+  opacity: 0.6;
+  z-index: 5;
+}
+
+/* Registration modal panel with diagonal clip */
+.registration-modal-panel {
+  clip-path: polygon(0 12px, 12px 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+}
+
+/* Payment modal with top-right diagonal */
+.payment-modal-panel {
+  clip-path: polygon(0 0, 95% 0, 100% 5%, 100% 100%, 0 100%);
+}
+
+/* Telemetry mark in modal footer */
+.modal-footer {
+  position: relative;
+  border-top: 1px solid var(--line);
+}
+
+.modal-footer::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 3%;
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--muted);
+  opacity: 0.3;
+  z-index: 3;
+}
+
+/* Coordinate tag for form field labels */
+.form-field-label {
+  position: relative;
+}
+
+.form-field-label::after {
+  content: attr(data-field-id);
+  display: inline-block;
+  font-family: var(--mono-font);
+  font-size: 0.55rem;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  margin-left: 6px;
+  opacity: 0.5;
+}
+
+/* HUD-style form input with grid background */
+.form-input {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  position: relative;
+}
+
+.form-input::placeholder {
+  color: rgba(234, 246, 245, 0.3);
+  letter-spacing: 0.02em;
+}
+
+/* Vertical divider in payment options */
+.payment-options {
+  display: grid;
+  gap: 1rem;
+}
+
+.payment-option {
+  border-left: 2px solid var(--line);
+  padding-left: 1rem;
+  position: relative;
+}
+
+.payment-option::before {
+  content: '';
+  position: absolute;
+  left: -2px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, var(--cyan) 0%, transparent 100%);
+  opacity: 0.4;
+}

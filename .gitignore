@@ -1,11 +1,15 @@
 node_modules/
 dist/
+venv/
+.venv/
 .env
 .env.*
 !.env.example
 /atlas-credentials.env
 google_auth.json
+backend/*service-account*.json
+backend/sympo-api-*.json
 __pycache__/
 *.py[cod]
-*.log
+*.db
 .DS_Store

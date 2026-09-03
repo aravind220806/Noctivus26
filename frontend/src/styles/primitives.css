@@ -1,0 +1,213 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   NOCTIVUS '26 UI PRIMITIVES
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* --- Surface Textures --- */
+.panel {
+  position: relative;
+}
+.panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.035;
+  pointer-events: none;
+  z-index: 1;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 150px 150px;
+}
+
+.scanlines {
+  position: relative;
+}
+.scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent, transparent 2px,
+    rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* 1. HudPanel */
+.hud-panel {
+  clip-path: polygon(0px 25px, 26px 0px, calc(60% - 25px) 0px, 60% 25px, 100% 25px,
+        100% calc(100% - 10px), calc(100% - 15px) calc(100% - 10px),
+        calc(80% - 10px) calc(100% - 10px), calc(80% - 15px) 100%,
+        10px 100%, 0% calc(100% - 10px));
+  background: var(--surface);
+  border: 1px solid var(--accent, var(--cyan));
+  box-shadow: 0 0 16px -4px var(--accent, var(--cyan)), inset 0 0 24px -12px var(--accent, var(--cyan));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.hud-label {
+  font-family: 'Aldrich', sans-serif;
+  font-weight: 400;
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 0.15em;
+  position: relative;
+  z-index: 5;
+}
+
+/* 2. HudCorners */
+.hud-corners-container {
+  position: relative;
+}
+.hud-corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--accent, var(--cyan));
+  opacity: 0.7;
+  z-index: 5;
+  pointer-events: none;
+}
+.hud-corner.tl { top: 8px; left: 8px; border-right: none; border-bottom: none; }
+.hud-corner.tr { top: 8px; right: 8px; border-left: none; border-bottom: none; }
+.hud-corner.bl { bottom: 8px; left: 8px; border-right: none; border-top: none; }
+.hud-corner.br { bottom: 8px; right: 8px; border-left: none; border-top: none; }
+
+/* 3. NotchedButton */
+.notched-button {
+  clip-path: polygon(0% 0%, calc(100% - 20px) 0%, 100% 20px, 100% 100%, 20px 100%, 0% calc(100% - 20px));
+  font-family: 'Aldrich', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 1rem 2rem;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+.btn-primary {
+  background: var(--accent, var(--cyan));
+  color: var(--bg);
+}
+.btn-primary:hover, .btn-primary:focus-visible {
+  animation: btn-glitch 0.3s linear infinite;
+  outline: none;
+}
+@keyframes btn-glitch {
+  0%, 58%  { transform: skew(0deg) translateX(0); }
+  60%, 68% { transform: skew(7deg) translateX(-2px); }
+  70%, 100%{ transform: skew(0deg) translateX(0); }
+}
+
+.btn-ghost-wrapper {
+  display: inline-flex;
+  clip-path: polygon(0% 0%, calc(100% - 20px) 0%, 100% 20px, 100% 100%, 20px 100%, 0% calc(100% - 20px));
+  background: var(--accent, var(--cyan));
+  padding: 1px;
+  box-sizing: border-box;
+}
+.btn-ghost {
+  clip-path: polygon(0% 0%, calc(100% - 20px) 0%, 100% 20px, 100% 100%, 20px 100%, 0% calc(100% - 20px));
+  background: var(--surface);
+  color: var(--accent, var(--cyan));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  flex: 1 1 100%;
+  box-sizing: border-box;
+}
+.btn-ghost:hover, .btn-ghost:focus-visible {
+  background: var(--accent, var(--cyan));
+  color: var(--bg);
+  box-shadow: 0 0 24px var(--accent, var(--cyan));
+  outline: none;
+}
+
+/* 4. HeadingBar */
+.heading-container {
+  margin-bottom: 1.5rem;
+}
+.heading-container h1, .heading-container h2, .heading-container h3 {
+  font-family: 'Aldrich', sans-serif;
+  font-weight: 400;
+  margin: 0;
+}
+.heading-container h1 { font-size: 2rem; }
+.heading-container h2 { font-size: 1.5rem; }
+.heading-container h3 { font-size: 1.25rem; }
+
+.heading-cursor {
+  display: inline-block;
+  color: var(--cyan);
+  animation: cursor-blink 1s step-end infinite;
+}
+@keyframes cursor-blink { 50% { opacity: 0; } }
+
+.h-bar {
+  height: 10px;
+  margin-top: 4px;
+}
+.h-bar.h1-bar { background: var(--cyan); clip-path: polygon(0px 0px, 85px 0px, 90px 5px, 100% 5px, 100% 6px, 85px 6px, 80px 10px, 0px 10px); }
+.h-bar.h2-bar { background: var(--teal); clip-path: polygon(0px 5px, 35px 5px, 40px 0px, 85px 0px, 90px 5px, 100% 5px, 100% 6px, 85px 6px, 80px 10px, 20px 10px, 15px 6px, 0px 6px); }
+.h-bar.h3-bar { background: var(--muted); clip-path: polygon(0px 5px, 10px 5px, 15px 0px, 40px 0px, 45px 5px, 100% 5px, 100% 6px, 31px 6px, 27px 2px, 15px 2px, 8px 10px, 0px 10px); }
+
+/* 5. TickDivider */
+.tick-divider {
+  width: 100%;
+  height: 12px;
+  border-bottom: 1px solid var(--line);
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='12'%3E%3Crect x='0' y='0' width='1' height='12' fill='%2300C8E0' opacity='0.6'/%3E%3Crect x='30' y='6' width='1' height='6' fill='%23506058'/%3E%3Crect x='60' y='6' width='1' height='6' fill='%23506058'/%3E%3Crect x='90' y='6' width='1' height='6' fill='%23506058'/%3E%3C/svg%3E") left bottom repeat-x;
+}
+.tick-divider.standalone {
+  margin: 2rem 0;
+}
+
+/* 6. AsymSection */
+.asym-section {
+  display: flex;
+  width: 100%;
+  min-height: 400px;
+}
+.asym-left {
+  width: 40%;
+  background: var(--surface);
+  clip-path: polygon(0 0, 100% 0, 100% 28%, calc(100% - 25px) 42%,
+        100% 54%, calc(100% - 15px) 68%, 100% 82%, 100% 100%, 0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.asym-right {
+  width: 60%;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 2rem;
+}
+
+@media (max-width: 700px) {
+  .asym-section {
+    flex-direction: column;
+  }
+  .asym-left {
+    width: 100%;
+    min-height: 300px;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 30px), calc(100% - 30px) 100%, 0 100%);
+  }
+  .asym-right {
+    width: 100%;
+    padding-left: 0;
+    padding-top: 2rem;
+  }
+}
