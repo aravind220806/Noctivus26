@@ -121,6 +121,14 @@ class _SQLiteDB:
                     await db.execute("CREATE INDEX IF NOT EXISTS idx_registrations_normalizedUtr ON registrations(normalizedUtr)")
                 except Exception:
                     logger.warning("Could not create idx_registrations_normalizedUtr index")
+                try:
+                    await db.execute("CREATE INDEX IF NOT EXISTS idx_registrations_compound_checkin ON registrations(qrHash, qrToken, paymentStatus, checkedIn)")
+                except Exception:
+                    logger.warning("Could not create idx_registrations_compound_checkin index")
+                try:
+                    await db.execute("CREATE INDEX IF NOT EXISTS idx_registrations_compound_food ON registrations(paymentStatus, key)")
+                except Exception:
+                    logger.warning("Could not create idx_registrations_compound_food index")
 
                 await db.commit()
             self._ready = True

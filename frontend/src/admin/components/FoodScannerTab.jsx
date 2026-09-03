@@ -11,7 +11,6 @@ import {
   VolumeX,
   Search,
   RefreshCw,
-  RotateCcw,
   Salad,
   Flame,
   ShieldAlert,
@@ -119,35 +118,6 @@ export function FoodScannerTab({ authHeaders }) {
       }
     } catch (err) {
       console.error('Failed to load food summary:', err);
-    }
-  };
-
-  const handleResetFood = async () => {
-    const confirmed = window.confirm(
-      'Are you sure you want to RESET ALL food claims?\n\nThis will reset all participants back to unclaimed so you can re-test or re-scan.'
-    );
-    if (!confirmed) return;
-
-    try {
-      const res = await adminFetch(apiPath('/api/admin/food/reset'), {
-        method: 'POST',
-        headers: authHeaders,
-      });
-      const data = await res.json();
-      if (res.ok) {
-        playSound('success');
-        setResult({
-          ok: true,
-          type: 'success',
-          title: '🔄 Food Scanner Reset',
-          message: data.message || 'All food claims have been successfully reset to unclaimed.',
-        });
-        loadSummary();
-      } else {
-        alert(data.detail || data.message || 'Failed to reset food claims.');
-      }
-    } catch (err) {
-      alert('Error resetting food claims: ' + err.message);
     }
   };
 
@@ -435,16 +405,6 @@ export function FoodScannerTab({ authHeaders }) {
               title="Refresh live counts"
             >
               <RefreshCw size={16} />
-            </button>
-            <button
-              type="button"
-              className="food-ctrl-btn"
-              onClick={handleResetFood}
-              title="Reset all food claims (testing/rehearsal)"
-              style={{ color: '#f87171' }}
-            >
-              <RotateCcw size={16} />
-              <span className="hide-mobile" style={{ fontSize: '0.75rem', fontWeight: 600 }}>Reset Claims</span>
             </button>
           </div>
         </div>
