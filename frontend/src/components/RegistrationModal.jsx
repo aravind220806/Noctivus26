@@ -14,7 +14,7 @@ const createPaymentReference = () => {
 
 const isCategoryTech = (cat) => {
   const c = String(cat || '').toLowerCase().trim();
-  return c === 'technical' || c === 'tech' || c === 'workshop';
+  return c === 'technical' || c === 'tech';
 };
 
 const isCategoryNonTech = (cat) => {
@@ -22,13 +22,19 @@ const isCategoryNonTech = (cat) => {
   return c === 'non-technical' || c === 'non-tech' || c === 'non technical';
 };
 
+const isCategoryWorkshop = (cat) => {
+  const c = String(cat || '').toLowerCase().trim();
+  return c === 'workshop';
+};
+
 export default function RegistrationModal({ events, registrationOpen, initialEventId, onClose }) {
   const closeButtonRef = useRef(null);
   const [step, setStep] = useState(1);
   const [form, setForm] = useState(emptyForm);
   const initialEvent = events.find((event) => event.id === initialEventId);
-  const [technicalEventId, setTechnicalEventId] = useState(isCategoryTech(initialEvent?.category) ? initialEventId : '');
-  const [nonTechnicalEventId, setNonTechnicalEventId] = useState(isCategoryNonTech(initialEvent?.category) ? initialEventId : '');
+  const [workshopEventId, setWorkshopEventId] = useState(isCategoryWorkshop(initialEvent?.category) ? initialEventId : '');
+  const [technicalEventId, setTechnicalEventId] = useState(!isCategoryWorkshop(initialEvent?.category) && isCategoryTech(initialEvent?.category) ? initialEventId : '');
+  const [nonTechnicalEventId, setNonTechnicalEventId] = useState(!isCategoryWorkshop(initialEvent?.category) && isCategoryNonTech(initialEvent?.category) ? initialEventId : '');
   const [igniteAbstract, setIgniteAbstract] = useState('');
   const [paymentReference] = useState(createPaymentReference);
   const [paymentStarted, setPaymentStarted] = useState(false);
@@ -69,12 +75,24 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
 
   const technicalEvents = useMemo(() => (events || []).filter((event) => isCategoryTech(event.category)), [events]);
   const nonTechnicalEvents = useMemo(() => (events || []).filter((event) => isCategoryNonTech(event.category)), [events]);
+  const workshopEvents = useMemo(() => (events || []).filter((event) => isCategoryWorkshop(event.category)), [events]);
+
   const selectedTechnicalEvent = useMemo(() => (events || []).find((event) => event.id === technicalEventId), [technicalEventId, events]);
   const selectedNonTechnicalEvent = useMemo(() => (events || []).find((event) => event.id === nonTechnicalEventId), [nonTechnicalEventId, events]);
-  const ctfSelected = technicalEventId === 'ctf' || technicalEventId === 'cyber-heist-ctf';
-  const selectedEvents = useMemo(() => [selectedTechnicalEvent, ctfSelected ? null : selectedNonTechnicalEvent].filter(Boolean), [ctfSelected, selectedNonTechnicalEvent, selectedTechnicalEvent]);
+  const selectedWorkshopEvent = useMemo(() => (events || []).find((event) => event.id === workshopEventId), [workshopEventId, events]);
+
+  const workshopSelected = Boolean(workshopEventId);
+  const ctfSelected = !workshopSelected && (technicalEventId === 'ctf' || technicalEventId === 'cyber-heist-ctf');
+
+  const selectedEvents = useMemo(() => {
+    if (workshopSelected) {
+      return [selectedWorkshopEvent].filter(Boolean);
+    }
+    return [selectedTechnicalEvent, ctfSelected ? null : selectedNonTechnicalEvent].filter(Boolean);
+  }, [workshopSelected, selectedWorkshopEvent, selectedTechnicalEvent, ctfSelected, selectedNonTechnicalEvent]);
+
   const selectedEventNames = selectedEvents.map((event) => event.name).join(' + ');
-  const hasWorkshop = selectedEvents.some(
+  const hasWorkshop = workshopSelected || selectedEvents.some(
     (event) => (event.category || '').toLowerCase() === 'workshop' || event.id === 'playground-of-hackers' || event.id === 'art-of-hacking' || event.fee === 300
   );
   const amount = !selectedEvents.length ? 0 : hasWorkshop ? 300 : 150;
@@ -347,18 +365,52 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
                   <h4 className="reg-review-event-title" style={{ fontSize: '1rem' }}>TICKET DETAILS</h4>
                   <span className="reg-review-event-category">Admission for selected options</span>
                 </div>
-                <strong className="reg-review-amount">₹{amount || (technicalEventId === 'playground-of-hackers' ? 300 : 150)}</strong>
+                <strong className="reg-review-amount">₹{amount}</strong>
               </div>
 
               <div className="reg-field-grid">
+                {/* Workshop Dropdown */}
+                <div className="reg-field reg-field--full">
+                  <label className="reg-field-label">Workshop (Exclusive Entry — ₹300)</label>
+                  <select
+                    className="reg-input"
+                    value={workshopEventId}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setWorkshopEventId(val);
+                      if (val) {
+                        setTechnicalEventId('');
+                        setNonTechnicalEventId('');
+                        setIgniteAbstract('');
+                      }
+                      setError('');
+                    }}
+                  >
+                    <option value="">Nil (Choose Regular Technical &amp; Non-Technical Events)</option>
+                    {workshopEvents.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name} — ₹{item.fee || 300}
+                      </option>
+                    ))}
+                  </select>
+                  {workshopSelected && (
+                    <small style={{ color: 'var(--cyan)', fontSize: '0.75rem', marginTop: '0.3rem', display: 'block', fontFamily: 'IBM Plex Mono' }}>
+                      ✦ Workshop selected (₹300): Technical &amp; Non-Technical events are disabled.
+                    </small>
+                  )}
+                </div>
+
+                {/* Technical Event Dropdown */}
                 <div className="reg-field">
                   <label className="reg-field-label">Technical Event</label>
                   <select
                     className="reg-input"
-                    value={technicalEventId}
+                    value={workshopSelected ? '' : technicalEventId}
+                    disabled={workshopSelected}
                     onChange={(e) => {
                       const val = e.target.value;
                       setTechnicalEventId(val);
+                      if (val) setWorkshopEventId('');
                       if (val === 'ctf' || val === 'cyber-heist-ctf') setNonTechnicalEventId('');
                       if (val !== 'ignite') setIgniteAbstract('');
                       setError('');
@@ -367,26 +419,35 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
                     <option value="">Nil</option>
                     {technicalEvents.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
                   </select>
+                  {workshopSelected && <small style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>Disabled: Workshop chosen.</small>}
                 </div>
+
+                {/* Non-Technical Event Dropdown */}
                 <div className="reg-field">
                   <label className="reg-field-label">Non-Technical Event</label>
                   <select
                     className="reg-input"
-                    value={ctfSelected ? '' : nonTechnicalEventId}
-                    disabled={ctfSelected}
+                    value={workshopSelected || ctfSelected ? '' : nonTechnicalEventId}
+                    disabled={workshopSelected || ctfSelected}
                     onChange={(e) => {
-                      setNonTechnicalEventId(e.target.value);
+                      const val = e.target.value;
+                      setNonTechnicalEventId(val);
+                      if (val) setWorkshopEventId('');
                       setError('');
                     }}
                   >
                     <option value="">Nil</option>
                     {nonTechnicalEvents.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
                   </select>
-                  {ctfSelected && <small style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>Disabled: CTF chosen.</small>}
+                  {workshopSelected ? (
+                    <small style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>Disabled: Workshop chosen.</small>
+                  ) : ctfSelected ? (
+                    <small style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>Disabled: CTF chosen.</small>
+                  ) : null}
                 </div>
 
                 {/* IGNITE 200 character abstract box - shown only when IGNITE is selected */}
-                {technicalEventId === 'ignite' && (
+                {!workshopSelected && technicalEventId === 'ignite' && (
                   <div className="reg-field reg-field--full">
                     <div className="reg-field-header">
                       <label className="reg-field-label" htmlFor="ignite-abstract">
