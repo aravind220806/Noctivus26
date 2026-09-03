@@ -39,27 +39,44 @@ export function EventsSection({ onSelect, onRegister, selectedCategory, onSelect
 
   return (
     <section className="events-section" id="events">
-      <HeadingBar level="h2" text="CHOOSE YOUR EVENT" sectionIndex="03 / 05" />
+      <HeadingBar level="h2" text="CHOOSE YOUR EVENT" />
 
       {/* Categories / Filters */}
       <div className="event-filters" role="group" aria-label="Filter events">
-        {categories.map((cat) => {
-          const isActive = filter.toLowerCase() === cat.toLowerCase();
-          const catLower = cat.toLowerCase();
-          const filterAccent = catLower === 'non-technical' ? 'lime' : catLower === 'workshop' ? 'violet' : 'cyan';
-          return (
-            <NotchedButton
-              key={cat}
-              variant={isActive ? 'primary' : 'ghost'}
-              accent={filterAccent}
-              onClick={() => handleFilterChange(cat)}
-              className="filter-btn"
-              style={{ padding: '0.6rem 1.2rem', fontSize: '0.8rem' }}
-            >
-              {cat}
-            </NotchedButton>
-          );
-        })}
+        {/* Desktop: buttons */}
+        <div className="event-filters-buttons">
+          {categories.map((cat) => {
+            const isActive = filter.toLowerCase() === cat.toLowerCase();
+            const catLower = cat.toLowerCase();
+            const filterAccent = catLower === 'non-technical' ? 'lime' : catLower === 'workshop' ? 'violet' : 'cyan';
+            return (
+              <NotchedButton
+                key={cat}
+                variant={isActive ? 'primary' : 'ghost'}
+                accent={filterAccent}
+                onClick={() => handleFilterChange(cat)}
+                className="filter-btn"
+                style={{ padding: '0.6rem 1.2rem', fontSize: '0.8rem' }}
+              >
+                {cat}
+              </NotchedButton>
+            );
+          })}
+        </div>
+        {/* Mobile: dropdown */}
+        <div className="event-filters-dropdown">
+          <select
+            className="event-filter-select"
+            value={filter}
+            onChange={(e) => handleFilterChange(e.target.value)}
+            aria-label="Filter events by category"
+          >
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+          <span className="event-filter-chevron" aria-hidden="true">▾</span>
+        </div>
       </div>
 
       {/* Interactive Swiper Carousel replacing old grid */}

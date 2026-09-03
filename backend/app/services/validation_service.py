@@ -83,7 +83,7 @@ def validate_registration(input_data: dict | None, configured_events: list[dict]
     non_tech_count = sum(1 for e in selected_configs if e.get("category") in ("non-tech", "Non-technical"))
 
     if has_ctf and (non_tech_count > 0 or len(selected_configs) > 1):
-        errors.append("Cyber Heist CTF is a dedicated competition and cannot be combined with other events.")
+        errors.append("NULL CORE 2.0 CTF is a dedicated competition and cannot be combined with other events.")
 
     if tech_count > 1:
         errors.append("Maximum 1 technical event allowed per registration.")
@@ -140,8 +140,14 @@ def validate_registration(input_data: dict | None, configured_events: list[dict]
             "teamMembers": [{"name": normalize_text(member.get("name")).upper(), "rollNo": normalize_text(member.get("rollNo")).upper()} for member in members if isinstance(member, dict)],
         })
 
-    # Dynamic registration fee based on selected event fees (e.g. ₹300 for workshop, ₹150 for regular events)
-    expected_amount = max([e.get("feeSnapshot", 150) for e in event_registrations], default=0) if event_registrations else 0
+    # Flat registration fee of ₹150 covers symposium admission (₹300 if workshop is included)
+    has_workshop = any(
+        (e.get("category") or "").lower() == "workshop"
+        or e.get("eventId") in ("playground-of-hackers", "art-of-hacking")
+        or e.get("feeSnapshot") == 300
+        for e in event_registrations
+    )
+    expected_amount = (300 if has_workshop else 150) if event_registrations else 0
     if data.get("claimedAmount") != expected_amount:
         errors.append("Registration amount does not match the configured event fees.")
 

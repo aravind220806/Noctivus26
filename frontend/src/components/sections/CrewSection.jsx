@@ -33,7 +33,7 @@ export function CrewSection() {
   return (
     <section className="crew-section" id="coordinators">
       <div className="crew-container">
-        <HeadingBar level="h2" text="COORDINATORS" sectionIndex="05 / 05" />
+        <HeadingBar level="h2" text="COORDINATORS" />
 
         {/* 3 Coordinator Cards across full width */}
         <div className="crew-cards-grid">

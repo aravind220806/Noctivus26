@@ -7,15 +7,15 @@
   ],
   "scripts": {
     "dev": "concurrently -k -n \"api,web\" -c \"blue,magenta\" \"npm:dev:api\" \"npm:dev:web\"",
-    "dev:api": "cd backend && (python run.py || python3 run.py || .venv\\Scripts\\python.exe run.py)",
+    "dev:api": "node scripts/run-backend.js run.py",
     "dev:web": "npm run dev --workspace frontend",
     "dev:frontend": "npm run dev --workspace frontend",
     "build": "npm run build --workspace frontend",
-    "start": "cd backend && (python run.py || python3 run.py || .venv\\Scripts\\python.exe run.py)",
-    "test": "cd backend && pytest"
+    "start": "node scripts/run-backend.js run.py",
+    "test": "node scripts/run-backend.js -m compileall app run.py"
   },
   "dependencies": {
-    "lucide-react": "^1.37.0",
+    "lucide-react": "^1.39.0",
     "recharts": "^3.10.1"
   },
   "devDependencies": {

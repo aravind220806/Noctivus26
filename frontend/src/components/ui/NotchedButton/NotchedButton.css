@@ -89,10 +89,14 @@
     clip-path: polygon(0% 0%, calc(100% - 16px) 0%, 100% 16px, 100% 100%, 16px 100%, 0% calc(100% - 16px));
     padding: 0.75rem 1.5rem;
     font-size: 0.9rem;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .btn-ghost-wrapper {
     clip-path: polygon(0% 0%, calc(100% - 16px) 0%, 100% 16px, 100% 100%, 16px 100%, 0% calc(100% - 16px));
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .btn-ghost {
