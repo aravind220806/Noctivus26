@@ -131,7 +131,7 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
       className={`noctivus-navbar ${scrolled ? 'is-scrolled' : ''} ${isCollapsed ? 'is-collapsed-mode' : ''}`}
     >
       <div className="navbar-container">
-        
+
         {/* Left: Noctivus Brand Logo */}
         <div ref={logoRef} className="navbar-brand-wrap">
           <a
