@@ -171,12 +171,13 @@ export function CheckInTab({ authHeaders }) {
     : 0;
 
   return (
-    <section className="admin-panel check-in-panel">
-      <div className="check-in-header">
+    <section className="admin-tab-panel check-in-panel">
+      {/* Header Banner */}
+      <div className="check-in-header-row">
         <div>
-          <h2>Check-in Desk &amp; Member Entry</h2>
-          <p className="admin-help">
-            Scan the registration pass QR code or enter the registration ID to verify and admit participants to the symposium.
+          <h2 className="check-in-title">Gate &amp; Reception Check-In</h2>
+          <p className="check-in-subtitle">
+            Live scanning and attendance tracking for Noctivus '26 participants.
           </p>
         </div>
         <button className="button button-secondary button-small" type="button" onClick={load}>

@@ -16,5 +16,38 @@ export default defineConfig({
   build: {
     target: 'es2020',
     cssCodeSplit: true,
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('motion') || id.includes('framer-motion') || id.includes('motion-dom')) {
+              return 'vendor-motion';
+            }
+            if (id.includes('lucide-react')) {
+              return 'vendor-lucide';
+            }
+            if (id.includes('swiper')) {
+              return 'vendor-swiper';
+            }
+            if (id.includes('html5-qrcode') || id.includes('qrcode')) {
+              return 'vendor-qrcode';
+            }
+            if (id.includes('recharts') || id.includes('d3-')) {
+              return 'vendor-charts';
+            }
+            if (id.includes('ogl')) {
+              return 'vendor-ogl';
+            }
+            if (id.includes('maplibre-gl')) {
+              return 'vendor-maplibre';
+            }
+            if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
+              return 'vendor-react';
+            }
+          }
+        },
+      },
+    },
   },
 });

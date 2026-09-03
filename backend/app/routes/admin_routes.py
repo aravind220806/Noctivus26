@@ -366,6 +366,72 @@ async def check_in_summary(_admin=Depends(require_admin_tab("Check-in"))):
     }
 
 
+@router.post("/check-in/reset")
+async def reset_check_ins(admin=Depends(require_any_admin_tab(["Check-in", "Dashboard"]))):
+    count = 0
+    if mongo.mongo_ready():
+        res = await mongo.db.registrations.update_many(
+            {},
+            {"$set": {
+                "checkedIn": False,
+                "checkedInAt": None,
+                "checkedInBy": None,
+                "attendance": {},
+                "attendedEvents": []
+            }}
+        )
+        count += res.modified_count
+
+    if sqlite_db.ready():
+        rows = await sqlite_db.list_all("registrations")
+        for r in rows:
+            if r.get("checkedIn") or r.get("attendance"):
+                r["checkedIn"] = False
+                r["checkedInAt"] = None
+                r["checkedInBy"] = None
+                r["attendance"] = {}
+                r["attendedEvents"] = []
+                await sqlite_db.upsert("registrations", r.get("registrationId"), r)
+                count += 1
+
+    for r in memory_registrations:
+        if r.get("checkedIn") or r.get("attendance"):
+            r["checkedIn"] = False
+            r["checkedInAt"] = None
+            r["checkedInBy"] = None
+            r["attendance"] = {}
+            r["attendedEvents"] = []
+            count += 1
+
+    try:
+        from app.services.cache_service import qr_lookup_cache, events_cache
+        qr_lookup_cache.clear()
+        events_cache.clear()
+    except Exception:
+        pass
+
+    # Trigger Google Sheets full sync
+    try:
+        from app.services.google_sheets_service import google_sheets_service
+        all_regs = await load_registrations()
+        events = await list_events()
+        slots = []
+        if sqlite_db.ready():
+            slots = await sqlite_db.list_all("event_slots")
+        await google_sheets_service.sync_full_database(events, all_regs, slots)
+    except Exception as err:
+        logger.warning("Google sheets sync after reset notice: %s", err)
+
+    await record_admin_action(
+        admin["email"],
+        "check_in.reset_all",
+        "all_participants",
+        {"resetCount": count, "timestamp": datetime.now(timezone.utc).isoformat()},
+    )
+
+    return {"ok": True, "resetCount": count, "message": f"Successfully reset check-in status for {count} records and synced with Google Sheets."}
+
+
 @router.post("/walk-ins")
 @limiter.limit("30/minute")
 async def create_walk_in(request: Request, admin=Depends(require_admin_tab("Check-in"))):

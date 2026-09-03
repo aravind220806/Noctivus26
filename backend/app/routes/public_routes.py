@@ -1,4 +1,5 @@
 import hashlib
+import json
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 
@@ -9,6 +10,7 @@ from pymongo import ReturnDocument
 from app.core.rate_limit import limiter
 from app.db import mongo
 from app.services.event_service import list_events
+from app.services.cache_service import qr_lookup_cache, events_cache
 from app.services.registration_service import (
     check_utr_availability,
     create_registration,
@@ -35,10 +37,16 @@ async def find_registration_by_qr_token(token: str) -> dict | None:
                 return None
             clean = candidate
 
+    cache_key = f"qr:{clean}"
+    cached = qr_lookup_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     token_hash = hashlib.sha256(clean.encode("utf-8")).hexdigest()
 
+    result = None
     if mongo.mongo_ready():
-        return await mongo.db.registrations.find_one({
+        result = await mongo.db.registrations.find_one({
             "$or": [
                 {"invitation.qrHash": token_hash},
                 {"invitation.qrHash": clean},
@@ -47,14 +55,18 @@ async def find_registration_by_qr_token(token: str) -> dict | None:
                 {"qrToken": clean},
             ]
         })
+    else:
+        rows = await load_registrations()
+        for item in rows:
+            qr_hash = str((item.get("invitation") or {}).get("qrHash") or item.get("qrHash") or "")
+            qr_token = str((item.get("invitation") or {}).get("qrToken") or item.get("qrToken") or "")
+            if (qr_hash and qr_hash == token_hash) or (qr_token and qr_token == clean):
+                result = item
+                break
 
-    rows = await load_registrations()
-    for item in rows:
-        qr_hash = str((item.get("invitation") or {}).get("qrHash") or item.get("qrHash") or "")
-        qr_token = str((item.get("invitation") or {}).get("qrToken") or item.get("qrToken") or "")
-        if (qr_hash and qr_hash == token_hash) or (qr_token and qr_token == clean):
-            return item
-    return None
+    if result:
+        qr_lookup_cache.set(cache_key, result, ttl_seconds=120.0)
+    return result
 
 
 @router.get("/health")
@@ -70,8 +82,22 @@ async def health():
 
 
 @router.get("/events")
-async def events():
-    return await registration_status()
+async def events(request: Request, response: Response):
+    data = events_cache.get("events_catalog")
+    if data is None:
+        data = await registration_status()
+        events_cache.set("events_catalog", data, ttl_seconds=30.0)
+
+    body_bytes = json.dumps(data, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    etag = f'W/"{hashlib.sha256(body_bytes).hexdigest()[:16]}"'
+
+    client_etag = request.headers.get("if-none-match")
+    if client_etag and client_etag.strip() == etag:
+        return Response(status_code=304, headers={"ETag": etag, "Cache-Control": "public, max-age=30, stale-while-revalidate=120"})
+
+    response.headers["ETag"] = etag
+    response.headers["Cache-Control"] = "public, max-age=30, stale-while-revalidate=120"
+    return data
 
 
 @router.post("/utr/check")

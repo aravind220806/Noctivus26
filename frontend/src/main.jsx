@@ -1,6 +1,5 @@
 import { Component, StrictMode, lazy, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
-import App from './App.jsx';
 import './styles.css';
 
 class RootErrorBoundary extends Component {
@@ -36,6 +35,7 @@ class RootErrorBoundary extends Component {
   }
 }
 
+const App = lazy(() => import('./App.jsx'));
 const AdminApp = lazy(() => import('./admin/AdminApp.jsx'));
 const PassVerification = lazy(() => import('./pages/PassVerification.jsx'));
 const DeviceDemo = lazy(() => import('./components/registration-device/DeviceDemo.jsx'));
@@ -68,9 +68,18 @@ createRoot(document.getElementById('root')).render(
           <CoordinatorsPage />
         </Suspense>
       ) : (
-        <App />
+        <Suspense fallback={<div className="admin-loading">Initializing Noctivus...</div>}>
+          <App />
+        </Suspense>
       )}
     </RootErrorBoundary>
   </StrictMode>,
 );
+
+// Register Service Worker in production
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
 

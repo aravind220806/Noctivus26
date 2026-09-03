@@ -1,7 +1,6 @@
-import { Component, useEffect, useMemo, useRef, useState } from 'react';
+import { Component, useEffect, useMemo, useRef, useState, lazy, Suspense } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { events } from './data/site.js';
-import RegistrationModal from './components/RegistrationModal.jsx';
 import Navbar from './components/Navbar.jsx';
 import Sidebar from './components/navigation/Sidebar.jsx';
 import MobileDrawer from './components/navigation/MobileDrawer.jsx';
@@ -9,14 +8,15 @@ import { TickDivider } from './components/ui/TickDivider/TickDivider';
 import { HeroSection } from './components/sections/HeroSection.jsx';
 import { AboutSection } from './components/sections/AboutSection.jsx';
 import { EventsSection } from './components/sections/EventsSection.jsx';
-import { CyberHeroSwiper } from './components/sections/CyberHeroSwiper.jsx';
-import { EventModal } from './components/sections/EventModal.jsx';
-import { WebsiteIntro } from './components/intro/WebsiteIntro.jsx';
-import { TimelineSection } from './components/sections/TimelineSection.jsx';
 import { CrewSection } from './components/sections/CrewSection.jsx';
 import { FooterSection } from './components/sections/FooterSection.jsx';
 import useReveal from './hooks/useReveal.js';
 import { getApiBase } from './lib/api';
+
+const RegistrationModal = lazy(() => import('./components/RegistrationModal.jsx'));
+const EventModal = lazy(() => import('./components/sections/EventModal.jsx'));
+const TimelineSection = lazy(() => import('./components/sections/TimelineSection.jsx').then(m => ({ default: m.TimelineSection })));
+const WebsiteIntro = lazy(() => import('./components/intro/WebsiteIntro.jsx').then(m => ({ default: m.WebsiteIntro })));
 
 const sectionsList = ['home', 'about', 'events', 'schedule', 'coordinators', 'footer'];
 
@@ -128,7 +128,11 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      {showIntro && <WebsiteIntro onComplete={() => setShowIntro(false)} />}
+      {showIntro && (
+        <Suspense fallback={null}>
+          <WebsiteIntro onComplete={() => setShowIntro(false)} />
+        </Suspense>
+      )}
 
       <div className="scroll-progress" ref={scrollProgressRef} aria-hidden="true" />
       
@@ -150,7 +154,9 @@ export default function App() {
           onSelectCategory={setSelectedCategory}
         />
         <TickDivider />
-        <TimelineSection />
+        <Suspense fallback={<div className="timeline-loading" style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>Loading timeline...</div>}>
+          <TimelineSection />
+        </Suspense>
         <TickDivider />
         <CrewSection />
         <FooterSection />
@@ -158,21 +164,25 @@ export default function App() {
 
       <AnimatePresence>
         {selectedEvent && (
-          <EventModal 
-            event={selectedEvent} 
-            onClose={() => setSelectedEvent(null)} 
-            onRegister={() => openRegistration(selectedEvent.id)} 
-          />
+          <Suspense fallback={null}>
+            <EventModal
+              event={selectedEvent}
+              onClose={() => setSelectedEvent(null)}
+              onRegister={() => openRegistration(selectedEvent.id)}
+            />
+          </Suspense>
         )}
       </AnimatePresence>
 
       {registration && (
-        <RegistrationModal
-          events={registerableEvents}
-          registrationOpen={registrationOpen}
-          initialEventId={registration === 'open' ? null : registration}
-          onClose={() => setRegistration(null)}
-        />
+        <Suspense fallback={<div className="admin-loading">Loading registration...</div>}>
+          <RegistrationModal
+            events={registerableEvents}
+            registrationOpen={registrationOpen}
+            initialEventId={registration === 'open' ? null : registration}
+            onClose={() => setRegistration(null)}
+          />
+        </Suspense>
       )}
     </ErrorBoundary>
   );
