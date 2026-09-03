@@ -20,7 +20,14 @@ export default function DashboardLayout({
   return (
     <ThemeProvider>
       <main className={`admin-shell ${sidebarOpen ? 'admin-shell--nav-open' : ''}`}>
-        <Sidebar activeTab={activeTab} visibleTabs={visibleTabs} onTabChange={onTabChange} user={user} onLogout={onLogout} />
+        <Sidebar
+          activeTab={activeTab}
+          visibleTabs={visibleTabs}
+          onTabChange={onTabChange}
+          user={user}
+          onLogout={onLogout}
+          onClose={onMenuToggle}
+        />
         <section className="admin-main">
           <Topbar
             activeTab={activeTab}

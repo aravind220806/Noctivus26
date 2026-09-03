@@ -15,27 +15,9 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
   const logoRef = useRef(null);
   const menuRef = useRef(null);
 
-  // Proximity / Collision detection: check if Noctivus logo is getting close to navbar container
   const checkProximity = useCallback(() => {
     setScrolled(window.scrollY > 30);
-
-    if (window.innerWidth <= 960) {
-      setIsCollapsed(true);
-      return;
-    }
-
-    if (logoRef.current && menuRef.current) {
-      const logoRect = logoRef.current.getBoundingClientRect();
-      const menuRect = menuRef.current.getBoundingClientRect();
-      const gap = menuRect.left - logoRect.right;
-      if (gap < 35) {
-        setIsCollapsed(true);
-      } else {
-        setIsCollapsed(false);
-      }
-    } else {
-      setIsCollapsed(window.innerWidth <= 960);
-    }
+    setIsCollapsed(window.innerWidth <= 960);
   }, []);
 
   useEffect(() => {
