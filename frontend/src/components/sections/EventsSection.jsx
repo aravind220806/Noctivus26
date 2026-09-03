@@ -25,9 +25,6 @@ export function EventsSection({ onSelect, onRegister, selectedCategory, onSelect
     const filterLower = filter.toLowerCase();
     return authoritativeEvents.filter((e) => {
       const catLower = e.category?.toLowerCase();
-      if (filterLower === 'technical') {
-        return catLower === 'technical' || catLower === 'workshop';
-      }
       return catLower === filterLower;
     });
   }, [filter, authoritativeEvents]);
