@@ -111,6 +111,62 @@
 .filter-dot--teal { background: var(--teal); box-shadow: 0 0 6px var(--teal); }
 .filter-dot--violet { background: var(--violet); box-shadow: 0 0 6px var(--violet); }
 
+/* Mobile dropdown / Desktop buttons */
+.timeline-filters-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.timeline-filters-dropdown {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .timeline-filters-buttons {
+    display: none;
+  }
+  .timeline-filters-dropdown {
+    display: block;
+    position: relative;
+    width: 100%;
+  }
+  .timeline-filter-select {
+    width: 100%;
+    padding: 0.65rem 2.5rem 0.65rem 0.8rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--line);
+    color: var(--cyan);
+    font-family: var(--mono-font);
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    outline: none;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  }
+  .timeline-filter-select option {
+    background: var(--surface);
+    color: var(--text);
+  }
+  .timeline-filter-select:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 12px rgba(0, 221, 242, 0.3);
+  }
+  .timeline-filter-chevron {
+    position: absolute;
+    right: 0.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--cyan);
+    font-size: 0.9rem;
+    pointer-events: none;
+  }
+}
+
 /* View Switcher (Desktop only) */
 .timeline-view-switch {
   display: inline-flex;
