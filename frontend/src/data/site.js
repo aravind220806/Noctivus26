@@ -55,8 +55,8 @@ export const events = [
     fee: 150,
     laptopRequirement: 'Laptop is mandatory for this event.',
     accent: 'cyan',
-    image: eventImage,
-    imagePosition: '58% 45%',
+    image: '/images/bug-hunt.webp',
+    imagePosition: 'center center',
     format: 'Find and report security vulnerabilities through live, hands-on cybersecurity challenges. Covers web security, infrastructure security, authentication, authorization, privilege escalation, and exploitation.',
     details: [
       'Test only the targets given by the organizers.',
@@ -139,8 +139,8 @@ export const events = [
     fee: 150,
     laptopRequirement: 'None',
     accent: 'cyan',
-    image: '/images/ignite-student.jpg',
-    imagePosition: 'center 30%',
+    image: '/images/ignite-student.webp',
+    imagePosition: 'center center',
     format: "Present one original idea using the official PPT template. Each team gets 5–6 minutes for the pitch and 2–3 minutes for judges' Q&A.",
     details: [
       'Use the official PPT template.',
@@ -194,8 +194,8 @@ export const events = [
     fee: 150,
     laptopRequirement: 'None',
     accent: 'lime',
-    image: eventImage,
-    imagePosition: '42% 46%',
+    image: '/images/tune-trap.webp',
+    imagePosition: 'center center',
     format: 'A multi-round music challenge testing song identification, lyrics recall, and theme matching under time pressure.',
     details: [
       'No Shazam, SoundHound, or music identification apps.',
@@ -248,8 +248,8 @@ export const events = [
     fee: 300,
     laptopRequirement: 'Laptop is recommended for live demo exercises.',
     accent: 'violet',
-    image: eventImage,
-    imagePosition: '50% 50%',
+    image: '/images/workshop-gamkers.webp',
+    imagePosition: 'center center',
     format: 'An intensive hands-on offensive & defensive cybersecurity workshop uncovering real-world exploit vectors, ethical hacking techniques, and live labs.',
     details: [
       'Interactive hands-on session with industry experts.',
