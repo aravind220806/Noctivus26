@@ -1,22 +1,56 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { TickDivider } from '../ui/TickDivider/TickDivider';
 import { site } from '../../data/site.js';
 import './FooterSection.css';
 
 export function FooterSection() {
-  const [showBusRouteModal, setShowBusRouteModal] = useState(false);
+  const mapContainerRef = useRef(null);
+  const mapRef = useRef(null);
 
   const linkedinUrl = site?.social?.LinkedIn || 'https://linkedin.com';
   const instagramUrl = site?.social?.Instagram || 'https://instagram.com';
   const xUrl = site?.social?.X || 'https://x.com';
 
-  const busRoutes = [
-    { routeNo: 'Route 1', from: 'Central / Broadway', via: 'Vyasarpadi, MKB Nagar, Madhavaram, Red Hills Road' },
-    { routeNo: 'Route 2', from: 'Tambaram', via: 'Chromepet, Guindy, Koyambedu, Ambattur OT, Surapet' },
-    { routeNo: 'Route 3', from: 'Avadi', via: 'Pattabiram, Thirumullaivoyal, Ambattur OT, Surapet' },
-    { routeNo: 'Route 4', from: 'Koyambedu (CMBT)', via: 'Thirumangalam, Mogappair, Ambattur Estate, Surapet' },
-    { routeNo: 'Route 5', from: 'Tiruvallur', via: 'Tiruninravur, Avadi, Ambattur, Surapet' },
-  ];
+  useEffect(() => {
+    if (!mapContainerRef.current || mapRef.current) return;
+
+    const initMap = async () => {
+      const { Map, NavigationControl } = await import('maplibre-gl');
+      await import('maplibre-gl/dist/maplibre-gl.css');
+
+      const map = new Map({
+        container: mapContainerRef.current,
+        style: {
+          version: 8,
+          sources: {
+            openstreetmap: {
+              type: 'raster',
+              tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+              tileSize: 256,
+              attribution: '',
+            },
+          },
+          layers: [{ id: 'openstreetmap', type: 'raster', source: 'openstreetmap' }],
+        },
+        center: [80.1916095, 13.1483288],
+        zoom: 15,
+        attributionControl: false,
+        interactive: false,
+      });
+
+      map.addControl(new NavigationControl({ showCompass: false, visualizePitch: false }), 'top-right');
+      mapRef.current = map;
+    };
+
+    initMap();
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, []);
 
   return (
     <footer className="footer-cyber-hud" id="footer">
@@ -87,33 +121,27 @@ export function FooterSection() {
                 <span>BUS ROUTE</span>
               </div>
               <div className="footer-info-body">
-                <button
-                  type="button"
-                  className="footer-bus-btn"
-                  onClick={() => setShowBusRouteModal(true)}
-                >
-                  <span>View Bus Route</span>
-                  <svg className="footer-ext-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                    <polyline points="15 3 21 3 21 9" />
-                    <line x1="10" y1="14" x2="21" y2="3" />
-                  </svg>
-                </button>
+                <a
+                href="/busroutes.pdf"
+                download
+                className="footer-bus-btn"
+              >
+                <span>View Bus Route</span>
+                <svg className="footer-ext-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  <polyline points="15 3 21 3 21 9" />
+                  <line x1="10" y1="14" x2="21" y2="3" />
+                </svg>
+              </a>
               </div>
             </div>
 
           </div>
 
-          {/* RIGHT SIDE: Compact Google Map */}
+          {/* RIGHT SIDE: Compact OpenStreetMap */}
           <div className="footer-map-side">
             <div className="footer-compact-map">
-              <iframe
-                title="Velammal Engineering College Location Map"
-                src="https://maps.google.com/maps?q=Velammal+Engineering+College%2C+Surapet%2C+Chennai&t=&z=15&ie=UTF8&iwloc=&output=embed"
-                className="footer-map-iframe"
-                loading="lazy"
-                allowFullScreen
-              />
+              <div ref={mapContainerRef} className="footer-map-container" />
               <a
                 href="https://www.google.com/maps/dir/?api=1&destination=Velammal+Engineering+College%2C+Surapet%2C+Chennai+600066"
                 target="_blank"
@@ -185,50 +213,6 @@ export function FooterSection() {
 
       </div>
 
-      {/* Bus Route Modal */}
-      {showBusRouteModal && (
-        <div className="bus-modal-backdrop" onClick={() => setShowBusRouteModal(false)}>
-          <div className="bus-modal-panel" onClick={(e) => e.stopPropagation()}>
-            <div className="bus-modal-header">
-              <h3 className="bus-modal-title">COLLEGE BUS ROUTES</h3>
-              <button
-                type="button"
-                className="bus-modal-close"
-                onClick={() => setShowBusRouteModal(false)}
-                aria-label="Close modal"
-              >
-                ✕
-              </button>
-            </div>
-            
-            <p className="bus-modal-subtitle">
-              Complimentary transportation to Velammal Engineering College, Surapet for Noctivus ’26 participants:
-            </p>
-
-            <div className="bus-routes-list">
-              {busRoutes.map((route) => (
-                <div key={route.routeNo} className="bus-route-item">
-                  <div className="bus-route-badge">{route.routeNo}</div>
-                  <div className="bus-route-info">
-                    <strong className="bus-route-from">{route.from}</strong>
-                    <span className="bus-route-via">Via: {route.via}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="bus-modal-footer">
-              <button
-                type="button"
-                className="bus-modal-btn"
-                onClick={() => setShowBusRouteModal(false)}
-              >
-                CLOSE
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </footer>
   );
 }
