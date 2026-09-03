@@ -111,8 +111,8 @@ export const events = [
     fee: 150,
     laptopRequirement: 'Laptop is mandatory for this event.',
     accent: 'cyan',
-    image: '/images/vibecoding-laptop.jpg',
-    imagePosition: 'center 65%',
+    image: '/images/vibecoding-laptop.webp',
+    imagePosition: 'center 45%',
     format: 'Build a useful and working solution based on a problem statement given by the organizers. AI-assisted coding is allowed.',
     details: [
       'Choose one problem statement provided by the organizers.',
