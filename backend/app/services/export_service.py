@@ -315,7 +315,7 @@ def export_scheduler_to_excel(events: list[dict], slots: list[dict], registratio
     return output.getvalue()
 
 def _sanitize_sheet_title(name: str) -> str:
-    """Excel sheet names max length is 31 and cannot contain : \ / ? * [ ]"""
+    r"""Excel sheet names max length is 31 and cannot contain : \ / ? * [ ]"""
     clean = re.sub(r'[:\\/?*\[\]]', '', str(name or 'Event')).strip()
     return clean[:31] if clean else 'Event'
 
