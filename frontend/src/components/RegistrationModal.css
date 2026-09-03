@@ -398,3 +398,54 @@
   color: var(--cyan);
   letter-spacing: 0.05em;
 }
+
+/* ── Mobile Viewport Optimizations (320px – 480px) ── */
+@media (max-width: 480px) {
+  .reg-modal-shell {
+    padding: 0.5rem;
+    align-items: flex-start;
+  }
+
+  .reg-modal-panel {
+    width: 100%;
+    padding: 1.25rem 0.9rem;
+  }
+
+  .reg-header {
+    margin-bottom: 1.25rem;
+  }
+
+  .reg-title {
+    font-size: 1.35rem;
+  }
+
+  .reg-progress {
+    margin-bottom: 1.25rem;
+    font-size: 0.72rem;
+  }
+
+  .reg-step-line {
+    margin: 0 0.4rem;
+  }
+
+  .reg-step-node span {
+    display: none;
+  }
+
+  .reg-food-options {
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .reg-actions {
+    flex-direction: column-reverse;
+    gap: 0.75rem;
+  }
+
+  .reg-actions button,
+  .reg-actions .notched-button {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+}
