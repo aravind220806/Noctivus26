@@ -10,6 +10,7 @@ export const tabs = [
   'Dashboard',
   'Verify Members',
   'Check-in',
+  'Food Scanner',
   'Attendance',
   'Events',
   'Event Scheduler',

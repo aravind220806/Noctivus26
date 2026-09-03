@@ -7,6 +7,7 @@ export const navigationGroups = [
       { label: 'Dashboard', icon: BionisIcons.dashboard },
       { label: 'Verify Members', icon: BionisIcons.verify },
       { label: 'Check-in', icon: BionisIcons.checkIn },
+      { label: 'Food Scanner', icon: BionisIcons.food },
       { label: 'Attendance', icon: BionisIcons.attendance },
       { label: 'Events', icon: BionisIcons.events },
       { label: 'Event Scheduler', icon: BionisIcons.events },

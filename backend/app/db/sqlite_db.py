@@ -1,5 +1,4 @@
-"""
-SQLite-backed persistence layer.
+"""SQLite-backed persistence layer.
 
 All records are stored as JSON blobs inside a simple key/value-ish table so
 the existing dict-based service interfaces need zero structural changes.
@@ -68,23 +67,61 @@ class _SQLiteDB:
         DB_PATH.parent.mkdir(parents=True, exist_ok=True)
         try:
             async with aiosqlite.connect(DB_PATH) as db:
-                # Generic key-value stores
+                # Enable WAL mode for better concurrent access
+                await db.execute("PRAGMA journal_mode=WAL")
+                # Performance pragmas
+                await db.execute("PRAGMA synchronous=NORMAL")
+                await db.execute("PRAGMA cache_size=-64000")  # 64MB cache
+
+                # Create/verify tables
                 for table in _TABLES:
-                    await db.execute(f"""
-                        CREATE TABLE IF NOT EXISTS {table} (
-                            key     TEXT PRIMARY KEY,
-                            data    TEXT NOT NULL,
-                            updated REAL NOT NULL DEFAULT (unixepoch('now'))
-                        )
-                    """)
-                # Audit log — append-only, no primary key requirement
-                await db.execute("""
-                    CREATE TABLE IF NOT EXISTS admin_actions (
-                        id      INTEGER PRIMARY KEY AUTOINCREMENT,
+                    if table == "registrations":
+                        # Check if the column we need exists; add it if not
+                        async with db.execute("PRAGMA table_info(registrations)") as cur:
+                            columns = {row[1] for row in await cur.fetchall()}
+                        if "qrHash" not in columns:
+                            await db.execute("ALTER TABLE registrations ADD COLUMN qrHash TEXT")
+                            logger.info("Added qrHash column to registrations table")
+                        if "qrToken" not in columns:
+                            await db.execute("ALTER TABLE registrations ADD COLUMN qrToken TEXT")
+                            logger.info("Added qrToken column to registrations table")
+                        if "paymentStatus" not in columns:
+                            await db.execute("ALTER TABLE registrations ADD COLUMN paymentStatus TEXT")
+                            logger.info("Added paymentStatus column to registrations table")
+                        if "checkedIn" not in columns:
+                            await db.execute("ALTER TABLE registrations ADD COLUMN checkedIn INTEGER DEFAULT 0")
+                            logger.info("Added checkedIn column to registrations table")
+                        if "normalizedUtr" not in columns:
+                            await db.execute("ALTER TABLE registrations ADD COLUMN normalizedUtr TEXT")
+                            logger.info("Added normalizedUtr column to registrations table")
+                    await db.execute(f"""CREATE TABLE IF NOT EXISTS {table} (
+                        key     TEXT PRIMARY KEY,
                         data    TEXT NOT NULL,
-                        ts      REAL NOT NULL DEFAULT (unixepoch('now'))
-                    )
-                """)
+                        updated REAL NOT NULL DEFAULT (unixepoch('now'))
+                    )""")
+
+                # Create indexes on the frequently queried columns
+                try:
+                    await db.execute("CREATE INDEX IF NOT EXISTS idx_registrations_qrHash ON registrations(qrHash)")
+                except Exception:
+                    logger.warning("Could not create idx_registrations_qrHash index")
+                try:
+                    await db.execute("CREATE INDEX IF NOT EXISTS idx_registrations_qrToken ON registrations(qrToken)")
+                except Exception:
+                    logger.warning("Could not create idx_registrations_qrToken index")
+                try:
+                    await db.execute("CREATE INDEX IF NOT EXISTS idx_registrations_paymentStatus ON registrations(paymentStatus)")
+                except Exception:
+                    logger.warning("Could not create idx_registrations_paymentStatus index")
+                try:
+                    await db.execute("CREATE INDEX IF NOT EXISTS idx_registrations_checkedIn ON registrations(checkedIn)")
+                except Exception:
+                    logger.warning("Could not create idx_registrations_checkedIn index")
+                try:
+                    await db.execute("CREATE INDEX IF NOT EXISTS idx_registrations_normalizedUtr ON registrations(normalizedUtr)")
+                except Exception:
+                    logger.warning("Could not create idx_registrations_normalizedUtr index")
+
                 await db.commit()
             self._ready = True
             logger.info("SQLite database ready at %s", DB_PATH)
@@ -95,7 +132,7 @@ class _SQLiteDB:
     def ready(self) -> bool:
         return self._ready
 
-    # ── Generic KV operations ────────────────────────────────────────────────
+    # ── Generic KV operations ──────────────────────────────────────────────────
 
     async def get(self, table: str, key: str) -> dict | None:
         if not self._ready:
@@ -151,7 +188,7 @@ class _SQLiteDB:
                 return row
         return None
 
-    # ── Audit log ────────────────────────────────────────────────────────────
+    # ── Audit log ──────────────────────────────────────────────────────────────
 
     async def insert_action(self, record: dict) -> None:
         if not self._ready:

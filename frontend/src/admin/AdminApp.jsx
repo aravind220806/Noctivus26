@@ -8,6 +8,7 @@ import { AnalysisTab } from './components/AnalysisTab';
 import { AttendanceTab } from './components/AttendanceTab';
 import { AuditLogTab } from './components/AuditLogTab';
 import { CheckInTab } from './components/CheckInTab';
+import { FoodScannerTab } from './components/FoodScannerTab';
 import { DashboardTab } from './components/DashboardTab';
 import { EventSchedulerTab } from './components/EventSchedulerTab';
 import { EventsTab } from './components/EventsTab';
@@ -143,16 +144,20 @@ export default function AdminApp() {
 
   if (!authChecked) return <div className="admin-loading">Checking admin session...</div>;
 
-  if (!session && !isLoginRoute) {
-    window.location.replace('/login');
-    return <div className="admin-loading">Redirecting to login...</div>;
+  if (isLoginRoute) {
+    return (
+      <AdminLogin
+        onSession={saveSession}
+        existingSession={session?.user}
+        onContinue={() => window.location.replace('/admin')}
+        onSwitchAccount={logout}
+      />
+    );
   }
 
-  if (!session) return <AdminLogin onSession={saveSession} />;
-
-  if (isLoginRoute) {
-    window.location.replace('/admin');
-    return <div className="admin-loading">Opening admin panel...</div>;
+  if (!session) {
+    window.location.replace('/login');
+    return <div className="admin-loading">Redirecting to login...</div>;
   }
 
   return (
@@ -192,6 +197,7 @@ export default function AdminApp() {
         />
       )}
       {activeTab === 'Check-in' && can('Check-in') && <CheckInTab authHeaders={authHeaders} />}
+      {activeTab === 'Food Scanner' && can('Food Scanner') && <FoodScannerTab authHeaders={authHeaders} />}
       {activeTab === 'Attendance' && can('Attendance') && <AttendanceTab authHeaders={authHeaders} />}
       {activeTab === 'Events' && can('Events') && <EventsTab authHeaders={authHeaders} onEventChanged={refresh} />}
       {activeTab === 'Event Scheduler' && can('Event Scheduler') && <EventSchedulerTab authHeaders={authHeaders} />}

@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   UserCheck,
   Users,
+  Utensils,
   X,
 } from 'lucide-react';
 
@@ -23,6 +24,7 @@ export const BionisIcons = {
   dashboard: LayoutDashboard,
   verify: ClipboardCheck,
   checkIn: QrCode,
+  food: Utensils,
   attendance: UserCheck,
   events: CalendarDays,
   invitations: Send,

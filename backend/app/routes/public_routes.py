@@ -159,6 +159,13 @@ async def public_check_in(request: Request, token_or_id: str):
     else:
         checked = await update_registration(reg_id, {"checkedIn": True, "checkedInAt": checked_at, "checkedInBy": "Scanner"})
 
+    try:
+        from app.services.google_sheets_service import google_sheets_service
+        import asyncio
+        asyncio.create_task(google_sheets_service.sync_check_in(checked or reg))
+    except Exception:
+        pass
+
     return {
         "status": "checked-in",
         "checkedInAt": checked_at,
