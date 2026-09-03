@@ -18,9 +18,9 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
     if (total <= 1) return;
 
     if (swiper.activeIndex <= 0) {
-      swiper.slideTo(total - 1, 800);
+      swiper.slideTo(total - 1, 380);
     } else {
-      swiper.slidePrev(800);
+      swiper.slidePrev(380);
     }
   }, [eventsData.length]);
 
@@ -31,9 +31,9 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
     if (total <= 1) return;
 
     if (swiper.activeIndex >= total - 1) {
-      swiper.slideTo(0, 800);
+      swiper.slideTo(0, 380);
     } else {
-      swiper.slideNext(800);
+      swiper.slideNext(380);
     }
   }, [eventsData.length]);
 
@@ -64,12 +64,12 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
       rewind: hasMultiple,
       loop: false,
       spaceBetween: 20,
-      speed: 800,
+      speed: 380,
       observer: true,
       observeParents: true,
       autoplay: hasMultiple
         ? {
-            delay: 5000,
+            delay: 2200,
             disableOnInteraction: false,
             pauseOnMouseEnter: false,
           }

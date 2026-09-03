@@ -196,14 +196,6 @@
   box-shadow: 0 0 10px var(--nav-accent-subtle);
 }
 
-.noctivus-navbar.is-collapsed-mode .cyber-hamburger-btn {
-  display: inline-flex;
-}
-
-.noctivus-navbar.is-collapsed-mode .menu {
-  display: none;
-}
-
 @media (max-width: 960px) {
   .noctivus-navbar {
     padding: 8px 0;
@@ -298,7 +290,7 @@
   background: rgba(5, 8, 12, 0.98);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border-bottom: 2px solid var(--nav-accent, #00DDF2);
+  border-bottom: 2px solid var(--nav-accent, #A7FF18);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.95);
   padding: 18px 20px 24px;
   max-height: calc(100vh - 64px);
@@ -337,7 +329,7 @@
 }
 
 .drawer-menu-item {
-  border-bottom: 1px solid rgba(0, 221, 242, 0.12);
+  border-bottom: 1px solid rgba(167, 255, 24, 0.15);
   padding: 4px 0;
 }
 
@@ -346,7 +338,7 @@
   font-weight: 700;
   font-size: 1.05rem;
   letter-spacing: 0.12em;
-  color: var(--nav-accent, #00DDF2);
+  color: var(--nav-accent, #A7FF18);
   text-decoration: none;
   text-transform: uppercase;
   display: flex;
@@ -363,60 +355,13 @@
   padding-left: 8px;
 }
 
-.drawer-group-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  padding: 4px 0;
-}
-
-.drawer-arrow {
-  color: var(--nav-accent, #00DDF2);
-  font-size: 0.75rem;
-  transition: transform 0.25s ease;
-  padding: 8px;
-}
-
-.drawer-arrow.open {
-  transform: rotate(180deg);
-}
-
-.drawer-sub-list {
-  list-style: none;
-  margin: 4px 0 10px 10px;
-  padding: 0 0 0 14px;
-  border-left: 2px solid var(--nav-accent, #00DDF2);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.drawer-sub-link {
-  font-family: var(--display-font, 'Aldrich'), 'Rajdhani', sans-serif;
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--muted, #7E9096);
-  text-decoration: none;
-  text-transform: uppercase;
-  display: block;
-  padding: 8px 4px;
-  transition: all 0.2s ease;
-}
-
-.drawer-sub-link:hover,
-.drawer-sub-link.active {
-  color: #FFFFFF;
-  padding-left: 8px;
-}
-
 .drawer-actions {
   margin-top: 12px;
 }
 
 .drawer-cta-btn {
   width: 100%;
-  background: var(--nav-accent, #00DDF2);
+  background: var(--nav-accent, #A7FF18);
   color: #000000;
   font-family: var(--display-font, 'Aldrich'), 'Rajdhani', sans-serif;
   font-weight: 700;

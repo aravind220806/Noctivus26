@@ -9,12 +9,13 @@
   background: #050a0d;
   border: 1px solid #8ca5b2;
   border-radius: 0;
-  box-shadow: 0 0 10px rgba(140, 165, 178, 0.12), 0 0 1px rgba(140, 165, 178, 0.45);
+  box-shadow: 0 0 14px rgba(140, 165, 178, 0.18), 0 0 1px rgba(140, 165, 178, 0.45);
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  width: min(100%, 518px);
-  height: 663px;
+  width: min(100%, 560px);
+  min-height: 700px;
+  height: auto;
   margin: 0 auto;
   overflow: hidden;
   font-family: 'Share Tech Mono', 'JetBrains Mono', 'Courier New', monospace;
@@ -22,8 +23,8 @@
 }
 
 .noc-member-card:hover {
-  border-color: #b4c9d1;
-  box-shadow: 0 0 14px rgba(140, 165, 178, 0.18), 0 0 1px rgba(140, 165, 178, 0.65);
+  border-color: #A7FF18;
+  box-shadow: 0 0 20px rgba(167, 255, 24, 0.25), 0 0 2px rgba(167, 255, 24, 0.65);
   transform: translateY(-2px);
 }
 
@@ -33,11 +34,11 @@
   box-sizing: border-box;
 }
 
-/* ── 3. HUD Reticle Corner Brackets (12px long) ── */
+/* ── HUD Reticle Corner Brackets ── */
 .noc-card-corner {
   position: absolute;
-  width: 13px;
-  height: 13px;
+  width: 14px;
+  height: 14px;
   pointer-events: none;
   z-index: 10;
 }
@@ -45,29 +46,29 @@
 .noc-card-corner--tl {
   top: -1px;
   left: -1px;
-  border-top: 2px solid #8ca5b2;
-  border-left: 2px solid #8ca5b2;
+  border-top: 2px solid #A7FF18;
+  border-left: 2px solid #A7FF18;
 }
 
 .noc-card-corner--tr {
   top: -1px;
   right: -1px;
-  border-top: 2px solid #8ca5b2;
-  border-right: 2px solid #8ca5b2;
+  border-top: 2px solid #A7FF18;
+  border-right: 2px solid #A7FF18;
 }
 
 .noc-card-corner--bl {
   bottom: -1px;
   left: -1px;
-  border-bottom: 2px solid #8ca5b2;
-  border-left: 2px solid #8ca5b2;
+  border-bottom: 2px solid #A7FF18;
+  border-left: 2px solid #A7FF18;
 }
 
 .noc-card-corner--br {
   bottom: -1px;
   right: -1px;
-  border-bottom: 2px solid #8ca5b2;
-  border-right: 2px solid #8ca5b2;
+  border-bottom: 2px solid #A7FF18;
+  border-right: 2px solid #A7FF18;
 }
 
 /* ── Card Header (Full-width top bar) ── */
@@ -75,14 +76,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 49px;
-  min-height: 49px;
-  padding: 0 0.9rem;
+  height: 52px;
+  min-height: 52px;
+  padding: 0 1.1rem;
   background: #04090c;
   border-bottom: 1px solid rgba(140, 165, 178, 0.45);
   border-radius: 0;
-  font-size: 0.68rem;
-  letter-spacing: 0.18em;
+  font-size: 0.82rem;
+  letter-spacing: 0.16em;
   position: relative;
   z-index: 5;
 }
@@ -90,29 +91,31 @@
 .noc-card-header-left {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.45rem;
 }
 
 .noc-card-brand {
-  color: #8ca5b2;
+  color: #A7FF18;
   font-weight: 700;
+  font-size: 0.88rem;
   letter-spacing: 1.5px;
 }
 
 .noc-card-tag {
-  color: #8ca5b2;
-  font-weight: 500;
+  color: #c4d9e5;
+  font-weight: 600;
+  font-size: 0.82rem;
 }
 
 .noc-card-classification {
-  color: #7a95a8;
+  color: #9ab4c4;
   text-transform: uppercase;
-  font-size: 0.62rem;
-  letter-spacing: 0.34em;
-  font-weight: 500;
+  font-size: 0.76rem;
+  letter-spacing: 0.22em;
+  font-weight: 600;
 }
 
-/* ── Outline Battery Indicator (Top Right in Neon Green) ── */
+/* ── Outline Battery Indicator ── */
 .noc-battery-indicator {
   display: flex;
   align-items: center;
@@ -124,34 +127,32 @@
   align-items: center;
   gap: 2px;
   padding: 2px;
-  border: 1px solid #8ca5b2;
+  border: 1px solid #A7FF18;
   background: transparent;
-  height: 11px;
+  height: 13px;
   box-sizing: border-box;
 }
 
 .noc-battery-segment {
-  width: 4px;
-  height: 5px;
+  width: 5px;
+  height: 7px;
   background: transparent;
 }
 
 .noc-battery-segment.is-active {
-  background: #8ca5b2;
+  background: #A7FF18;
 }
 
-.noc-battery-nipple {
+.noc-battery-cap {
   width: 2px;
-  height: 5px;
-  background: #8ca5b2;
-  border-top-right-radius: 1px;
-  border-bottom-right-radius: 1px;
+  height: 6px;
+  background: #A7FF18;
 }
 
-/* ── Card Body (Two Columns divided by hairline) ── */
+/* ── Card Body (Two Columns) ── */
 .noc-card-body {
   display: grid;
-  grid-template-columns: 58% 42%;
+  grid-template-columns: 50% 50%;
   width: 100%;
   min-height: 0;
   flex: 1;
@@ -180,10 +181,67 @@
 .noc-member-portrait-frame {
   width: 100%;
   height: 100%;
+  min-height: 380px;
   position: relative;
   overflow: hidden;
   display: flex;
   background: #060c12;
+}
+
+.noc-member-portrait-empty {
+  background: radial-gradient(circle at center, #0d222e 0%, #03070a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid rgba(140, 165, 178, 0.3);
+}
+
+.noc-portrait-placeholder-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 28px 18px;
+  gap: 14px;
+}
+
+.noc-portrait-placeholder-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(167, 255, 24, 0.08);
+  border: 1px solid rgba(167, 255, 24, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #A7FF18;
+  box-shadow: 0 0 20px rgba(167, 255, 24, 0.2);
+}
+
+.noc-portrait-placeholder-badge {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #02090D;
+  background: #A7FF18;
+  border: 1px solid #A7FF18;
+  padding: 5px 12px;
+}
+
+.noc-portrait-placeholder-code {
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #A7FF18;
+}
+
+.noc-portrait-placeholder-sub {
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  color: #a4c2d4;
+  max-width: 200px;
+  line-height: 1.45;
 }
 
 .noc-member-portrait-img {
@@ -211,32 +269,29 @@
 
 .noc-info-section {
   border-bottom: 1px solid rgba(140, 165, 178, 0.36);
-  padding: 0.75rem 1rem;
+  padding: 0.85rem 1.1rem;
 }
 
 .noc-role-section {
-  padding-top: 1rem;
-  padding-bottom: 0.85rem;
+  padding-top: 1.1rem;
+  padding-bottom: 0.95rem;
+  background: rgba(167, 255, 24, 0.04);
 }
 
 .noc-access-section {
-  padding-top: 0.72rem;
-  padding-bottom: 0.68rem;
+  padding-top: 0.85rem;
+  padding-bottom: 0.8rem;
 }
 
 .noc-permissions-section {
-  padding-top: 0.78rem;
-  padding-bottom: 0.74rem;
-}
-
-.noc-field-divider {
-  display: none;
+  padding-top: 0.9rem;
+  padding-bottom: 0.85rem;
 }
 
 .noc-field-group {
   display: flex;
   flex-direction: column;
-  gap: 0.16rem;
+  gap: 0.22rem;
   min-width: 0;
 }
 
@@ -245,90 +300,93 @@
 }
 
 .noc-field-label {
-  font-size: 0.55rem;
-  color: #7a95a8;
-  letter-spacing: 0.24em;
+  font-size: 0.72rem;
+  color: #8ec3df;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .noc-field-val {
-  font-size: clamp(0.68rem, 0.85vw, 0.78rem);
-  color: #d8e4ea;
+  font-size: clamp(0.85rem, 1vw, 0.98rem);
+  color: #FFFFFF;
   font-weight: 600;
-  line-height: 1.28;
-  letter-spacing: 0.14em;
+  line-height: 1.35;
+  letter-spacing: 0.12em;
   overflow-wrap: anywhere;
 }
 
 .noc-field-role-val {
-  font-size: clamp(1.25rem, 1.65vw, 1.55rem);
+  font-size: clamp(1.35rem, 1.8vw, 1.65rem);
   font-weight: 700;
-  color: #d8e4ea;
-  line-height: 1.16;
+  color: #FFFFFF;
+  line-height: 1.2;
   letter-spacing: 0.14em;
   margin: 0;
   text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(167, 255, 24, 0.2);
 }
 
 .noc-id-val {
-  color: #d8e4ea;
+  color: #A7FF18;
+  font-weight: 700;
+  font-size: clamp(0.88rem, 1.05vw, 1rem);
+  letter-spacing: 1.4px;
+}
+
+.noc-name-val {
+  font-size: clamp(0.92rem, 1.1vw, 1.08rem);
+  color: #FFFFFF;
   font-weight: 700;
   letter-spacing: 1.2px;
 }
 
-.noc-name-val {
-  font-size: clamp(0.68rem, 0.9vw, 0.82rem);
-  color: #d8e4ea;
-  font-weight: 700;
-  letter-spacing: 1px;
-}
-
 .noc-link-val {
-  color: #7a95a8;
+  color: #00f0ff;
   text-decoration: none;
-  font-size: clamp(0.63rem, 0.84vw, 0.74rem);
+  font-size: clamp(0.82rem, 0.98vw, 0.94rem);
   letter-spacing: 0.12em;
+  font-weight: 600;
   transition: color 0.15s ease;
 }
 
 .noc-link-val:hover {
-  color: #d8e4ea;
+  color: #A7FF18;
   text-decoration: underline;
 }
 
 .noc-meta-fields-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 0.56rem;
-  padding-top: 0.72rem;
-  padding-bottom: 0.72rem;
+  gap: 0.68rem;
+  padding-top: 0.85rem;
+  padding-bottom: 0.85rem;
 }
 
-/* ── Access Level Solid Square Blocks (8 Blocks) ── */
+/* ── Access Level ── */
 .noc-access-level-wrap {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.35rem;
 }
 
 .noc-access-label {
-  font-size: 0.55rem;
-  color: #7a95a8;
-  letter-spacing: 0.24em;
-  font-weight: 500;
+  font-size: 0.72rem;
+  color: #8ec3df;
+  letter-spacing: 0.18em;
+  font-weight: 600;
 }
 
 .noc-access-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.45rem;
+  gap: 0.55rem;
 }
 
 .noc-access-val {
-  font-size: 0.72rem;
-  color: #d8e4ea;
+  font-size: 0.88rem;
+  color: #FFFFFF;
   font-weight: 700;
   letter-spacing: 1px;
 }
@@ -336,35 +394,36 @@
 .noc-access-blocks {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
 }
 
 .noc-access-block {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 0;
 }
 
 .noc-access-block.is-filled {
-  background: #8aa6b7;
+  background: #A7FF18;
+  box-shadow: 0 0 6px rgba(167, 255, 24, 0.4);
 }
 
 .noc-access-block.is-empty {
-  background: #2a3a45;
+  background: #1c2b36;
 }
 
 /* ── Permissions ── */
 .noc-permissions-wrap {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.45rem;
 }
 
 .noc-permissions-title {
-  font-size: 0.55rem;
-  color: #7a95a8;
-  letter-spacing: 0.24em;
-  font-weight: 500;
+  font-size: 0.72rem;
+  color: #8ec3df;
+  letter-spacing: 0.18em;
+  font-weight: 600;
 }
 
 .noc-permissions-list {
@@ -373,37 +432,37 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.28rem;
+  gap: 0.36rem;
 }
 
 .noc-permission-item {
   display: flex;
   align-items: flex-start;
-  gap: 0.4rem;
-  font-size: 0.56rem;
+  gap: 0.5rem;
+  font-size: 0.74rem;
   line-height: 1.45;
-  color: #7a95a8;
+  color: #d8e8f2;
 }
 
 .noc-perm-bullet {
-  color: #7a95a8;
-  font-size: 0.55rem;
+  color: #A7FF18;
+  font-size: 0.72rem;
   line-height: 1.4;
   flex-shrink: 0;
 }
 
 .noc-perm-text {
   overflow-wrap: anywhere;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
 }
 
-/* ── Authorization Area & Desaturated Watermark ── */
+/* ── Authorization Area ── */
 .noc-auth-area {
   position: relative;
   margin-top: 0;
-  padding-top: 0.86rem;
-  padding-bottom: 0.78rem;
-  min-height: 118px;
+  padding-top: 0.95rem;
+  padding-bottom: 0.85rem;
+  min-height: 125px;
   border-bottom: none;
 }
 
@@ -417,13 +476,13 @@
 }
 
 .noc-auth-text {
-  font-size: 0.55rem;
+  font-size: 0.68rem;
   line-height: 1.5;
-  color: #7a95a8;
-  margin: 0 0 0.4rem 0;
+  color: #a4c2d4;
+  margin: 0 0 0.5rem 0;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  max-width: 92%;
+  max-width: 95%;
   position: relative;
   z-index: 2;
 }
@@ -432,20 +491,20 @@
   display: grid;
   grid-template-columns: auto 1fr;
   align-items: start;
-  gap: 0.4rem;
-  font-size: 0.54rem;
+  gap: 0.5rem;
+  font-size: 0.68rem;
   position: relative;
   z-index: 2;
   letter-spacing: 0.8px;
 }
 
 .noc-valid-label {
-  color: #7a95a8;
+  color: #8ec3df;
   letter-spacing: 1.5px;
 }
 
 .noc-valid-val {
-  color: #d8e4ea;
+  color: #FFFFFF;
   font-weight: 600;
 }
 
@@ -454,14 +513,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 69px;
-  min-height: 69px;
-  padding: 0.35rem 1rem;
+  height: 68px;
+  min-height: 68px;
+  padding: 0.45rem 1.1rem;
   background: #04090c;
   border-top: 1px solid rgba(140, 165, 178, 0.45);
   border-radius: 0;
-  font-size: 0.55rem;
-  color: #7a95a8;
+  font-size: 0.70rem;
+  color: #8ec3df;
   letter-spacing: 1.6px;
   position: relative;
   z-index: 5;
@@ -472,34 +531,34 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1px;
+  gap: 2px;
   flex: 1;
   text-align: center;
 }
 
 .noc-card-footer-text {
-  color: #7a95a8;
-  font-weight: 500;
+  color: #c4d9e5;
+  font-weight: 600;
+  font-size: 0.72rem;
 }
 
 .noc-card-footer-subtext {
-  color: #7a95a8;
-  font-size: 0.58rem;
-  opacity: 0.85;
+  color: #8ec3df;
+  font-size: 0.66rem;
 }
 
 .noc-card-footer-emblem {
-  color: #7a95a8;
+  color: #8ec3df;
   display: flex;
   align-items: center;
-  opacity: 0.6;
+  opacity: 0.8;
 }
 
 /* ── Responsive Adaptations ── */
 @media (max-width: 600px) {
   .noc-member-card {
     height: auto;
-    aspect-ratio: auto;
+    min-height: auto;
   }
 
   .noc-card-body {
@@ -518,7 +577,7 @@
   }
 
   .noc-info-section {
-    padding-left: 1rem;
-    padding-right: 1rem;
+    padding-left: 1.1rem;
+    padding-right: 1.1rem;
   }
 }

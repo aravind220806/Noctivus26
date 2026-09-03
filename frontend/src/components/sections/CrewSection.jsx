@@ -8,7 +8,7 @@ export function CrewSection() {
       id: 'faculty',
       title: 'Faculty\nCoordinator',
       role: 'Department of CSE (Cyber Security)',
-      contact: 'faculty@velammal.edu.in',
+      contact: 'hod.cyber@velammal.edu.in',
       contactType: 'email',
       href: '/coordinators#faculty',
     },

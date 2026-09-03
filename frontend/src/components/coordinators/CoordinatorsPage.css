@@ -289,16 +289,16 @@
 /* ── Cards Grid ── */
 .noc-coord-cards-grid {
   display: grid;
-  grid-template-columns: minmax(0, 530px);
+  grid-template-columns: minmax(0, 560px);
   justify-content: center;
   gap: 2.75rem;
   justify-items: center;
 }
 
-@media (min-width: 1150px) {
+@media (min-width: 1180px) {
   .noc-coord-cards-grid {
-    grid-template-columns: repeat(2, minmax(0, 530px));
-    gap: 3rem 4.25rem;
+    grid-template-columns: repeat(2, minmax(0, 560px));
+    gap: 3rem 4rem;
   }
 }
 

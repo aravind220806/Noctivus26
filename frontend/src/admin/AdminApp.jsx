@@ -5,8 +5,8 @@ import { adminFetch, setGlobalCsrf, tabs } from './adminUtils';
 import { AdminAccessTab } from './components/AdminAccessTab';
 import { AdminLogin } from './components/AdminLogin';
 import { AnalysisTab } from './components/AnalysisTab';
-import { AnnouncementsTab } from './components/AnnouncementsTab';
 import { AuditLogTab } from './components/AuditLogTab';
+import { AttendanceTab } from './components/AttendanceTab';
 import { CheckInTab } from './components/CheckInTab';
 import { DashboardTab } from './components/DashboardTab';
 import { EventSchedulerTab } from './components/EventSchedulerTab';
@@ -192,6 +192,7 @@ export default function AdminApp() {
         />
       )}
       {activeTab === 'Check-in' && can('Check-in') && <CheckInTab authHeaders={authHeaders} />}
+      {activeTab === 'Attendance' && can('Attendance') && <AttendanceTab authHeaders={authHeaders} />}
       {activeTab === 'Events' && can('Events') && <EventsTab authHeaders={authHeaders} onEventChanged={refresh} />}
       {activeTab === 'Event Scheduler' && can('Event Scheduler') && <EventSchedulerTab authHeaders={authHeaders} />}
       {activeTab === 'Audit Log' && can('Audit Log') && <AuditLogTab authHeaders={authHeaders} />}
@@ -205,7 +206,6 @@ export default function AdminApp() {
           }}
         />
       )}
-      {activeTab === 'Announcements' && can('Announcements') && <AnnouncementsTab authHeaders={authHeaders} />}
       {activeTab === 'AI Analysis' && can('AI Analysis') && <AnalysisTab overview={overview} authHeaders={authHeaders} />}
       {activeTab === 'Export' && can('Export') && (
         <ExportTab
