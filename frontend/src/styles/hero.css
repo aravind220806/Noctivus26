@@ -354,9 +354,9 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Hero Mobile Responsive Overrides (max-width: 900px)
+   Hero Mobile Responsive Overrides (max-width: 768px)
    ───────────────────────────────────────────────────────────────────────────── */
-@media (max-width: 900px) {
+@media (max-width: 768px) {
   .hero-section {
     padding: 70px 0 2.5rem;
     width: 100%;
@@ -401,8 +401,8 @@
     margin: 0 auto 1rem;
   }
   .hero-tagline {
-    font-size: 0.9rem;
-    max-width: 480px;
+    font-size: 0.88rem;
+    max-width: 100%;
     margin: 0 auto 1.5rem;
     text-align: center;
     line-height: 1.5;
@@ -416,6 +416,7 @@
     margin: 1.25rem auto 0;
     width: 100%;
     max-width: 360px;
+    padding: 0 1rem;
   }
   .hero-actions-container .notched-button,
   .hero-actions-container .btn-ghost-wrapper {
@@ -424,6 +425,7 @@
     display: flex;
     justify-content: center;
     text-align: center;
+    max-width: 100%;
   }
   .hero-meta-grid {
     flex-wrap: wrap;
@@ -431,5 +433,20 @@
     gap: 1.25rem;
     margin-bottom: 1.5rem;
     text-align: center;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Hero Tablet Overrides (768px – 900px) — desktop side-by-side layout
+   ───────────────────────────────────────────────────────────────────────────── */
+@media (min-width: 768px) and (max-width: 900px) {
+  .hero-logo-img {
+    max-width: 220px;
+  }
+  .hero-title {
+    font-size: 2.4rem;
+  }
+  .hero-tagline {
+    font-size: 0.92rem;
   }
 }

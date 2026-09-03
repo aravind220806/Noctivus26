@@ -86,13 +86,6 @@ export default function CoordinatorsPage() {
       <main className="noc-database-main">
         {/* Page Hero */}
         <div className="noc-db-hero">
-          <div className="noc-db-telemetry-strip">
-            <span className="noc-telemetry-badge is-live">SYSTEM: ONLINE</span>
-            <span className="noc-telemetry-badge">DATABASE: COORDINATORS</span>
-            <span className="noc-telemetry-badge">ACCESS: PUBLIC DIRECTORY</span>
-            <span className="noc-telemetry-badge">YEAR: 2026</span>
-          </div>
-
           <div className="noc-db-eyebrow">NOCTIVUS '26</div>
           <h1 className="noc-db-title">
             COORDINATOR DATABASE<span className="noc-db-cursor">_</span>

@@ -191,6 +191,7 @@
   color: var(--nav-accent);
   padding: 6px 14px;
   cursor: pointer;
+  flex-shrink: 0;
   clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
   transition: all 0.2s ease;
   box-shadow: 0 0 10px var(--nav-accent-subtle);
@@ -217,6 +218,27 @@
   }
   .cyber-hamburger-btn {
     display: inline-flex !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-container {
+    padding: 0 12px;
+  }
+  .brand-wordmark {
+    font-size: 1.1rem;
+    letter-spacing: 0.1em;
+  }
+  .brand-badge {
+    font-size: 0.6rem;
+    padding: 1px 5px;
+  }
+  .hamburger-label {
+    display: none;
+  }
+  .cyber-hamburger-btn {
+    gap: 0;
+    padding: 8px 10px;
   }
 }
 

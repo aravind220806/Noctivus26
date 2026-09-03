@@ -29,15 +29,7 @@
   margin-bottom: var(--sp-8);     /* 32px mobile */
 }
 
-/* ── About grid ── */
-.about-grid {
-  gap: var(--sp-8);               /* 32px */
-}
-
-.about-manifesto {
-  padding-left: var(--sp-8);      /* 32px */
-}
-
+/* ── Stats grid ── */
 .stats-grid {
   margin-top: var(--sp-12);       /* 48px */
 }
