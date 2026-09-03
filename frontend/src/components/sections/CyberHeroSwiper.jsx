@@ -128,7 +128,11 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
                 key={slide.id || index}
               >
                 <div className="item">
-                  <img src={slide.image} alt={heading} />
+                  <img
+                    src={slide.image}
+                    alt={heading}
+                    style={slide.imagePosition ? { objectPosition: slide.imagePosition } : undefined}
+                  />
                   <div className="item-content">
                     {slide.category && (
                       <span className="item-category-tag" data-category={slide.category}>
