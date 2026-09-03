@@ -10,8 +10,9 @@ NPM ?= npm
 BACKEND_DIR := backend
 FRONTEND_DIR := frontend
 DOCKER_COMPOSE := $(shell which docker-compose 2>/dev/null || echo "docker compose")
+SQLITE_DB_PATH ?= noctivus.db
 
-.PHONY: all help setup env install install-backend install-frontend build test up down restart status logs health clean load-test dev
+.PHONY: all help setup env install install-backend install-frontend build test up down restart status logs health clean load-test dev db-create db-tables
 
 # Default target: do everything from setup to uptime
 all: up
@@ -31,6 +32,7 @@ help:
 	@printf "  \033[1m%-20s\033[0m %s\n" "make build"       "Build production frontend assets (dist)"
 	@printf "  \033[1m%-20s\033[0m %s\n" "make dev"         "Start local frontend dev server"
 	@printf "  \033[1m%-20s\033[0m %s\n" "make dev-api"     "Start local backend API dev server"
+	@printf "  \033[1m%-20s\033[0m %s\n" "make db-create"   "Create the SQLite database and all tables"
 	@printf "  \033[1m%-20s\033[0m %s\n" "make clean"       "Clean build artifacts and caches"
 	@printf "\033[1;36m====================================================================\033[0m\n\n"
 
@@ -155,6 +157,12 @@ dev-api:
 	else \
 		PYTHONPATH=$(BACKEND_DIR) $(PYTHON) $(BACKEND_DIR)/run.py; \
 	fi
+
+db-create:
+	@printf "\033[1;34mCreating SQLite database and tables...\033[0m\n"
+	@SQLITE_DB_PATH="$(SQLITE_DB_PATH)" PYTHONPATH=$(BACKEND_DIR) $(PYTHON) -c 'import asyncio; from app.db.sqlite_db import DB_PATH, sqlite_db; asyncio.run(sqlite_db.init()); assert sqlite_db.ready(), "SQLite database initialization failed"; print(f"  SQLite database ready at {DB_PATH}")'
+
+db-tables: db-create
 
 test:
 	@printf "\033[1;34mRunning backend verification tests...\033[0m\n"
