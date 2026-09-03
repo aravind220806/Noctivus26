@@ -269,6 +269,7 @@ export const timeline = [
   ['08:30 AM', 'Registration desk opens', 'Check in, collect your participant confirmation badge, and proceed to the inaugural venue.'],
   ['09:00 AM – 10:00 AM', 'Inauguration Ceremony', 'Welcome address, ceremonial lighting, and symposium briefing in the Main Auditorium.'],
   ['10:00 AM – 01:00 PM', 'Technical & Non-Technical Events', 'All Technical (NULL CORE 2.0 CTF, Bug Hunt, Prompt Heist, Secure X Vibe Coding, IGNITE) and Non-Technical (Mystery Hunt, Tune Trap, IPL Bidverse) events commence simultaneously.'],
+  ['10:00 AM – 03:00 PM', 'Workshop: Playground of Hackers', 'Hands-on intensive offensive & defensive cybersecurity workshop uncovering real-world exploit vectors, ethical hacking techniques, and live labs.'],
   ['01:00 PM – 02:00 PM', 'Lunch Break', 'Lunch and refreshments served at the designated campus dining areas.'],
   ['02:00 PM – 03:00 PM', 'Final Rounds & Evaluation', 'Shortlisted finalists compete in project demonstrations and final rounds before the judging panel.'],
   ['03:00 PM – 04:00 PM', 'Valedictory & Awards Ceremony', 'Announcement of winners, trophy and cash prize distribution, and closing valedictory.'],
