@@ -419,17 +419,21 @@ class GoogleSheetsService:
             _LAST_SYNC_STATUS["last_error"] = str(err)
 
     async def sync_check_in(self, registration: dict):
-        """Live trigger: Append to 'Check-In List' sheet."""
+        """Live trigger: Update Check-In List and all event/master sheets in Google Sheets."""
         if not self.is_enabled:
             return
         try:
-            await self.ensure_sheets_exist(["Check-In List"])
-            row = self._format_checkin_row(registration)
-            await self._api_request(
-                "POST",
-                "/values/'Check-In List'!A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS",
-                json_body={"values": [row]},
-            )
+            from app.services.event_service import list_events
+            from app.services.registration_service import load_registrations
+            from app.db.sqlite_db import sqlite_db
+
+            events = await list_events()
+            all_regs = await load_registrations()
+            slots = []
+            if sqlite_db.ready():
+                slots = await sqlite_db.list_all("event_slots")
+
+            await self.sync_full_database(events, all_regs, slots)
             _LAST_SYNC_STATUS["last_synced_at"] = datetime.now(timezone.utc).isoformat()
             _LAST_SYNC_STATUS["last_sync_type"] = "check-in"
             _LAST_SYNC_STATUS["total_sync_count"] += 1
