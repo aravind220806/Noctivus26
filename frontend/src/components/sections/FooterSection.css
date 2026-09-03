@@ -161,30 +161,11 @@
   background-color: #050E17;
   overflow: hidden;
   box-shadow: 0 0 12px rgba(0, 240, 255, 0.12);
-  display: block;
-  text-decoration: none;
-  cursor: pointer;
-  transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
-.footer-compact-map:hover {
-  border-color: #00f0ff;
-  box-shadow: 0 0 16px rgba(0, 240, 255, 0.35);
-}
-
-.footer-map-image {
+.footer-map-container {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: 45% 55%;
-  display: block;
-  transition: transform 0.35s ease, filter 0.35s ease;
-  filter: contrast(1.05) brightness(0.95);
-}
-
-.footer-compact-map:hover .footer-map-image {
-  transform: scale(1.05);
-  filter: contrast(1.1) brightness(1.02);
 }
 
 .footer-map-link {
