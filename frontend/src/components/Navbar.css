@@ -205,6 +205,20 @@
   display: none;
 }
 
+@media (min-width: 961px) {
+  .cyber-hamburger-btn,
+  .noctivus-navbar .cyber-hamburger-btn {
+    display: none !important;
+  }
+  .menu,
+  .noctivus-navbar .menu {
+    display: flex !important;
+  }
+  .mobile-menu-overlay {
+    display: none !important;
+  }
+}
+
 @media (max-width: 960px) {
   .noctivus-navbar {
     padding: 8px 0;

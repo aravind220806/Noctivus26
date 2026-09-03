@@ -35,11 +35,11 @@ class RootErrorBoundary extends Component {
   }
 }
 
-const App = lazy(() => import('./App.jsx'));
-const AdminApp = lazy(() => import('./admin/AdminApp.jsx'));
-const PassVerification = lazy(() => import('./pages/PassVerification.jsx'));
-const DeviceDemo = lazy(() => import('./components/registration-device/DeviceDemo.jsx'));
-const CoordinatorsPage = lazy(() => import('./pages/CoordinatorsPage.jsx'));
+const App = lazy(() => import('./App.jsx').then(m => ({ default: m.default || m.App })));
+const AdminApp = lazy(() => import('./admin/AdminApp.jsx').then(m => ({ default: m.default || m.AdminApp })));
+const PassVerification = lazy(() => import('./pages/PassVerification.jsx').then(m => ({ default: m.default || m.PassVerification })));
+const DeviceDemo = lazy(() => import('./components/registration-device/DeviceDemo.jsx').then(m => ({ default: m.default || m.DeviceDemo })));
+const CoordinatorsPage = lazy(() => import('./pages/CoordinatorsPage.jsx').then(m => ({ default: m.default || m.CoordinatorsPage })));
 
 const currentPath = window.location.pathname.toLowerCase();
 const isAdminRoute = currentPath.startsWith('/admin') || currentPath.startsWith('/adimn');

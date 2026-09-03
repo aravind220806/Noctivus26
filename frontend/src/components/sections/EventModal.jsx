@@ -191,3 +191,5 @@ export function EventModal({ event, onClose, onRegister }) {
     </motion.div>
   );
 }
+
+export default EventModal;
