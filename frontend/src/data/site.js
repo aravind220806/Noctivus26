@@ -139,8 +139,8 @@ export const events = [
     fee: 150,
     laptopRequirement: 'None',
     accent: 'cyan',
-    image: '/images/ignite-student.jpg',
-    imagePosition: 'center 30%',
+    image: '/images/ignite-student.webp',
+    imagePosition: 'center center',
     format: "Present one original idea using the official PPT template. Each team gets 5–6 minutes for the pitch and 2–3 minutes for judges' Q&A.",
     details: [
       'Use the official PPT template.',
