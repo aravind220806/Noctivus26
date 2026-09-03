@@ -16,7 +16,18 @@ from app.services.validation_service import normalize_digits, validate_registrat
 
 
 def create_registration_id() -> str:
-    return f"NOC26-{secrets.token_hex(3).upper()}"
+    """Return a human-readable registration ID with sufficient entropy.
+
+    Format: NOC26-{base62-8chars}
+    The 8-character suffix provides ~38 bits of entropy (base62),
+    making brute-force infeasible while remaining compact.
+    """
+    import string
+    import secrets
+
+    alphabet = string.digits + string.ascii_uppercase + string.ascii_lowercase
+    suffix = ''.join(secrets.choice(alphabet) for _ in range(8))
+    return f"NOC26-{suffix}"
 
 
 def create_qr_token() -> tuple[str, str]:
@@ -147,6 +158,12 @@ async def create_registration(payload: dict | None, idempotency_key: str | None 
     try:
         from app.services.scheduler_service import assignMembersToSlots
         asyncio.create_task(assignMembersToSlots())
+    except Exception:
+        pass
+
+    try:
+        from app.services.google_sheets_service import google_sheets_service
+        asyncio.create_task(google_sheets_service.sync_new_registration(record))
     except Exception:
         pass
 

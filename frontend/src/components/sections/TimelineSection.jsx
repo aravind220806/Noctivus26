@@ -252,9 +252,9 @@ export function TimelineSection() {
 
   const filteredEvents = useMemo(() => {
     if (selectedCategory === 'ALL') return events;
-    if (selectedCategory === 'TECHNICAL') return events.filter((e) => e.category === 'Technical');
-    if (selectedCategory === 'NON-TECHNICAL') return events.filter((e) => e.category === 'Non-Technical');
-    if (selectedCategory === 'WORKSHOP') return events.filter((e) => e.category === 'Workshop');
+    if (selectedCategory === 'TECHNICAL') return events.filter((e) => (e.category === 'Technical' || e.category === 'tech') && e.category !== 'Workshop' && e.category !== 'workshop');
+    if (selectedCategory === 'NON-TECHNICAL') return events.filter((e) => e.category === 'Non-Technical' || e.category === 'non-tech');
+    if (selectedCategory === 'WORKSHOP') return events.filter((e) => e.category === 'Workshop' || e.category === 'workshop');
     if (selectedCategory === 'CEREMONY') return events.filter((e) => e.category === 'General');
     return events;
   }, [selectedCategory]);
@@ -338,7 +338,7 @@ export function TimelineSection() {
 
           {events.map((event) => {
             const isFilteredOut = selectedCategory !== 'ALL' &&
-              ((selectedCategory === 'TECHNICAL' && event.category !== 'Technical') ||
+              ((selectedCategory === 'TECHNICAL' && (event.category !== 'Technical' || event.category === 'Workshop')) ||
                (selectedCategory === 'NON-TECHNICAL' && event.category !== 'Non-Technical') ||
                (selectedCategory === 'WORKSHOP' && event.category !== 'Workshop') ||
                (selectedCategory === 'CEREMONY' && event.category !== 'General'));

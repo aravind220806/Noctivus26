@@ -43,8 +43,8 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
       initialSlide: 0,
       slidesPerView: hasMultiple ? 1.25 : 1,
       centeredSlides: true,
-      rewind: false,
-      loop: hasMultiple,
+      rewind: hasMultiple,
+      loop: false,
       spaceBetween: 20,
       speed: 800,
       observer: true,
@@ -114,7 +114,7 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
 
   return (
     <div className="cyber-hero-carousel-section" key={carouselKey}>
-      <div className="swiper" ref={swiperContainerRef}>
+      <div className="swiper" key={carouselKey} ref={swiperContainerRef}>
         <div className="swiper-wrapper">
           {eventsData.map((slide, index) => {
             const heading = slide.heading || slide.name || "WHAT'S NEW";

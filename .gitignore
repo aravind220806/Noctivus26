@@ -7,6 +7,8 @@ venv/
 !.env.example
 /atlas-credentials.env
 google_auth.json
+google_service_account.json
+backend/google_service_account.json
 backend/*service-account*.json
 backend/sympo-api-*.json
 __pycache__/
