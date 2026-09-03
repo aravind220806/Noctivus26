@@ -140,8 +140,8 @@ def validate_registration(input_data: dict | None, configured_events: list[dict]
             "teamMembers": [{"name": normalize_text(member.get("name")).upper(), "rollNo": normalize_text(member.get("rollNo")).upper()} for member in members if isinstance(member, dict)],
         })
 
-    # Flat registration fee of ₹150 covers symposium admission for up to 2 events
-    expected_amount = 150 if event_registrations else 0
+    # Dynamic registration fee based on selected event fees (e.g. ₹300 for workshop, ₹150 for regular events)
+    expected_amount = max([e.get("feeSnapshot", 150) for e in event_registrations], default=0) if event_registrations else 0
     if data.get("claimedAmount") != expected_amount:
         errors.append("Registration amount does not match the configured event fees.")
 

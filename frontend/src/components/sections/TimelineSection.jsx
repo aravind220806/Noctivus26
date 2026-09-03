@@ -27,7 +27,7 @@ const events = [
   { title: 'IGNITE (Idea Pitch)', start: 10.0, end: 13.0, icon: Lightbulb },
   { title: 'Mystery Hunt', start: 10.0, end: 13.0, icon: Search },
   { title: 'Tune Trap', start: 10.0, end: 13.0, icon: Music },
-  { title: 'IPL Bidverse', start: 10.0, end: 13.0, icon: Trophy },
+  { title: 'IPL Auction Arena', start: 10.0, end: 13.0, icon: Trophy },
   { title: 'Lunch Break', start: 13.0, end: 14.0, icon: Coffee },
   { title: 'Finals & Project Evaluations', start: 14.0, end: 15.0, icon: CheckCircle },
   { title: 'Valedictory & Awards Ceremony', start: 15.0, end: 16.0, icon: Award },

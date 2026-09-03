@@ -74,7 +74,10 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
   const ctfSelected = technicalEventId === 'ctf' || technicalEventId === 'cyber-heist-ctf';
   const selectedEvents = useMemo(() => [selectedTechnicalEvent, ctfSelected ? null : selectedNonTechnicalEvent].filter(Boolean), [ctfSelected, selectedNonTechnicalEvent, selectedTechnicalEvent]);
   const selectedEventNames = selectedEvents.map((event) => event.name).join(' + ');
-  const amount = selectedEvents.length ? 150 : 0;
+  const amount = useMemo(() => {
+    if (!selectedEvents.length) return 0;
+    return Math.max(...selectedEvents.map((e) => e?.fee ?? 150));
+  }, [selectedEvents]);
   const upiId = (import.meta.env.VITE_UPI_ID || '').trim() || 'noctivus2026@okhdfcbank';
   const payee = (import.meta.env.VITE_UPI_PAYEE || '').trim() || 'Noctivus 26';
   const paymentConfigured = Boolean(upiId) || import.meta.env.DEV;
@@ -344,7 +347,7 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
                   <h4 className="reg-review-event-title" style={{ fontSize: '1rem' }}>TICKET DETAILS</h4>
                   <span className="reg-review-event-category">Admission for selected options</span>
                 </div>
-                <strong className="reg-review-amount">₹150</strong>
+                <strong className="reg-review-amount">₹{amount}</strong>
               </div>
 
               <div className="reg-field-grid">
