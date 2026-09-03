@@ -1160,4 +1160,3 @@ async def export_attendance_excel(_admin=Depends(require_admin_tab("Attendance")
             "Cache-Control": "no-cache",
         },
     )
-
