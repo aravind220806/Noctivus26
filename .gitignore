@@ -7,8 +7,9 @@ venv/
 !.env.example
 /atlas-credentials.env
 google_auth.json
+backend/*service-account*.json
+backend/sympo-api-*.json
 __pycache__/
 *.py[cod]
 *.db
 .DS_Store
-

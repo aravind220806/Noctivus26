@@ -60,13 +60,13 @@ export function FooterSection() {
       </div>
 
       <div className="footer-hud-container">
-        
+
         {/* Main Content: Info on Left, Map on Right */}
         <div className="footer-main-layout">
-          
+
           {/* LEFT SIDE: Venue, Contact, Bus Route */}
           <div className="footer-info-columns">
-            
+
             {/* Venue */}
             <div className="footer-info-block">
               <div className="footer-info-heading">
