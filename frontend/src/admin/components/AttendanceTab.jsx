@@ -126,13 +126,27 @@ export function AttendanceTab({ authHeaders }) {
     if (!cameraOpen) return undefined;
     let active = true;
     import('html5-qrcode')
-      .then(({ Html5Qrcode }) => {
+      .then(({ Html5Qrcode, Html5QrcodeSupportedFormats }) => {
         if (!active) return;
-        const scanner = new Html5Qrcode('attendance-qr-reader');
+        const scanner = new Html5Qrcode('attendance-qr-reader', {
+          formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+          verbose: false,
+          experimentalFeatures: {
+            useBarCodeDetectorIfSupported: true,
+          },
+        });
         scannerRef.current = scanner;
         return scanner.start(
           { facingMode: 'environment' },
-          { fps: 12, qrbox: { width: 220, height: 220 } },
+          {
+            fps: 25,
+            qrbox: (viewfinderWidth, viewfinderHeight) => {
+              const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+              const edgeSize = Math.max(180, Math.floor(minEdge * 0.85));
+              return { width: edgeSize, height: edgeSize };
+            },
+            aspectRatio: 1.0,
+          },
           (scannedVal) => {
             const clean = extractCleanId(scannedVal);
             setScanInput(clean);

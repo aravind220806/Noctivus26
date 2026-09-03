@@ -56,6 +56,11 @@ class Settings:
     smtp_user = env("SMTP_USER", "noctivus2026@gmail.com")
     smtp_password = env("SMTP_PASSWORD", "")
     smtp_from_email = env("SMTP_FROM_EMAIL", "noctivus2026@gmail.com")
+    # Google Sheets Live Sync Configuration
+    google_sheets_spreadsheet_id = env("GOOGLE_SHEETS_SPREADSHEET_ID")
+    google_service_account_file = env("GOOGLE_SERVICE_ACCOUNT_FILE")
+    google_service_account_json = env("GOOGLE_SERVICE_ACCOUNT_JSON")
+    google_sheets_live_sync_enabled = env("GOOGLE_SHEETS_LIVE_SYNC_ENABLED", "true").lower() == "true"
 
 
 settings = Settings()

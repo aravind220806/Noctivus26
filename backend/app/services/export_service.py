@@ -630,3 +630,672 @@ def export_attendance_to_excel(events: list[dict], registrations: list[dict]) ->
     output = io.BytesIO()
     wb.save(output)
     return output.getvalue()
+
+
+def export_full_live_backup_excel(events: list[dict], registrations: list[dict], slots: list[dict]) -> bytes:
+    """
+    Generates a master live-backup Excel workbook containing:
+    1. Registered (All registrations)
+    2. Verified (Confirmed payment registrations)
+    3. Check-In List (Gate check-in participants)
+    4. Master Event Slots (Scheduler slots)
+    5. Scheduler Summary (Event capacities & allocations)
+    6. Member Slot Allocations (Participant slot timings)
+    7+. Dedicated attendance sheets for every event
+    """
+    wb = Workbook()
+
+    # Styling
+    header_fill = PatternFill(start_color="0F172A", end_color="0F172A", fill_type="solid")
+    header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
+    badge_green_fill = PatternFill(start_color="DCFCE7", end_color="DCFCE7", fill_type="solid")
+    badge_green_font = Font(name="Calibri", size=10, bold=True, color="166534")
+    badge_red_fill = PatternFill(start_color="FEE2E2", end_color="FEE2E2", fill_type="solid")
+    badge_red_font = Font(name="Calibri", size=10, color="991B1B")
+    morning_fill = PatternFill(start_color="FEF3C7", end_color="FEF3C7", fill_type="solid")
+    afternoon_fill = PatternFill(start_color="E0F2FE", end_color="E0F2FE", fill_type="solid")
+    thin_border = Border(
+        left=Side(style="thin", color="CBD5E1"),
+        right=Side(style="thin", color="CBD5E1"),
+        top=Side(style="thin", color="CBD5E1"),
+        bottom=Side(style="thin", color="CBD5E1"),
+    )
+
+    events_map = {e["id"]: e for e in events}
+    slots_map = {s["id"]: s for s in slots}
+
+    # ================= 1. SHEET: Registered =================
+    ws_reg = wb.active
+    ws_reg.title = "Registered"
+    reg_headers = [
+        "S.No",
+        "Registration ID",
+        "Participant Name",
+        "Email",
+        "Phone",
+        "College",
+        "Department",
+        "Year",
+        "Food Preference",
+        "Registered Events",
+        "Abstract / Topic",
+        "Payment Status",
+        "UTR Number",
+        "Expected Amount",
+        "Claimed Amount",
+        "Gate Check-In",
+        "Checked In At",
+        "Submitted At",
+        "Verified At",
+    ]
+    ws_reg.append(reg_headers)
+    for col_num in range(1, len(reg_headers) + 1):
+        cell = ws_reg.cell(row=1, column=col_num)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+    for r_idx, reg in enumerate(registrations, 1):
+        p = reg.get("participant") or {}
+        event_names = [e.get("eventName") or e.get("eventId") for e in reg.get("eventRegistrations", [])]
+        is_checked_in = bool(reg.get("checkedIn"))
+        p_status = (reg.get("paymentStatus") or "pending").capitalize()
+
+        row_data = [
+            r_idx,
+            reg.get("registrationId") or reg.get("member_id", ""),
+            p.get("name", ""),
+            p.get("email", ""),
+            p.get("phone", ""),
+            p.get("college", ""),
+            p.get("department", ""),
+            p.get("year", ""),
+            p.get("foodPreference", ""),
+            "; ".join(event_names),
+            _get_abstract(reg),
+            p_status,
+            reg.get("utrNumber", ""),
+            reg.get("expectedAmount", 0),
+            reg.get("claimedAmount", 0),
+            "YES" if is_checked_in else "NO",
+            reg.get("checkedInAt", ""),
+            reg.get("paymentSubmittedAt", "") or reg.get("createdAt", ""),
+            reg.get("verifiedAt", ""),
+        ]
+        ws_reg.append(row_data)
+        curr_row = r_idx + 1
+        for col_idx in range(1, len(row_data) + 1):
+            cell = ws_reg.cell(row=curr_row, column=col_idx)
+            cell.border = thin_border
+            if col_idx in (1, 8, 9, 12, 14, 15, 16):
+                cell.alignment = Alignment(horizontal="center")
+            if col_idx == 12:  # Payment status
+                if p_status.lower() == "confirmed":
+                    cell.fill = badge_green_fill
+                    cell.font = badge_green_font
+            elif col_idx == 16:  # Gate Check-In
+                if is_checked_in:
+                    cell.fill = badge_green_fill
+                    cell.font = badge_green_font
+
+    # ================= 2. SHEET: Verified =================
+    ws_ver = wb.create_sheet(title="Verified")
+    ver_headers = [
+        "S.No",
+        "Registration ID",
+        "Participant Name",
+        "Email",
+        "Phone",
+        "College",
+        "Department",
+        "Year",
+        "Food",
+        "Registered Events",
+        "UTR Number",
+        "Verified Amount",
+        "Verified At",
+        "Gate Check-In",
+    ]
+    ws_ver.append(ver_headers)
+    for col_num in range(1, len(ver_headers) + 1):
+        cell = ws_ver.cell(row=1, column=col_num)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+    verified_regs = [r for r in registrations if (r.get("paymentStatus") or "").lower() == "confirmed"]
+    for v_idx, reg in enumerate(verified_regs, 1):
+        p = reg.get("participant") or {}
+        event_names = [e.get("eventName") or e.get("eventId") for e in reg.get("eventRegistrations", [])]
+        is_checked_in = bool(reg.get("checkedIn"))
+
+        row_data = [
+            v_idx,
+            reg.get("registrationId") or reg.get("member_id", ""),
+            p.get("name", ""),
+            p.get("email", ""),
+            p.get("phone", ""),
+            p.get("college", ""),
+            p.get("department", ""),
+            p.get("year", ""),
+            p.get("foodPreference", ""),
+            "; ".join(event_names),
+            reg.get("utrNumber", ""),
+            reg.get("expectedAmount", 0),
+            reg.get("verifiedAt", ""),
+            "YES" if is_checked_in else "NO",
+        ]
+        ws_ver.append(row_data)
+        curr_row = v_idx + 1
+        for col_idx in range(1, len(row_data) + 1):
+            cell = ws_ver.cell(row=curr_row, column=col_idx)
+            cell.border = thin_border
+            if col_idx in (1, 8, 9, 12, 14):
+                cell.alignment = Alignment(horizontal="center")
+            if col_idx == 14 and is_checked_in:
+                cell.fill = badge_green_fill
+                cell.font = badge_green_font
+
+    # ================= 3. SHEET: Check-In List =================
+    ws_chk = wb.create_sheet(title="Check-In List")
+    chk_headers = [
+        "S.No",
+        "Registration ID",
+        "Participant Name",
+        "Email",
+        "Phone",
+        "College",
+        "Department",
+        "Food",
+        "Registered Events",
+        "Payment Status",
+        "Checked In At",
+        "Checked In By",
+    ]
+    ws_chk.append(chk_headers)
+    for col_num in range(1, len(chk_headers) + 1):
+        cell = ws_chk.cell(row=1, column=col_num)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+    checked_in_regs = [r for r in registrations if bool(r.get("checkedIn"))]
+    for c_idx, reg in enumerate(checked_in_regs, 1):
+        p = reg.get("participant") or {}
+        event_names = [e.get("eventName") or e.get("eventId") for e in reg.get("eventRegistrations", [])]
+
+        row_data = [
+            c_idx,
+            reg.get("registrationId") or reg.get("member_id", ""),
+            p.get("name", ""),
+            p.get("email", ""),
+            p.get("phone", ""),
+            p.get("college", ""),
+            p.get("department", ""),
+            p.get("foodPreference", ""),
+            "; ".join(event_names),
+            (reg.get("paymentStatus") or "pending").capitalize(),
+            reg.get("checkedInAt", ""),
+            reg.get("checkedInBy", "Gate Desk"),
+        ]
+        ws_chk.append(row_data)
+        curr_row = c_idx + 1
+        for col_idx in range(1, len(row_data) + 1):
+            cell = ws_chk.cell(row=curr_row, column=col_idx)
+            cell.border = thin_border
+            if col_idx in (1, 8, 10):
+                cell.alignment = Alignment(horizontal="center")
+
+    # ================= 4. SHEET: Master Event Slots =================
+    ws_slots = wb.create_sheet(title="Master Event Slots")
+    slots_headers = [
+        "Event Name",
+        "Category",
+        "Window",
+        "Date",
+        "Start Time",
+        "End Time",
+        "Slot Timing",
+        "Capacity",
+        "Assigned Count",
+        "Available",
+        "Assigned Member IDs",
+        "Assigned Member Names",
+    ]
+    ws_slots.append(slots_headers)
+    for col_num in range(1, len(slots_headers) + 1):
+        cell = ws_slots.cell(row=1, column=col_num)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+    reg_by_id = {(r.get("registrationId") or r.get("member_id")): r for r in registrations}
+    sorted_slots = sorted(
+        slots,
+        key=lambda s: (
+            events_map.get(s.get("event_id"), {}).get("name", s.get("event_id", "")),
+            0 if str(s.get("window")).lower() == "morning" else 1,
+            s.get("start_time", ""),
+        ),
+    )
+    for s_idx, slot in enumerate(sorted_slots, 2):
+        ev = events_map.get(slot.get("event_id"), {})
+        assigned_ids = slot.get("assigned_member_ids") or []
+        assigned_count = len(assigned_ids)
+        capacity = slot.get("capacity") or 30
+        available = max(0, capacity - assigned_count)
+        member_names = []
+        for mid in assigned_ids:
+            reg = reg_by_id.get(mid)
+            if reg:
+                pname = (reg.get("participant") or {}).get("name", mid)
+                member_names.append(f"{pname} ({mid})")
+            else:
+                member_names.append(mid)
+
+        window_label = "Morning" if str(slot.get("window")).lower() == "morning" else "Afternoon"
+        slot_timing = f"{slot.get('start_time', '')} - {slot.get('end_time', '')}"
+
+        row_data = [
+            ev.get("name", slot.get("event_id")),
+            ev.get("category", "tech"),
+            window_label,
+            slot.get("date", "2026-09-26"),
+            slot.get("start_time", ""),
+            slot.get("end_time", ""),
+            slot_timing,
+            capacity,
+            assigned_count,
+            available,
+            ", ".join(assigned_ids) if assigned_ids else "None",
+            "; ".join(member_names) if member_names else "None",
+        ]
+        ws_slots.append(row_data)
+        for col_idx in range(1, len(row_data) + 1):
+            cell = ws_slots.cell(row=s_idx, column=col_idx)
+            cell.border = thin_border
+            if col_idx == 3:
+                cell.fill = morning_fill if window_label == "Morning" else afternoon_fill
+                cell.alignment = Alignment(horizontal="center")
+            elif col_idx in (4, 5, 6, 7, 8, 9, 10):
+                cell.alignment = Alignment(horizontal="center")
+
+    # ================= 5. SHEET: Scheduler Event Summary =================
+    ws_sched_sum = wb.create_sheet(title="Scheduler Summary")
+    sched_sum_headers = [
+        "Event ID",
+        "Event Name",
+        "Category",
+        "Duration (Mins)",
+        "Total Registrations",
+        "Total Slots",
+        "Morning Slots",
+        "Afternoon Slots",
+        "Total Capacity",
+        "Total Assigned",
+        "Utilization %",
+    ]
+    ws_sched_sum.append(sched_sum_headers)
+    for col_num in range(1, len(sched_sum_headers) + 1):
+        cell = ws_sched_sum.cell(row=1, column=col_num)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+    slots_by_ev = {}
+    for s in slots:
+        eid = s.get("event_id")
+        if eid not in slots_by_ev:
+            slots_by_ev[eid] = []
+        slots_by_ev[eid].append(s)
+
+    for row_idx, ev in enumerate(events, 2):
+        eid = ev["id"]
+        ev_slots = slots_by_ev.get(eid, [])
+        morning_count = sum(1 for s in ev_slots if str(s.get("window")).lower() == "morning")
+        afternoon_count = sum(1 for s in ev_slots if str(s.get("window")).lower() == "afternoon")
+        total_capacity = sum(s.get("capacity", 30) for s in ev_slots)
+        total_assigned = sum(len(s.get("assigned_member_ids", [])) for s in ev_slots)
+        utilization = f"{(total_assigned / total_capacity * 100):.1f}%" if total_capacity > 0 else "0.0%"
+
+        row_data = [
+            eid,
+            ev.get("name", eid),
+            ev.get("category", "tech"),
+            ev.get("duration_minutes", 90),
+            ev.get("total_registrations", 0),
+            len(ev_slots),
+            morning_count,
+            afternoon_count,
+            total_capacity,
+            total_assigned,
+            utilization,
+        ]
+        ws_sched_sum.append(row_data)
+        for col_idx in range(1, len(row_data) + 1):
+            cell = ws_sched_sum.cell(row=row_idx, column=col_idx)
+            cell.border = thin_border
+            if col_idx in (4, 5, 6, 7, 8, 9, 10, 11):
+                cell.alignment = Alignment(horizontal="center")
+
+    # ================= 6. SHEET: Member Slot Allocations =================
+    ws_alloc = wb.create_sheet(title="Member Allocations")
+    alloc_headers = [
+        "Registration ID",
+        "Member Name",
+        "Email",
+        "College",
+        "Registered Events",
+        "Abstract / Topic",
+        "Assigned Slot IDs",
+        "Slot Details (Window & Timing)",
+    ]
+    ws_alloc.append(alloc_headers)
+    for col_num in range(1, len(alloc_headers) + 1):
+        cell = ws_alloc.cell(row=1, column=col_num)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+    for row_idx, reg in enumerate(verified_regs, 2):
+        participant = reg.get("participant") or {}
+        assigned_slot_ids = reg.get("assigned_slots") or []
+        slot_descriptions = []
+        for sid in assigned_slot_ids:
+            sl = slots_map.get(sid)
+            if sl:
+                ev_name = events_map.get(sl.get("event_id"), {}).get("name", sl.get("event_id"))
+                win = "Morning" if sl.get("window") == "morning" else "Afternoon"
+                slot_descriptions.append(f"{ev_name}: {win} ({sl.get('start_time')} - {sl.get('end_time')})")
+            else:
+                slot_descriptions.append(sid)
+
+        event_names = [e.get("eventName") or e.get("eventId") for e in reg.get("eventRegistrations", [])]
+        row_data = [
+            reg.get("registrationId") or reg.get("member_id"),
+            participant.get("name", ""),
+            participant.get("email", ""),
+            participant.get("college", ""),
+            ", ".join(event_names),
+            _get_abstract(reg),
+            ", ".join(assigned_slot_ids) if assigned_slot_ids else "Unassigned",
+            "; ".join(slot_descriptions) if slot_descriptions else "Unassigned",
+        ]
+        ws_alloc.append(row_data)
+        for col_idx in range(1, len(row_data) + 1):
+            cell = ws_alloc.cell(row=row_idx, column=col_idx)
+            cell.border = thin_border
+
+    # ================= 7+. SHEETS: Per-Event Attendance Sheets =================
+    def _extract_members(reg: dict, target_event_id: str) -> list[dict]:
+        p = reg.get("participant") or {}
+        event_regs = reg.get("eventRegistrations") or []
+        ev_item = next((e for e in event_regs if e.get("eventId") == target_event_id), None)
+        if not ev_item:
+            return []
+        att_data = ev_item.get("attendance") or (reg.get("attendance") or {}).get(target_event_id) or {}
+        members_att = {
+            (m.get("name") or "").strip().upper(): m.get("present", False)
+            for m in att_data.get("members", [])
+            if isinstance(m, dict)
+        }
+        marked_at = att_data.get("markedAt") or ""
+        marked_by = att_data.get("markedBy") or ""
+        members_list = []
+
+        leader_name = (p.get("name") or "").strip().upper()
+        leader_present = members_att.get(leader_name, att_data.get("present", False) if "members" not in att_data else False)
+        members_list.append({
+            "registrationId": reg.get("registrationId") or reg.get("member_id", ""),
+            "name": leader_name,
+            "role": "Team Leader",
+            "rollNo": p.get("rollNo") or p.get("collegeId") or "",
+            "college": p.get("college", ""),
+            "department": p.get("department", ""),
+            "year": p.get("year", ""),
+            "email": p.get("email", ""),
+            "phone": p.get("phone", ""),
+            "paymentStatus": reg.get("paymentStatus", "pending"),
+            "checkedIn": "Yes" if reg.get("checkedIn") else "No",
+            "present": leader_present,
+            "markedAt": marked_at,
+            "markedBy": marked_by,
+        })
+
+        for tm in (ev_item.get("teamMembers") or []):
+            if not isinstance(tm, dict):
+                continue
+            tm_name = (tm.get("name") or "").strip().upper()
+            if not tm_name:
+                continue
+            tm_present = members_att.get(tm_name, False)
+            members_list.append({
+                "registrationId": reg.get("registrationId") or reg.get("member_id", ""),
+                "name": tm_name,
+                "role": "Team Member",
+                "rollNo": tm.get("rollNo", ""),
+                "college": p.get("college", ""),
+                "department": p.get("department", ""),
+                "year": p.get("year", ""),
+                "email": p.get("email", ""),
+                "phone": p.get("phone", ""),
+                "paymentStatus": reg.get("paymentStatus", "pending"),
+                "checkedIn": "Yes" if reg.get("checkedIn") else "No",
+                "present": tm_present,
+                "markedAt": marked_at,
+                "markedBy": marked_by,
+            })
+        return members_list
+
+    for s_idx, ev in enumerate(events, 1):
+        eid = ev.get("id")
+        ename = ev.get("name", eid)
+        clean_sheet_name = _sanitize_sheet_title(f"Att - {ename}")
+        if clean_sheet_name in wb.sheetnames:
+            clean_sheet_name = _sanitize_sheet_title(f"Att - {ename[:22]}-{s_idx}")
+
+        ws_ev = wb.create_sheet(title=clean_sheet_name)
+        ev_headers = [
+            "S.No",
+            "Registration ID",
+            "Member Name (E-Certificate Name)",
+            "Role",
+            "Roll No / ID",
+            "College",
+            "Department",
+            "Year",
+            "Email",
+            "Phone",
+            "Payment Status",
+            "Gate Check-In",
+            "Event Attendance",
+            "E-Certificate Eligible",
+            "Attendance Marked At",
+            "Marked By",
+        ]
+        ws_ev.append(ev_headers)
+        for col_num in range(1, len(ev_headers) + 1):
+            cell = ws_ev.cell(row=1, column=col_num)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+        event_regs = [
+            r for r in registrations
+            if any(e.get("eventId") == eid for e in r.get("eventRegistrations", []))
+        ]
+        all_event_members = []
+        for r in event_regs:
+            all_event_members.extend(_extract_members(r, eid))
+
+        sorted_event_members = sorted(
+            all_event_members,
+            key=lambda x: (0 if x.get("present") else 1, x.get("registrationId", ""), 0 if x.get("role") == "Team Leader" else 1)
+        )
+
+        for m_idx, m in enumerate(sorted_event_members, 1):
+            is_present = m.get("present", False)
+            is_confirmed = (m.get("paymentStatus") or "").lower() == "confirmed"
+            is_cert_eligible = "YES" if (is_present and is_confirmed) else "NO"
+            att_status_text = "PRESENT" if is_present else "ABSENT"
+
+            row_data = [
+                m_idx,
+                m.get("registrationId", ""),
+                m.get("name", ""),
+                m.get("role", ""),
+                m.get("rollNo", ""),
+                m.get("college", ""),
+                m.get("department", ""),
+                m.get("year", ""),
+                m.get("email", ""),
+                m.get("phone", ""),
+                (m.get("paymentStatus") or "").capitalize(),
+                m.get("checkedIn", "No"),
+                att_status_text,
+                is_cert_eligible,
+                m.get("markedAt", ""),
+                m.get("markedBy", ""),
+            ]
+            ws_ev.append(row_data)
+            curr_row = m_idx + 1
+            for col_idx in range(1, len(row_data) + 1):
+                cell = ws_ev.cell(row=curr_row, column=col_idx)
+                cell.border = thin_border
+                if col_idx in (1, 4, 8, 11, 12, 13, 14):
+                    cell.alignment = Alignment(horizontal="center")
+                if col_idx in (13, 14):
+                    if is_present and is_cert_eligible == "YES":
+                        cell.fill = badge_green_fill
+                        cell.font = badge_green_font
+                    elif not is_present:
+                        cell.fill = badge_red_fill
+                        cell.font = badge_red_font
+
+    # ================= 8+. SHEETS: Per-Event Slot Allocation Sheets =================
+    for s_idx, ev in enumerate(events, 1):
+        eid = ev.get("id")
+        ename = ev.get("name", eid)
+        clean_slot_sheet_name = _sanitize_sheet_title(f"Slots - {ename}")
+        if clean_slot_sheet_name in wb.sheetnames:
+            clean_slot_sheet_name = _sanitize_sheet_title(f"Slots - {ename[:20]}-{s_idx}")
+
+        ws_ev_slot = wb.create_sheet(title=clean_slot_sheet_name)
+        slot_headers = [
+            "S.No",
+            "Slot Window",
+            "Timing",
+            "Date",
+            "Capacity",
+            "Assigned",
+            "Available",
+            "Assigned Reg ID",
+            "Member Name",
+            "College",
+            "Department",
+            "Year",
+            "Email",
+            "Phone",
+            "Payment Status",
+            "Gate Check-In",
+        ]
+        ws_ev_slot.append(slot_headers)
+        for col_num in range(1, len(slot_headers) + 1):
+            cell = ws_ev_slot.cell(row=1, column=col_num)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+        ev_slots = [s for s in slots if s.get("event_id") == eid]
+        ev_slots_sorted = sorted(
+            ev_slots,
+            key=lambda s: (0 if str(s.get("window")).lower() == "morning" else 1, s.get("start_time", ""))
+        )
+
+        row_counter = 1
+        for sl in ev_slots_sorted:
+            assigned_ids = sl.get("assigned_member_ids") or []
+            assigned_count = len(assigned_ids)
+            capacity = sl.get("capacity") or 30
+            available = max(0, capacity - assigned_count)
+            window_label = "Morning" if str(sl.get("window")).lower() == "morning" else "Afternoon"
+            timing_label = f"{sl.get('start_time', '')} - {sl.get('end_time', '')}"
+            date_label = sl.get("date", "2026-09-26")
+
+            if not assigned_ids:
+                row_data = [
+                    row_counter,
+                    window_label,
+                    timing_label,
+                    date_label,
+                    capacity,
+                    0,
+                    available,
+                    "None",
+                    "Unassigned / Open Slot",
+                    "-",
+                    "-",
+                    "-",
+                    "-",
+                    "-",
+                    "-",
+                    "-",
+                ]
+                ws_ev_slot.append(row_data)
+                curr_row = row_counter + 1
+                for col_idx in range(1, len(row_data) + 1):
+                    cell = ws_ev_slot.cell(row=curr_row, column=col_idx)
+                    cell.border = thin_border
+                    if col_idx in (1, 2, 4, 5, 6, 7):
+                        cell.alignment = Alignment(horizontal="center")
+                    if col_idx == 2:
+                        cell.fill = morning_fill if window_label == "Morning" else afternoon_fill
+                row_counter += 1
+            else:
+                for mid in assigned_ids:
+                    reg = reg_by_id.get(mid)
+                    p = (reg.get("participant") or {}) if reg else {}
+                    is_chk = reg and reg.get("checkedIn")
+                    row_data = [
+                        row_counter,
+                        window_label,
+                        timing_label,
+                        date_label,
+                        capacity,
+                        assigned_count,
+                        available,
+                        mid,
+                        p.get("name", mid),
+                        p.get("college", ""),
+                        p.get("department", ""),
+                        p.get("year", ""),
+                        p.get("email", ""),
+                        p.get("phone", ""),
+                        (reg.get("paymentStatus") or "").capitalize() if reg else "",
+                        "YES" if is_chk else "NO",
+                    ]
+                    ws_ev_slot.append(row_data)
+                    curr_row = row_counter + 1
+                    for col_idx in range(1, len(row_data) + 1):
+                        cell = ws_ev_slot.cell(row=curr_row, column=col_idx)
+                        cell.border = thin_border
+                        if col_idx in (1, 2, 4, 5, 6, 7, 15, 16):
+                            cell.alignment = Alignment(horizontal="center")
+                        if col_idx == 2:
+                            cell.fill = morning_fill if window_label == "Morning" else afternoon_fill
+                        if col_idx == 16 and is_chk:
+                            cell.fill = badge_green_fill
+                            cell.font = badge_green_font
+                    row_counter += 1
+
+    # Auto-adjust column widths on ALL sheets
+    for sheet in wb.worksheets:
+        sheet.views.sheetView[0].showGridLines = True
+        for col in sheet.columns:
+            max_len = max(len(str(cell.value or "")) for cell in col)
+            col_letter = get_column_letter(col[0].column)
+            sheet.column_dimensions[col_letter].width = min(max(max_len + 4, 12), 40)
+
+    output = io.BytesIO()
+    wb.save(output)
+    return output.getvalue()

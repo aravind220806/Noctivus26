@@ -17,9 +17,10 @@ from app.services.analysis_service import build_overview, create_ai_analysis
 from app.services.boarding_pass_service import create_pass_token, render_pass_artwork_bytes
 from app.services.email_service import normalize_pass_template, queue_email, send_confirmation, send_invitation, send_member_pass, sendPaymentConfirmationEmail
 from app.services.event_service import admin_events, get_event, list_events, update_event
-from app.services.export_service import export_attendance_to_excel, export_scheduler_to_excel, registrations_to_csv
+from app.services.export_service import export_attendance_to_excel, export_full_live_backup_excel, export_scheduler_to_excel, registrations_to_csv
 from app.services.audit_service import list_admin_actions, record_admin_action
 from app.services.google_auth_service import verify_google_credential
+from app.services.google_sheets_service import google_sheets_service
 from app.services.registration_service import create_registration_id, load_registrations, serialize_registration, update_registration
 from app.services.scheduler_service import assignMembersToSlots, create_custom_slot, delete_slot, generate_all_event_slots, get_scheduler_dashboard_data, load_all_slots, slotsConflict, update_slot
 from app.db.memory_store import memory_registrations
@@ -107,6 +108,21 @@ async def scheduler_get(_admin=Depends(require_admin_tab("Event Scheduler"))):
     return await get_scheduler_dashboard_data()
 
 
+async def _run_sheets_sync():
+    try:
+        events = await list_events()
+        registrations = await load_registrations()
+        slots = await load_all_slots()
+        await google_sheets_service.sync_full_database(events, registrations, slots)
+    except Exception as err:
+        logger.error(f"Background sheets sync failed: {err}")
+
+
+def _trigger_sheets_sync():
+    if google_sheets_service.is_enabled:
+        asyncio.create_task(_run_sheets_sync())
+
+
 @router.post("/scheduler/generate-slots")
 async def scheduler_generate_slots(request: Request, admin=Depends(require_admin_tab("Event Scheduler"))):
     try:
@@ -115,6 +131,7 @@ async def scheduler_generate_slots(request: Request, admin=Depends(require_admin
         body = {}
     regenerate = bool(body.get("regenerate", False))
     result = await generate_all_event_slots(regenerate=regenerate)
+    _trigger_sheets_sync()
     await record_admin_action(
         admin["email"],
         "scheduler.generate_slots",
@@ -128,6 +145,7 @@ async def scheduler_generate_slots(request: Request, admin=Depends(require_admin
 async def scheduler_run_assignment(admin=Depends(require_admin_tab("Event Scheduler"))):
     try:
         summary = await assignMembersToSlots()
+        _trigger_sheets_sync()
         await record_admin_action(
             admin["email"],
             "scheduler.run_assignment",
@@ -145,6 +163,7 @@ async def scheduler_run_assignment(admin=Depends(require_admin_tab("Event Schedu
 async def scheduler_create_slot(request: Request, admin=Depends(require_admin_tab("Event Scheduler"))):
     body = await request.json()
     new_slot = await create_custom_slot(body)
+    _trigger_sheets_sync()
     await record_admin_action(
         admin["email"],
         "scheduler.create_slot",
@@ -160,6 +179,7 @@ async def scheduler_update_slot(slot_id: str, request: Request, admin=Depends(re
     updated = await update_slot(slot_id, body)
     if not updated:
         raise HTTPException(status_code=404, detail="Slot not found.")
+    _trigger_sheets_sync()
     await record_admin_action(
         admin["email"],
         "scheduler.update_slot",
@@ -174,6 +194,7 @@ async def scheduler_delete_slot(slot_id: str, admin=Depends(require_admin_tab("E
     deleted = await delete_slot(slot_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Slot not found.")
+    _trigger_sheets_sync()
     await record_admin_action(
         admin["email"],
         "scheduler.delete_slot",
@@ -297,6 +318,7 @@ async def check_in(request: Request, registration_id: str, admin=Depends(require
         checked = await update_registration(current["registrationId"], {"checkedIn": True, "checkedInAt": checked_at, "checkedInBy": admin["email"]})
     if not checked:
         return {"status": "already-checked-in", "checkedInAt": current.get("checkedInAt"), "registration": serialize_registration(current)}
+    asyncio.create_task(google_sheets_service.sync_check_in(checked or current))
     await record_admin_action(
         admin["email"],
         "check-in",
@@ -362,6 +384,9 @@ async def create_walk_in(request: Request, admin=Depends(require_admin_tab("Chec
         await sqlite_db.upsert("registrations", record["registrationId"], record)
     else:
         memory_registrations.append(record)
+    asyncio.create_task(google_sheets_service.sync_new_registration(record))
+    asyncio.create_task(google_sheets_service.sync_verified_registration(record))
+    asyncio.create_task(google_sheets_service.sync_check_in(record))
     await record_admin_action(
         admin["email"],
         "walk-in.create",
@@ -369,6 +394,168 @@ async def create_walk_in(request: Request, admin=Depends(require_admin_tab("Chec
         {"name": name, "college": college, "eventId": event_id, "eventName": event["name"]},
     )
     return {"registration": serialize_registration(record)}
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# FOOD / LUNCH DISTRIBUTION SCANNER
+# ══════════════════════════════════════════════════════════════════════════════
+
+@router.post("/food/claim/{registration_id:path}")
+@limiter.limit("120/minute")
+async def claim_food(request: Request, registration_id: str, admin=Depends(require_any_admin_tab(["Food Scanner", "Check-in", "Dashboard"]))):
+    scanned_input = registration_id.strip()
+    current = await find_registration_flexible(scanned_input)
+
+    if not current:
+        raise HTTPException(status_code=404, detail="Registration not found. Send participant to the help desk.")
+
+    payment_status = str(current.get("paymentStatus") or "").lower()
+    is_eligible = payment_status in ("confirmed", "paid", "approved") or bool(current.get("isWalkIn"))
+    if not is_eligible:
+        raise HTTPException(status_code=409, detail=f"Payment is '{payment_status or 'unconfirmed'}'. Only confirmed participants are eligible for lunch. Send to help desk.")
+
+    p = current.get("participant") or {}
+    food_pref_raw = str(current.get("foodPreference") or p.get("foodPreference") or "veg").strip().lower()
+    food_pref = "Non-Veg" if "non" in food_pref_raw else "Veg"
+
+    # STRICT CHECK: If already claimed, it CANNOT be changed or claimed again!
+    if current.get("foodClaimed"):
+        return {
+            "status": "already-claimed",
+            "message": "FOOD ALREADY RECEIVED",
+            "foodClaimedAt": current.get("foodClaimedAt"),
+            "foodClaimedBy": current.get("foodClaimedBy", "Food Counter"),
+            "foodPreference": food_pref,
+            "registration": serialize_registration(current),
+        }
+
+    claimed_at = datetime.now(timezone.utc).isoformat()
+    claimed_by = admin.get("email") if isinstance(admin, dict) else "Food Counter Desk"
+    reg_id = current.get("registrationId")
+
+    update_data = {
+        "foodClaimed": True,
+        "foodClaimedAt": claimed_at,
+        "foodClaimedBy": claimed_by,
+        "foodPreference": food_pref,
+    }
+
+    if mongo.mongo_ready():
+        updated = await mongo.db.registrations.find_one_and_update(
+            {"registrationId": reg_id, "foodClaimed": {"$ne": True}},
+            {"$set": update_data},
+            return_document=ReturnDocument.AFTER,
+        )
+    else:
+        updated = await update_registration(reg_id, update_data)
+
+    if not updated:
+        return {
+            "status": "already-claimed",
+            "message": "FOOD ALREADY RECEIVED",
+            "foodClaimedAt": current.get("foodClaimedAt") or claimed_at,
+            "foodClaimedBy": current.get("foodClaimedBy", claimed_by),
+            "foodPreference": food_pref,
+            "registration": serialize_registration(current),
+        }
+
+    await record_admin_action(
+        claimed_by,
+        "food.claim",
+        reg_id,
+        {
+            "name": p.get("name", ""),
+            "college": p.get("college", ""),
+            "foodPreference": food_pref,
+            "claimedAt": claimed_at,
+        },
+    )
+
+    return {
+        "status": "claimed",
+        "message": f"{food_pref.upper()} LUNCH CLAIMED",
+        "foodClaimedAt": claimed_at,
+        "foodClaimedBy": claimed_by,
+        "foodPreference": food_pref,
+        "registration": serialize_registration(updated),
+    }
+
+
+@router.get("/food/summary")
+async def get_food_summary(_admin=Depends(require_any_admin_tab(["Food Scanner", "Check-in", "Dashboard"]))):
+    rows = await load_registrations()
+    confirmed = [r for r in rows if r.get("paymentStatus") == "confirmed"]
+
+    total_eligible = len(confirmed)
+    total_claimed = sum(1 for r in confirmed if r.get("foodClaimed") is True)
+    total_pending = max(0, total_eligible - total_claimed)
+
+    def _is_non_veg(r):
+        p = r.get("participant") or {}
+        raw = str(r.get("foodPreference") or p.get("foodPreference") or "").strip().lower()
+        return "non" in raw
+
+    veg_total = sum(1 for r in confirmed if not _is_non_veg(r))
+    veg_claimed = sum(1 for r in confirmed if (not _is_non_veg(r) and r.get("foodClaimed") is True))
+    veg_remaining = max(0, veg_total - veg_claimed)
+
+    non_veg_total = sum(1 for r in confirmed if _is_non_veg(r))
+    non_veg_claimed = sum(1 for r in confirmed if (_is_non_veg(r) and r.get("foodClaimed") is True))
+    non_veg_remaining = max(0, non_veg_total - non_veg_claimed)
+
+    recent_claims = [r for r in confirmed if r.get("foodClaimed") is True]
+    recent_claims.sort(key=lambda x: str(x.get("foodClaimedAt") or ""), reverse=True)
+
+    return {
+        "totalEligible": total_eligible,
+        "totalClaimed": total_claimed,
+        "totalPending": total_pending,
+        "vegTotal": veg_total,
+        "vegClaimed": veg_claimed,
+        "vegRemaining": veg_remaining,
+        "nonVegTotal": non_veg_total,
+        "nonVegClaimed": non_veg_claimed,
+        "nonVegRemaining": non_veg_remaining,
+        "recentClaims": [serialize_registration(r) for r in recent_claims[:25]],
+    }
+
+
+@router.post("/food/reset")
+async def reset_food_claims(admin=Depends(require_any_admin_tab(["Food Scanner", "Dashboard"]))):
+    count = 0
+    if mongo.mongo_ready():
+        res = await mongo.db.registrations.update_many(
+            {},
+            {"$set": {"foodClaimed": False, "foodClaimedAt": None, "foodClaimedBy": None}}
+        )
+        count += res.modified_count
+
+    if sqlite_db.ready():
+        rows = await sqlite_db.list_all("registrations")
+        for r in rows:
+            if r.get("foodClaimed"):
+                r["foodClaimed"] = False
+                r["foodClaimedAt"] = None
+                r["foodClaimedBy"] = None
+                await sqlite_db.upsert("registrations", r.get("registrationId"), r)
+                count += 1
+
+    for r in memory_registrations:
+        if r.get("foodClaimed"):
+            r["foodClaimed"] = False
+            r["foodClaimedAt"] = None
+            r["foodClaimedBy"] = None
+            count += 1
+
+    await record_admin_action(
+        admin["email"],
+        "food.reset_all",
+        "all_participants",
+        {"resetCount": count, "timestamp": datetime.now(timezone.utc).isoformat()},
+    )
+
+    return {"ok": True, "resetCount": count, "message": f"Successfully reset {count} food claim records."}
+
 
 
 @router.get("/access")
@@ -449,6 +636,7 @@ async def bulk_verify(request: Request, admin=Depends(require_admin_tab("Verify 
             changed += 1
             if status == "confirmed":
                 asyncio.create_task(sendPaymentConfirmationEmail(reg))
+                asyncio.create_task(google_sheets_service.sync_verified_registration(reg))
     await record_admin_action(admin["email"], f"registration.bulk.{status}", "bulk", {"count": changed})
     return {"updated": changed}
 
@@ -469,6 +657,9 @@ async def verify_registration(registration_id: str, request: Request, admin=Depe
             await sendPaymentConfirmationEmail(registration)
         except Exception as err:
             logger.error(f"Error sending payment confirmation email: {err}")
+
+    if update["paymentStatus"] == "confirmed":
+        asyncio.create_task(google_sheets_service.sync_verified_registration(registration))
 
     rows = await load_registrations()
     fresh_reg = next((r for r in rows if r.get("registrationId") == registration_id), registration)
@@ -1064,6 +1255,7 @@ async def mark_event_attendance(request: Request, admin=Depends(require_admin_ta
     else:
         updated = await update_registration(reg["registrationId"], update_payload)
 
+    _trigger_sheets_sync()
     await record_admin_action(
         admin["email"],
         "attendance.mark",
@@ -1142,6 +1334,7 @@ async def quick_toggle_attendance(request: Request, admin=Depends(require_admin_
     else:
         updated = await update_registration(reg["registrationId"], update_payload)
 
+    _trigger_sheets_sync()
     formatted = format_registration_for_attendance(updated or reg, event_id)
     return {"message": "Attendance updated.", "registration": formatted}
 
@@ -1157,6 +1350,133 @@ async def export_attendance_excel(_admin=Depends(require_admin_tab("Attendance")
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={
             "Content-Disposition": "attachment; filename=noctivus_event_wise_attendance.xlsx",
+            "Cache-Control": "no-cache",
+        },
+    )
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# GOOGLE SHEETS LIVE SYNC & MASTER EXCEL BACKUP
+# ══════════════════════════════════════════════════════════════════════════════
+
+@router.get("/sheets/status")
+async def get_sheets_status(_admin=Depends(require_any_admin_tab(["Export", "Dashboard", "Event Scheduler", "Attendance"]))):
+    return google_sheets_service.get_status()
+
+
+@router.post("/sheets/create-spreadsheet")
+async def create_new_google_spreadsheet(request: Request, admin=Depends(require_any_admin_tab(["Export", "Dashboard", "Event Scheduler", "Attendance"]))):
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    title = str(body.get("title") or "Noctivus '26 Live Database").strip()[:100]
+
+    created = await google_sheets_service.create_new_spreadsheet(title=title)
+    if not created or not created.get("spreadsheetId"):
+        raise HTTPException(
+            status_code=502,
+            detail="Failed to create Google Spreadsheet. Please verify your Google Service Account credentials.",
+        )
+
+    # Perform initial sync
+    events = await list_events()
+    registrations = await load_registrations()
+    slots = await load_all_slots()
+    await google_sheets_service.sync_full_database(events, registrations, slots)
+
+    await record_admin_action(
+        admin["email"],
+        "sheets.create_spreadsheet",
+        created["spreadsheetId"],
+        {"title": title, "spreadsheetUrl": created.get("spreadsheetUrl")},
+    )
+
+    return {
+        "success": True,
+        "spreadsheetId": created["spreadsheetId"],
+        "spreadsheetUrl": f"https://docs.google.com/spreadsheets/d/{created['spreadsheetId']}",
+        "message": "New Google Spreadsheet created and initialized with all sheets successfully!",
+        "status": google_sheets_service.get_status(),
+    }
+
+
+@router.post("/sheets/set-spreadsheet-id")
+async def set_active_google_sheet(request: Request, admin=Depends(require_any_admin_tab(["Export", "Dashboard", "Event Scheduler", "Attendance"]))):
+    body = await request.json()
+    sid = str(body.get("spreadsheetId") or "").strip()
+    if not sid:
+        raise HTTPException(status_code=400, detail="Spreadsheet ID or URL is required.")
+
+    google_sheets_service.set_active_spreadsheet_id(sid)
+    events = await list_events()
+    registrations = await load_registrations()
+    slots = await load_all_slots()
+    await google_sheets_service.sync_full_database(events, registrations, slots)
+
+    await record_admin_action(
+        admin["email"],
+        "sheets.set_active_id",
+        google_sheets_service.spreadsheet_id,
+        {"input": sid},
+    )
+
+    return {
+        "success": True,
+        "message": "Spreadsheet ID connected and synced successfully!",
+        "status": google_sheets_service.get_status(),
+    }
+
+
+@router.post("/sheets/sync-all")
+async def sync_all_to_sheets(admin=Depends(require_any_admin_tab(["Export", "Dashboard", "Event Scheduler", "Attendance"]))):
+    events = await list_events()
+    registrations = await load_registrations()
+    slots = await load_all_slots()
+
+    if not google_sheets_service.is_configured:
+        raise HTTPException(
+            status_code=400,
+            detail="Google Sheets is not fully configured. Please set GOOGLE_SHEETS_SPREADSHEET_ID and Google Service Account credentials.",
+        )
+
+    success = await google_sheets_service.sync_full_database(events, registrations, slots)
+    if not success:
+        status = google_sheets_service.get_status()
+        raise HTTPException(
+            status_code=502,
+            detail=f"Google Sheets synchronization failed: {status.get('lastError') or 'Unknown error'}",
+        )
+
+    await record_admin_action(
+        admin["email"],
+        "sheets.sync_all",
+        google_sheets_service.spreadsheet_id,
+        {"events": len(events), "registrations": len(registrations), "slots": len(slots)},
+    )
+    return {
+        "success": True,
+        "message": "Entire database synchronized to Google Sheet successfully.",
+        "status": google_sheets_service.get_status(),
+    }
+
+
+
+@router.get("/sheets/export-excel")
+async def export_master_excel_backup(_admin=Depends(require_any_admin_tab(["Export", "Dashboard", "Event Scheduler", "Attendance"]))):
+    events = await list_events()
+    registrations = await load_registrations()
+    slots = await load_all_slots()
+
+    excel_bytes = export_full_live_backup_excel(events, registrations, slots)
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M")
+    filename = f"Noctivus26_Master_Live_Backup_{timestamp}.xlsx"
+
+    return Response(
+        content=excel_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
             "Cache-Control": "no-cache",
         },
     )

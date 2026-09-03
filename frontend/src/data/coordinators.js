@@ -5,23 +5,6 @@
 
 export const facultyCoordinators = [
   {
-    id: 'FAC-001',
-    name: 'DR S RAJALAKSHMI',
-    role: 'FACULTY COORDINATOR',
-    type: 'faculty',
-    department: 'CSE (CYBER SECURITY)',
-    designation: 'HOD OF CSE (CYBER SECURITY)',
-    image: null,
-    email: 'hod.cyber@velammal.edu.in',
-    phone: '+91 98409 56491',
-    accessLevel: 9,
-    permissions: [
-      'DEPARTMENT OVERSIGHT',
-      'FACULTY SUPERVISION',
-      'EVENT AUTHORIZATION',
-    ],
-  },
-  {
     id: 'FAC-002',
     name: 'RUBA A',
     role: 'FACULTY COORDINATOR',

@@ -21,11 +21,20 @@ export function EventsSection({ onSelect, onRegister, selectedCategory, onSelect
   }, []);
 
   const visibleEvents = useMemo(() => {
-    if (!filter || filter === 'All') return authoritativeEvents;
-    const filterLower = filter.toLowerCase();
+    if (!filter || filter.toLowerCase() === 'all') return authoritativeEvents;
+    const f = filter.toLowerCase().trim();
     return authoritativeEvents.filter((e) => {
-      const catLower = e.category?.toLowerCase();
-      return catLower === filterLower;
+      const c = (e.category || '').toLowerCase().trim();
+      if (f === 'technical' || f === 'tech') {
+        return (c === 'technical' || c === 'tech') && c !== 'workshop';
+      }
+      if (f === 'non-technical' || f === 'non-tech') {
+        return (c === 'non-technical' || c === 'non-tech' || c === 'non technical') && c !== 'workshop';
+      }
+      if (f === 'workshop') {
+        return c === 'workshop';
+      }
+      return c === f;
     });
   }, [filter, authoritativeEvents]);
 

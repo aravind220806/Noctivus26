@@ -1,12 +1,19 @@
 import { useEffect, useState } from 'react';
 import { adminFetch, apiPath, googleClientId } from '../adminUtils';
 
-export function AdminLogin({ onSession }) {
+export function AdminLogin({ onSession, existingSession, onContinue, onSwitchAccount }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [buttonReady, setButtonReady] = useState(false);
 
   useEffect(() => {
+    // Strictly disable Google Auto-Select on mount
+    try {
+      window.google?.accounts?.id?.disableAutoSelect?.();
+    } catch {
+      // ignore
+    }
+
     if (!googleClientId) {
       setLoading(false);
       setError('Google sign-in is not configured in this frontend. Restart Vite after setting VITE_GOOGLE_CLIENT_ID.');
@@ -30,6 +37,9 @@ export function AdminLogin({ onSession }) {
         window.google.accounts.id.disableAutoSelect?.();
         window.google.accounts.id.initialize({
           client_id: googleClientId,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+          itp_support: true,
           callback: async ({ credential }) => {
             setLoading(true);
             try {
@@ -55,7 +65,16 @@ export function AdminLogin({ onSession }) {
         });
         const target = document.getElementById('google-admin-login');
         if (!target) throw new Error('Google sign-in button could not be mounted.');
-        window.google.accounts.id.renderButton(target, { theme: 'filled_black', size: 'large', width: 320 });
+        target.innerHTML = '';
+        window.google.accounts.id.renderButton(target, {
+          type: 'standard',
+          theme: 'filled_black',
+          size: 'large',
+          width: 320,
+          text: 'signin_with',
+          shape: 'rectangular',
+          logo_alignment: 'left',
+        });
         setButtonReady(true);
         window.clearTimeout(timeout);
         setLoading(false);
@@ -90,8 +109,34 @@ export function AdminLogin({ onSession }) {
         <a className="admin-login__home" href="/">
           Back to home
         </a>
+
+        {existingSession ? (
+          <div style={{ margin: '1.5rem 0', padding: '1rem', background: 'rgba(0, 200, 224, 0.08)', border: '1px solid rgba(0, 200, 224, 0.25)', borderRadius: '8px', textAlign: 'center' }}>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: '#94a3b8' }}>Currently logged in as:</p>
+            <p style={{ margin: '0.3rem 0 1rem 0', fontWeight: 'bold', color: '#fff' }}>{existingSession.email}</p>
+            <div style={{ display: 'flex', gap: '0.6rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className="btn btn--primary"
+                onClick={onContinue}
+                style={{ padding: '0.6rem 1.2rem', fontSize: '0.85rem' }}
+              >
+                Go to Admin Portal →
+              </button>
+              <button
+                type="button"
+                className="btn btn--ghost"
+                onClick={onSwitchAccount}
+                style={{ padding: '0.6rem 1.2rem', fontSize: '0.85rem' }}
+              >
+                Switch Account / Sign Out
+              </button>
+            </div>
+          </div>
+        ) : null}
+
         {googleClientId ? (
-          <div id="google-admin-login" aria-busy={loading} />
+          <div id="google-admin-login" aria-busy={loading} style={{ marginTop: existingSession ? '1rem' : 0 }} />
         ) : (
           <p className="form-error" role="alert">
             Set VITE_GOOGLE_CLIENT_ID and GOOGLE_CLIENT_ID to enable Google login.
