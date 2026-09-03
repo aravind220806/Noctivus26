@@ -24,6 +24,7 @@ from app.services.registration_service import create_registration_id, load_regis
 from app.services.scheduler_service import assignMembersToSlots, create_custom_slot, delete_slot, generate_all_event_slots, get_scheduler_dashboard_data, load_all_slots, slotsConflict, update_slot
 from app.db.memory_store import memory_registrations
 from app.db import mongo
+from app.db.sqlite_db import sqlite_db
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -251,37 +252,60 @@ async def audit_log(search: str = "", _admin=Depends(require_admin_tab("Audit Lo
 @router.post("/check-in/{registration_id}")
 @limiter.limit("120/minute")
 async def check_in(request: Request, registration_id: str, admin=Depends(require_admin_tab("Check-in"))):
-    scanned_id = registration_id
-    parsed = urlparse(registration_id)
+    scanned_id = registration_id.strip()
+    candidates = [scanned_id]
+    parsed = urlparse(scanned_id)
     if parsed.path:
-        candidate = parsed.path.rstrip("/").split("/")[-1]
-        if candidate and candidate != registration_id:
-            scanned_id = candidate
-    token_hash = hashlib.sha256(scanned_id.encode("utf-8")).hexdigest()
+        path_candidate = parsed.path.rstrip("/").split("/")[-1].strip()
+        if path_candidate and path_candidate not in candidates:
+            candidates.append(path_candidate)
+    if parsed.query:
+        from urllib.parse import parse_qs
+        qs = parse_qs(parsed.query)
+        for val_list in qs.values():
+            for v in val_list:
+                v_clean = v.strip()
+                if v_clean and v_clean not in candidates:
+                    candidates.append(v_clean)
+
     current = None
     if mongo.mongo_ready():
-        current = await mongo.db.registrations.find_one({
-            "$or": [
-                {"registrationId": {"$regex": f"^{re.escape(scanned_id)}$", "$options": "i"}},
-                {"invitation.qrHash": token_hash},
-                {"invitation.qrHash": scanned_id},
-                {"invitation.qrToken": scanned_id},
-                {"qrHash": token_hash},
-                {"qrToken": scanned_id},
-            ]
-        })
+        or_clauses = []
+        for cand in candidates:
+            cand_hash = hashlib.sha256(cand.encode("utf-8")).hexdigest()
+            or_clauses.extend([
+                {"registrationId": {"$regex": f"^{re.escape(cand)}$", "$options": "i"}},
+                {"invitation.qrHash": cand_hash},
+                {"invitation.qrHash": cand},
+                {"invitation.qrToken": cand},
+                {"qrHash": cand_hash},
+                {"qrToken": cand},
+                {"normalizedUtr": cand},
+                {"participant.email": {"$regex": f"^{re.escape(cand)}$", "$options": "i"}},
+                {"participant.phone": cand},
+            ])
+        current = await mongo.db.registrations.find_one({"$or": or_clauses})
     else:
-        clean_lower = scanned_id.lower()
-        current = next(
-            (
-                item
-                for item in memory_registrations
-                if str(item.get("registrationId") or "").lower() == clean_lower
-                or str((item.get("invitation") or {}).get("qrHash") or item.get("qrHash") or "") in [token_hash, scanned_id]
-                or str((item.get("invitation") or {}).get("qrToken") or item.get("qrToken") or "") == scanned_id
-            ),
-            None,
-        )
+        rows = await load_registrations()
+        for cand in candidates:
+            cand_lower = cand.lower()
+            cand_hash = hashlib.sha256(cand.encode("utf-8")).hexdigest()
+            current = next(
+                (
+                    item
+                    for item in rows
+                    if str(item.get("registrationId") or "").lower() == cand_lower
+                    or str((item.get("invitation") or {}).get("qrHash") or item.get("qrHash") or "") in [cand_hash, cand]
+                    or str((item.get("invitation") or {}).get("qrToken") or item.get("qrToken") or "") == cand
+                    or str(item.get("normalizedUtr") or "") == cand
+                    or str((item.get("participant") or {}).get("email") or "").lower() == cand_lower
+                    or str((item.get("participant") or {}).get("phone") or "") == cand
+                ),
+                None,
+            )
+            if current:
+                break
+
     if not current:
         raise HTTPException(status_code=404, detail="Registration not found. Send participant to the help desk.")
     if current.get("paymentStatus") != "confirmed":
@@ -360,6 +384,8 @@ async def create_walk_in(request: Request, admin=Depends(require_admin_tab("Chec
     record = {"registrationId": create_registration_id(), "participant": {"name": name, "college": college, "email": str(participant.get("email") or "")[:190], "phone": re.sub(r"\D", "", str(participant.get("phone") or ""))[:10], "foodPreference": ""}, "eventRegistrations": [{"eventId": event["id"], "eventName": event["name"], "category": event["category"], "feeSnapshot": event["fee"], "teamSize": 1, "teamSizeMin": 1, "teamSizeMax": 1, "teamMembers": []}], "paymentStatus": "confirmed", "claimedAmount": 0, "expectedAmount": 0, "isWalkIn": True, "checkedIn": True, "checkedInAt": datetime.now(timezone.utc), "checkedInBy": admin["email"], "createdAt": datetime.now(timezone.utc), "updatedAt": datetime.now(timezone.utc)}
     if mongo.mongo_ready():
         await mongo.db.registrations.insert_one(record)
+    elif sqlite_db.ready():
+        await sqlite_db.upsert("registrations", record["registrationId"], record)
     else:
         memory_registrations.append(record)
     await record_admin_action(

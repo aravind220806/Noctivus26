@@ -183,6 +183,10 @@ async def load_registrations(filters: dict | None = None) -> list[dict]:
     if sqlite_db.ready():
         order = "asc" if filters.get("sortAsc") else "desc"
         rows = await sqlite_db.list_all("registrations", order=order)
+        sqlite_ids = {r.get("registrationId") for r in rows if r.get("registrationId")}
+        for mem in memory_registrations:
+            if mem.get("registrationId") not in sqlite_ids:
+                rows.append(mem)
     else:
         rows = sorted(
             memory_registrations,
