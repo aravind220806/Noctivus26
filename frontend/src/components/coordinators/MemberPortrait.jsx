@@ -21,13 +21,27 @@ export function MemberPortrait({ image, name, role }) {
   }
 
   return (
-    <div className="noc-member-portrait-frame">
+    <div
+      className="noc-member-portrait-frame"
+      onContextMenu={(e) => e.preventDefault()}
+      onDragStart={(e) => e.preventDefault()}
+    >
+      {/* Invisible security shield overlay blocking direct clicks/saves */}
+      <div className="noc-portrait-security-shield" aria-hidden="true" />
+
+      {/* Subtle security watermark matrix grid overlay */}
+      <div className="noc-portrait-watermark-overlay" aria-hidden="true">
+        <span className="noc-watermark-tag">NOCTIVUS '26 // PROTECTED</span>
+      </div>
+
       <img
         src={image}
         alt={`${name} - ${role}`}
         className="noc-member-portrait-img"
         loading="lazy"
         decoding="async"
+        draggable={false}
+        onContextMenu={(e) => e.preventDefault()}
       />
     </div>
   );

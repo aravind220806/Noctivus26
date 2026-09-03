@@ -332,3 +332,151 @@
   color: #A7FF18;
   letter-spacing: 0.2em;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   ANTI-SCREENSHOT & ANTI-DOWNLOAD SECURITY PROTOCOLS
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.noc-database-page {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Screen Capture Privacy Blur */
+.noc-privacy-blurred .noc-member-portrait-img {
+  filter: blur(35px) grayscale(100%) brightness(0.2) !important;
+  opacity: 0.05 !important;
+  transition: filter 0.05s ease, opacity 0.05s ease;
+}
+
+.noc-privacy-blurred .noc-member-portrait-frame {
+  background: #000000 !important;
+}
+
+/* Security Overlay when window focus is lost during screen capture */
+.noc-privacy-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(2, 6, 10, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  cursor: pointer;
+  animation: nocOverlayFade 0.15s ease-out;
+}
+
+@keyframes nocOverlayFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.noc-privacy-overlay-box {
+  background: #04090c;
+  border: 1px solid #A7FF18;
+  padding: 2.5rem 3rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 0 30px rgba(167, 255, 24, 0.3), 0 0 1px #A7FF18;
+  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+  max-width: 90vw;
+}
+
+.noc-privacy-overlay-title {
+  font-family: 'Aldrich', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #A7FF18;
+  letter-spacing: 0.18em;
+}
+
+.noc-privacy-overlay-sub {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem;
+  color: #EAF6F5;
+  letter-spacing: 0.12em;
+}
+
+.noc-privacy-overlay-hint {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.74rem;
+  color: #7a95a8;
+  margin-top: 0.5rem;
+  letter-spacing: 0.14em;
+}
+
+/* Security HUD Toast */
+.noc-security-toast {
+  position: fixed;
+  top: 85px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 99998;
+  background: #04090c;
+  border: 1px solid #A7FF18;
+  box-shadow: 0 0 25px rgba(167, 255, 24, 0.4), 0 8px 30px rgba(0, 0, 0, 0.9);
+  padding: 0.75rem 1.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  letter-spacing: 0.12em;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  animation: nocToastIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: 90vw;
+}
+
+@keyframes nocToastIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -15px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.noc-security-toast-icon {
+  font-size: 1.1rem;
+}
+
+.noc-security-toast-text {
+  color: #A7FF18;
+}
+
+/* ── Print Protection ── */
+@media print {
+  body {
+    background: #000000 !important;
+    color: #ffffff !important;
+  }
+
+  .noc-database-page,
+  .noc-member-card,
+  .noc-member-portrait-img,
+  .noc-member-portrait-frame {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  body::after {
+    content: "NOCTIVUS '26 PERSONNEL DIRECTORY - PRINTING AND CAPTURE RESTRICTED BY SECURITY PROTOCOL.";
+    display: block;
+    font-family: monospace;
+    font-size: 20pt;
+    text-align: center;
+    padding: 100pt 20pt;
+    color: #ffffff;
+  }
+}

@@ -19,32 +19,40 @@ export function FooterSection() {
   ];
 
   return (
-    <footer className="footer-cyber-hud" id="footer">
-      {/* Full-width Top Tick Divider */}
-      <div className="footer-ruler-divider">
-        <TickDivider />
-      </div>
+    <footer className="footer-section" id="footer">
+      <div className="footer-container">
 
-      <div className="footer-hud-container">
-        
-        {/* Main Content: Info on Left, Map on Right */}
-        <div className="footer-main-layout">
-          
-          {/* LEFT SIDE: Venue, Contact, Bus Route */}
+        {/* TOP ROW: Brand Header */}
+        <div className="footer-brand-row">
+          <div className="footer-brand-title">
+            <span className="brand-word">NOCTIVUS</span>
+            <span className="brand-year">'26</span>
+          </div>
+          <p className="footer-brand-tagline">
+            NATIONAL LEVEL TECHNICAL SYMPOSIUM &bull; VELAMMAL ENGINEERING COLLEGE
+          </p>
+        </div>
+
+        <TickDivider />
+
+        {/* MAIN HUD GRID: Info Panels (Left) & Compact Google Map (Right) */}
+        <div className="footer-hud-main">
+
+          {/* LEFT SIDE: 3 Info Blocks */}
           <div className="footer-info-columns">
-            
+
             {/* Venue */}
             <div className="footer-info-block">
               <div className="footer-info-heading">
                 <svg className="footer-info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
-                  <circle cx="12" cy="9" r="2.5" />
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
                 </svg>
                 <span>VENUE</span>
               </div>
               <div className="footer-info-body">
-                <p>Velammal Engineering College,</p>
-                <p>Ambattur-Red Hills Road,</p>
+                <p>Velammal Engineering College</p>
+                <p>Ambattur–Red Hills Road,</p>
                 <p>Surapet, Chennai,</p>
                 <p>Tamil Nadu 600066</p>
               </div>
@@ -188,43 +196,50 @@ export function FooterSection() {
       {/* Bus Route Modal */}
       {showBusRouteModal && (
         <div className="bus-modal-backdrop" onClick={() => setShowBusRouteModal(false)}>
-          <div className="bus-modal-panel" onClick={(e) => e.stopPropagation()}>
+          <div className="bus-modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="bus-modal-header">
-              <h3 className="bus-modal-title">COLLEGE BUS ROUTES</h3>
+              <h3>CAMPUS BUS ROUTES</h3>
               <button
                 type="button"
                 className="bus-modal-close"
                 onClick={() => setShowBusRouteModal(false)}
-                aria-label="Close modal"
+                aria-label="Close Bus Routes Modal"
               >
-                ✕
+                &times;
               </button>
             </div>
-            
-            <p className="bus-modal-subtitle">
-              Complimentary transportation to Velammal Engineering College, Surapet for Noctivus ’26 participants:
+            <p className="bus-modal-desc">
+              College buses will operate on symposium day (26 Sept 2026) across key routes in Chennai.
             </p>
-
-            <div className="bus-routes-list">
-              {busRoutes.map((route) => (
-                <div key={route.routeNo} className="bus-route-item">
-                  <div className="bus-route-badge">{route.routeNo}</div>
-                  <div className="bus-route-info">
-                    <strong className="bus-route-from">{route.from}</strong>
-                    <span className="bus-route-via">Via: {route.via}</span>
-                  </div>
-                </div>
-              ))}
+            <div className="bus-routes-table-wrap">
+              <table className="bus-routes-table">
+                <thead>
+                  <tr>
+                    <th>ROUTE</th>
+                    <th>STARTING POINT</th>
+                    <th>VIA KEY STOPS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {busRoutes.map((r, i) => (
+                    <tr key={i}>
+                      <td className="bus-route-no">{r.routeNo}</td>
+                      <td className="bus-route-from">{r.from}</td>
+                      <td className="bus-route-via">{r.via}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-
             <div className="bus-modal-footer">
-              <button
-                type="button"
-                className="bus-modal-btn"
-                onClick={() => setShowBusRouteModal(false)}
+              <a
+                href="/bus-routes.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bus-download-btn"
               >
-                CLOSE
-              </button>
+                Download Official Bus Schedule (PDF) ↗
+              </a>
             </div>
           </div>
         </div>

@@ -5108,32 +5108,6 @@
   gap: 12px;
 }
 
-.dev-quick-login-card {
-  margin-top: 14px;
-  padding: 14px;
-  background: rgba(59, 130, 246, 0.08);
-  border: 1px dashed rgba(59, 130, 246, 0.4);
-  border-radius: 8px;
-  text-align: center;
-}
-
-.dev-login-btn {
-  width: 100%;
-  margin-top: 8px;
-  background: #2563eb !important;
-  color: #ffffff !important;
-  border: none !important;
-  padding: 10px 16px !important;
-  border-radius: 6px !important;
-  font-weight: 600 !important;
-  cursor: pointer !important;
-  transition: background 0.2s !important;
-}
-
-.dev-login-btn:hover {
-  background: #1d4ed8 !important;
-}
-
 /* Batch Pass Sending & Tracking Panel */
 .batch-stats-summary {
   display: grid;
