@@ -32,41 +32,6 @@
   margin-bottom: 2.5rem;
 }
 
-.noc-db-telemetry-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.25rem;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.72rem;
-  color: #62758d;
-  letter-spacing: 0.12em;
-  margin-bottom: 1.25rem;
-}
-
-.noc-telemetry-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  background: rgba(4, 16, 24, 0.8);
-  border: 1px solid rgba(167, 255, 24, 0.25);
-  padding: 0.35rem 0.75rem;
-}
-
-.noc-telemetry-badge.is-live {
-  color: #A7FF18;
-  border-color: rgba(167, 255, 24, 0.5);
-}
-
-.noc-telemetry-badge.is-live::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #A7FF18;
-  box-shadow: 0 0 8px #A7FF18;
-  display: inline-block;
-}
-
 .noc-db-eyebrow {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 0.85rem;
