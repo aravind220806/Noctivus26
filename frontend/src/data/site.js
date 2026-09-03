@@ -55,8 +55,8 @@ export const events = [
     fee: 150,
     laptopRequirement: 'Laptop is mandatory for this event.',
     accent: 'cyan',
-    image: eventImage,
-    imagePosition: '58% 45%',
+    image: '/images/bug-hunt.webp',
+    imagePosition: 'center center',
     format: 'Find and report security vulnerabilities through live, hands-on cybersecurity challenges. Covers web security, infrastructure security, authentication, authorization, privilege escalation, and exploitation.',
     details: [
       'Test only the targets given by the organizers.',
