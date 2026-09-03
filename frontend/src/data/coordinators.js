@@ -106,6 +106,23 @@ export const studentCoordinators = [
       'SUPERVISE STUDENT TEAMS',
     ],
   },
+  {
+    id: 'STU-OC-0004',
+    name: 'JEHAN J',
+    role: 'OVERALL COORDINATOR',
+    type: 'student',
+    department: 'CSE (CYBER SECURITY)',
+    year: '3RD YEAR',
+    accessLevel: 7,
+    image: '/coordinators/jehan.webp',
+    email: 'jehanjehan2k@gmail.com',
+    phone: '+91 63830 43066',
+    permissions: [
+      'COORDINATE ALL ACTIVITIES',
+      'MANAGE EVENT OPERATIONS',
+      'SUPERVISE STUDENT TEAMS',
+    ],
+  },
 ];
 
 export const registrationCoordinators = [
