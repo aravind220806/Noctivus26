@@ -245,7 +245,7 @@ export const events = [
     name: 'Playground of Hackers',
     category: 'Workshop',
     teamSize: 'Individual / Open',
-    fee: 150,
+    fee: 300,
     laptopRequirement: 'Laptop is recommended for live demo exercises.',
     accent: 'violet',
     image: eventImage,
