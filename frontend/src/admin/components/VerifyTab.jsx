@@ -31,10 +31,7 @@ export function VerifyTab({
       if (response.ok && data.registration) {
         setFeedback((prev) => ({
           ...prev,
-          [registrationId]:
-            data.registration.payment_email_status === 'sent'
-              ? '✅ Payment confirmed. Receipt sent to member.'
-              : '⚠️ Payment confirmed, but email failed to send.',
+          [registrationId]: '✅ Payment confirmed. Email & Google Sheets sync in progress.',
         }));
         if (onChanged) onChanged();
       }
