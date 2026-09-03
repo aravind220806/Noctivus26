@@ -51,29 +51,39 @@ def serialize_event(event: dict) -> dict:
 
 
 async def list_events() -> list[dict]:
+    db_events = []
     try:
         if mongo.mongo_ready():
             rows = await mongo.db.events.find({}).sort("id", 1).to_list(length=100)
             if not rows:
                 await seed_events()
                 rows = await mongo.db.events.find({}).sort("id", 1).to_list(length=100)
-            return [serialize_event(row) for row in rows]
+            db_events = [serialize_event(row) for row in rows]
     except Exception as error:
         print(f"Falling back to SQLite/memory events: {error}")
         mongo.client = None
         mongo.db = None
 
-    if sqlite_db.ready():
+    if not db_events and sqlite_db.ready():
         rows = await sqlite_db.list_all("events")
         if not rows:
             await seed_events()
             rows = await sqlite_db.list_all("events")
         if rows:
-            return [serialize_event(item) for item in rows]
+            db_events = [serialize_event(item) for item in rows]
 
-    if not memory_events:
-        memory_events.extend(_seed_events())
-    return [serialize_event(item) for item in memory_events]
+    if not db_events:
+        if not memory_events:
+            memory_events.extend(_seed_events())
+        db_events = [serialize_event(item) for item in memory_events]
+
+    db_by_id = {e["id"]: e for e in db_events}
+    for catalog_event in _seed_events():
+        if catalog_event["id"] not in db_by_id:
+            db_events.append(catalog_event)
+            db_by_id[catalog_event["id"]] = catalog_event
+
+    return db_events
 
 
 async def seed_events() -> None:
@@ -102,8 +112,10 @@ async def seed_events() -> None:
             existing = await sqlite_db.get("events", event["id"])
             if not existing:
                 await sqlite_db.upsert("events", event["id"], event)
-    elif not memory_events:
-        memory_events.extend(seeded)
+    else:
+        for event in seeded:
+            if not any(e["id"] == event["id"] for e in memory_events):
+                memory_events.append(event)
 
 
 async def get_event(event_id: str) -> dict | None:

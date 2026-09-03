@@ -20,6 +20,9 @@ def too_long(value: str, limit: int) -> bool:
     return len(value) > limit
 
 
+from app.events import EVENT_CATALOG
+
+
 def validate_registration(input_data: dict | None, configured_events: list[dict]) -> dict:
     data = input_data or {}
     errors: list[str] = []
@@ -59,7 +62,10 @@ def validate_registration(input_data: dict | None, configured_events: list[dict]
     if len(raw_submitted_events) > 2:
         errors.append("Members may register for a maximum of 2 events.")
 
-    events_by_id = {event["id"]: event for event in configured_events}
+    events_by_id = {event["id"]: event for event in (configured_events or [])}
+    for cat_event in EVENT_CATALOG:
+        if cat_event["id"] not in events_by_id:
+            events_by_id[cat_event["id"]] = cat_event
 
     submitted_events = []
     for item in raw_submitted_events:
