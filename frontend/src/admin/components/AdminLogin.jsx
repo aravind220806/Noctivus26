@@ -81,22 +81,6 @@ export function AdminLogin({ onSession }) {
     };
   }, [onSession]);
 
-  const handleDevLogin = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const response = await adminFetch(apiPath('/api/admin/auth/dev'), { method: 'POST' });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.detail || data.message || 'Dev login failed.');
-      onSession(data);
-      window.location.replace('/admin');
-    } catch (err) {
-      setError(err.message || 'Dev login failed.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <main className="admin-login">
       <section>
@@ -114,14 +98,6 @@ export function AdminLogin({ onSession }) {
           </p>
         )}
         {loading && !buttonReady && <p className="admin-login__status">Connecting to Google sign-in…</p>}
-        {import.meta.env.DEV && (
-          <div className="dev-quick-login-card">
-            <small style={{ color: '#94a3b8' }}>Local Development Mode</small>
-            <button type="button" className="button dev-login-btn" onClick={handleDevLogin} disabled={loading}>
-              ⚡ Quick Admin Login (Dev)
-            </button>
-          </div>
-        )}
         {error && <p className="form-error">{error}</p>}
       </section>
     </main>
