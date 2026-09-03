@@ -73,33 +73,7 @@ async def google_auth(request: Request):
         raise HTTPException(status_code=502, detail="The server could not complete Google admin authentication. Check the backend logs.") from error
 
 
-@limiter.limit("5/minute")
-@router.post("/auth/dev")
-async def dev_auth(request: Request):
-    if settings.environment == "production":
-        raise HTTPException(status_code=403, detail="Dev login is disabled in production.")
-    owner_email = settings.admin_emails[0] if settings.admin_emails else "admin@noctivus.site"
-    access = await resolve_admin_access(owner_email)
-    user = {
-        "email": owner_email,
-        "name": "Admin (Dev)",
-        "picture": "",
-        "tabs": access["tabs"] if access else ADMIN_TABS,
-        "owner": True,
-    }
-    token, csrf = sign_admin_token(user)
-    response = Response(content=json.dumps({"user": user, "csrfToken": csrf}, separators=(",", ":")), media_type="application/json")
-    response.set_cookie(
-                "noctivus_admin_session",
-                token,
-                max_age=8 * 60 * 60,
-                httponly=True,
-                secure=False,
-                samesite="lax",
-                path="/",
-            )
-    await record_admin_action(owner_email, "auth.dev_login", "admin_portal", {"method": "dev"})
-    return response
+
 
 
 @router.get("/me")
