@@ -34,13 +34,15 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 COPY . .
 
-# Create non-root user for security
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+# Create non-root user, own app dir and persistent data dir
+RUN useradd -m -u 1000 appuser \
+    && mkdir -p /data \
+    && chown -R appuser:appuser /app /data
 USER appuser
 
 EXPOSE 4000
 
-HEALTHCHECK --interval=20s --timeout=5s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:4000/api/events || exit 1
+HEALTHCHECK --interval=20s --timeout=5s --start-period=25s --retries=3 \
+  CMD curl -sf http://localhost:4000/api/health || exit 1
 
 CMD ["python", "run.py"]
