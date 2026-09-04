@@ -19,6 +19,11 @@ PASS_WIDTH = 1800
 PASS_HEIGHT = 580
 DESTINATION_COLLEGE = "Velammal Engineering College"
 DESTINATION_CITY = "Chennai, Tamil Nadu"
+FALLBACK_LOGO_DATA_URI = (
+    "data:image/svg+xml;base64,"
+    "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTI4IDEyOCI+"
+    "PHJlY3Qgd2lkdGg9IjEyOCIgaGVpZ2h0PSIxMjgiIHJ4PSIyNCIgZmlsbD0iIzA2MTgyQiIvPjxjaXJjbGUgY3g9IjY0IiBjeT0iNjQiIHI9IjQyIiBmaWxsPSJub25lIiBzdHJva2U9IiMzNTZBRTYiIHN0cm9rZS13aWR0aD0iNiIvPjx0ZXh0IHg9IjY0IiB5PSI1OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsLEhlbHZldGljYSxzYW5zLXNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iODAwIiBmaWxsPSIjRkZGRkZGIj5OT0M8L3RleHQ+PHRleHQgeD0iNjQiIHk9IjgyIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTgiIGZvbnQtd2VpZ2h0PSI4MDAiIGZpbGw9IiMwMEYwRkYiPicyNjwvdGV4dD48L3N2Zz4="
+)
 
 
 def create_pass_token() -> tuple[str, str]:
@@ -35,6 +40,23 @@ def _asset_data_uri(path: Path) -> str:
     suffix = path.suffix.lower().lstrip(".") or "png"
     media_type = "jpeg" if suffix in {"jpg", "jpeg"} else suffix
     return f"data:image/{media_type};base64,{base64.b64encode(path.read_bytes()).decode('ascii')}"
+
+
+def logo_data_uri() -> str:
+    assets = Path(__file__).resolve().parents[1] / "assets"
+    candidates = [
+        assets / "noctivus-emblem.png",
+        assets / "noctivus-emblem.webp",
+        Path(__file__).resolve().parents[3] / "frontend" / "public" / "brand" / "noctivus-emblem.png",
+        Path(__file__).resolve().parents[3] / "frontend" / "public" / "brand" / "noctivus-emblem.webp",
+    ]
+    for path in candidates:
+        if path.exists() and path.is_file():
+            try:
+                return _asset_data_uri(path)
+            except OSError:
+                continue
+    return FALLBACK_LOGO_DATA_URI
 
 
 def qr_data_uri(url: str) -> str:
@@ -118,8 +140,7 @@ def pass_values(registration: dict, pass_data: dict) -> dict[str, str]:
 
 
 def render_boarding_pass_html(registration: dict, pass_data: dict, token: str) -> str:
-    assets = Path(__file__).resolve().parents[1] / "assets"
-    logo = _asset_data_uri(assets / "noctivus-emblem.png") if (assets / "noctivus-emblem.png").exists() else _asset_data_uri(Path(__file__).resolve().parents[3] / "frontend" / "public" / "brand" / "noctivus-emblem.png")
+    logo = logo_data_uri()
     values = {key: html.escape(value) for key, value in pass_values(registration, pass_data).items()}
     qr_payload = verification_url(token)
     qr = qr_data_uri(qr_payload)

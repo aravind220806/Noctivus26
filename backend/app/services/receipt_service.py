@@ -13,6 +13,7 @@ except ImportError:
     async_playwright = None
 
 from app.core.config import settings
+from app.services.boarding_pass_service import logo_data_uri
 from app.services.event_service import list_events
 
 RECEIPT_WIDTH = 900
@@ -36,11 +37,7 @@ def qr_data_uri(url: str) -> str:
 
 
 def render_receipt_html(registration: dict) -> str:
-    assets = Path(__file__).resolve().parents[1] / "assets"
-    logo_path = assets / "noctivus-emblem.png"
-    if not logo_path.exists():
-        logo_path = Path(__file__).resolve().parents[3] / "frontend" / "public" / "brand" / "noctivus-emblem.png"
-    logo = _asset_data_uri(logo_path) if logo_path.exists() else ""
+    logo = logo_data_uri()
 
     participant = registration.get("participant") or {}
     name = html.escape(str(participant.get("name") or "Participant").upper())

@@ -220,6 +220,31 @@ def test_boarding_pass_qr_encodes_verification_url(monkeypatch):
     assert captured["payload"] == bps.verification_url(token)
 
 
+def test_pass_and_receipt_render_without_logo_files(monkeypatch):
+    from pathlib import Path
+    from app.services import boarding_pass_service as bps
+    from app.services import receipt_service
+
+    monkeypatch.setattr(Path, "exists", lambda _path: False)
+    registration = {
+        "registrationId": "NOC26-NOLOGO",
+        "participant": {
+            "name": "Logo Missing",
+            "email": "logo@example.com",
+            "college": "Test College",
+            "foodPreference": "veg",
+        },
+        "eventRegistrations": [{"eventId": "ctf", "eventName": "NULL CORE 2.0 CTF"}],
+        "expectedAmount": 150,
+    }
+
+    pass_html = bps.render_boarding_pass_html(registration, {}, "token123456789")
+    receipt_html = receipt_service.render_receipt_html(registration)
+
+    assert "data:image/svg+xml;base64," in pass_html
+    assert "data:image/svg+xml;base64," in receipt_html
+
+
 # ---------------------------------------------------------------------------
 # P0.3 — QR token generated separately from registration ID
 # ---------------------------------------------------------------------------
