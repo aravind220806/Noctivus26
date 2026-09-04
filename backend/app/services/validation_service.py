@@ -20,7 +20,7 @@ def too_long(value: str, limit: int) -> bool:
     return len(value) > limit
 
 
-from app.events import EVENT_CATALOG
+from app.events import EVENT_ALIASES, EVENT_CATALOG
 
 
 def validate_registration(input_data: dict | None, configured_events: list[dict]) -> dict:
@@ -70,14 +70,16 @@ def validate_registration(input_data: dict | None, configured_events: list[dict]
     submitted_events = []
     for item in raw_submitted_events:
         if isinstance(item, str):
-            conf = events_by_id.get(item)
+            canonical_id = EVENT_ALIASES.get(item, item)
+            conf = events_by_id.get(canonical_id)
             submitted_events.append({
-                "eventId": item,
+                "eventId": canonical_id,
                 "teamSize": conf.get("teamMin", 1) if conf else 1,
                 "teamMembers": [],
             })
         elif isinstance(item, dict):
-            submitted_events.append(item)
+            event_id = item.get("eventId")
+            submitted_events.append({**item, "eventId": EVENT_ALIASES.get(event_id, event_id)})
 
     ids = [item.get("eventId") for item in submitted_events if isinstance(item, dict)]
     if len(set(ids)) != len(ids):
@@ -149,7 +151,7 @@ def validate_registration(input_data: dict | None, configured_events: list[dict]
     # Flat registration fee of ₹150 covers symposium admission (₹300 if workshop is included)
     has_workshop = any(
         (e.get("category") or "").lower() == "workshop"
-        or e.get("eventId") in ("playground-of-hackers", "art-of-hacking")
+        or e.get("eventId") == "playground-of-hackers"
         or e.get("feeSnapshot") == 300
         for e in event_registrations
     )

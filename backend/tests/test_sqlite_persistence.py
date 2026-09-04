@@ -76,6 +76,23 @@ async def test_events_are_solo_only_even_with_saved_team_settings():
 
 
 @pytest.mark.asyncio
+async def test_event_list_contains_only_nine_canonical_events():
+    await sqlite_db.init()
+    await sqlite_db.upsert(
+        "events",
+        "art-of-hacking",
+        {"id": "art-of-hacking", "name": "Legacy Alias", "status": "open", "teamMin": 1, "teamMax": 1},
+    )
+
+    events = await list_events()
+    event_ids = {event["id"] for event in events}
+
+    assert len(events) == 9
+    assert "art-of-hacking" not in event_ids
+    assert "playground-of-hackers" in event_ids
+
+
+@pytest.mark.asyncio
 async def test_sqlite_audit_log():
     await sqlite_db.init()
     await record_admin_action("admin@example.com", "test.action", "target1", {"detail": "sqlite_test"})

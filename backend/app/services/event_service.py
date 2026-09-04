@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from app.core.config import settings
 from app.db.memory_store import memory_events
 from app.db.sqlite_db import sqlite_db
-from app.events import EVENT_CATALOG
+from app.events import EVENT_ALIASES, EVENT_CATALOG
 
 VALID_STATUSES = {"open", "closed", "coming-soon"}
 SOLO_TEAM_SIZE = 1
@@ -11,6 +11,10 @@ SOLO_TEAM_SIZE = 1
 
 def _solo_event(event: dict) -> dict:
     return {**event, "teamMin": SOLO_TEAM_SIZE, "teamMax": SOLO_TEAM_SIZE}
+
+
+def _is_canonical_event(event: dict) -> bool:
+    return str((event or {}).get("id") or "") not in EVENT_ALIASES
 
 
 def _seed_events() -> list[dict]:
@@ -76,7 +80,7 @@ async def list_events() -> list[dict]:
             db_events.append(catalog_event)
             db_by_id[catalog_event["id"]] = catalog_event
 
-    return db_events
+    return [event for event in db_events if _is_canonical_event(event)]
 
 
 async def seed_events() -> None:

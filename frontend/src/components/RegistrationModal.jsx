@@ -93,7 +93,7 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
 
   const selectedEventNames = selectedEvents.map((event) => event.name).join(' + ');
   const hasWorkshop = workshopSelected || selectedEvents.some(
-    (event) => (event.category || '').toLowerCase() === 'workshop' || event.id === 'playground-of-hackers' || event.id === 'art-of-hacking' || event.fee === 300
+    (event) => (event.category || '').toLowerCase() === 'workshop' || event.id === 'playground-of-hackers' || event.fee === 300
   );
   const amount = !selectedEvents.length ? 0 : hasWorkshop ? 300 : 150;
   const upiId = (import.meta.env.VITE_UPI_ID || '').trim();
