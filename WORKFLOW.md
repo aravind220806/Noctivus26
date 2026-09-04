@@ -62,3 +62,7 @@ Backend and frontend live in one monorepo (`/backend`, `/frontend`).
 - SQLite unavailable → local memory fallback only when explicitly allowed
 - Admin session replay → HMAC-signed 8-hour tokens, re-resolved access on each request
 - CSRF → synchronizer token in session; required as `X-CSRF-Token` on mutating admin routes
+
+## 6. Historical MongoDB Performance Issues
+
+MongoDB is not part of the current runtime. If it returns later, keep rate limits in Redis for multi-worker deployments, tune connection pools for the database tier, make database health failures explicit, and keep pass-email batch concurrency bounded.

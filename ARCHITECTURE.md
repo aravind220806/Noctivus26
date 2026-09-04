@@ -214,3 +214,10 @@ Known gaps or mismatches:
 - Registration UI currently submits one selected event at a time, although backend validation supports multiple events.
 - Capacity enforcement is not implemented in `/api/register`.
 - A durable background queue is not implemented; email retries are bounded in-process and can be lost if a worker restarts.
+
+Historical MongoDB performance risks to avoid if that backend is ever reintroduced:
+
+- Per-process rate-limit storage with multiple workers multiplies limits and makes 429s intermittent.
+- Oversized connection pools can overload small managed database tiers.
+- Database connection failure should be fatal or clearly degraded in health checks, never silently masked.
+- Bulk invitation sending needs bounded concurrency so browser rendering, SMTP, and database writes do not pile up.
