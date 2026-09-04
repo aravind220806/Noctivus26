@@ -122,7 +122,7 @@ def render_boarding_pass_html(registration: dict, pass_data: dict, token: str) -
     assets = Path(__file__).resolve().parents[1] / "assets"
     logo = _asset_data_uri(assets / "noctivus-emblem.png") if (assets / "noctivus-emblem.png").exists() else _asset_data_uri(Path(__file__).resolve().parents[3] / "frontend" / "public" / "brand" / "noctivus-emblem.png")
     values = {key: html.escape(value) for key, value in pass_values(registration, pass_data).items()}
-    qr_payload = str(registration.get("registrationId") or values.get("UNIQUE_ID") or token)
+    qr_payload = verification_url(token)
     qr = qr_data_uri(qr_payload)
     return f"""<!doctype html>
 <html lang="en">

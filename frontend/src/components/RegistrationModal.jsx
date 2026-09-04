@@ -96,9 +96,9 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
     (event) => (event.category || '').toLowerCase() === 'workshop' || event.id === 'playground-of-hackers' || event.id === 'art-of-hacking' || event.fee === 300
   );
   const amount = !selectedEvents.length ? 0 : hasWorkshop ? 300 : 150;
-  const upiId = (import.meta.env.VITE_UPI_ID || '').trim() || '7695827158@okbizaxis';
-  const payee = (import.meta.env.VITE_UPI_PAYEE || '').trim() || 'balakumaran';
-  const paymentConfigured = Boolean(upiId) || import.meta.env.DEV;
+  const upiId = (import.meta.env.VITE_UPI_ID || '').trim();
+  const payee = (import.meta.env.VITE_UPI_PAYEE || '').trim();
+  const paymentConfigured = Boolean(upiId && payee);
   const upiLink = useMemo(() => {
     if (!selectedEvents.length || !amount || !upiId) return '';
     const parameters = new URLSearchParams({
@@ -213,6 +213,7 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
 
   const submitRegistration = async (event) => {
     event.preventDefault();
+    if (!paymentConfigured) return setError('Payments are not configured yet. Please contact the organizers.');
     if (!/^\d{12}$/.test(utr)) return setError('Enter the 12-digit UTR/reference number shown in your payment app.');
     if (utrStatus.state === 'duplicate') return setError('This UTR has already been submitted. Enter the UTR from your own payment.');
     if (utrStatus.state === 'checking') return setError('Wait a moment while we check this UTR.');
@@ -567,6 +568,7 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
                 <strong className="reg-review-amount">₹{amount}</strong>
               </div>
 
+              {paymentConfigured ? (
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '260px 1fr', gap: '2rem', border: '1px solid var(--line)', padding: '1.5rem', background: 'rgba(0, 0, 0, 0.2)' }}>
                 {!isMobile ? (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', background: '#fff', padding: '1rem', boxSizing: 'border-box' }}>
@@ -600,6 +602,11 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>REFERENCE:</span><span>{paymentReference}</span></div>
                 </div>
               </div>
+              ) : (
+                <div style={{ border: '1px solid var(--error)', padding: '1.5rem', background: 'rgba(239, 68, 68, 0.08)', color: 'var(--text)', fontFamily: 'IBM Plex Mono' }}>
+                  Payments are not configured yet. Please contact the organizers.
+                </div>
+              )}
 
               <div className="reg-field">
                 <label className="reg-field-label">12-Digit Transaction UTR</label>
@@ -640,7 +647,7 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
                 <NotchedButton
                   variant="primary"
                   type="submit"
-                  disabled={submitting || !consent || utr.length !== 12 || utrStatus.state === 'checking' || utrStatus.state === 'duplicate'}
+                  disabled={!paymentConfigured || submitting || !consent || utr.length !== 12 || utrStatus.state === 'checking' || utrStatus.state === 'duplicate'}
                 >
                   {submitting ? 'PROCESSING...' : 'CONFIRM ENTRY'}
                 </NotchedButton>

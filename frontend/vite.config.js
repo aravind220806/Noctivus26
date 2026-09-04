@@ -1,6 +1,11 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
+const extraAllowedHosts = (process.env.VITE_DEV_ALLOWED_HOSTS || '')
+  .split(',')
+  .map((host) => host.trim())
+  .filter(Boolean);
+
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
@@ -8,7 +13,7 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    allowedHosts: ['posted-foothold-crabbing.ngrok-free.dev', 'localhost', '127.0.0.1'],
+    allowedHosts: ['localhost', '127.0.0.1', ...extraAllowedHosts],
     proxy: {
       '/api': 'http://localhost:4000',
     },

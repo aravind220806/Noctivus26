@@ -23,7 +23,8 @@ def test_invitations_stats():
     token, _ = make_admin_cookie()
     client = get_client()
     client.cookies.set("noctivus_admin_session", token)
-    with patch("app.middleware.admin_auth.resolve_admin_access", new=AsyncMock(return_value={"tabs": ["Invitations"], "owner": True})):
+    with patch("app.middleware.admin_auth.resolve_admin_access", new=AsyncMock(return_value={"tabs": ["Invitations"], "owner": True})), \
+         patch("app.middleware.admin_auth.session_exists", new=AsyncMock(return_value=True)):
         resp = client.get(
             "/api/admin/invitations/stats",
             headers={"Origin": "http://localhost:5173"},
@@ -42,6 +43,8 @@ def test_invitations_send_batch():
     client.cookies.set("noctivus_admin_session", token)
 
     with patch("app.middleware.admin_auth.resolve_admin_access", new=AsyncMock(return_value={"tabs": ["Invitations"], "owner": True})), \
+         patch("app.middleware.admin_auth.session_exists", new=AsyncMock(return_value=True)), \
+         patch("app.routes.admin_routes.renderer_available", new=AsyncMock(return_value=True)), \
          patch("app.routes.admin_routes.send_member_pass", new_callable=AsyncMock) as mock_send:
         mock_send.return_value = {
             "success": True,
@@ -72,6 +75,8 @@ def test_invitations_resend_failed():
     client.cookies.set("noctivus_admin_session", token)
 
     with patch("app.middleware.admin_auth.resolve_admin_access", new=AsyncMock(return_value={"tabs": ["Invitations"], "owner": True})), \
+         patch("app.middleware.admin_auth.session_exists", new=AsyncMock(return_value=True)), \
+         patch("app.routes.admin_routes.renderer_available", new=AsyncMock(return_value=True)), \
          patch("app.routes.admin_routes.send_member_pass", new_callable=AsyncMock) as mock_send:
         mock_send.return_value = {
             "success": True,

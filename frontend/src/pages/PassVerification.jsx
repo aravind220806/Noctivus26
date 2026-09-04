@@ -170,7 +170,7 @@ export default function PassVerification() {
                 </small>
               </div>
 
-              {!data.checkedIn && (
+              {!data.checkedIn && data.selfCheckInEnabled && (
                 <button
                   type="button"
                   style={styles.checkInBtn}
@@ -179,6 +179,11 @@ export default function PassVerification() {
                 >
                   {checkingIn ? 'Checking In...' : '⚡ Check In Now'}
                 </button>
+              )}
+              {!data.checkedIn && !data.selfCheckInEnabled && (
+                <small style={{ color: '#94a3b8', maxWidth: 240, textAlign: 'right' }}>
+                  Show this pass at the registration desk to check in.
+                </small>
               )}
             </div>
 

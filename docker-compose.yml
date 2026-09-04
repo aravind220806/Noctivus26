@@ -8,11 +8,16 @@ services:
     env_file: ./backend/.env
     environment:
       PORT: "4000"
+      NODE_ENV: production
       ENVIRONMENT: production
       PYTHONUNBUFFERED: "1"
       SQLITE_DB_PATH: /data/noctivus.db
+      REDIS_URL: redis://redis:6379/0
     volumes:
       - backend_data:/data
+    depends_on:
+      redis:
+        condition: service_healthy
     networks:
       - noctivus
     healthcheck:
@@ -34,6 +39,24 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+  redis:
+    image: redis:7-alpine
+    container_name: noctivus-redis
+    restart: unless-stopped
+    command: ["redis-server", "--maxmemory", "64mb", "--maxmemory-policy", "allkeys-lru"]
+    networks:
+      - noctivus
+    deploy:
+      resources:
+        limits:
+          memory: 96M
+          cpus: "0.20"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
   frontend:
     build:

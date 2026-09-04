@@ -1,8 +1,8 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
 Allow: /
-Allow: /coordinators
 Allow: /device
+Disallow: /coordinators
 Disallow: /admin
 Disallow: /adimn
 Disallow: /login

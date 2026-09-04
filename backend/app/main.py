@@ -64,7 +64,14 @@ async def lifespan(_app: FastAPI):
     await close_mongo()
 
 
-app = FastAPI(title="Noctivus API", lifespan=lifespan)
+docs_enabled = settings.environment != "production"
+app = FastAPI(
+    title="Noctivus API",
+    lifespan=lifespan,
+    docs_url="/docs" if docs_enabled else None,
+    redoc_url="/redoc" if docs_enabled else None,
+    openapi_url="/openapi.json" if docs_enabled else None,
+)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(GZipMiddleware, minimum_size=1000)
@@ -86,9 +93,10 @@ app.add_middleware(SecurityHeadersMiddleware)
 app.include_router(public_router, prefix="/api")
 app.include_router(admin_router, prefix="/api/admin")
 
-# Mount fallback routes without /api prefix for Vercel serverless functions
-app.include_router(admin_router, prefix="/admin", include_in_schema=False)
-app.include_router(public_router, prefix="", include_in_schema=False)
+# Optional fallback routes for hosts that strip the /api prefix before invoking the app.
+if settings.enable_unprefixed_routes:
+    app.include_router(admin_router, prefix="/admin", include_in_schema=False)
+    app.include_router(public_router, prefix="", include_in_schema=False)
 
 
 @app.exception_handler(Exception)

@@ -3,6 +3,8 @@
  * Classified personnel directory data architecture.
  */
 
+export const CONTACTS_REVEAL_ON_CLICK = true;
+
 export const facultyCoordinators = [
   {
     id: 'FAC-002',
