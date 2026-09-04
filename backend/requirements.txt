@@ -10,6 +10,7 @@ qrcode[pil]==8.2
 aiosmtplib==3.0.2
 openpyxl==3.1.5
 resend==2.10.0
+cryptography>=42.0.0
 pytest==8.3.5
 pytest-asyncio==0.24.0
 aiosqlite
