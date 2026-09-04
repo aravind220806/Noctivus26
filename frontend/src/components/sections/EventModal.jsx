@@ -16,6 +16,7 @@ const EVENT_ORDER = [
 
 export function EventModal({ event, onClose, onRegister }) {
   const [page, setPage] = useState(0);
+  const [visibleContacts, setVisibleContacts] = useState({});
 
   if (!event) return null;
 
@@ -148,13 +149,25 @@ export function EventModal({ event, onClose, onRegister }) {
                       const tenDigits = cleanPhone.length === 12 && cleanPhone.startsWith('91') ? cleanPhone.slice(2) : cleanPhone;
                       const telHref = `tel:+91${tenDigits}`;
                       const phoneDisplay = `+91 ${tenDigits}`;
+                      const isVisible = Boolean(visibleContacts[coord.name]);
                       return (
                         <div key={coord.name} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontFamily: 'IBM Plex Mono, monospace', fontSize: '0.85rem' }}>
                           <span style={{ color: '#EAF6F5', fontWeight: 600 }}>{coord.name}</span>
                           <span style={{ color: '#7C8BA1' }}>—</span>
-                          <a href={telHref} style={{ color: 'var(--accent, #00f0ff)', textDecoration: 'none' }}>
-                            {phoneDisplay}
-                          </a>
+                          {isVisible ? (
+                            <a href={telHref} style={{ color: 'var(--accent, #00f0ff)', textDecoration: 'none' }}>
+                              {phoneDisplay}
+                            </a>
+                          ) : (
+                            <button
+                              type="button"
+                              aria-expanded={isVisible}
+                              onClick={() => setVisibleContacts((current) => ({ ...current, [coord.name]: true }))}
+                              style={{ color: 'var(--accent, #00f0ff)', background: 'transparent', border: '1px solid rgba(0,240,255,0.35)', padding: '0.25rem 0.5rem', cursor: 'pointer', font: 'inherit' }}
+                            >
+                              Show contact
+                            </button>
+                          )}
                         </div>
                       );
                     })}

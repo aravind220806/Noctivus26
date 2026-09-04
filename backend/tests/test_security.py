@@ -84,7 +84,8 @@ def test_csrf_required_on_mutating_admin_request():
     """A POST to an auth-guarded endpoint with a valid session but no X-CSRF-Token must get 403."""
     token, _csrf = _make_admin_token()
     # Patch where admin_auth.py imported resolve_admin_access, not the source module.
-    with patch("app.middleware.admin_auth.resolve_admin_access", new=AsyncMock(return_value={"tabs": ["Check-in"], "owner": False})):
+    with patch("app.middleware.admin_auth.resolve_admin_access", new=AsyncMock(return_value={"tabs": ["Check-in"], "owner": False})), \
+         patch("app.middleware.admin_auth.session_exists", new=AsyncMock(return_value=True)):
         client = TestClient(get_client().app, raise_server_exceptions=False)
         client.cookies.set("noctivus_admin_session", token)
         resp = client.post(
@@ -99,7 +100,8 @@ def test_csrf_required_on_mutating_admin_request():
 def test_csrf_accepted_with_correct_token():
     """A POST with a valid session AND matching X-CSRF-Token must not be rejected for CSRF."""
     token, csrf = _make_admin_token()
-    with patch("app.middleware.admin_auth.resolve_admin_access", new=AsyncMock(return_value={"tabs": ["Check-in"], "owner": False})):
+    with patch("app.middleware.admin_auth.resolve_admin_access", new=AsyncMock(return_value={"tabs": ["Check-in"], "owner": False})), \
+         patch("app.middleware.admin_auth.session_exists", new=AsyncMock(return_value=True)):
         client = TestClient(get_client().app, raise_server_exceptions=False)
         client.cookies.set("noctivus_admin_session", token)
         resp = client.post(
@@ -155,8 +157,8 @@ def test_public_pass_rejects_registration_id():
     memory_registrations.clear()
 
 
-def test_public_checkin_accepts_qr_token():
-    """POST /api/p/{qrToken}/check-in with a valid high-entropy QR token must work."""
+def test_public_checkin_disabled_by_default_for_qr_token():
+    """Self check-in is disabled by default even with a valid high-entropy QR token."""
     client = get_client()
     qr_token = "ValidHighEntropyToken_1234567890AB"
     memory_registrations.clear()
@@ -171,8 +173,53 @@ def test_public_checkin_accepts_qr_token():
         "invitation": {"qrToken": qr_token, "qrHash": "anyhash"},
     })
     resp = client.post(f"/api/p/{qr_token}/check-in")
-    assert resp.status_code == 200, f"Valid QR token rejected: {resp.status_code} {resp.text}"
+    assert resp.status_code == 403, f"Self check-in should be disabled by default: {resp.status_code} {resp.text}"
+    assert memory_registrations[0]["checkedIn"] is False
     memory_registrations.clear()
+
+
+def test_public_checkin_flag_accepts_qr_token():
+    """POST /api/p/{qrToken}/check-in works only when self check-in is explicitly enabled."""
+    client = get_client()
+    qr_token = "ValidHighEntropyToken_1234567890AB"
+    memory_registrations.clear()
+    memory_registrations.append({
+        "registrationId": "NOC26-AABBCC",
+        "qrToken": qr_token,
+        "paymentStatus": "confirmed",
+        "checkedIn": False,
+        "participant": {"name": "Test", "email": "t@t.com"},
+        "eventRegistrations": [],
+        "invitation": {"qrToken": qr_token},
+    })
+    with patch("app.routes.public_routes.settings.public_self_checkin_enabled", True), \
+         patch("app.routes.public_routes.mongo.mongo_ready", return_value=False), \
+         patch("app.services.registration_service.mongo.mongo_ready", return_value=False), \
+         patch("app.services.registration_service.sqlite_db.ready", return_value=False):
+        resp = client.post(f"/api/p/{qr_token}/check-in")
+    assert resp.status_code == 200, f"Valid QR token rejected: {resp.status_code} {resp.text}"
+    assert resp.json()["registration"]["checkedInBy"] == "self"
+    memory_registrations.clear()
+
+
+def test_boarding_pass_qr_encodes_verification_url(monkeypatch):
+    """The QR payload must point to /p/<token>, not the human-readable registration ID."""
+    from app.services import boarding_pass_service as bps
+    captured = {}
+
+    def fake_qr_data_uri(payload):
+        captured["payload"] = payload
+        return "data:image/png;base64,abc"
+
+    monkeypatch.setattr(bps, "qr_data_uri", fake_qr_data_uri)
+    token = "HighEntropyToken_1234567890"
+    html = bps.render_boarding_pass_html(
+        {"registrationId": "NOC26-HUMANID", "participant": {"name": "Test"}},
+        {},
+        token,
+    )
+    assert "data:image/png;base64,abc" in html
+    assert captured["payload"] == bps.verification_url(token)
 
 
 # ---------------------------------------------------------------------------
@@ -236,6 +283,28 @@ def test_rate_limits_match_documentation():
         "Inflated 1000/minute registration limit is still present — security regression"
     assert "1200/minute" not in source, \
         "Inflated 1200/minute UTR limit is still present — security regression"
+
+
+def test_worker_config_requires_redis_for_multiworker_production():
+    from app.core.config import validate_worker_config
+
+    with pytest.raises(RuntimeError):
+        validate_worker_config("production", 2, "")
+    validate_worker_config("production", 2, "redis://redis:6379/0")
+    validate_worker_config("production", 1, "")
+
+
+def test_authorization_bearer_is_not_admin_auth():
+    token, _csrf = _make_admin_token()
+    with patch("app.middleware.admin_auth.resolve_admin_access", new=AsyncMock(return_value={"tabs": ["Registrations"], "owner": False})), \
+         patch("app.middleware.admin_auth.session_exists", new=AsyncMock(return_value=True)):
+        client = TestClient(get_client().app, raise_server_exceptions=False)
+        bearer_resp = client.get("/api/admin/me", headers={"Authorization": f"Bearer {token}"})
+        client.cookies.set("noctivus_admin_session", token)
+        cookie_resp = client.get("/api/admin/me")
+
+    assert bearer_resp.status_code == 401
+    assert cookie_resp.status_code == 200
 
 
 # ---------------------------------------------------------------------------

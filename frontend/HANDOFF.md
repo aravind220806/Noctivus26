@@ -5,6 +5,16 @@ up frontend work. Read it top to bottom before touching any code.
 
 ---
 
+## Headers rollout
+
+nginx and Vercel currently send `Content-Security-Policy-Report-Only`. Before
+switching to enforcing `Content-Security-Policy`, open and check the browser
+console on home, the registration payment step, `/login`, `/admin` including
+scanner camera access, `/p/<token>`, `/coordinators`, and the venue map. Fix any
+CSP reports first, then rename the header.
+
+---
+
 ## What just changed on the backend (and why the frontend had to move too)
 
 A full security remediation was completed on the backend (see

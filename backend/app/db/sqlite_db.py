@@ -8,6 +8,7 @@ Tables
   registrations   – keyed by ``registrationId``
   events          – keyed by ``id``
   admin_access    – keyed by ``email``
+  admin_sessions  – keyed by ``sid``
   admin_actions   – append-only audit log
   event_slots     – keyed by ``id``
 
@@ -40,6 +41,7 @@ _TABLES = [
     "registrations",
     "events",
     "admin_access",
+    "admin_sessions",
     "event_slots",
 ]
 
@@ -73,8 +75,13 @@ class _SQLiteDB:
                 await db.execute("PRAGMA synchronous=NORMAL")
                 await db.execute("PRAGMA cache_size=-64000")  # 64MB cache
 
-                # Create/verify tables
+                # Create/verify tables before any migrations that inspect or alter them.
                 for table in _TABLES:
+                    await db.execute(f"""CREATE TABLE IF NOT EXISTS {table} (
+                        key     TEXT PRIMARY KEY,
+                        data    TEXT NOT NULL,
+                        updated REAL NOT NULL DEFAULT (unixepoch('now'))
+                    )""")
                     if table == "registrations":
                         # Check if the column we need exists; add it if not
                         async with db.execute("PRAGMA table_info(registrations)") as cur:
@@ -94,11 +101,11 @@ class _SQLiteDB:
                         if "normalizedUtr" not in columns:
                             await db.execute("ALTER TABLE registrations ADD COLUMN normalizedUtr TEXT")
                             logger.info("Added normalizedUtr column to registrations table")
-                    await db.execute(f"""CREATE TABLE IF NOT EXISTS {table} (
-                        key     TEXT PRIMARY KEY,
-                        data    TEXT NOT NULL,
-                        updated REAL NOT NULL DEFAULT (unixepoch('now'))
-                    )""")
+                await db.execute("""CREATE TABLE IF NOT EXISTS admin_actions (
+                    id      INTEGER PRIMARY KEY AUTOINCREMENT,
+                    data    TEXT NOT NULL,
+                    ts      REAL NOT NULL DEFAULT (unixepoch('now'))
+                )""")
 
                 # Create indexes on the frequently queried columns
                 try:

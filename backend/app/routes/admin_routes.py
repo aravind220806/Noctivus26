@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import hashlib
 import json
 import logging
@@ -11,10 +11,12 @@ from pymongo import ReturnDocument
 
 from app.core.config import settings
 from app.core.rate_limit import limiter
-from app.middleware.admin_auth import require_admin, require_admin_tab, require_any_admin_tab, sign_admin_token
+from app.middleware.admin_auth import require_admin, require_admin_tab, require_any_admin_tab, sign_admin_token, verify_admin_token
 from app.services.admin_access_service import ADMIN_TABS, deactivate_admin_access, is_owner_admin, list_admin_access, normalize_admin_tabs, resolve_admin_access, upsert_admin_access
+from app.services.admin_session_service import create_session, delete_all_sessions, delete_session, delete_sessions_for_email
 from app.services.analysis_service import build_overview, create_ai_analysis
 from app.services.boarding_pass_service import create_pass_token, render_pass_artwork_bytes
+from app.services.browser_renderer import renderer_available
 from app.services.email_service import normalize_pass_template, queue_email, send_confirmation, send_invitation, send_member_pass, sendPaymentConfirmationEmail
 from app.services.event_service import admin_events, get_event, list_events, update_event
 from app.services.export_service import export_attendance_to_excel, export_full_live_backup_excel, export_scheduler_to_excel, registrations_to_csv
@@ -42,7 +44,8 @@ async def google_auth(request: Request):
         if not settings.google_client_id:
             raise HTTPException(status_code=503, detail="Google OAuth is not configured on the server.")
         profile = await verify_google_credential(credential)
-        if not profile.get("email") or not profile.get("email_verified"):
+        email_verified = str(profile.get("email_verified")).lower() in {"true", "1", "yes"}
+        if not profile.get("email") or not email_verified:
             raise HTTPException(status_code=401, detail="Use a verified Google account.")
         google_email = str(profile["email"]).strip().lower()
         access = await resolve_admin_access(google_email)
@@ -52,6 +55,8 @@ async def google_auth(request: Request):
         origin = str(request.headers.get("origin") or "")
         is_https = origin.startswith("https://") or request.headers.get("x-forwarded-proto") == "https" or settings.environment == "production"
         token, csrf = sign_admin_token(user)
+        signed = verify_admin_token(token) or {}
+        await create_session(str(signed.get("sid") or ""), google_email, datetime.now(timezone.utc) + timedelta(hours=8))
         response = Response(
             content=json.dumps({"user": user, "csrfToken": csrf}, separators=(",", ":")),
             media_type="application/json",
@@ -93,6 +98,7 @@ async def logout(admin=Depends(require_admin)):
     response.delete_cookie("noctivus_admin_session", path="/api/admin", **cookie_options)
     response.delete_cookie("noctivus_admin_session", path="/", **cookie_options)
     if admin and admin.get("email"):
+        await delete_session(admin.get("sid"))
         await record_admin_action(admin["email"], "auth.logout", "admin_portal")
     return response
 
@@ -653,6 +659,8 @@ async def put_access(email: str, request: Request, admin=Depends(require_admin_t
     if not tabs:
         raise HTTPException(status_code=400, detail="Select at least one tab.")
     user = await upsert_admin_access(normalized_email, body.get("name"), tabs, body.get("active") is not False, admin["email"])
+    if body.get("active") is False:
+        await delete_sessions_for_email(normalized_email)
     await record_admin_action(
         admin["email"],
         "admin_access.upsert",
@@ -668,7 +676,17 @@ async def delete_access(email: str, admin=Depends(require_admin_tab("Admin Acces
     if is_owner_admin(normalized_email):
         raise HTTPException(status_code=400, detail="Owner access is controlled from ADMIN_EMAILS.")
     await deactivate_admin_access(normalized_email, admin["email"])
+    await delete_sessions_for_email(normalized_email)
     await record_admin_action(admin["email"], "admin_access.deactivate", normalized_email)
+    return {"ok": True}
+
+
+@router.post("/sessions/revoke-all")
+async def revoke_all_sessions(admin=Depends(require_admin)):
+    if not admin.get("owner"):
+        raise HTTPException(status_code=403, detail="Owner admin access required.")
+    await delete_all_sessions()
+    await record_admin_action(admin["email"], "admin_sessions.revoke_all", "all")
     return {"ok": True}
 
 
@@ -790,6 +808,8 @@ async def invitations_stats(_admin=Depends(require_admin_tab("Invitations"))):
 @router.post("/invitations/send-batch")
 @limiter.limit("5/minute")
 async def invitations_send_batch(request: Request, admin=Depends(require_admin_tab("Invitations"))):
+    if not await renderer_available():
+        raise HTTPException(status_code=503, detail="Pass renderer is unavailable. Install Playwright Chromium before sending passes.")
     body = await request.json()
     try:
         batch_size = int(body.get("batchSize") or 0)
@@ -802,7 +822,8 @@ async def invitations_send_batch(request: Request, admin=Depends(require_admin_t
     eligible = [r for r in all_confirmed if (r.get("pass_status") or "not_sent") != "sent"]
     batch = eligible[:batch_size]
 
-    sem = asyncio.Semaphore(4)
+    # Chromium is memory-heavy on the small event-day instances; send sequentially.
+    sem = asyncio.Semaphore(1)
 
     async def _send_one(registration):
         async with sem:
@@ -847,6 +868,8 @@ async def invitations_send_batch(request: Request, admin=Depends(require_admin_t
 @router.post("/invitations/resend-failed")
 @limiter.limit("5/minute")
 async def invitations_resend_failed(request: Request, admin=Depends(require_admin_tab("Invitations"))):
+    if not await renderer_available():
+        raise HTTPException(status_code=503, detail="Pass renderer is unavailable. Install Playwright Chromium before resending passes.")
     body = await request.json()
     reg_ids = [str(x).strip() for x in (body.get("registrationIds") or []) if str(x).strip()]
     if not reg_ids:
@@ -855,7 +878,8 @@ async def invitations_resend_failed(request: Request, admin=Depends(require_admi
     all_confirmed = await load_registrations({"status": "confirmed"})
     targets = [r for r in all_confirmed if r.get("registrationId") in reg_ids]
 
-    sem = asyncio.Semaphore(4)
+    # Chromium is memory-heavy on the small event-day instances; send sequentially.
+    sem = asyncio.Semaphore(1)
 
     async def _send_one(registration):
         async with sem:

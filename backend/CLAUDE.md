@@ -209,19 +209,8 @@ runtime tests at all. If dependencies can't be resolved (no network,
 version conflicts, etc.), tell me exactly what's blocking it rather than
 skipping silently.
 
-## P2 — do these only after P0 and P1 are complete and I've reviewed them
+## P2 — remaining follow-up after P0 and P1 are complete
 
-- Redis-backed rate limiting in production (`storage_uri` currently falls
-  back to `memory://`, which doesn't share state across workers).
-- Admin session revocation (add a `sid`, store active/revoked sessions,
-  revoke on logout and on admin removal).
-- Gate `POST /api/admin/auth/dev` behind an explicit `ENABLE_DEV_AUTH`
-  flag defaulting to `false`, in addition to the existing
-  non-production check.
-- Reassess whether the `Authorization: Bearer` auth path is actually
-  needed alongside cookie auth; if not, remove it — smaller attack
-  surface. If it's needed, confirm HTTPS-only, no logging of the token,
-  and no localStorage usage on the frontend.
 - Finish or explicitly descope the Google Sheets mirror workflow
   described in `WORKFLOW.md` but marked "not implemented" in
   `BACKEND.md` — ask me which, don't assume.

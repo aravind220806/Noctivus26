@@ -21,6 +21,7 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONFAULTHANDLER=1 \
+    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
     PORT=4000
 
 WORKDIR /app
@@ -31,6 +32,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
+
+RUN playwright install --with-deps chromium && rm -rf /var/lib/apt/lists/*
 
 COPY . .
 

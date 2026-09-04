@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import hashlib
 import html
 import os
 import re
@@ -21,6 +22,17 @@ from app.db import mongo
 from app.services.boarding_pass_service import create_pass_token, render_pass_artwork_bytes
 from app.services.event_service import get_event
 from app.services.registration_service import update_registration
+
+
+def _registration_pass_token(registration: dict) -> tuple[str, str]:
+    invitation = registration.get("invitation") or {}
+    token = str(registration.get("qrToken") or invitation.get("qrToken") or "").strip()
+    qr_hash = str(registration.get("qrHash") or invitation.get("qrHash") or "").strip()
+    if not token:
+        token, qr_hash = create_pass_token()
+    elif not qr_hash or len(qr_hash) != 64:
+        qr_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    return token, qr_hash
 
 
 def normalize_pass_template(pass_data: dict | None) -> dict:
@@ -444,7 +456,7 @@ async def send_member_pass(registration: dict, admin_email: str = "") -> dict:
             "terminal": event_rec.get("terminal") or "Main Hall",
         })
 
-        qr_token, qr_hash = create_pass_token()
+        qr_token, qr_hash = _registration_pass_token(registration)
         artwork = await render_pass_artwork_bytes(registration, pass_data, qr_token)
         event_names = event_entry.get("eventName") or event_rec.get("name") or "Noctivus '26"
         safe_name = re.sub(r"[^\w\s-]", "", name).strip().replace(" ", "_") or "Member"
@@ -465,11 +477,14 @@ async def send_member_pass(registration: dict, admin_email: str = "") -> dict:
             "pass_sent_at": now,
             "pass_failure_reason": None,
             "pass_failed_at": None,
+            "qrToken": qr_token,
+            "qrHash": qr_hash,
             "invitation": {
                 "sentAt": now,
                 "sentBy": admin_email,
                 "eventId": event_id,
                 "passTitle": pass_data["title"],
+                "qrToken": qr_token,
                 "qrHash": qr_hash,
                 "status": "active",
             },
@@ -492,7 +507,7 @@ async def send_invitation(registration: dict, pass_data: dict) -> None:
     if not email:
         return
     template_event_id = str(pass_data.get("templateEventId") or "")
-    token = str(pass_data.get("qrToken") or "")
+    token, qr_hash = _registration_pass_token(registration)
     if template_event_id and mongo.mongo_ready():
         template = await mongo.db.pass_templates.find_one({"eventId": template_event_id}, {"pass": 1})
         pass_data = (template or {}).get("pass") or {}
@@ -502,7 +517,7 @@ async def send_invitation(registration: dict, pass_data: dict) -> None:
         pass_data["time"] = str(assigned_time)
     event_id = str(pass_data.get("eventId") or template_event_id)
     event_names = pass_tag_values(registration, event_id)["event"]
-    artwork = await render_pass_artwork_bytes(registration, pass_data, token or None)
+    artwork = await render_pass_artwork_bytes(registration, pass_data, token)
 
     reg_id = str(registration.get("registrationId") or "preview")
     cid = make_msgid(domain="noctivus.site").strip("<>")
@@ -515,6 +530,14 @@ async def send_invitation(registration: dict, pass_data: dict) -> None:
         inline_image_cid=cid,
         inline_image_name=f"noctivus-boarding-pass-{reg_id}.png",
     )
+    if reg_id and reg_id != "preview":
+        invitation = dict(registration.get("invitation") or {})
+        invitation.update({"qrToken": token, "qrHash": qr_hash})
+        await update_registration(reg_id, {
+            "qrToken": token,
+            "qrHash": qr_hash,
+            "invitation": invitation,
+        })
 
 
 async def send_confirmation(registration: dict) -> None:

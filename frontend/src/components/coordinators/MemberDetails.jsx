@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AccessLevel } from './AccessLevel';
 import { Permissions } from './Permissions';
+import { CONTACTS_REVEAL_ON_CLICK } from '../../data/coordinators';
 
 export function MemberDetails({ member }) {
+  const [contactsVisible, setContactsVisible] = useState(!CONTACTS_REVEAL_ON_CLICK);
   const isFaculty = member.type === 'faculty';
   const isRegistration = member.type === 'registration';
 
@@ -51,7 +53,20 @@ export function MemberDetails({ member }) {
           </div>
         )}
 
-        {member.phone && (
+        {(member.phone || member.email) && CONTACTS_REVEAL_ON_CLICK && (
+          <div className="noc-field-group noc-field-full">
+            <button
+              type="button"
+              className="noc-field-val noc-link-val"
+              aria-expanded={contactsVisible}
+              onClick={() => setContactsVisible((visible) => !visible)}
+            >
+              {contactsVisible ? 'Hide contact' : 'Show contact'}
+            </button>
+          </div>
+        )}
+
+        {member.phone && contactsVisible && (
           <div className="noc-field-group">
             <span className="noc-field-label">CONTACT</span>
             <a href={`tel:${member.phone.replace(/\s+/g, '')}`} className="noc-field-val noc-link-val">
@@ -60,7 +75,7 @@ export function MemberDetails({ member }) {
           </div>
         )}
 
-        {member.email && (
+        {member.email && contactsVisible && (
           <div className="noc-field-group noc-field-full">
             <span className="noc-field-label">EMAIL</span>
             <a href={`mailto:${member.email}`} className="noc-field-val noc-link-val">

@@ -1,6 +1,7 @@
 from __future__ import annotations
 import asyncio
 import logging
+import time
 from typing import Callable, Any
 
 try:
@@ -17,6 +18,7 @@ logger = logging.getLogger(__name__)
 _playwright_instance: Playwright | None = None
 _browser_instance: Browser | None = None
 _lock = asyncio.Lock()
+_availability_cache: tuple[float, bool] = (0.0, False)
 
 
 async def get_browser() -> Browser | None:
@@ -47,6 +49,19 @@ async def get_browser() -> Browser | None:
             logger.exception(f"Failed to launch shared browser: {e}")
             _browser_instance = None
             return None
+
+
+async def renderer_available() -> bool:
+    """Return whether Chromium can be launched, cached briefly for health checks."""
+    global _availability_cache
+    now = time.monotonic()
+    cached_at, cached_value = _availability_cache
+    if now - cached_at < 60:
+        return cached_value
+    browser = await get_browser()
+    available = bool(browser and browser.is_connected())
+    _availability_cache = (now, available)
+    return available
 
 
 async def render_html_to_png(

@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from pymongo import ReturnDocument
 
 from app.core.rate_limit import limiter
+from app.core.config import settings
 from app.db import mongo
 from app.services.event_service import list_events
 from app.services.cache_service import qr_lookup_cache, events_cache
@@ -71,14 +72,16 @@ async def find_registration_by_qr_token(token: str) -> dict | None:
 
 @router.get("/health")
 async def health():
+    from app.services.browser_renderer import renderer_available
+    renderer_status = "ok" if await renderer_available() else "unavailable"
     if not mongo.mongo_ready():
-        return {"status": "ok", "database": "memory"}
+        return {"status": "ok", "database": "memory", "passRenderer": renderer_status}
     if not await mongo.ping_mongo():
         return JSONResponse(
             status_code=503,
             content={"status": "degraded", "database": "unavailable"},
         )
-    return {"status": "ok", "database": "mongo"}
+    return {"status": "ok", "database": "mongo", "passRenderer": renderer_status}
 
 
 @router.get("/events")
@@ -113,6 +116,8 @@ async def utr_check(request: Request, response: Response):
 @limiter.limit("30/minute")
 async def register(request: Request, response: Response):
     idempotency_key = request.headers.get("idempotency-key") or None
+    if idempotency_key and len(idempotency_key) > 128:
+        raise HTTPException(status_code=400, detail="Idempotency-Key must be 128 characters or fewer.")
     status_code, body = await create_registration(await request.json(), idempotency_key=idempotency_key)
     response.status_code = status_code
     return body
@@ -150,10 +155,10 @@ async def get_pass_details(request: Request, token_or_id: str):
         "registrationId": reg.get("registrationId"),
         "passengerName": participant.get("name") or "Participant",
         "college": participant.get("college") or "Velammal Engineering College",
-        "email": participant.get("email") or "",
         "paymentStatus": reg.get("paymentStatus") or "confirmed",
         "checkedIn": bool(reg.get("checkedIn")),
         "checkedInAt": reg.get("checkedInAt"),
+        "selfCheckInEnabled": settings.public_self_checkin_enabled,
         "date": event_details[0]["date"] if event_details else "26 SEP 2026",
         "events": event_details,
     }
@@ -162,6 +167,8 @@ async def get_pass_details(request: Request, token_or_id: str):
 @router.post("/p/{token_or_id}/check-in")
 @limiter.limit("20/minute")
 async def public_check_in(request: Request, token_or_id: str):
+    if not settings.public_self_checkin_enabled:
+        raise HTTPException(status_code=403, detail="Self check-in is disabled. Please check in at the registration desk.")
     reg = await find_registration_by_qr_token(token_or_id)
     if not reg:
         raise HTTPException(status_code=404, detail="Registration not found.")
@@ -179,11 +186,11 @@ async def public_check_in(request: Request, token_or_id: str):
     if mongo.mongo_ready():
         checked = await mongo.db.registrations.find_one_and_update(
             {"registrationId": reg_id, "paymentStatus": "confirmed", "checkedIn": {"$ne": True}},
-            {"$set": {"checkedIn": True, "checkedInAt": checked_at, "checkedInBy": "Scanner", "updatedAt": checked_at}},
+            {"$set": {"checkedIn": True, "checkedInAt": checked_at, "checkedInBy": "self", "updatedAt": checked_at}},
             return_document=ReturnDocument.AFTER,
         )
     else:
-        checked = await update_registration(reg_id, {"checkedIn": True, "checkedInAt": checked_at, "checkedInBy": "Scanner"})
+        checked = await update_registration(reg_id, {"checkedIn": True, "checkedInAt": checked_at, "checkedInBy": "self"})
 
     try:
         from app.services.google_sheets_service import google_sheets_service

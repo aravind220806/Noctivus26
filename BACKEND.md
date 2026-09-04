@@ -98,7 +98,7 @@ Admin tab permissions are enforced by backend dependencies, not only by hidden f
 
 ### Public routes
 
-- `GET /api/health` - reports service health and active database mode.
+- `GET /api/health` - reports service health, active database mode, and pass renderer availability.
 - `GET /api/events` - returns the server-side event catalog.
 - `POST /api/utr/check` - checks UTR format and whether it is already used.
 - `POST /api/register` - validates and stores a pending registration.
@@ -114,6 +114,8 @@ These limits reduce abuse while allowing users behind a shared campus network to
 
 - `POST /api/admin/auth/google` - Google login, limited to `10/minute/IP`.
 - `GET /api/admin/me` - current admin session and permissions.
+- `POST /api/admin/logout` - revokes the active admin session and clears the cookie.
+- `POST /api/admin/sessions/revoke-all` - owner-only emergency revocation for all admin sessions.
 - `GET /api/admin/access` - list delegated admin access.
 - `PUT /api/admin/access/{email}` - grant or update delegated tabs.
 - `DELETE /api/admin/access/{email}` - deactivate delegated access.
@@ -144,17 +146,22 @@ The in-memory store is only for local development. Production startup fails when
 - Removed the legacy organizer bearer-secret write endpoint.
 - Removed the unused `ORGANIZER_SECRET` deployment configuration.
 - Admin tokens use HMAC signing and constant-time signature comparison.
-- Admin tokens expire after 8 hours.
+- Admin tokens include a server-side session id, expire after 8 hours, and are revoked on logout.
 - Protected requests re-resolve delegated access from the database.
+- Deactivating delegated admin access revokes that user's active sessions.
 - Owner accounts cannot be edited or deactivated through delegated access management.
+- Admin auth is cookie-only; unused bearer-token session auth was removed.
 - Google admin login is rate-limited.
 - Public registration and UTR endpoints are rate-limited.
 - Production requires `ADMIN_SESSION_SECRET`.
+- Production rejects placeholder or short `ADMIN_SESSION_SECRET` values.
 - Production rejects memory-only storage and missing MongoDB configuration.
 - CORS uses the configured `FRONTEND_ORIGINS` list.
 - Registration input lengths, email, phone, event IDs, fees, and UTR values are validated server-side.
 - MongoDB unique indexes close application-level race conditions.
-- CSV values beginning with `=`, `+`, `-`, or `@` are escaped to prevent spreadsheet formula injection.
+- CSV/XLSX values beginning with `=`, `+`, `-`, or `@` are escaped to prevent spreadsheet formula injection.
+- Public pass lookup omits participant email and public self check-in is disabled unless `PUBLIC_SELF_CHECKIN_ENABLED=true`.
+- Boarding-pass QR codes encode the high-entropy verification URL, not the human registration ID.
 - Invitation email fields are HTML-escaped and image data is size-limited.
 - Resend calls check HTTP status and retry up to three times with exponential backoff.
 - Email delivery stays asynchronous so registration and admin responses do not wait on Resend.
@@ -170,8 +177,8 @@ The API is primarily I/O-bound. MongoDB calls use the async Motor driver, and em
 - A multi-core paid instance can use `WEB_CONCURRENCY=2` or higher after load testing.
 - MongoDB pool defaults are `minPoolSize=2` and `maxPoolSize=20`.
 - Responses larger than 1 KB use gzip compression.
-- Rate limiting is currently in-memory and per process. For multiple workers or multiple instances, use shared Redis-backed limiter storage before relying on it as a distributed control.
-- Set `REDIS_URL` to share rate-limit state across workers or instances. Without it, the limiter intentionally uses local process memory.
+- Set `REDIS_URL` to share rate-limit state across workers or instances.
+- Production startup fails when `WEB_CONCURRENCY > 1` and `REDIS_URL` is missing. A single-worker production process may still use local limiter memory.
 - Event capacities are configured as `event-id:number` pairs in `EVENT_CAPACITIES`; existing MongoDB registrations are counted when the service starts.
 
 ## Environment Variables
@@ -194,6 +201,10 @@ Optional settings:
 ```text
 PORT=4000
 WEB_CONCURRENCY=1
+REDIS_URL=
+FORWARDED_ALLOW_IPS=*
+ENABLE_UNPREFIXED_ROUTES=false
+PUBLIC_SELF_CHECKIN_ENABLED=false
 MONGODB_MAX_POOL_SIZE=20
 MONGODB_MIN_POOL_SIZE=2
 MONGODB_SERVER_SELECTION_TIMEOUT_MS=8000

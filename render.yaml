@@ -4,7 +4,7 @@ services:
     runtime: python
     pythonVersion: "3.11.9"
     rootDir: backend
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r requirements.txt && playwright install chromium
     startCommand: python run.py
     healthCheckPath: /api/health
     envVars:

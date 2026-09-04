@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Any
+import secrets
 
 from dotenv import load_dotenv
 
@@ -31,6 +32,9 @@ class Settings:
     mongo_storage_limit_mb = max(1, int(env("MONGODB_STORAGE_LIMIT_MB", "1024")))
     web_concurrency = max(1, int(env("WEB_CONCURRENCY", "4" if environment == "production" else "1")))
     redis_url = env("REDIS_URL")
+    forwarded_allow_ips = env("FORWARDED_ALLOW_IPS", "*")
+    enable_unprefixed_routes = env("ENABLE_UNPREFIXED_ROUTES", "false").lower() == "true"
+    public_self_checkin_enabled = env("PUBLIC_SELF_CHECKIN_ENABLED", "false").lower() == "true"
     event_capacities = {
         item.split(":", 1)[0].strip(): int(item.split(":", 1)[1])
         for item in csv_env("EVENT_CAPACITIES")
@@ -43,8 +47,8 @@ class Settings:
         "http://localhost:4000",
         "http://127.0.0.1:4000",
     ]
-    # Keep the development fallback convenient, but never allow a public default in production.
-    admin_session_secret = env("ADMIN_SESSION_SECRET") or "development-admin-session-secret"
+    # Keep development convenient with a per-process secret; production is validated below.
+    admin_session_secret = env("ADMIN_SESSION_SECRET") or secrets.token_urlsafe(48)
     google_client_id = env("GOOGLE_CLIENT_ID")
     admin_emails = [email.lower() for email in csv_env("ADMIN_EMAILS")]
     allow_memory_db = env("ALLOW_MEMORY_DB", "true" if environment != "production" else "false").lower() == "true"
@@ -65,14 +69,25 @@ class Settings:
 
 settings = Settings()
 
+
+def validate_worker_config(environment: str, web_concurrency: int, redis_url: str) -> None:
+    if environment == "production" and web_concurrency > 1 and not redis_url:
+        raise RuntimeError("Production with WEB_CONCURRENCY > 1 requires REDIS_URL so rate limits are shared across workers. Set REDIS_URL or WEB_CONCURRENCY=1.")
+
+
+def validate_admin_session_secret(environment: str, secret: str) -> None:
+    placeholders = {"development-admin-session-secret", "replace-with-another-long-random-secret", "change-me", "secret"}
+    if environment == "production" and (not secret or len(secret) < 32 or secret in placeholders):
+        raise RuntimeError("ADMIN_SESSION_SECRET must be a non-placeholder value of at least 32 characters in production.")
+
 if settings.environment == "production" and settings.allow_memory_db:
     raise RuntimeError("ALLOW_MEMORY_DB cannot be true in production.")
 
 if settings.environment == "production" and not settings.mongodb_uri:
     raise RuntimeError("MONGODB_URI is required in production.")
 
-if settings.environment == "production" and not env("ADMIN_SESSION_SECRET"):
-    raise RuntimeError("ADMIN_SESSION_SECRET is required in production.")
+validate_admin_session_secret(settings.environment, env("ADMIN_SESSION_SECRET"))
+validate_worker_config(settings.environment, settings.web_concurrency, settings.redis_url)
 
 
 def jsonable(value: Any) -> Any:
