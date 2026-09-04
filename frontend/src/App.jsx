@@ -31,6 +31,18 @@ export default function App() {
     }
     return true;
   });
+
+  useEffect(() => {
+    if (!showIntro && typeof window !== 'undefined' && window.location.hash) {
+      const id = window.location.hash.replace('#', '');
+      setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  }, [showIntro]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [registration, setRegistration] = useState(null);
   const [registrationOpen, setRegistrationOpen] = useState(true);
