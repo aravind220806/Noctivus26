@@ -48,4 +48,4 @@ EXPOSE 4000
 HEALTHCHECK --interval=20s --timeout=5s --start-period=25s --retries=3 \
   CMD curl -sf http://localhost:4000/api/health || exit 1
 
-CMD ["python", "run.py"]
+CMD ["sh", "-c", "chmod 600 /data/noctivus.db 2>/dev/null || true; exec python run.py"]
