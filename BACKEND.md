@@ -256,6 +256,16 @@ The container runs `python run.py` and reads `PORT` and `WEB_CONCURRENCY` from t
 
 - Google Sheets mirror is optional and configured through the Google Sheets service-account settings.
 
+## Historical MongoDB Performance Issues
+
+MongoDB support was removed from the runtime. If the project ever reintroduces it, avoid these known problems from the security/performance review:
+
+- Rate limits must not use per-process memory with multiple Uvicorn workers; use shared Redis or force `WEB_CONCURRENCY=1`.
+- Connection pool sizes must match the host and database tier. Large defaults can exhaust a small Atlas/free-tier deployment.
+- Startup must fail loudly when the configured database is unreachable; silent fallback makes data loss and slow retries hard to diagnose.
+- Batch email/pass sending should not couple every render/send to database writes on the request path. Keep bounded concurrency and make renderer availability visible in `/api/health`.
+- Duplicate UTR and duplicate email/event checks need database-level uniqueness or a transactional equivalent, not only application-level reads.
+
 ## Verification
 
 The project currently verifies with:
