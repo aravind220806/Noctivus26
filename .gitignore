@@ -14,4 +14,5 @@ backend/sympo-api-*.json
 __pycache__/
 *.py[cod]
 *.db
+*.zip
 .DS_Store

@@ -14,6 +14,18 @@ def _safe_csv_value(value):
     return value
 
 
+def _safe_excel_value(value):
+    if not isinstance(value, str):
+        return value
+    if value.lstrip().startswith(("=", "+", "-", "@")):
+        return "'" + value
+    return value
+
+
+def _append_safe_row(sheet, values):
+    sheet.append([_safe_excel_value(value) for value in values])
+
+
 def _get_abstract(registration: dict, event_id: str | None = None) -> str:
     if not registration:
         return ""
@@ -180,7 +192,7 @@ def export_scheduler_to_excel(events: list[dict], slots: list[dict], registratio
             ", ".join(assigned_ids) if assigned_ids else "None",
             "; ".join(member_names) if member_names else "None",
         ]
-        ws1.append(row_data)
+        _append_safe_row(ws1, row_data)
 
         # Apply cell borders and subtle window colors
         for col_idx in range(1, len(row_data) + 1):
@@ -243,7 +255,7 @@ def export_scheduler_to_excel(events: list[dict], slots: list[dict], registratio
             total_assigned,
             utilization,
         ]
-        ws2.append(row_data)
+        _append_safe_row(ws2, row_data)
         for col_idx in range(1, len(row_data) + 1):
             cell = ws2.cell(row=row_idx, column=col_idx)
             cell.border = thin_border
@@ -298,7 +310,7 @@ def export_scheduler_to_excel(events: list[dict], slots: list[dict], registratio
             ", ".join(assigned_slot_ids) if assigned_slot_ids else "Unassigned",
             "; ".join(slot_descriptions) if slot_descriptions else "Unassigned",
         ]
-        ws3.append(row_data)
+        _append_safe_row(ws3, row_data)
         for col_idx in range(1, len(row_data) + 1):
             cell = ws3.cell(row=row_idx, column=col_idx)
             cell.border = thin_border
@@ -463,7 +475,7 @@ def export_attendance_to_excel(events: list[dict], registrations: list[dict]) ->
         absent_count = max(0, total_members_count - present_count)
         rate_str = f"{(present_count / total_members_count * 100):.1f}%" if total_members_count > 0 else "0.0%"
 
-        ws_summary.append([
+        _append_safe_row(ws_summary, [
             s_idx,
             eid,
             ename,
@@ -546,7 +558,7 @@ def export_attendance_to_excel(events: list[dict], registrations: list[dict]) ->
                 m.get("markedAt", ""),
                 m.get("markedBy", ""),
             ]
-            ws_event.append(row_data)
+            _append_safe_row(ws_event, row_data)
 
             curr_row = m_idx + 1
             for col_idx in range(1, len(row_data) + 1):
@@ -608,7 +620,7 @@ def export_attendance_to_excel(events: list[dict], registrations: list[dict]) ->
             pm.get("markedAt", ""),
             pm.get("markedBy", ""),
         ]
-        ws_master.append(master_row)
+        _append_safe_row(ws_master, master_row)
         curr_row = p_idx + 1
         for col_idx in range(1, len(master_row) + 1):
             cell = ws_master.cell(row=curr_row, column=col_idx)
@@ -722,7 +734,7 @@ def export_full_live_backup_excel(events: list[dict], registrations: list[dict],
             reg.get("paymentSubmittedAt", "") or reg.get("createdAt", ""),
             reg.get("verifiedAt", ""),
         ]
-        ws_reg.append(row_data)
+        _append_safe_row(ws_reg, row_data)
         curr_row = r_idx + 1
         for col_idx in range(1, len(row_data) + 1):
             cell = ws_reg.cell(row=curr_row, column=col_idx)
@@ -785,7 +797,7 @@ def export_full_live_backup_excel(events: list[dict], registrations: list[dict],
             reg.get("verifiedAt", ""),
             "YES" if is_checked_in else "NO",
         ]
-        ws_ver.append(row_data)
+        _append_safe_row(ws_ver, row_data)
         curr_row = v_idx + 1
         for col_idx in range(1, len(row_data) + 1):
             cell = ws_ver.cell(row=curr_row, column=col_idx)
@@ -838,7 +850,7 @@ def export_full_live_backup_excel(events: list[dict], registrations: list[dict],
             reg.get("checkedInAt", ""),
             reg.get("checkedInBy", "Gate Desk"),
         ]
-        ws_chk.append(row_data)
+        _append_safe_row(ws_chk, row_data)
         curr_row = c_idx + 1
         for col_idx in range(1, len(row_data) + 1):
             cell = ws_chk.cell(row=curr_row, column=col_idx)
@@ -910,7 +922,7 @@ def export_full_live_backup_excel(events: list[dict], registrations: list[dict],
             ", ".join(assigned_ids) if assigned_ids else "None",
             "; ".join(member_names) if member_names else "None",
         ]
-        ws_slots.append(row_data)
+        _append_safe_row(ws_slots, row_data)
         for col_idx in range(1, len(row_data) + 1):
             cell = ws_slots.cell(row=s_idx, column=col_idx)
             cell.border = thin_border
@@ -971,7 +983,7 @@ def export_full_live_backup_excel(events: list[dict], registrations: list[dict],
             total_assigned,
             utilization,
         ]
-        ws_sched_sum.append(row_data)
+        _append_safe_row(ws_sched_sum, row_data)
         for col_idx in range(1, len(row_data) + 1):
             cell = ws_sched_sum.cell(row=row_idx, column=col_idx)
             cell.border = thin_border
@@ -1021,7 +1033,7 @@ def export_full_live_backup_excel(events: list[dict], registrations: list[dict],
             ", ".join(assigned_slot_ids) if assigned_slot_ids else "Unassigned",
             "; ".join(slot_descriptions) if slot_descriptions else "Unassigned",
         ]
-        ws_alloc.append(row_data)
+        _append_safe_row(ws_alloc, row_data)
         for col_idx in range(1, len(row_data) + 1):
             cell = ws_alloc.cell(row=row_idx, column=col_idx)
             cell.border = thin_border
@@ -1157,7 +1169,7 @@ def export_full_live_backup_excel(events: list[dict], registrations: list[dict],
                 m.get("markedAt", ""),
                 m.get("markedBy", ""),
             ]
-            ws_ev.append(row_data)
+            _append_safe_row(ws_ev, row_data)
             curr_row = m_idx + 1
             for col_idx in range(1, len(row_data) + 1):
                 cell = ws_ev.cell(row=curr_row, column=col_idx)
@@ -1241,7 +1253,7 @@ def export_full_live_backup_excel(events: list[dict], registrations: list[dict],
                     "-",
                     "-",
                 ]
-                ws_ev_slot.append(row_data)
+                _append_safe_row(ws_ev_slot, row_data)
                 curr_row = row_counter + 1
                 for col_idx in range(1, len(row_data) + 1):
                     cell = ws_ev_slot.cell(row=curr_row, column=col_idx)
@@ -1274,7 +1286,7 @@ def export_full_live_backup_excel(events: list[dict], registrations: list[dict],
                         (reg.get("paymentStatus") or "").capitalize() if reg else "",
                         "YES" if is_chk else "NO",
                     ]
-                    ws_ev_slot.append(row_data)
+                    _append_safe_row(ws_ev_slot, row_data)
                     curr_row = row_counter + 1
                     for col_idx in range(1, len(row_data) + 1):
                         cell = ws_ev_slot.cell(row=curr_row, column=col_idx)

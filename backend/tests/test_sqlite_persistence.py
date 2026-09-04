@@ -61,6 +61,21 @@ async def test_sqlite_slots_and_events():
 
 
 @pytest.mark.asyncio
+async def test_events_are_solo_only_even_with_saved_team_settings():
+    await sqlite_db.init()
+    current = await get_event("ctf")
+    await sqlite_db.upsert("events", "ctf", {**current, "teamMin": 2, "teamMax": 3})
+
+    event = await get_event("ctf")
+    assert event["teamMin"] == 1
+    assert event["teamMax"] == 1
+
+    updated = await update_event("ctf", {"teamMin": 2, "teamMax": 4}, "tester@example.com")
+    assert updated["teamMin"] == 1
+    assert updated["teamMax"] == 1
+
+
+@pytest.mark.asyncio
 async def test_sqlite_audit_log():
     await sqlite_db.init()
     await record_admin_action("admin@example.com", "test.action", "target1", {"detail": "sqlite_test"})

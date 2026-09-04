@@ -34,7 +34,7 @@ On every host (Render, Vercel, Docker) set:
 ```
 ENVIRONMENT=production
 ADMIN_SESSION_SECRET=<32+ random chars: python3 -c "import secrets; print(secrets.token_urlsafe(48))">
-MONGODB_URI=...
+SQLITE_DB_PATH=/data/noctivus.db
 FRONTEND_ORIGINS=https://<your-frontend-domain>
 GOOGLE_CLIENT_ID=...
 ADMIN_EMAILS=...
@@ -59,7 +59,7 @@ loudly instead of running with a forgeable admin login.
 | 4 | Medium | Spreadsheet formula injection in all three Excel exports (attendance, scheduler, master backup). openpyxl stores a string starting with `=` as a live formula, so a participant registering as `=HYPERLINK("http://evil","...")` gets it executed when an organizer opens the file. The CSV export already escaped this; the xlsx exports did not. Verified with a proof-of-concept. | Fixed |
 | 5 | Medium | Google login checked `profile.get("email_verified")` for truthiness, but Google's tokeninfo endpoint returns the **string** `"false"`, which is truthy. Unverified accounts passed the check. | Fixed |
 | 6 | Medium | Per-IP rate limiting did not work in any real deployment. Uvicorn only trusts `X-Forwarded-For` from 127.0.0.1, and Render's proxy and the nginx container connect from other addresses, so every visitor shared one bucket. One person sending 30 requests/minute locked registration for the whole campus. | Fixed: Uvicorn trusts the proxy via `FORWARDED_ALLOW_IPS` (default `*`). Do not expose port 4000 directly while this is `*`. |
-| 7 | Medium | SQLite persistence never initialised on a fresh database (`ALTER TABLE` ran before `CREATE TABLE`), and the `admin_actions` table was never created. The service silently fell back to in-memory storage, so registrations and the admin audit log vanished on restart whenever Mongo was not configured. This is why 2 existing tests failed. | Fixed |
+| 7 | Medium | SQLite persistence never initialised on a fresh database (`ALTER TABLE` ran before `CREATE TABLE`), and the `admin_actions` table was never created. The service could fall back to in-memory storage, so registrations and the admin audit log could vanish on restart when persistence was misconfigured. This is why 2 existing tests failed. | Fixed |
 | 8 | Low | Swagger UI, ReDoc and `/openapi.json` were public in production, enumerating every admin route. | Fixed: disabled in production |
 | 9 | Low | The public boarding-pass endpoint `GET /api/p/{token}` returned the participant's email, which the pass page never displays. | Fixed: removed |
 | 10 | Low | `Idempotency-Key` header was stored and uniquely indexed with no length limit. | Fixed: capped at 128 chars |
@@ -85,7 +85,7 @@ Items 13–24 each have a detailed write-up, recommended design, verification st
 - CORS uses an explicit allowlist with no regex; credentialed requests from other origins are rejected.
 - CSRF: the token is embedded in the HMAC-signed session and required as `X-CSRF-Token` on every non-GET admin request, compared in constant time. The cookie is `HttpOnly`, `SameSite=Lax`, `Secure` on HTTPS.
 - Admin tokens are HMAC-SHA256 signed, expire after 8 hours, and every request re-resolves tab permissions from the database, so revoking a delegate takes effect immediately.
-- All Mongo `$regex` queries built from user input go through `re.escape`. SQLite uses parameter binding; table names are internal constants.
+- SQLite uses parameter binding; table names are internal constants.
 - Every value rendered into email HTML and into the Playwright-rendered pass/receipt is passed through `html.escape`.
 - The React frontend has no `dangerouslySetInnerHTML`, no `eval`, and all admin calls go through one `adminFetch` wrapper that attaches credentials and the CSRF header.
 - Registration fees, event IDs, team sizes, UTR format, and duplicate checks are all enforced server-side; the client cannot set price or payment status.

@@ -5,7 +5,7 @@ from openpyxl import load_workbook
 from app.db.sqlite_db import sqlite_db
 from app.events import EVENT_CATALOG
 from app.services.admin_access_service import ADMIN_TABS
-from app.services.export_service import export_attendance_to_excel
+from app.services.export_service import export_attendance_to_excel, export_full_live_backup_excel, export_scheduler_to_excel
 from app.services.registration_service import serialize_registration
 from app.routes.admin_routes import (
     extract_event_members_with_attendance,
@@ -201,3 +201,58 @@ def test_export_attendance_to_excel():
     # Check that individual event sheets exist
     assert any("CTF" in name or "NULL" in name for name in sheet_names)
     assert any("Bug Hunt" in name for name in sheet_names)
+
+
+def test_excel_exports_escape_formula_like_values():
+    registrations = [
+        {
+            "registrationId": "NOC26-FORM01",
+            "paymentStatus": "confirmed",
+            "checkedIn": True,
+            "participant": {
+                "name": '=HYPERLINK("https://evil.example","click")',
+                "email": "formula@example.com",
+                "phone": "9998887776",
+                "college": "+Malicious College",
+                "foodPreference": "veg",
+            },
+            "eventRegistrations": [
+                {
+                    "eventId": "ctf",
+                    "eventName": "NULL CORE 2.0 CTF",
+                    "category": "tech",
+                    "teamSize": 1,
+                    "teamMembers": [],
+                }
+            ],
+            "assigned_slots": ["slot1"],
+        }
+    ]
+    slots = [{"id": "slot1", "event_id": "ctf", "window": "morning", "start_time": "10:00", "end_time": "11:00", "assigned_member_ids": ["NOC26-FORM01"]}]
+
+    for excel_bytes in (
+        export_attendance_to_excel(EVENT_CATALOG[:1], registrations),
+        export_scheduler_to_excel(EVENT_CATALOG[:1], slots, registrations),
+        export_full_live_backup_excel(EVENT_CATALOG[:1], registrations, slots),
+    ):
+        wb = load_workbook(io.BytesIO(excel_bytes), data_only=False)
+        risky_cells = [
+            (sheet.title, cell.coordinate, cell.value, cell.data_type)
+            for sheet in wb.worksheets
+            for row in sheet.iter_rows()
+            for cell in row
+            if isinstance(cell.value, str)
+            and cell.value.lstrip().startswith(("=", "+", "-", "@"))
+        ]
+        assert risky_cells == []
+
+        escaped_cells = [
+            cell.value
+            for sheet in wb.worksheets
+            for row in sheet.iter_rows()
+            for cell in row
+            if isinstance(cell.value, str)
+            and ("evil.example" in cell.value or "Malicious College" in cell.value)
+        ]
+        assert escaped_cells
+        assert all(cell.startswith("'") for cell in escaped_cells)

@@ -35,12 +35,15 @@ class Settings:
         if ":" in item and item.split(":", 1)[1].strip().isdigit()
     }
     frontend_origins = csv_env("FRONTEND_ORIGINS") or [
+        "https://noctivus.site",
+        "https://www.noctivus.site",
         "https://noctivus26.vercel.app",
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:4000",
         "http://127.0.0.1:4000",
     ]
+    public_site_url = (env("PUBLIC_SITE_URL") or "https://noctivus.site").rstrip("/")
     # Keep development convenient with a per-process secret; production is validated below.
     admin_session_secret = env("ADMIN_SESSION_SECRET") or secrets.token_urlsafe(48)
     google_client_id = env("GOOGLE_CLIENT_ID")

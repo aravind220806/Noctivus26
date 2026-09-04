@@ -6,12 +6,17 @@ from app.db.sqlite_db import sqlite_db
 from app.events import EVENT_CATALOG
 
 VALID_STATUSES = {"open", "closed", "coming-soon"}
+SOLO_TEAM_SIZE = 1
+
+
+def _solo_event(event: dict) -> dict:
+    return {**event, "teamMin": SOLO_TEAM_SIZE, "teamMax": SOLO_TEAM_SIZE}
 
 
 def _seed_events() -> list[dict]:
     return [
         {
-            **event,
+            **_solo_event(event),
             "status": event.get("status", "open"),
             "terminal": event.get("terminal", "MAIN HALL"),
             "seatType": event.get("seatType", "VIP"),
@@ -39,7 +44,8 @@ def _is_closed(event: dict, now: datetime | None = None) -> bool:
 
 
 def public_event(event: dict) -> dict:
-    return {key: event.get(key) for key in ("id", "name", "category", "duration_minutes", "is_ctf", "fee", "teamMin", "teamMax", "detailsComplete", "status", "autoCloseAt", "venue", "date", "time", "gate", "terminal", "seatType", "passActive")}
+    solo = _solo_event(event)
+    return {key: solo.get(key) for key in ("id", "name", "category", "duration_minutes", "is_ctf", "fee", "teamMin", "teamMax", "detailsComplete", "status", "autoCloseAt", "venue", "date", "time", "gate", "terminal", "seatType", "passActive")}
 
 
 def serialize_event(event: dict) -> dict:
@@ -57,12 +63,12 @@ async def list_events() -> list[dict]:
             await seed_events()
             rows = await sqlite_db.list_all("events")
         if rows:
-            db_events = [serialize_event(item) for item in rows]
+            db_events = [_solo_event(serialize_event(item)) for item in rows]
 
     if not db_events:
         if not memory_events:
             memory_events.extend(_seed_events())
-        db_events = [serialize_event(item) for item in memory_events]
+        db_events = [_solo_event(serialize_event(item)) for item in memory_events]
 
     db_by_id = {e["id"]: e for e in db_events}
     for catalog_event in _seed_events():
@@ -92,16 +98,12 @@ async def get_event(event_id: str) -> dict | None:
 
 
 async def update_event(event_id: str, changes: dict, updated_by: str) -> dict | None:
-    allowed = {"status", "fee", "teamMin", "teamMax", "autoCloseAt", "venue", "date", "time", "gate", "terminal", "seatType", "passActive", "duration_minutes", "category"}
+    allowed = {"status", "fee", "autoCloseAt", "venue", "date", "time", "gate", "terminal", "seatType", "passActive", "duration_minutes", "category"}
     update = {key: value for key, value in changes.items() if key in allowed}
     if update.get("status") not in VALID_STATUSES and "status" in update:
         raise ValueError("Invalid event status.")
     if "fee" in update and (not isinstance(update["fee"], int) or update["fee"] < 0):
         raise ValueError("Fee must be a non-negative integer.")
-    if "teamMin" in update and (not isinstance(update["teamMin"], int) or update["teamMin"] < 1):
-        raise ValueError("Team minimum must be at least 1.")
-    if "teamMax" in update and (not isinstance(update["teamMax"], int) or update["teamMax"] < 1):
-        raise ValueError("Team maximum must be at least 1.")
     if "duration_minutes" in update:
         try:
             update["duration_minutes"] = max(15, int(update["duration_minutes"]))
@@ -115,9 +117,7 @@ async def update_event(event_id: str, changes: dict, updated_by: str) -> dict | 
     current = await get_event(event_id)
     if not current:
         return None
-    merged = {**current, **update, "updatedBy": updated_by, "updatedAt": datetime.now(timezone.utc).isoformat()}
-    if merged["teamMin"] > merged["teamMax"]:
-        raise ValueError("Team minimum cannot exceed team maximum.")
+    merged = _solo_event({**current, **update, "updatedBy": updated_by, "updatedAt": datetime.now(timezone.utc).isoformat()})
     if sqlite_db.ready():
         await sqlite_db.upsert("events", event_id, merged)
     else:

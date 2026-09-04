@@ -28,8 +28,7 @@ def create_pass_token() -> tuple[str, str]:
 
 
 def verification_url(token: str) -> str:
-    origin = (settings.frontend_origins[0] if settings.frontend_origins else "https://noctivus26.com").rstrip("/")
-    return f"{origin}/p/{token}"
+    return f"{settings.public_site_url}/p/{token}"
 
 
 def _asset_data_uri(path: Path) -> str:

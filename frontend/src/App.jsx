@@ -24,9 +24,7 @@ export default function App() {
   const [showIntro, setShowIntro] = useState(() => {
     try {
       if (typeof window !== 'undefined') {
-        // Always show intro on first load (dev mode); comment out for production
-        return true;
-        // return !sessionStorage.getItem('intro-done');
+        return !sessionStorage.getItem('intro-done');
       }
     } catch (e) {
       console.warn('sessionStorage is not accessible:', e);

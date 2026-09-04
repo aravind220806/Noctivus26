@@ -280,6 +280,32 @@ def test_worker_config_requires_redis_for_multiworker_production():
     validate_worker_config("production", 1, "")
 
 
+def test_all_events_accept_solo_registration():
+    from app.events import EVENT_CATALOG
+    from app.services.validation_service import validate_registration
+
+    for event in EVENT_CATALOG:
+        result = validate_registration(
+            {
+                "participant": {
+                    "name": "Solo Participant",
+                    "email": f"{event['id']}@example.com",
+                    "phone": "9876543210",
+                    "college": "Test College",
+                    "foodPreference": "veg",
+                },
+                "events": [{"eventId": event["id"], "teamSize": 1, "teamMembers": []}],
+                "utrNumber": "123456789012",
+                "paymentReference": "NOC26-ABC123",
+                "claimedAmount": event["fee"],
+                "consent": {"privacyAccepted": True},
+            },
+            EVENT_CATALOG,
+        )
+
+        assert result["valid"], f"{event['name']} rejected solo registration: {result['errors']}"
+
+
 def test_authorization_bearer_is_not_admin_auth():
     token, _csrf = _make_admin_token()
     with patch("app.middleware.admin_auth.resolve_admin_access", new=AsyncMock(return_value={"tabs": ["Registrations"], "owner": False})), \
