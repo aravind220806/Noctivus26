@@ -248,7 +248,7 @@ async def send_smtp_email(
 
         img_part = MIMEImage(inline_image_bytes, name=inline_image_name or "image.png")
         img_part.add_header("Content-ID", f"<{inline_image_cid}>")
-        img_part.add_header("Content-Disposition", "inline", filename=inline_image_name or "image.png")
+        img_part.add_header("Content-Disposition", "inline")
         related.attach(img_part)
 
         outer.attach(related)
@@ -323,9 +323,18 @@ async def sendPaymentConfirmationEmail(member: dict) -> dict:
         receipt_error_note = "Receipt image generation failed, email sent without inline image"
         print(f"[Receipt Gen Error for {reg_id}]: {img_err}")
 
+    if receipt_gen_failed or not receipt_bytes:
+        error_msg = "Receipt image generation failed; confirmation email was not sent."
+        await update_registration(reg_id, {
+            "payment_email_status": "failed",
+            "payment_email_error": error_msg,
+        })
+        print(f"[Payment Confirmation Email Blocked for {reg_id}]: {error_msg}")
+        return {"success": False, "error": error_msg}
+
     subject = "Noctivus '26 — Payment Verified & Receipt ✅"
     cid = make_msgid(domain="noctivus.site").strip("<>")
-    html_content = build_confirmation_html(full_name, event_names_str, cid=cid if (receipt_bytes and not receipt_gen_failed) else None)
+    html_content = build_confirmation_html(full_name, event_names_str, cid=cid)
     safe_name = re.sub(r"[^\w\s-]", "", full_name).strip().replace(" ", "_") or "Member"
     inline_name = f"Noctivus26_Receipt_{safe_name}.png"
 
@@ -340,8 +349,8 @@ async def sendPaymentConfirmationEmail(member: dict) -> dict:
             to_email=email,
             subject=subject,
             html_body=html_content,
-            inline_image_bytes=receipt_bytes if not receipt_gen_failed else None,
-            inline_image_cid=cid if not receipt_gen_failed else None,
+            inline_image_bytes=receipt_bytes,
+            inline_image_cid=cid,
             inline_image_name=inline_name,
         )
 

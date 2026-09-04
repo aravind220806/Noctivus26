@@ -9,7 +9,7 @@ NPM            := npm
 
 .PHONY: up down restart build pull logs logs-api logs-web status health \
         dev dev-api dev-frontend \
-	setup env install install-backend install-frontend db-init \
+	setup env install install-backend install-frontend db-init email-sample email-sample-send \
         test clean nuke help
 
 all: help
@@ -112,6 +112,12 @@ db-init: up  ## Start services and verify SQLite/table initialization
 		&& echo "✓ SQLite database and application tables are ready" \
 		|| (echo "✗ SQLite database health check failed"; exit 1)
 	@$(DOCKER_COMPOSE) exec -T backend python -c 'import sqlite3; db=sqlite3.connect("/data/noctivus.db"); tables={row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type=\"table\"")}; required={"registrations","events","admin_access","admin_sessions","admin_actions","event_slots"}; missing=required-tables; raise SystemExit(f"Missing tables: {sorted(missing)}") if missing else print(f"✓ SQLite tables ready: {len(required)} checked")'
+
+email-sample:  ## Insert the synthetic email-performance registration without sending
+	@PYTHONPATH=$(BACKEND_DIR) $(PYTHON) $(BACKEND_DIR)/scripts/email_performance_sample.py
+
+email-sample-send:  ## Insert the sample and send its confirmation email with timing
+	@PYTHONPATH=$(BACKEND_DIR) $(PYTHON) $(BACKEND_DIR)/scripts/email_performance_sample.py --send
 
 install: install-backend install-frontend  ## Install all local dependencies
 
