@@ -4,12 +4,9 @@ from datetime import datetime, timezone
 from urllib.parse import urlparse
 
 from fastapi import APIRouter, HTTPException, Request, Response
-from fastapi.responses import JSONResponse
-from pymongo import ReturnDocument
 
 from app.core.rate_limit import limiter
 from app.core.config import settings
-from app.db import mongo
 from app.services.event_service import list_events
 from app.services.cache_service import qr_lookup_cache, events_cache
 from app.services.registration_service import (
@@ -46,24 +43,13 @@ async def find_registration_by_qr_token(token: str) -> dict | None:
     token_hash = hashlib.sha256(clean.encode("utf-8")).hexdigest()
 
     result = None
-    if mongo.mongo_ready():
-        result = await mongo.db.registrations.find_one({
-            "$or": [
-                {"invitation.qrHash": token_hash},
-                {"invitation.qrHash": clean},
-                {"invitation.qrToken": clean},
-                {"qrHash": token_hash},
-                {"qrToken": clean},
-            ]
-        })
-    else:
-        rows = await load_registrations()
-        for item in rows:
-            qr_hash = str((item.get("invitation") or {}).get("qrHash") or item.get("qrHash") or "")
-            qr_token = str((item.get("invitation") or {}).get("qrToken") or item.get("qrToken") or "")
-            if (qr_hash and qr_hash == token_hash) or (qr_token and qr_token == clean):
-                result = item
-                break
+    rows = await load_registrations()
+    for item in rows:
+        qr_hash = str((item.get("invitation") or {}).get("qrHash") or item.get("qrHash") or "")
+        qr_token = str((item.get("invitation") or {}).get("qrToken") or item.get("qrToken") or "")
+        if (qr_hash and qr_hash == token_hash) or (qr_token and qr_token == clean):
+            result = item
+            break
 
     if result:
         qr_lookup_cache.set(cache_key, result, ttl_seconds=120.0)
@@ -74,14 +60,7 @@ async def find_registration_by_qr_token(token: str) -> dict | None:
 async def health():
     from app.services.browser_renderer import renderer_available
     renderer_status = "ok" if await renderer_available() else "unavailable"
-    if not mongo.mongo_ready():
-        return {"status": "ok", "database": "memory", "passRenderer": renderer_status}
-    if not await mongo.ping_mongo():
-        return JSONResponse(
-            status_code=503,
-            content={"status": "degraded", "database": "unavailable"},
-        )
-    return {"status": "ok", "database": "mongo", "passRenderer": renderer_status}
+    return {"status": "ok", "database": "sqlite", "passRenderer": renderer_status}
 
 
 @router.get("/events")
@@ -183,14 +162,7 @@ async def public_check_in(request: Request, token_or_id: str):
 
     checked_at = datetime.now(timezone.utc)
     reg_id = reg["registrationId"]
-    if mongo.mongo_ready():
-        checked = await mongo.db.registrations.find_one_and_update(
-            {"registrationId": reg_id, "paymentStatus": "confirmed", "checkedIn": {"$ne": True}},
-            {"$set": {"checkedIn": True, "checkedInAt": checked_at, "checkedInBy": "self", "updatedAt": checked_at}},
-            return_document=ReturnDocument.AFTER,
-        )
-    else:
-        checked = await update_registration(reg_id, {"checkedIn": True, "checkedInAt": checked_at, "checkedInBy": "self"})
+    checked = await update_registration(reg_id, {"checkedIn": True, "checkedInAt": checked_at, "checkedInBy": "self"})
 
     try:
         from app.services.google_sheets_service import google_sheets_service

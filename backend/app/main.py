@@ -11,7 +11,6 @@ from slowapi import _rate_limit_exceeded_handler
 
 from app.core.config import settings
 from app.core.rate_limit import limiter
-from app.db.mongo import close_mongo, connect_mongo
 from app.db.sqlite_db import sqlite_db
 from app.routes.admin_routes import router as admin_router
 from app.routes.public_routes import router as public_router
@@ -35,33 +34,19 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    # Always init SQLite for persistent local storage
     await sqlite_db.init()
 
     email_stop = asyncio.Event()
-    email_task = None
+    email_task = asyncio.create_task(email_worker(email_stop))
     try:
-        await connect_mongo()
-        logger.info("Connected to MongoDB")
-        email_task = asyncio.create_task(email_worker(email_stop))
-    except Exception as error:
-        logger.warning("MongoDB unavailable (%s) — using SQLite for persistence", error)
-        if settings.node_env == "production":
-            raise
-        # Still start email worker even without Mongo
-        try:
-            email_task = asyncio.create_task(email_worker(email_stop))
-        except Exception:
-            pass
-    yield
-    email_stop.set()
-    if email_task:
+        yield
+    finally:
+        email_stop.set()
         email_task.cancel()
         try:
             await email_task
         except asyncio.CancelledError:
             pass
-    await close_mongo()
 
 
 docs_enabled = settings.environment != "production"

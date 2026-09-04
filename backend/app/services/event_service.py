@@ -2,7 +2,6 @@ from datetime import datetime, timezone
 
 from app.core.config import settings
 from app.db.memory_store import memory_events
-from app.db import mongo
 from app.db.sqlite_db import sqlite_db
 from app.events import EVENT_CATALOG
 
@@ -52,19 +51,7 @@ def serialize_event(event: dict) -> dict:
 
 async def list_events() -> list[dict]:
     db_events = []
-    try:
-        if mongo.mongo_ready():
-            rows = await mongo.db.events.find({}).sort("id", 1).to_list(length=100)
-            if not rows:
-                await seed_events()
-                rows = await mongo.db.events.find({}).sort("id", 1).to_list(length=100)
-            db_events = [serialize_event(row) for row in rows]
-    except Exception as error:
-        print(f"Falling back to SQLite/memory events: {error}")
-        mongo.client = None
-        mongo.db = None
-
-    if not db_events and sqlite_db.ready():
+    if sqlite_db.ready():
         rows = await sqlite_db.list_all("events")
         if not rows:
             await seed_events()
@@ -88,26 +75,7 @@ async def list_events() -> list[dict]:
 
 async def seed_events() -> None:
     seeded = _seed_events()
-    if mongo.mongo_ready():
-        await mongo.db.events.create_index("id", unique=True)
-        for event in seeded:
-            await mongo.db.events.update_one(
-                {"id": event["id"]},
-                {"$set": {
-                    "name": event["name"],
-                    "category": event["category"],
-                    "duration_minutes": event["duration_minutes"],
-                    "is_ctf": event["is_ctf"],
-                    "venue": event["venue"],
-                    "date": event["date"],
-                    "time": event["time"],
-                    "gate": event["gate"],
-                    "teamMin": event["teamMin"],
-                    "teamMax": event["teamMax"],
-                }, "$setOnInsert": event},
-                upsert=True,
-            )
-    elif sqlite_db.ready():
+    if sqlite_db.ready():
         for event in seeded:
             existing = await sqlite_db.get("events", event["id"])
             if not existing:
@@ -150,11 +118,7 @@ async def update_event(event_id: str, changes: dict, updated_by: str) -> dict | 
     merged = {**current, **update, "updatedBy": updated_by, "updatedAt": datetime.now(timezone.utc).isoformat()}
     if merged["teamMin"] > merged["teamMax"]:
         raise ValueError("Team minimum cannot exceed team maximum.")
-    if mongo.mongo_ready():
-        clean_merged = dict(merged)
-        clean_merged.pop("_id", None)
-        await mongo.db.events.replace_one({"id": event_id}, clean_merged)
-    elif sqlite_db.ready():
+    if sqlite_db.ready():
         await sqlite_db.upsert("events", event_id, merged)
     else:
         current.clear()

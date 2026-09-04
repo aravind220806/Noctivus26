@@ -193,8 +193,6 @@ def test_public_checkin_flag_accepts_qr_token():
         "invitation": {"qrToken": qr_token},
     })
     with patch("app.routes.public_routes.settings.public_self_checkin_enabled", True), \
-         patch("app.routes.public_routes.mongo.mongo_ready", return_value=False), \
-         patch("app.services.registration_service.mongo.mongo_ready", return_value=False), \
          patch("app.services.registration_service.sqlite_db.ready", return_value=False):
         resp = client.post(f"/api/p/{qr_token}/check-in")
     assert resp.status_code == 200, f"Valid QR token rejected: {resp.status_code} {resp.text}"
@@ -237,28 +235,16 @@ def test_qr_token_is_independent_of_registration_id():
 
 
 # ---------------------------------------------------------------------------
-# P1.4 — Health reports degraded state when Mongo is unreachable
+# P1.4 — Health reports SQLite-backed runtime state
 # ---------------------------------------------------------------------------
 
-def test_health_reports_degraded_when_mongo_unavailable():
-    """GET /api/health must return 503 + degraded status when Mongo is reachable but ping fails."""
+def test_health_reports_sqlite_runtime():
+    """GET /api/health returns the SQLite-backed runtime state."""
     client = get_client()
-    with patch("app.db.mongo.ping_mongo", new=AsyncMock(return_value=False)), \
-         patch("app.db.mongo.mongo_ready", return_value=True):
-        resp = client.get("/api/health")
-    assert resp.status_code == 503, f"Expected 503 for degraded Mongo, got {resp.status_code}"
-    body = resp.json()
-    assert body.get("status") == "degraded"
-
-
-def test_health_ok_when_using_memory():
-    """GET /api/health with no Mongo URI returns 200 + memory status."""
-    client = get_client()
-    with patch("app.db.mongo.mongo_ready", return_value=False):
-        resp = client.get("/api/health")
+    resp = client.get("/api/health")
     assert resp.status_code == 200
     body = resp.json()
-    assert body.get("database") == "memory"
+    assert body.get("database") == "sqlite"
 
 
 # ---------------------------------------------------------------------------

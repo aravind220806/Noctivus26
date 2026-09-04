@@ -60,7 +60,7 @@ def _loads(raw: str | None) -> dict:
 
 
 class _SQLiteDB:
-    """Minimal async SQLite wrapper used as a MongoDB-compatible fallback."""
+    """Minimal async SQLite wrapper used as the durable application store."""
 
     _ready: bool = False
 

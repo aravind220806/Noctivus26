@@ -1,6 +1,6 @@
 # Noctivus '26 Website Architecture
 
-Stack: React/Vite frontend + Python/FastAPI backend API + MongoDB + UPI payment QR/deep link + admin verification.
+Stack: React/Vite frontend + Python/FastAPI backend API + SQLite + UPI payment QR/deep link + admin verification.
 
 This project does not use Razorpay. Payment is handled through UPI, and payment truth is confirmed manually by organizers against the bank or UPI statement using the submitted UTR/reference number.
 
@@ -8,8 +8,8 @@ This project does not use Razorpay. Payment is handled through UPI, and payment 
 
 ```text
 ┌─────────────┐      ┌──────────────────┐      ┌─────────────────┐
-│ React/Vite  │─────▶│ Backend API      │─────▶│ MongoDB         │
-│ Frontend    │◀─────│ Backend          │◀─────│ Atlas/local     │
+│ React/Vite  │─────▶│ Backend API      │─────▶│ SQLite          │
+│ Frontend    │◀─────│ Backend          │◀─────│ local file      │
 └──────┬──────┘      │                  │      └─────────────────┘
        │             │ - Events API     │
        │             │ - Registration   │      ┌─────────────────┐
@@ -45,7 +45,7 @@ The backend is Python/FastAPI and is split across routes, services, database hel
   - `analysis_service.py` - dashboard overview and local analysis text.
   - `validation_service.py` - registration normalization and server-side validation.
 - `backend/app/middleware/admin_auth.py` - signed admin session tokens and tab guards.
-- `backend/app/db/mongo.py` - Motor async MongoDB connection and indexes.
+- `backend/app/db/sqlite_db.py` - SQLite persistence.
 - `backend/app/db/memory_store.py` - development-only memory fallback.
 - `backend/app/events.py` - event catalog returned by `/api/events`.
 
@@ -102,7 +102,7 @@ The current payment method is UPI, not Razorpay.
 5. User pays in their UPI app.
 6. User enters the 12-digit UTR/reference number.
 7. Backend revalidates event, amount, UTR format, duplicate UTR, and duplicate email/event.
-8. Backend stores the registration in MongoDB as `pending`.
+8. Backend stores the registration in SQLite as `pending`.
 9. Organizer reconciles the UTR and amount against the actual bank/UPI statement.
 10. Admin marks the registration as `confirmed`, `mismatch`, or `duplicate`.
 11. If confirmed and Resend is configured, the backend can send confirmation/pass emails.
@@ -111,7 +111,7 @@ There is no gateway webhook in this architecture. The bank/UPI statement is the 
 
 ## 5. Database
 
-MongoDB is the source of truth. The backend uses the async Motor driver.
+SQLite is the source of truth. The backend uses `aiosqlite`.
 
 ### `Registration`
 
@@ -164,9 +164,9 @@ updatedAt
 
 Google Sheets sync is not implemented in the current backend. The implemented verification workflow is the admin dashboard plus CSV export.
 
-If Sheets mirroring becomes a hard requirement, add it as a downstream mirror from MongoDB, not as the primary store:
+If Sheets mirroring becomes a hard requirement, keep it as a downstream mirror from SQLite, not as the primary store:
 
-1. Keep `/api/register` writing to MongoDB first.
+1. Keep `/api/register` writing to SQLite first.
 2. Trigger an async sync after registration creation or after payment confirmation, depending on what organizers want mirrored.
 3. Append rows to a master sheet and event-specific tabs.
 4. Track sync failures separately so a Sheets outage never blocks registration.
@@ -177,15 +177,14 @@ If Sheets mirroring becomes a hard requirement, add it as a downstream mirror fr
 - Never auto-confirm from the frontend. Confirmation must come from organizer reconciliation.
 - Public registration endpoints are IP rate-limited with `slowapi`: `/api/register` is limited to `5/minute`, and `/api/utr/check` is limited to `10/minute`.
 - Validate `claimedAmount` server-side against event fees.
-- Enforce unique `normalizedUtr` in MongoDB with a sparse unique index.
-- Check duplicate registrations by normalized email and event with a MongoDB compound unique index plus app-level prechecks.
-- Production startup fails if `ALLOW_MEMORY_DB=true` or `MONGODB_URI` is missing.
+- Check duplicate UTRs and duplicate registrations by normalized email and event server-side.
+- Production startup fails if `ALLOW_MEMORY_DB=true`.
 - Production startup also fails if `ADMIN_SESSION_SECRET` is missing.
 - Production runs configurable Uvicorn worker processes through `WEB_CONCURRENCY`; Render currently sets it to `1` for a free/starter-tier host, while development uses one reload-enabled worker.
 - Responses larger than 1 KB use gzip compression, which reduces admin payload size on mobile connections.
 - Public limits are `30 registrations/minute/IP` and `60 UTR checks/minute/IP` to reduce false throttling behind shared campus networks.
 - Confirmation and invitation emails remain asynchronous and retry up to three times with exponential backoff when Resend fails.
-- Keep `VITE_UPI_ID` public, but keep `MONGODB_URI`, `ADMIN_SESSION_SECRET`, `GOOGLE_CLIENT_ID`, and `RESEND_API_KEY` server-side.
+- Keep `VITE_UPI_ID` public, but keep `ADMIN_SESSION_SECRET`, `GOOGLE_CLIENT_ID`, and `RESEND_API_KEY` server-side.
 - CORS is locked to `FRONTEND_ORIGINS` and limited to `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, and `OPTIONS`.
 - Admin tokens are HMAC-signed and expire after 8 hours; admin access is re-resolved server-side on protected requests.
 - Keep `REGISTRATION_OPEN=false` until real payment and DB tests pass.
@@ -195,7 +194,7 @@ If Sheets mirroring becomes a hard requirement, add it as a downstream mirror fr
 
 The backend mostly matches this architecture:
 
-- FastAPI/MongoDB registration API exists.
+- FastAPI/SQLite registration API exists.
 - UPI/UTR payment verification flow exists.
 - Server-side fee validation exists.
 - Duplicate UTR and duplicate email/event checks exist at app and DB-index level.

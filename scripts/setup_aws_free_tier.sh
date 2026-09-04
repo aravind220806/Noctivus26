@@ -50,7 +50,7 @@ echo "[3/4] Verifying environment variables..."
 if [ ! -f "backend/.env" ]; then
     if [ -f "backend/.env.example" ]; then
         cp backend/.env.example backend/.env
-        echo "⚠️ Created backend/.env from .env.example. Please populate your MONGODB_URI."
+        echo "⚠️ Created backend/.env from .env.example. Please review SQLite and production settings."
     fi
 fi
 

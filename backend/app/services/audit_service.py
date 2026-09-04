@@ -1,7 +1,6 @@
 from datetime import datetime, timezone
 
 from app.db.memory_store import memory_admin_actions
-from app.db import mongo
 from app.db.sqlite_db import sqlite_db
 
 
@@ -28,13 +27,6 @@ async def record_admin_action(actor: str, action: str, target: str = "", metadat
         "createdAt": datetime.now(timezone.utc).isoformat(),
     }
 
-    if mongo.mongo_ready():
-        try:
-            await mongo.db.admin_actions.insert_one(dict(record))
-            return
-        except Exception as error:
-            print(f"Mongo admin action logging failed: {error}")
-
     if sqlite_db.ready():
         try:
             await sqlite_db.insert_action(record)
@@ -48,24 +40,6 @@ async def record_admin_action(actor: str, action: str, target: str = "", metadat
 
 
 async def list_admin_actions(search: str = "", limit: int = 500) -> list[dict]:
-    import re as _re
-    if mongo.mongo_ready():
-        try:
-            query = {}
-            if search:
-                term = _re.escape(search.strip()[:80])
-                query = {
-                    "$or": [
-                        {"actor": {"$regex": term, "$options": "i"}},
-                        {"action": {"$regex": term, "$options": "i"}},
-                        {"target": {"$regex": term, "$options": "i"}},
-                    ]
-                }
-            docs = await mongo.db.admin_actions.find(query).sort("createdAt", -1).to_list(length=limit)
-            return [_format_action(d) for d in docs]
-        except Exception as error:
-            print(f"Mongo admin action list failed: {error}")
-
     if sqlite_db.ready():
         try:
             return [_format_action(r) for r in await sqlite_db.list_actions(search=search, limit=limit)]

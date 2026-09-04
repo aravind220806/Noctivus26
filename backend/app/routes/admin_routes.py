@@ -7,7 +7,6 @@ import re
 from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from pymongo import ReturnDocument
 
 from app.core.config import settings
 from app.core.rate_limit import limiter
@@ -26,7 +25,6 @@ from app.services.google_sheets_service import google_sheets_service
 from app.services.registration_service import create_registration_id, load_registrations, serialize_registration, update_registration
 from app.services.scheduler_service import assignMembersToSlots, create_custom_slot, delete_slot, generate_all_event_slots, get_scheduler_dashboard_data, load_all_slots, slotsConflict, update_slot
 from app.db.memory_store import memory_registrations
-from app.db import mongo
 from app.db.sqlite_db import sqlite_db
 
 router = APIRouter()
@@ -270,42 +268,25 @@ async def check_in(request: Request, registration_id: str, admin=Depends(require
                     candidates.append(v_clean)
 
     current = None
-    if mongo.mongo_ready():
-        or_clauses = []
-        for cand in candidates:
-            cand_hash = hashlib.sha256(cand.encode("utf-8")).hexdigest()
-            or_clauses.extend([
-                {"registrationId": {"$regex": f"^{re.escape(cand)}$", "$options": "i"}},
-                {"invitation.qrHash": cand_hash},
-                {"invitation.qrHash": cand},
-                {"invitation.qrToken": cand},
-                {"qrHash": cand_hash},
-                {"qrToken": cand},
-                {"normalizedUtr": cand},
-                {"participant.email": {"$regex": f"^{re.escape(cand)}$", "$options": "i"}},
-                {"participant.phone": cand},
-            ])
-        current = await mongo.db.registrations.find_one({"$or": or_clauses})
-    else:
-        rows = await load_registrations()
-        for cand in candidates:
-            cand_lower = cand.lower()
-            cand_hash = hashlib.sha256(cand.encode("utf-8")).hexdigest()
-            current = next(
-                (
-                    item
-                    for item in rows
-                    if str(item.get("registrationId") or "").lower() == cand_lower
-                    or str((item.get("invitation") or {}).get("qrHash") or item.get("qrHash") or "") in [cand_hash, cand]
-                    or str((item.get("invitation") or {}).get("qrToken") or item.get("qrToken") or "") == cand
-                    or str(item.get("normalizedUtr") or "") == cand
-                    or str((item.get("participant") or {}).get("email") or "").lower() == cand_lower
-                    or str((item.get("participant") or {}).get("phone") or "") == cand
-                ),
-                None,
-            )
-            if current:
-                break
+    rows = await load_registrations()
+    for cand in candidates:
+        cand_lower = cand.lower()
+        cand_hash = hashlib.sha256(cand.encode("utf-8")).hexdigest()
+        current = next(
+            (
+                item
+                for item in rows
+                if str(item.get("registrationId") or "").lower() == cand_lower
+                or str((item.get("invitation") or {}).get("qrHash") or item.get("qrHash") or "") in [cand_hash, cand]
+                or str((item.get("invitation") or {}).get("qrToken") or item.get("qrToken") or "") == cand
+                or str(item.get("normalizedUtr") or "") == cand
+                or str((item.get("participant") or {}).get("email") or "").lower() == cand_lower
+                or str((item.get("participant") or {}).get("phone") or "") == cand
+            ),
+            None,
+        )
+        if current:
+            break
 
     if not current:
         raise HTTPException(status_code=404, detail="Registration not found. Send participant to the help desk.")
@@ -314,14 +295,7 @@ async def check_in(request: Request, registration_id: str, admin=Depends(require
     if current.get("checkedIn"):
         return {"status": "already-checked-in", "checkedInAt": current.get("checkedInAt"), "registration": serialize_registration(current)}
     checked_at = datetime.now(timezone.utc)
-    if mongo.mongo_ready():
-        checked = await mongo.db.registrations.find_one_and_update(
-            {"registrationId": current["registrationId"], "paymentStatus": "confirmed", "checkedIn": {"$ne": True}},
-            {"$set": {"checkedIn": True, "checkedInAt": checked_at, "checkedInBy": admin["email"], "updatedAt": checked_at}},
-            return_document=ReturnDocument.AFTER,
-        )
-    else:
-        checked = await update_registration(current["registrationId"], {"checkedIn": True, "checkedInAt": checked_at, "checkedInBy": admin["email"]})
+    checked = await update_registration(current["registrationId"], {"checkedIn": True, "checkedInAt": checked_at, "checkedInBy": admin["email"]})
     if not checked:
         return {"status": "already-checked-in", "checkedInAt": current.get("checkedInAt"), "registration": serialize_registration(current)}
     asyncio.create_task(google_sheets_service.sync_check_in(checked or current))
@@ -340,21 +314,6 @@ async def check_in(request: Request, registration_id: str, admin=Depends(require
 
 @router.get("/check-in/summary")
 async def check_in_summary(_admin=Depends(require_admin_tab("Check-in"))):
-    if mongo.mongo_ready():
-        total_members = await mongo.db.registrations.count_documents({})
-        confirmed = await mongo.db.registrations.count_documents({"paymentStatus": "confirmed"})
-        checked_in = await mongo.db.registrations.count_documents({"paymentStatus": "confirmed", "checkedIn": True})
-        walk_ins = await mongo.db.registrations.count_documents({"isWalkIn": True})
-        recent_cursor = mongo.db.registrations.find({"checkedIn": True}).sort("checkedInAt", -1).limit(15)
-        recent_docs = await recent_cursor.to_list(length=15)
-        return {
-            "totalMembers": total_members,
-            "confirmed": confirmed,
-            "checkedIn": checked_in,
-            "walkIns": walk_ins,
-            "pendingCheckIn": max(0, confirmed - checked_in),
-            "recentCheckIns": [serialize_registration(d) for d in recent_docs],
-        }
     rows = await load_registrations()
     total_members = len(rows)
     confirmed = sum(row.get("paymentStatus") == "confirmed" for row in rows)
@@ -375,19 +334,6 @@ async def check_in_summary(_admin=Depends(require_admin_tab("Check-in"))):
 @router.post("/check-in/reset")
 async def reset_check_ins(admin=Depends(require_any_admin_tab(["Check-in", "Dashboard"]))):
     count = 0
-    if mongo.mongo_ready():
-        res = await mongo.db.registrations.update_many(
-            {},
-            {"$set": {
-                "checkedIn": False,
-                "checkedInAt": None,
-                "checkedInBy": None,
-                "attendance": {},
-                "attendedEvents": []
-            }}
-        )
-        count += res.modified_count
-
     if sqlite_db.ready():
         rows = await sqlite_db.list_all("registrations")
         for r in rows:
@@ -450,9 +396,7 @@ async def create_walk_in(request: Request, admin=Depends(require_admin_tab("Chec
     if len(name) < 2 or len(college) < 2 or not event:
         raise HTTPException(status_code=400, detail="Name, college, and a valid event are required.")
     record = {"registrationId": create_registration_id(), "participant": {"name": name, "college": college, "email": str(participant.get("email") or "")[:190], "phone": re.sub(r"\D", "", str(participant.get("phone") or ""))[:10], "foodPreference": ""}, "eventRegistrations": [{"eventId": event["id"], "eventName": event["name"], "category": event["category"], "feeSnapshot": event["fee"], "teamSize": 1, "teamSizeMin": 1, "teamSizeMax": 1, "teamMembers": []}], "paymentStatus": "confirmed", "claimedAmount": 0, "expectedAmount": 0, "isWalkIn": True, "checkedIn": True, "checkedInAt": datetime.now(timezone.utc), "checkedInBy": admin["email"], "createdAt": datetime.now(timezone.utc), "updatedAt": datetime.now(timezone.utc)}
-    if mongo.mongo_ready():
-        await mongo.db.registrations.insert_one(record)
-    elif sqlite_db.ready():
+    if sqlite_db.ready():
         await sqlite_db.upsert("registrations", record["registrationId"], record)
     else:
         memory_registrations.append(record)
@@ -512,14 +456,7 @@ async def claim_food(request: Request, registration_id: str, admin=Depends(requi
         "foodPreference": food_pref,
     }
 
-    if mongo.mongo_ready():
-        updated = await mongo.db.registrations.find_one_and_update(
-            {"registrationId": reg_id, "foodClaimed": {"$ne": True}},
-            {"$set": update_data},
-            return_document=ReturnDocument.AFTER,
-        )
-    else:
-        updated = await update_registration(reg_id, update_data)
+    updated = await update_registration(reg_id, update_data)
 
     if not updated:
         return {
@@ -607,13 +544,6 @@ async def get_food_summary(_admin=Depends(require_any_admin_tab(["Food Scanner",
 @router.post("/food/reset")
 async def reset_food_claims(admin=Depends(require_any_admin_tab(["Food Scanner", "Dashboard"]))):
     count = 0
-    if mongo.mongo_ready():
-        res = await mongo.db.registrations.update_many(
-            {},
-            {"$set": {"foodClaimed": False, "foodClaimedAt": None, "foodClaimedBy": None}}
-        )
-        count += res.modified_count
-
     if sqlite_db.ready():
         rows = await sqlite_db.list_all("registrations")
         for r in rows:
@@ -693,7 +623,7 @@ async def revoke_all_sessions(admin=Depends(require_admin)):
 @router.get("/overview")
 async def overview(_admin=Depends(require_any_admin_tab(["Dashboard", "Verify Members", "Invitations", "AI Analysis", "Export"]))):
     result = build_overview(await load_registrations(), await list_events())
-    result["storage"] = await mongo.storage_usage()
+    result["storage"] = {"available": sqlite_db.ready(), "engine": "sqlite"}
     return result
 
 
@@ -822,8 +752,7 @@ async def invitations_send_batch(request: Request, admin=Depends(require_admin_t
     eligible = [r for r in all_confirmed if (r.get("pass_status") or "not_sent") != "sent"]
     batch = eligible[:batch_size]
 
-    # Chromium is memory-heavy on the small event-day instances; send sequentially.
-    sem = asyncio.Semaphore(1)
+    sem = asyncio.Semaphore(settings.invitation_send_concurrency)
 
     async def _send_one(registration):
         async with sem:
@@ -860,6 +789,7 @@ async def invitations_send_batch(request: Request, admin=Depends(require_admin_t
         "attempted": len(batch),
         "succeeded": len(successful),
         "failed": len(failed_list),
+        "concurrency": settings.invitation_send_concurrency,
         "successful": successful,
         "failedList": failed_list,
     }
@@ -878,8 +808,7 @@ async def invitations_resend_failed(request: Request, admin=Depends(require_admi
     all_confirmed = await load_registrations({"status": "confirmed"})
     targets = [r for r in all_confirmed if r.get("registrationId") in reg_ids]
 
-    # Chromium is memory-heavy on the small event-day instances; send sequentially.
-    sem = asyncio.Semaphore(1)
+    sem = asyncio.Semaphore(settings.invitation_send_concurrency)
 
     async def _send_one(registration):
         async with sem:
@@ -916,6 +845,7 @@ async def invitations_resend_failed(request: Request, admin=Depends(require_admi
         "attempted": len(targets),
         "succeeded": len(successful),
         "failed": len(failed_list),
+        "concurrency": settings.invitation_send_concurrency,
         "successful": successful,
         "failedList": failed_list,
     }
@@ -1035,24 +965,6 @@ async def find_registration_flexible(query_str: str) -> dict | None:
         if candidate and candidate != raw:
             scanned = candidate
     token_hash = hashlib.sha256(scanned.encode("utf-8")).hexdigest()
-
-    if mongo.mongo_ready():
-        match = await mongo.db.registrations.find_one({
-            "$or": [
-                {"registrationId": {"$regex": f"^{re.escape(scanned)}$", "$options": "i"}},
-                {"invitation.qrHash": token_hash},
-                {"invitation.qrHash": scanned},
-                {"invitation.qrToken": scanned},
-                {"qrHash": token_hash},
-                {"qrToken": scanned},
-                {"normalized.email": scanned.lower()},
-                {"participant.email": {"$regex": f"^{re.escape(scanned)}$", "$options": "i"}},
-                {"participant.phone": scanned},
-                {"normalizedUtr": scanned},
-            ]
-        })
-        if match:
-            return match
 
     all_rows = await load_registrations()
     for row in all_rows:
@@ -1343,14 +1255,7 @@ async def mark_event_attendance(request: Request, admin=Depends(require_admin_ta
         "updatedAt": now_iso,
     }
 
-    if mongo.mongo_ready():
-        updated = await mongo.db.registrations.find_one_and_update(
-            {"registrationId": reg["registrationId"]},
-            {"$set": update_payload},
-            return_document=ReturnDocument.AFTER,
-        )
-    else:
-        updated = await update_registration(reg["registrationId"], update_payload)
+    updated = await update_registration(reg["registrationId"], update_payload)
 
     _trigger_sheets_sync()
     await record_admin_action(
@@ -1422,14 +1327,7 @@ async def quick_toggle_attendance(request: Request, admin=Depends(require_admin_
         "updatedAt": now_iso,
     }
 
-    if mongo.mongo_ready():
-        updated = await mongo.db.registrations.find_one_and_update(
-            {"registrationId": reg["registrationId"]},
-            {"$set": update_payload},
-            return_document=ReturnDocument.AFTER,
-        )
-    else:
-        updated = await update_registration(reg["registrationId"], update_payload)
+    updated = await update_registration(reg["registrationId"], update_payload)
 
     _trigger_sheets_sync()
     formatted = format_registration_for_attendance(updated or reg, event_id)

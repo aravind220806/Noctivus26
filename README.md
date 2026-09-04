@@ -1,6 +1,6 @@
 # Noctivus '26
 
-A fast, mobile-first symposium website with a React/Vite frontend and a Python/FastAPI MongoDB registration API.
+A fast, mobile-first symposium website with a React/Vite frontend and a Python/FastAPI SQLite registration API.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the current system architecture. The implemented payment flow is UPI QR/deep-link plus manual UTR verification, not Razorpay.
 
@@ -14,7 +14,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the current system architecture. The 
 - Dynamic UPI deep link and lazy-loaded QR generation
 - Server-authoritative fee validation, UTR validation, duplicate checks, and pending verification
 - Protected admin verification and optional confirmation email through Resend
-- MongoDB persistence with an explicit in-memory development fallback
+- SQLite persistence with an explicit in-memory development fallback
 
 ## Run locally
 
@@ -46,7 +46,7 @@ For local registration testing, set `ALLOW_MEMORY_DB=true` and `REGISTRATION_OPE
 
 1. Replace the placeholder content and event data in `frontend/src/data/site.js` with the approved date, contacts, schedule, fees, rules, and links.
 2. Set the real `VITE_UPI_ID`, `VITE_UPI_PAYEE`, and deployed `VITE_API_URL` in the frontend host.
-3. Set `MONGODB_URI`, `FRONTEND_ORIGINS`, and a long random `ADMIN_SESSION_SECRET` in the backend host. Production refuses to start without the database and admin-session secrets.
+3. Set `SQLITE_DB_PATH`, `FRONTEND_ORIGINS`, and a long random `ADMIN_SESSION_SECRET` in the backend host. Production refuses to start without a strong admin-session secret.
 4. Keep `REGISTRATION_OPEN=false` during setup. Change it to `true` only after a real payment and database test.
 5. Configure `RESEND_API_KEY` and `CONFIRM_FROM` if confirmation emails are required.
 6. Replace the brochure, transport, and coordinator placeholders after organizers approve them.
@@ -55,7 +55,6 @@ Never commit `.env` files or expose the admin session secret in the React fronte
 
 Render is configured with one Uvicorn worker for a free/starter-tier host. Set `WEB_CONCURRENCY` to `2` or higher only when the backend instance has multiple CPU cores. Local development keeps one reload-enabled worker. Public registration and UTR-check limits are per source IP to protect shared networks without blocking normal event traffic.
 
-For local development, the backend automatically loads `atlas-credentials.env` from the project root when present. That file is ignored by Git. A different location can be supplied through `ATLAS_CREDENTIALS_FILE`.
 
 ## Verification
 
