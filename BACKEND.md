@@ -2,7 +2,7 @@
 
 ## Overview
 
-The backend is a modular Python FastAPI service. It is the source of truth for registrations and uses MongoDB for persistence. Local development can use an explicit in-memory fallback; production requires MongoDB.
+The backend is a modular Python FastAPI service. It is the source of truth for registrations and uses SQLite for persistence, with an explicit in-memory fallback for local development.
 
 The payment flow is UPI plus manual UTR verification. There is no Razorpay or other payment gateway in this project. The frontend creates a UPI QR/deep link, and an organizer confirms the submitted UTR against the bank or UPI statement.
 
@@ -10,10 +10,8 @@ The payment flow is UPI plus manual UTR verification. There is no Razorpay or ot
 
 - Python 3.10+
 - FastAPI and Uvicorn
-- Motor async MongoDB driver
-- MongoDB Atlas or local MongoDB
 - SlowAPI for IP-based rate limiting
-- Resend for optional email delivery, with MongoDB-backed email jobs
+- Resend for optional email delivery
 - Google OAuth credential verification for admin login
 - React/Vite frontend in `frontend/`
 
@@ -34,7 +32,7 @@ backend/
     │   ├── config.py        # Environment loading and production guards
     │   └── rate_limit.py    # SlowAPI limiter configuration
     ├── db/
-    │   ├── mongo.py         # Async MongoDB client, indexes, connection
+    │   ├── sqlite_db.py     # SQLite persistence
     │   └── memory_store.py  # Explicit local-development fallback
     ├── middleware/
     │   └── admin_auth.py    # Signed admin sessions and permission checks
@@ -61,7 +59,7 @@ React form
   -> rate limit
   -> validation_service
   -> registration_service
-  -> MongoDB or explicit local memory store
+  -> SQLite or explicit local memory store
   -> pending registration
 ```
 
@@ -130,16 +128,9 @@ The former organizer-secret route `PATCH /api/registrations/{id}` was removed be
 
 ## Data Storage
 
-MongoDB is the production source of truth. Startup creates these important indexes:
+SQLite is the production source of truth. Startup creates the registration, event, admin access, session, slot, and audit tables.
 
-- Unique `registrationId`
-- Unique sparse `normalizedUtr`
-- Unique compound `normalized.email` plus `eventRegistrations.eventId`
-- Lookup indexes for email, event, payment status, and admin access
-
-The unique indexes protect against duplicate UTRs and duplicate email/event registrations even when concurrent requests reach different workers.
-
-The in-memory store is only for local development. Production startup fails when `ALLOW_MEMORY_DB=true` or `MONGODB_URI` is missing.
+Application-level checks protect against duplicate UTRs and duplicate email/event registrations. The in-memory store is only for local development.
 
 ## Security Fixes Completed
 
@@ -155,31 +146,30 @@ The in-memory store is only for local development. Production startup fails when
 - Public registration and UTR endpoints are rate-limited.
 - Production requires `ADMIN_SESSION_SECRET`.
 - Production rejects placeholder or short `ADMIN_SESSION_SECRET` values.
-- Production rejects memory-only storage and missing MongoDB configuration.
+- Production rejects memory-only storage.
 - CORS uses the configured `FRONTEND_ORIGINS` list.
 - Registration input lengths, email, phone, event IDs, fees, and UTR values are validated server-side.
-- MongoDB unique indexes close application-level race conditions.
 - CSV/XLSX values beginning with `=`, `+`, `-`, or `@` are escaped to prevent spreadsheet formula injection.
 - Public pass lookup omits participant email and public self check-in is disabled unless `PUBLIC_SELF_CHECKIN_ENABLED=true`.
 - Boarding-pass QR codes encode the high-entropy verification URL, not the human registration ID.
 - Invitation email fields are HTML-escaped and image data is size-limited.
 - Resend calls check HTTP status and retry up to three times with exponential backoff.
 - Email delivery stays asynchronous so registration and admin responses do not wait on Resend.
-- MongoDB-backed email jobs survive process restarts and are retried by the API worker; local development uses the in-process fallback.
+- Email jobs are queued in-process and retried with bounded exponential backoff.
 
 ## Performance and Load Handling
 
-The API is primarily I/O-bound. MongoDB calls use the async Motor driver, and email calls are queued outside the request response.
+The API is primarily I/O-bound. SQLite calls use `aiosqlite`, and email calls are queued outside the request response.
 
 - `WEB_CONCURRENCY` controls Uvicorn workers.
 - Local development uses one reload-enabled worker.
 - Render is explicitly configured with `WEB_CONCURRENCY=1` for a free/starter-tier host.
 - A multi-core paid instance can use `WEB_CONCURRENCY=2` or higher after load testing.
-- MongoDB pool defaults are `minPoolSize=2` and `maxPoolSize=20`.
 - Responses larger than 1 KB use gzip compression.
 - Set `REDIS_URL` to share rate-limit state across workers or instances.
 - Production startup fails when `WEB_CONCURRENCY > 1` and `REDIS_URL` is missing. A single-worker production process may still use local limiter memory.
-- Event capacities are configured as `event-id:number` pairs in `EVENT_CAPACITIES`; existing MongoDB registrations are counted when the service starts.
+- `INVITATION_SEND_CONCURRENCY` controls how many pass emails render/send in parallel. Use `1` on 512 MB hosts, `2` or `3` on larger hosts.
+- Event capacities are configured as `event-id:number` pairs in `EVENT_CAPACITIES`.
 
 ## Environment Variables
 
@@ -189,8 +179,7 @@ Required for production:
 
 ```text
 ENVIRONMENT=production
-MONGODB_URI=<private MongoDB connection string>
-MONGODB_DB=noctivus
+SQLITE_DB_PATH=/data/noctivus.db
 FRONTEND_ORIGINS=https://<frontend-domain>
 ADMIN_SESSION_SECRET=<long-random-secret>
 REGISTRATION_OPEN=false
@@ -205,16 +194,14 @@ REDIS_URL=
 FORWARDED_ALLOW_IPS=*
 ENABLE_UNPREFIXED_ROUTES=false
 PUBLIC_SELF_CHECKIN_ENABLED=false
-MONGODB_MAX_POOL_SIZE=20
-MONGODB_MIN_POOL_SIZE=2
-MONGODB_SERVER_SELECTION_TIMEOUT_MS=8000
+INVITATION_SEND_CONCURRENCY=2
 GOOGLE_CLIENT_ID=<Google OAuth client ID>
 ADMIN_EMAILS=owner@example.com
 RESEND_API_KEY=<Resend API key>
 CONFIRM_FROM=Noctivus 26 <registrations@example.com>
 ```
 
-Never commit `.env`, MongoDB credentials, OAuth secrets, email API keys, or generated session secrets.
+Never commit `.env`, OAuth secrets, email API keys, or generated session secrets.
 
 ## Local Development
 
@@ -239,7 +226,7 @@ make build    # React production build
 make clean    # Remove generated caches and frontend dist
 ```
 
-The backend can run without MongoDB locally when `ALLOW_MEMORY_DB=true`. Memory data is lost when the process stops.
+The backend uses SQLite by default. Memory data is used only when SQLite is unavailable and `ALLOW_MEMORY_DB=true`.
 
 ## Deployment
 
@@ -254,7 +241,7 @@ The backend can run without MongoDB locally when `ALLOW_MEMORY_DB=true`. Memory 
 - Generated `ADMIN_SESSION_SECRET`
 - One worker by default for free/starter resources
 
-Set `MONGODB_URI`, `FRONTEND_ORIGINS`, `GOOGLE_CLIENT_ID`, `ADMIN_EMAILS`, and email variables in the Render dashboard as required.
+Set `SQLITE_DB_PATH`, `FRONTEND_ORIGINS`, `GOOGLE_CLIENT_ID`, `ADMIN_EMAILS`, and email variables in the Render dashboard as required.
 
 ### Docker
 
@@ -267,9 +254,7 @@ The container runs `python run.py` and reads `PORT` and `WEB_CONCURRENCY` from t
 
 ## Current Gaps and Next Work
 
-- Google Sheets mirror is not implemented.
-- Production MongoDB connectivity still needs to be tested with the real deployment credentials.
-- Owner sessions cannot be individually revoked; rotating `ADMIN_SESSION_SECRET` invalidates all sessions.
+- Google Sheets mirror is optional and configured through the Google Sheets service-account settings.
 
 ## Verification
 

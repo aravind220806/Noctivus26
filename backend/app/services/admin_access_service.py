@@ -2,7 +2,6 @@ from datetime import datetime, timezone
 
 from app.core.config import settings
 from app.db.memory_store import memory_admin_access
-from app.db import mongo
 from app.db.sqlite_db import sqlite_db
 
 ADMIN_TABS = ["Dashboard", "Verify Members", "Check-in", "Food Scanner", "Attendance", "Events", "Event Scheduler", "Invitations", "AI Analysis", "Export", "Audit Log", "Admin Access"]
@@ -31,18 +30,6 @@ async def resolve_admin_access(email: str) -> dict | None:
         return None
     if is_owner_admin(normalized):
         return {"email": normalized, "tabs": ADMIN_TABS, "owner": True, "active": True}
-    try:
-        if mongo.mongo_ready():
-            access = await mongo.db.admin_access.find_one({"email": normalized, "active": True})
-            if access is not None:
-                tabs = normalize_admin_tabs(access.get("tabs"))
-                if tabs:
-                    return {"email": normalized, "tabs": tabs, "owner": False, "active": True}
-    except Exception as error:
-        print(f"Mongo admin access lookup failed; using SQLite/memory: {error}")
-        mongo.client = None
-        mongo.db = None
-
     if sqlite_db.ready():
         access = await sqlite_db.get("admin_access", normalized)
         if access and access.get("active", True):
@@ -61,23 +48,6 @@ async def resolve_admin_access(email: str) -> dict | None:
 
 async def list_admin_access() -> list[dict]:
     owner_users = [{"email": email, "name": "Owner admin", "tabs": ADMIN_TABS, "active": True, "owner": True} for email in owner_emails()]
-    try:
-        if mongo.mongo_ready():
-            delegated = await mongo.db.admin_access.find({}).sort("updatedAt", -1).to_list(length=1000)
-            return owner_users + [{
-                "email": item.get("email"),
-                "name": item.get("name") or "",
-                "tabs": normalize_admin_tabs(item.get("tabs")),
-                "active": item.get("active", True) is not False,
-                "owner": False,
-                "updatedAt": item.get("updatedAt"),
-                "updatedBy": item.get("updatedBy"),
-            } for item in delegated]
-    except Exception as error:
-        print(f"Mongo admin access list failed; using SQLite/memory: {error}")
-        mongo.client = None
-        mongo.db = None
-
     if sqlite_db.ready():
         delegated = await sqlite_db.list_all("admin_access", order="desc")
         return owner_users + [{
@@ -105,16 +75,6 @@ async def list_admin_access() -> list[dict]:
 async def upsert_admin_access(email: str, name: str, tabs: list[str], active: bool, actor: str) -> dict:
     now = datetime.now(timezone.utc).isoformat()
     record = {"email": email, "name": str(name or "")[:80], "tabs": tabs, "active": active, "updatedBy": actor, "updatedAt": now}
-    if mongo.mongo_ready():
-        try:
-            await mongo.db.admin_access.update_one({"email": email}, {"$set": record, "$setOnInsert": {"createdBy": actor, "createdAt": now}}, upsert=True)
-            user = await mongo.db.admin_access.find_one({"email": email})
-            return {**user, "tabs": normalize_admin_tabs(user.get("tabs")), "owner": False}
-        except Exception as error:
-            print(f"Mongo admin access save failed: {error}")
-            mongo.client = None
-            mongo.db = None
-
     if sqlite_db.ready():
         existing = await sqlite_db.get("admin_access", email)
         if not existing:
@@ -137,15 +97,6 @@ async def upsert_admin_access(email: str, name: str, tabs: list[str], active: bo
 
 async def deactivate_admin_access(email: str, actor: str) -> None:
     now = datetime.now(timezone.utc).isoformat()
-    if mongo.mongo_ready():
-        try:
-            await mongo.db.admin_access.update_one({"email": email}, {"$set": {"active": False, "updatedBy": actor, "updatedAt": now}})
-            return
-        except Exception as error:
-            print(f"Mongo admin access deletion failed: {error}")
-            mongo.client = None
-            mongo.db = None
-
     if sqlite_db.ready():
         existing = await sqlite_db.get("admin_access", email)
         if existing:

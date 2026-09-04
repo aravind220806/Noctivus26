@@ -115,30 +115,9 @@ defense in depth. Do this:
 
 ## P1 — after P0 is verified
 
-### P1.4 — Mongo health/startup behavior
+### P1.4 — SQLite health/startup behavior
 
-**File:** `connect_mongo()` and the app's lifespan/startup handler, and
-the `/health` route.
-
-Current state: a Mongo connection failure is swallowed (`client = None`,
-`db = None`, no re-raise), the startup log still prints
-"Connected to MongoDB" regardless of success, and `/health` always
-returns `{"status": "ok"}`.
-
-Do this:
-1. Make `connect_mongo()` raise on failure, or return a status the caller
-   checks — don't let the startup log claim success unconditionally.
-2. Make `/health` actually ping Mongo (e.g. a lightweight `ping` command)
-   and return `{"status": "degraded", "database": "unavailable"}` (or
-   similar, matching this codebase's existing response conventions) when
-   it can't reach the DB, with a non-200 status code so infra health
-   checks (Render/Docker/K8s) correctly mark the instance unhealthy.
-3. Decide, and document in code comments, whether a failed Mongo
-   connection at startup should be fatal (crash the process) or degrade
-   gracefully — either is defensible, but right now it silently does
-   neither.
-4. Test: simulate a Mongo connection failure (mock/patch the client) and
-   assert `/health` reflects it.
+The backend uses SQLite as its durable store. `/health` should report the SQLite runtime state and pass renderer availability.
 
 ### P1.5 — Rate limit code/doc mismatch
 
@@ -227,7 +206,7 @@ skipping silently.
   code.
 - `BACKEND.md`, `WORKFLOW.md`, and the code agree with each other on
   payment architecture and rate limits.
-- `/health` reflects real Mongo state.
+- `/health` reflects real SQLite state.
 - No unhandled exception can reach a client with internal details.
 - You've given me one status report per tier (P0, P1, P2), not per file
   or per commit.

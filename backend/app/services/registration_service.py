@@ -4,12 +4,8 @@ import secrets
 import re
 from datetime import datetime, timezone
 
-from pymongo import ReturnDocument
-from pymongo.errors import DuplicateKeyError
-
 from app.core.config import settings
 from app.db.memory_store import memory_registrations
-from app.db import mongo
 from app.db.sqlite_db import sqlite_db
 from app.services.event_service import list_events, public_event, _is_closed
 from app.services.validation_service import normalize_digits, validate_registration
@@ -51,9 +47,7 @@ async def check_utr_availability(input_value) -> tuple[int, dict]:
     if not __import__("re").match(r"^\d{12}$", utr_number):
         return 400, {"available": False, "message": "Enter exactly 12 digits."}
 
-    if mongo.mongo_ready():
-        duplicate = await mongo.db.registrations.find_one({"normalizedUtr": utr_number}, {"_id": 1})
-    elif sqlite_db.ready():
+    if sqlite_db.ready():
         duplicate = await sqlite_db.find_one("registrations", "normalizedUtr", utr_number)
     else:
         if settings.node_env == "production" or not settings.allow_memory_db:
@@ -75,11 +69,7 @@ async def create_registration(payload: dict | None, idempotency_key: str | None 
 
     # Idempotency: return the original result if this key was already processed.
     if idempotency_key:
-        if mongo.mongo_ready():
-            existing = await mongo.db.registrations.find_one(
-                {"idempotencyKey": idempotency_key}, {"registrationId": 1}
-            )
-        elif sqlite_db.ready():
+        if sqlite_db.ready():
             existing = await sqlite_db.find_one("registrations", "idempotencyKey", idempotency_key)
         else:
             existing = next((r for r in memory_registrations if r.get("idempotencyKey") == idempotency_key), None)
@@ -114,26 +104,7 @@ async def create_registration(payload: dict | None, idempotency_key: str | None 
         "updatedAt": now.isoformat(),
     }
 
-    if mongo.mongo_ready():
-        if not await mongo.reserve_event_capacity(event_ids):
-            return 409, {"message": "One of the selected events has reached capacity."}
-        duplicate = await mongo.db.registrations.find_one({"normalized.email": result["value"]["normalized"]["email"], "eventRegistrations.eventId": {"$in": event_ids}}, {"_id": 1})
-        if duplicate:
-            await mongo.release_event_capacity(event_ids)
-            return 409, {"message": "This email is already registered for one of the selected events."}
-        try:
-            await mongo.db.registrations.insert_one(record)
-        except DuplicateKeyError as error:
-            await mongo.release_event_capacity(event_ids)
-            message = str(error)
-            if "normalized.email" in message or "eventRegistrations.eventId" in message:
-                return 409, {"message": "This email is already registered for one of the selected events."}
-            if "idempotencyKey" in message:
-                existing = await mongo.db.registrations.find_one({"idempotencyKey": idempotency_key}, {"registrationId": 1})
-                if existing:
-                    return 200, {"registrationId": existing["registrationId"], "message": "Registration received and awaiting payment verification."}
-            return 409, {"message": "This UTR has already been submitted."}
-    elif sqlite_db.ready():
+    if sqlite_db.ready():
         # Check for duplicate email+event
         all_regs = await sqlite_db.list_all("registrations")
         norm_email = result["value"]["normalized"]["email"]
@@ -175,27 +146,6 @@ async def create_registration(payload: dict | None, idempotency_key: str | None 
 
 async def load_registrations(filters: dict | None = None) -> list[dict]:
     filters = filters or {}
-    if mongo.mongo_ready():
-        query = {}
-        if filters.get("eventId"):
-            query["eventRegistrations.eventId"] = filters["eventId"]
-        if filters.get("status"):
-            query["paymentStatus"] = filters["status"]
-        if filters.get("pass_status"):
-            if isinstance(filters["pass_status"], list):
-                query["pass_status"] = {"$in": filters["pass_status"]}
-            else:
-                query["pass_status"] = filters["pass_status"]
-        if filters.get("search"):
-            term = re.escape(str(filters["search"]).strip()[:80])
-            query["$or"] = [{"participant.name": {"$regex": term, "$options": "i"}}, {"participant.email": {"$regex": term, "$options": "i"}}, {"participant.phone": {"$regex": term, "$options": "i"}}, {"normalizedUtr": {"$regex": term}}]
-        try:
-            cursor = mongo.db.registrations.find(query).sort("createdAt", 1 if filters.get("sortAsc") else -1)
-            rows = await cursor.to_list(length=5000)
-            return rows
-        except Exception as error:
-            print(f"Mongo load failed, falling back to SQLite/memory: {error}")
-
     # --- SQLite path ---
     if sqlite_db.ready():
         order = "asc" if filters.get("sortAsc") else "desc"
@@ -227,16 +177,7 @@ async def load_registrations(filters: dict | None = None) -> list[dict]:
 async def update_registration(registration_id: str, update: dict) -> dict | None:
     update["updatedAt"] = datetime.now(timezone.utc).isoformat()
     result = None
-    if mongo.mongo_ready():
-        try:
-            result = await mongo.db.registrations.find_one_and_update(
-                {"registrationId": registration_id},
-                {"$set": update},
-                return_document=ReturnDocument.AFTER,
-            )
-        except Exception as error:
-            print(f"Mongo registration update failed; falling back: {error}")
-    elif sqlite_db.ready():
+    if sqlite_db.ready():
         existing = await sqlite_db.get("registrations", registration_id)
         if existing:
             existing.update(update)

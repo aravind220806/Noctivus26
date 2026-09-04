@@ -1,7 +1,7 @@
 # Sympo Website — PRD
 
 ## 1. Overview
-A symposium website where students can browse events, register, and pay via Razorpay. Every registration is stored reliably (MongoDB) and mirrored into Google Sheets (Master tab + per-event tab) for organizers.
+A symposium website where students can browse events, register, and pay via UPI. Every registration is stored reliably in SQLite and can be mirrored into Google Sheets for organizers.
 
 ## 2. Goals
 - Let students discover events and register with payment in a smooth, low-friction flow.
@@ -30,11 +30,11 @@ A symposium website where students can browse events, register, and pay via Razo
 - Duplicate-submission protection (idempotency key per submit).
 - Capacity check before allowing payment to start.
 
-### 5.3 Payment (Razorpay)
-- Create order → Razorpay Checkout → client-side callback verification → server-side signature verification → webhook as final source of truth.
+### 5.3 Payment (UPI)
+- Generate UPI QR/deep link → participant pays → participant submits UTR → organizer verifies manually.
 - Registration status: `pending` → `paid` / `failed`.
 
-### 5.4 Data Storage (MongoDB)
+### 5.4 Data Storage (SQLite)
 - Primary store for events, registrations, payment status.
 - Fast lookups: check capacity, check duplicate, check payment status by order_id.
 
@@ -48,7 +48,7 @@ A symposium website where students can browse events, register, and pay via Razo
 - Certificate generation (post-event).
 - QR-based check-in at event venue.
 
-## 6. Data Model (MongoDB collections, draft)
+## 6. Data Model (SQLite-backed records, draft)
 
 ```
 events
@@ -57,7 +57,6 @@ events
 registrations
   _id, event_id, name, email, phone, college, extra_fields (per event_config),
   payment_status ("pending"/"paid"/"failed"),
-  razorpay_order_id, razorpay_payment_id,
   idempotency_key, created_at, updated_at
 ```
 
@@ -68,36 +67,34 @@ registrations
 - Registration-to-payment completion rate (drop-off tracking, informal).
 
 ## 8. Risks
-- Sheets API rate limits during a registration rush → mitigated by async queue + retries, Mongo as fast primary store.
+- Sheets API rate limits during a registration rush → mitigated by async queue + retries, SQLite as primary store.
 - Razorpay webhook delivery delay/failure → mitigated by combining client verify + webhook, plus a periodic reconciliation job against Razorpay's API.
-- Concurrent registration for last seat → capacity check + atomic Mongo update (`findOneAndUpdate` with capacity guard) instead of read-then-write.
+- Concurrent registration for last seat → server-side capacity checks before confirmation.
 
 ---
 
 # Phased Plan
 
 ## Phase 0 — Setup
-- Repo structure (`/backend`, `/frontend`), env config, Razorpay test account, Google Cloud service account + test Sheet.
-- MongoDB: local (Docker) for dev, MongoDB Atlas free tier for staging/prod.
+- Repo structure (`/backend`, `/frontend`), env config, UPI settings, Google Cloud service account + test Sheet.
+- SQLite database path for staging/prod.
 
 ## Phase 1 — Foundation
-- FastAPI skeleton + Mongo connection (via `motor` for async, or `pymongo`).
+- FastAPI skeleton + SQLite persistence.
 - Event CRUD (admin-only, can be simple scripts/seed data initially, no UI needed yet).
 - React skeleton, routing, event listing page pulling from `/events` API.
 
 ## Phase 2 — Registration + Payment
 - Config-driven registration form (frontend) + `/registrations` endpoint.
 - Capacity check + idempotency key handling.
-- Razorpay order creation endpoint.
-- Razorpay Checkout integration (frontend).
-- Signature verification endpoint (`/payments/verify`).
-- Razorpay webhook endpoint (`/payments/webhook`) — authoritative payment confirmation.
+- UPI QR/deep-link generation in the frontend.
+- UTR submission and admin verification flow.
 
 ## Phase 3 — Sheets Automation
 - Google Sheets API service account integration.
 - Background job (e.g. FastAPI `BackgroundTasks` or a simple queue) to push confirmed registrations to Master + event tab.
 - Retry/dead-letter handling for failed syncs.
-- Manual "resync from Mongo" endpoint for recovery.
+- Manual resync endpoint for recovery.
 
 ## Phase 4 — Automations & Polish
 - Email/WhatsApp confirmation on payment success.
@@ -107,5 +104,5 @@ registrations
 
 ## Phase 5 — Hardening (pre-launch)
 - Load test registration flow (simulate rush).
-- Reconciliation job: compare Mongo `paid` registrations against Razorpay dashboard periodically.
+- Reconciliation job: compare confirmed registrations against bank/UPI statements periodically.
 - Security pass: rate limiting, CORS lock-down, secrets audit.

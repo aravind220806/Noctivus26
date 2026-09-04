@@ -12,8 +12,8 @@ services:
         value: production
       - key: REGISTRATION_OPEN
         value: "true"
-      - key: MONGODB_URI
-        sync: false
+      - key: SQLITE_DB_PATH
+        value: /opt/render/project/src/noctivus.db
       - key: FRONTEND_ORIGINS
         sync: false
       - key: GOOGLE_CLIENT_ID

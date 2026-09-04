@@ -1,8 +1,6 @@
 import math
 from datetime import datetime, timezone
-from pymongo import ReturnDocument
 
-from app.db import mongo
 from app.db.memory_store import memory_event_slots
 from app.db.sqlite_db import sqlite_db
 from app.services.event_service import list_events
@@ -84,16 +82,6 @@ def serialize_slot(slot: dict) -> dict:
 
 
 async def load_all_slots() -> list[dict]:
-    try:
-        if mongo.mongo_ready():
-            cursor = mongo.db.event_slots.find({}).sort("start_time", 1)
-            docs = await cursor.to_list(length=1000)
-            return [serialize_slot(doc) for doc in docs]
-    except Exception as error:
-        print(f"Falling back to SQLite/memory slots: {error}")
-        mongo.client = None
-        mongo.db = None
-
     if sqlite_db.ready():
         rows = await sqlite_db.list_all("event_slots")
         if rows:
@@ -104,19 +92,6 @@ async def load_all_slots() -> list[dict]:
 
 async def save_slot(slot: dict) -> None:
     clean_slot = {k: v for k, v in slot.items() if k != "_id"}
-    try:
-        if mongo.mongo_ready():
-            await mongo.db.event_slots.update_one(
-                {"id": clean_slot["id"]},
-                {"$set": clean_slot},
-                upsert=True,
-            )
-            return
-    except Exception as error:
-        print(f"Mongo slot save failed: {error}")
-        mongo.client = None
-        mongo.db = None
-
     if sqlite_db.ready():
         await sqlite_db.upsert("event_slots", clean_slot["id"], clean_slot)
         return
@@ -227,13 +202,6 @@ async def create_next_auto_slot(event: dict, existing_slots: list[dict]) -> dict
 
 
 async def delete_slot(slot_id: str) -> bool:
-    try:
-        if mongo.mongo_ready():
-            res = await mongo.db.event_slots.delete_one({"id": slot_id})
-            return res.deleted_count > 0
-    except Exception:
-        pass
-
     if sqlite_db.ready():
         return await sqlite_db.delete("event_slots", slot_id)
 
@@ -313,12 +281,6 @@ async def generate_all_event_slots(regenerate: bool = False) -> dict:
     existing_by_event = set(s.get("event_id") for s in existing_slots)
 
     if regenerate:
-        try:
-            if mongo.mongo_ready():
-                await mongo.db.event_slots.delete_many({})
-                await mongo.db.registrations.update_many({}, {"$set": {"assigned_slots": []}})
-        except Exception:
-            pass
         if sqlite_db.ready():
             await sqlite_db.delete_all("event_slots")
             all_regs = await sqlite_db.list_all("registrations")

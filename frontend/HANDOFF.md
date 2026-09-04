@@ -198,5 +198,5 @@ make test             # compile-check + 15 security regression tests
 ```
 
 Copy `backend/.env.example` → `backend/.env` and `frontend/.env.example` →
-`frontend/.env` before starting. Set `ALLOW_MEMORY_DB=true` and leave
-`MONGODB_URI` blank to run without a real database.
+`frontend/.env` before starting. The backend uses SQLite by default; set
+`ALLOW_MEMORY_DB=true` only for temporary in-memory fallback testing.
