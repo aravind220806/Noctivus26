@@ -26,6 +26,19 @@ _LAST_SYNC_STATUS = {
     "total_sync_count": 0,
 }
 
+# Serialize concurrent check-in syncs: at most one running + one queued.
+# Multiple callers that arrive while a sync is in flight all collapse into a
+# single follow-up run (full DB re-read guarantees the result is current).
+_sync_lock: asyncio.Lock | None = None
+_sync_pending: bool = False
+
+
+def _get_sync_lock() -> asyncio.Lock:
+    global _sync_lock
+    if _sync_lock is None:
+        _sync_lock = asyncio.Lock()
+    return _sync_lock
+
 
 def _extract_spreadsheet_id(raw_id_or_url: str | None) -> str:
     if not raw_id_or_url:
@@ -444,27 +457,40 @@ class GoogleSheetsService:
             _LAST_SYNC_STATUS["last_error"] = str(err)
 
     async def sync_check_in(self, registration: dict):
-        """Live trigger: Update Check-In List and all event/master sheets in Google Sheets."""
+        """Live trigger: serialized full-DB sync after a check-in.
+
+        Concurrent check-ins collapse: if a sync is already running, we set
+        _sync_pending so the running sync will do one more pass after it
+        finishes, ensuring the latest state always lands in Sheets.
+        """
         if not self.is_enabled:
             return
-        try:
-            from app.services.event_service import list_events
-            from app.services.registration_service import load_registrations
-            from app.db.sqlite_db import sqlite_db
+        global _sync_pending
+        _sync_pending = True
+        lock = _get_sync_lock()
+        if lock.locked():
+            return  # running sync will loop and pick up the pending flag
+        async with lock:
+            while _sync_pending:
+                _sync_pending = False
+                try:
+                    from app.services.event_service import list_events
+                    from app.services.registration_service import load_registrations
+                    from app.db.sqlite_db import sqlite_db
 
-            events = await list_events()
-            all_regs = await load_registrations()
-            slots = []
-            if sqlite_db.ready():
-                slots = await sqlite_db.list_all("event_slots")
+                    events = await list_events()
+                    all_regs = await load_registrations()
+                    slots = []
+                    if sqlite_db.ready():
+                        slots = await sqlite_db.list_all("event_slots")
 
-            await self.sync_full_database(events, all_regs, slots)
-            _LAST_SYNC_STATUS["last_synced_at"] = datetime.now(timezone.utc).isoformat()
-            _LAST_SYNC_STATUS["last_sync_type"] = "check-in"
-            _LAST_SYNC_STATUS["total_sync_count"] += 1
-        except Exception as err:
-            logger.error(f"Live sync check-in error: {err}")
-            _LAST_SYNC_STATUS["last_error"] = str(err)
+                    await self.sync_full_database(events, all_regs, slots)
+                    _LAST_SYNC_STATUS["last_synced_at"] = datetime.now(timezone.utc).isoformat()
+                    _LAST_SYNC_STATUS["last_sync_type"] = "check-in"
+                    _LAST_SYNC_STATUS["total_sync_count"] += 1
+                except Exception as err:
+                    logger.error(f"Live sync check-in error: {err}")
+                    _LAST_SYNC_STATUS["last_error"] = str(err)
 
     async def sync_full_database(self, events: list[dict], registrations: list[dict], slots: list[dict]) -> bool:
         """Full database resync pushing all tables, event slots, and attendance sheets in batch."""

@@ -329,6 +329,12 @@ async def sendPaymentConfirmationEmail(member: dict) -> dict:
     safe_name = re.sub(r"[^\w\s-]", "", full_name).strip().replace(" ", "_") or "Member"
     inline_name = f"Noctivus26_Receipt_{safe_name}.png"
 
+    now = datetime.now(timezone.utc)
+    await update_registration(reg_id, {
+        "payment_email_status": "processing",
+        "payment_email_claimed_at": now.isoformat(),
+    })
+
     try:
         await send_smtp_email(
             to_email=email,
@@ -379,9 +385,50 @@ async def _safe_email(email_factory: Callable[[], Awaitable[None]]) -> None:
             await asyncio.sleep(0.5 * (2**attempt))
 
 
+_STUCK_JOB_TIMEOUT_MINUTES = 3
+_RECOVERY_INTERVAL_SECONDS = 300
+
+
+async def _recover_stuck_email_jobs() -> None:
+    """Retry payment confirmation emails stuck in 'processing' for >3 minutes."""
+    try:
+        from app.services.registration_service import load_registrations
+        all_regs = await load_registrations()
+        cutoff = datetime.now(timezone.utc) - timedelta(minutes=_STUCK_JOB_TIMEOUT_MINUTES)
+        stuck = []
+        for r in all_regs:
+            if r.get("payment_email_status") != "processing":
+                continue
+            claimed_raw = r.get("payment_email_claimed_at")
+            if not claimed_raw:
+                stuck.append(r)
+                continue
+            try:
+                claimed_at = datetime.fromisoformat(str(claimed_raw).replace("Z", "+00:00"))
+                if claimed_at < cutoff:
+                    stuck.append(r)
+            except ValueError:
+                stuck.append(r)
+        for reg in stuck:
+            reg_id = reg.get("registrationId") or reg.get("member_id", "?")
+            print(f"[Email Recovery] Retrying stuck job for {reg_id}")
+            await sendPaymentConfirmationEmail(reg)
+    except Exception as err:
+        print(f"[Email Recovery] Scan failed: {err}")
+
+
 async def email_worker(stop_event: asyncio.Event) -> None:
+    await _recover_stuck_email_jobs()
     while not stop_event.is_set():
-        await asyncio.sleep(1)
+        try:
+            await asyncio.wait_for(
+                asyncio.shield(stop_event.wait()),
+                timeout=_RECOVERY_INTERVAL_SECONDS,
+            )
+        except asyncio.TimeoutError:
+            pass
+        if not stop_event.is_set():
+            await _recover_stuck_email_jobs()
 
 
 async def send_member_pass(registration: dict, admin_email: str = "") -> dict:
