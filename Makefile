@@ -9,7 +9,7 @@ NPM            := npm
 
 .PHONY: up down restart build pull logs logs-api logs-web status health \
         dev dev-api dev-frontend \
-        setup env install install-backend install-frontend \
+	setup env install install-backend install-frontend db-init \
         test clean nuke help
 
 all: help
@@ -63,10 +63,14 @@ health:  ## Check HTTP health of running services
 			break; \
 		fi; \
 		if [ $$i -eq 20 ]; then echo "⚠  Backend not responding (may still be starting — run: make logs-api)"; fi; \
+		if [ $$i -eq 20 ]; then exit 1; fi; \
 		sleep 2; \
 	done
 	@if curl -sf http://localhost/ >/dev/null 2>&1; then \
 		echo "✓ Frontend (Nginx): serving"; \
+	else \
+		echo "✗ Frontend (Nginx): not serving"; \
+		exit 1; \
 	fi
 
 # ── LOCAL DEVELOPMENT ─────────────────────────────────────────────────────────
@@ -81,17 +85,33 @@ dev-api:  ## Start FastAPI backend locally (no Docker)
 
 # ── SETUP ─────────────────────────────────────────────────────────────────────
 
-setup: env install  ## Create .env files and install local dependencies
+setup: env install db-init  ## Configure env, install dependencies, build and start all services
 
-env:  ## Copy .env.example → .env if not already present
+env:  ## Create production-safe .env files if they do not exist
 	@if [ ! -f $(BACKEND_DIR)/.env ]; then \
 		cp $(BACKEND_DIR)/.env.example $(BACKEND_DIR)/.env; \
-		echo "✓ Created $(BACKEND_DIR)/.env — fill in secrets before running"; \
+		sed -i \
+			-e 's/^ENVIRONMENT=.*/ENVIRONMENT=production/' \
+			-e 's/^WEB_CONCURRENCY=.*/WEB_CONCURRENCY=1/' \
+			-e 's/^SQLITE_DB_PATH=.*/SQLITE_DB_PATH=\/data\/noctivus.db/' \
+			-e 's/^ALLOW_MEMORY_DB=.*/ALLOW_MEMORY_DB=false/' \
+			-e 's/^REGISTRATION_OPEN=.*/REGISTRATION_OPEN=false/' \
+			-e "s/^ADMIN_SESSION_SECRET=.*/ADMIN_SESSION_SECRET=$$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))')/" \
+			$(BACKEND_DIR)/.env; \
+		echo "✓ Created $(BACKEND_DIR)/.env with production-safe defaults"; \
 	fi
 	@if [ ! -f $(FRONTEND_DIR)/.env ] && [ -f $(FRONTEND_DIR)/.env.example ]; then \
 		cp $(FRONTEND_DIR)/.env.example $(FRONTEND_DIR)/.env; \
-		echo "✓ Created $(FRONTEND_DIR)/.env"; \
+		sed -i 's|^VITE_API_URL=.*|VITE_API_URL=|' $(FRONTEND_DIR)/.env; \
+		echo "✓ Created $(FRONTEND_DIR)/.env for the local API proxy"; \
 	fi
+
+db-init: up  ## Start services and verify SQLite/table initialization
+	@echo "→ Verifying database initialization..."
+	@curl -sf http://localhost/api/health | grep -q '"database":"sqlite"' \
+		&& echo "✓ SQLite database and application tables are ready" \
+		|| (echo "✗ SQLite database health check failed"; exit 1)
+	@$(DOCKER_COMPOSE) exec -T backend python -c 'import sqlite3; db=sqlite3.connect("/data/noctivus.db"); tables={row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type=\"table\"")}; required={"registrations","events","admin_access","admin_sessions","admin_actions","event_slots"}; missing=required-tables; raise SystemExit(f"Missing tables: {sorted(missing)}") if missing else print(f"✓ SQLite tables ready: {len(required)} checked")'
 
 install: install-backend install-frontend  ## Install all local dependencies
 
