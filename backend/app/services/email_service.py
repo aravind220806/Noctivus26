@@ -358,6 +358,95 @@ async def sendPaymentConfirmationEmail(member: dict) -> dict:
         return {"success": False, "error": err_msg}
 
 
+def build_payment_issue_html(full_name: str, event_names_str: str, issue_label: str, message: str) -> str:
+    contact_email = "noctivus26@velammal.edu.in"
+    contact_phone = "+91 98840 17375"
+    return f"""<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Verification Update - Noctivus '26</title>
+</head>
+<body style="margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0b0f19; color: #f3f4f6;">
+  <div style="max-width: 600px; margin: 0 auto; background: #111827; border: 1px solid #1f2937; border-radius: 12px; padding: 32px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+    <div style="margin-bottom: 24px; border-bottom: 1px solid #1f2937; padding-bottom: 16px;">
+      <h1 style="margin: 0; font-size: 24px; color: #00c8e0; font-weight: 800;">NOCTIVUS '26</h1>
+      <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #9ca3af;">Payment Verification Update</span>
+    </div>
+    <p style="font-size: 16px; line-height: 1.6; margin: 0 0 16px;">Hi <strong>{html.escape(full_name)}</strong>,</p>
+    <p style="font-size: 16px; line-height: 1.6; margin: 0 0 16px;">We reviewed your registration payment for <strong>{html.escape(event_names_str)}</strong>.</p>
+    <div style="background: rgba(248, 113, 113, 0.10); border-left: 4px solid #f87171; border-radius: 6px; padding: 14px 16px; margin: 20px 0;">
+      <strong style="color: #fecaca; display: block; font-size: 14px; margin-bottom: 6px;">{html.escape(issue_label)}</strong>
+      <span style="font-size: 14px; color: #e5e7eb; line-height: 1.5;">{html.escape(message)}</span>
+    </div>
+    <p style="font-size: 14px; line-height: 1.6; color: #cbd5e1; margin: 20px 0;">Please contact the Noctivus registration team with your registration ID, payment screenshot, and UTR/reference number so we can verify it manually.</p>
+    <div style="background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 14px 16px; margin: 20px 0; font-size: 14px; line-height: 1.7;">
+      <div>Email: <a href="mailto:{contact_email}" style="color: #67e8f9;">{contact_email}</a></div>
+      <div>Phone: <a href="tel:+919884017375" style="color: #67e8f9;">{contact_phone}</a></div>
+    </div>
+    <div style="border-top: 1px solid #1f2937; padding-top: 16px; font-size: 13px; color: #6b7280;">
+      - Team Noctivus '26 &bull; Department of CSE (Cyber Security)
+    </div>
+  </div>
+</body>
+</html>"""
+
+
+async def sendPaymentIssueEmail(member: dict, issue: str) -> dict:
+    reg_id = str(member.get("registrationId") or member.get("member_id") or "")
+    participant = member.get("participant") or {}
+    full_name = str(participant.get("name") or member.get("name") or "Participant").strip()
+    email = str(participant.get("email") or member.get("email") or "").strip()
+
+    if not email:
+        error_msg = "No email address on file"
+        await update_registration(reg_id, {
+            "payment_email_status": "failed",
+            "payment_email_error": error_msg,
+        })
+        return {"success": False, "error": error_msg}
+
+    events = member.get("eventRegistrations") or []
+    event_names = [str(e.get("eventName") or e.get("eventId") or "").strip() for e in events if (e.get("eventName") or e.get("eventId"))]
+    event_names_str = " and ".join(event_names) if event_names else "Noctivus '26 Events"
+    issue_copy = {
+        "mismatch": (
+            "Payment Details Mismatch",
+            "The payment details submitted with your registration did not match our verification records.",
+        ),
+        "duplicate": (
+            "Duplicate Payment Reference",
+            "The UTR/reference number submitted with your registration appears to have already been used.",
+        ),
+    }
+    issue_label, message = issue_copy.get(issue, issue_copy["mismatch"])
+    subject = f"Noctivus '26 - {issue_label}"
+
+    try:
+        await send_smtp_email(
+            to_email=email,
+            subject=subject,
+            html_body=build_payment_issue_html(full_name, event_names_str, issue_label, message),
+        )
+        now = datetime.now(timezone.utc)
+        await update_registration(reg_id, {
+            "payment_email_status": "sent",
+            "payment_email_sent_at": now,
+            "payment_email_error": None,
+        })
+        print(f"[Payment Issue Email] Sent {issue} notice to {email} ({reg_id})")
+        return {"success": True}
+    except Exception as send_err:
+        err_msg = str(send_err) or "SMTP delivery failed"
+        await update_registration(reg_id, {
+            "payment_email_status": "failed",
+            "payment_email_error": err_msg,
+        })
+        print(f"[Payment Issue Email Failed for {reg_id}]: {err_msg}")
+        return {"success": False, "error": err_msg}
+
+
 async def queue_email(kind: str, registration: dict, pass_data: dict | None = None) -> None:
     if kind == "confirmation":
         await sendPaymentConfirmationEmail(registration)

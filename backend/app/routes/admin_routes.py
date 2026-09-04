@@ -16,7 +16,7 @@ from app.services.admin_session_service import create_session, delete_all_sessio
 from app.services.analysis_service import build_overview, create_ai_analysis
 from app.services.boarding_pass_service import create_pass_token, render_pass_artwork_bytes
 from app.services.browser_renderer import renderer_available
-from app.services.email_service import normalize_pass_template, queue_email, send_confirmation, send_invitation, send_member_pass, sendPaymentConfirmationEmail
+from app.services.email_service import normalize_pass_template, queue_email, send_confirmation, send_invitation, send_member_pass, sendPaymentConfirmationEmail, sendPaymentIssueEmail
 from app.services.event_service import admin_events, get_event, list_events, update_event
 from app.services.export_service import export_attendance_to_excel, export_full_live_backup_excel, export_scheduler_to_excel, registrations_to_csv
 from app.services.audit_service import list_admin_actions, record_admin_action
@@ -663,6 +663,8 @@ async def bulk_verify(request: Request, admin=Depends(require_admin_tab("Verify 
             if status == "confirmed":
                 asyncio.create_task(sendPaymentConfirmationEmail(reg))
                 asyncio.create_task(google_sheets_service.sync_verified_registration(reg))
+            elif status in {"mismatch", "duplicate"}:
+                asyncio.create_task(sendPaymentIssueEmail(reg, status))
     await record_admin_action(admin["email"], f"registration.bulk.{status}", "bulk", {"count": changed})
     return {"updated": changed}
 
@@ -680,6 +682,8 @@ async def verify_registration(registration_id: str, request: Request, admin=Depe
 
     if update["paymentStatus"] == "confirmed" and body.get("sendEmail") is not False:
         asyncio.create_task(sendPaymentConfirmationEmail(registration))
+    elif update["paymentStatus"] in {"mismatch", "duplicate"} and body.get("sendEmail") is not False:
+        asyncio.create_task(sendPaymentIssueEmail(registration, update["paymentStatus"]))
 
     if update["paymentStatus"] == "confirmed":
         asyncio.create_task(google_sheets_service.sync_verified_registration(registration))

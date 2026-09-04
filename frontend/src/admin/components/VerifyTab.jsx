@@ -14,6 +14,12 @@ export function VerifyTab({
   selected,
   setSelected,
 }) {
+  const feedbackMessages = {
+    confirmed: '✅ Payment confirmed. Email & Google Sheets sync in progress.',
+    mismatch: '⚠️ Payment mismatch email queued. Ask the participant to contact the registration team.',
+    duplicate: '⚠️ Duplicate payment reference email queued. Ask the participant to contact the registration team.',
+  };
+
   const [notes, setNotes] = useState({});
   const [search, setSearch] = useState('');
   const [verifyingId, setVerifyingId] = useState(null);
@@ -31,7 +37,7 @@ export function VerifyTab({
       if (response.ok && data.registration) {
         setFeedback((prev) => ({
           ...prev,
-          [registrationId]: '✅ Payment confirmed. Email & Google Sheets sync in progress.',
+          [registrationId]: feedbackMessages[nextStatus] || 'Status updated. Email sync in progress.',
         }));
         if (onChanged) onChanged();
       }
