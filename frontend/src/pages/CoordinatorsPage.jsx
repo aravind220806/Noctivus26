@@ -16,25 +16,37 @@ export default function CoordinatorsPage() {
   const [activeCategory, setActiveCategory] = useState('faculty');
   const [registrationModalOpen, setRegistrationModalOpen] = useState(false);
 
-  // Hash navigation scrolling on initial load or hash change
+  // Hash / sessionStorage navigation scrolling on initial load or change
   useEffect(() => {
-    const handleHash = () => {
-      const hash = window.location.hash.replace('#', '').toLowerCase();
-      if (!hash) return;
+    const handleScrollTarget = () => {
+      let targetId = sessionStorage.getItem('scroll-target-coord');
+      if (targetId) {
+        sessionStorage.removeItem('scroll-target-coord');
+      } else if (window.location.hash) {
+        const hash = window.location.hash.replace('#', '').toLowerCase();
+        if (hash) {
+          targetId = hash === 'students' ? 'student' : hash;
+        }
+      }
 
-      const targetId = hash === 'students' ? 'student' : hash;
-      const el = document.getElementById(targetId);
-      if (el) {
-        window.requestAnimationFrame(() => {
-          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
-        setActiveCategory(targetId);
+      if (targetId) {
+        const el = document.getElementById(targetId);
+        if (el) {
+          window.requestAnimationFrame(() => {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
+          setActiveCategory(targetId);
+        }
+      }
+
+      if (window.location.hash && window.history?.replaceState) {
+        window.history.replaceState(null, '', window.location.pathname);
       }
     };
 
-    handleHash();
-    window.addEventListener('hashchange', handleHash);
-    return () => window.removeEventListener('hashchange', handleHash);
+    handleScrollTarget();
+    window.addEventListener('hashchange', handleScrollTarget);
+    return () => window.removeEventListener('hashchange', handleScrollTarget);
   }, []);
 
   // IntersectionObserver to sync active category navigation with scroll
@@ -69,8 +81,11 @@ export default function CoordinatorsPage() {
   const handleNavbarNavigate = (sectionId) => {
     if (sectionId === 'coordinators') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (sectionId === 'home') {
+      window.location.href = '/';
     } else {
-      window.location.href = `/#${sectionId}`;
+      sessionStorage.setItem('scroll-target', sectionId);
+      window.location.href = '/';
     }
   };
 

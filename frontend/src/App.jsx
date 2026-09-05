@@ -33,14 +33,28 @@ export default function App() {
   });
 
   useEffect(() => {
-    if (!showIntro && typeof window !== 'undefined' && window.location.hash) {
-      const id = window.location.hash.replace('#', '');
-      setTimeout(() => {
-        const el = document.getElementById(id);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth' });
+    if (!showIntro && typeof window !== 'undefined') {
+      const scrollTarget = sessionStorage.getItem('scroll-target');
+      if (scrollTarget) {
+        sessionStorage.removeItem('scroll-target');
+        setTimeout(() => {
+          const el = document.getElementById(scrollTarget);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 100);
+      } else if (window.location.hash) {
+        const id = window.location.hash.replace('#', '');
+        setTimeout(() => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 100);
+        if (window.history?.replaceState) {
+          window.history.replaceState(null, '', window.location.pathname);
         }
-      }, 100);
+      }
     }
   }, [showIntro]);
   const [selectedEvent, setSelectedEvent] = useState(null);

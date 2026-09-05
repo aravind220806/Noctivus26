@@ -168,7 +168,14 @@ export function FooterSection() {
             &copy; 2026 Noctivus ’26. Department of CSE (Cyber Security), Velammal Engineering College. All rights reserved.
           </p>
 
-          <a href="#home" className="footer-hud-back-to-top">
+          <a
+            href="#home"
+            className="footer-hud-back-to-top"
+            onClick={(e) => {
+              e.preventDefault();
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          >
             Back to top <span className="footer-hud-arrow">↑</span>
           </a>
         </div>

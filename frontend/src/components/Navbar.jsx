@@ -105,7 +105,12 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
     }
 
     if (isCoordinatorsPage) {
-      window.location.href = `/${item.href}`;
+      if (item.id === 'home') {
+        window.location.href = '/';
+      } else {
+        sessionStorage.setItem('scroll-target', item.id);
+        window.location.href = '/';
+      }
       setMobileOpen(false);
       return;
     }

@@ -43,6 +43,11 @@ export function HeroSection({ onRegister }) {
                 variant="ghost" 
                 as="a" 
                 href="#events"
+                onClick={(e) => {
+                  e.preventDefault();
+                  const target = document.getElementById('events') || document.querySelector('#events');
+                  if (target) target.scrollIntoView({ behavior: 'smooth' });
+                }}
               >
                 EXPLORE EVENTS
               </NotchedButton>

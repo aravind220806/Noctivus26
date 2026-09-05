@@ -10,7 +10,6 @@ export function CrewSection() {
       role: 'Department of CSE (Cyber Security)',
       contact: '+91 70942 57044',
       contactType: 'phone',
-      href: '/coordinators#faculty',
     },
     {
       id: 'student',
@@ -18,7 +17,6 @@ export function CrewSection() {
       role: 'Noctivus Organizing Team',
       contact: '+91 98840 17375',
       contactType: 'phone',
-      href: '/coordinators#student',
     },
     {
       id: 'registration',
@@ -26,9 +24,15 @@ export function CrewSection() {
       role: 'Payments and confirmations',
       contact: '+91 87540 77308',
       contactType: 'phone',
-      href: '/coordinators#registration',
     },
   ];
+
+  const handleNavigateToCoord = (targetId) => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('scroll-target-coord', targetId);
+      window.location.href = '/coordinators';
+    }
+  };
 
   return (
     <section className="crew-section" id="coordinators">
@@ -41,9 +45,7 @@ export function CrewSection() {
             <article
               key={card.id}
               className="cyber-crew-card"
-              onClick={() => {
-                window.location.href = card.href;
-              }}
+              onClick={() => handleNavigateToCoord(card.id)}
               style={{ cursor: 'pointer' }}
             >
               <div className="card-corner card-corner-tl" aria-hidden="true" />
@@ -83,9 +85,13 @@ export function CrewSection() {
               {/* VIEW COORDINATORS Button */}
               <div className="crew-card-action">
                 <a
-                  href={card.href}
+                  href="/coordinators"
                   className="crew-view-btn"
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleNavigateToCoord(card.id);
+                  }}
                 >
                   <span className="crew-btn-corner tl" aria-hidden="true" />
                   <span className="crew-btn-corner tr" aria-hidden="true" />
