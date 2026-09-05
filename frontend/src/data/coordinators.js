@@ -46,7 +46,7 @@ export const studentCoordinators = [
   {
     id: 'STU-OC-0001',
     name: 'SARVERSHWARAN N',
-    role: 'OVERALL COORDINATOR',
+    role: 'STUDENT COORDINATOR',
     type: 'student',
     department: 'CSE (CYBER SECURITY)',
     year: '3RD YEAR',
@@ -62,7 +62,7 @@ export const studentCoordinators = [
   {
     id: 'STU-OC-0002',
     name: 'BHAVANA M',
-    role: 'OVERALL COORDINATOR',
+    role: 'STUDENT COORDINATOR',
     type: 'student',
     department: 'CSE (CYBER SECURITY)',
     year: '3RD YEAR',
@@ -78,7 +78,7 @@ export const studentCoordinators = [
   {
     id: 'STU-OC-0003',
     name: 'MONICA S',
-    role: 'OVERALL COORDINATOR',
+    role: 'STUDENT COORDINATOR',
     type: 'student',
     department: 'CSE (CYBER SECURITY)',
     year: '3RD YEAR',
@@ -94,7 +94,7 @@ export const studentCoordinators = [
   {
     id: 'STU-OC-0004',
     name: 'JEHAN J',
-    role: 'OVERALL COORDINATOR',
+    role: 'STUDENT COORDINATOR',
     type: 'student',
     department: 'CSE (CYBER SECURITY)',
     year: '3RD YEAR',
@@ -117,7 +117,7 @@ export const registrationCoordinators = [
     role: 'REGISTRATION DESK',
     type: 'registration',
     department: 'CSE (CYBER SECURITY)',
-    year: '2ND YEAR',
+    year: '3RD YEAR',
     accessLevel: 3,
     image: '/coordinators/ajai.webp',
     email: 'ajaikaliyamoorthy@gmail.com',
@@ -134,7 +134,7 @@ export const registrationCoordinators = [
     role: 'REGISTRATION DESK',
     type: 'registration',
     department: 'CSE (CYBER SECURITY)',
-    year: '2ND YEAR',
+    year: '3RD YEAR',
     accessLevel: 3,
     image: '/coordinators/adirai.webp',
     email: 'adrai5031205@gmail.com',

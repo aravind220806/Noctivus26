@@ -197,10 +197,10 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
   const continueToReview = () => {
     if (!selectedEvents.length) return setError('Choose at least one event, or choose Nil only if you are not registering for events.');
     if (technicalEventId === 'ignite' && !igniteAbstract.trim()) {
-      return setError('Please enter your project idea or abstract for IGNITE (up to 200 characters).');
+      return setError('Please enter your project idea or abstract for Ignite Ideathon (up to 200 characters).');
     }
     if (technicalEventId === 'ignite' && igniteAbstract.length > 200) {
-      return setError('IGNITE abstract must not exceed 200 characters.');
+      return setError('Ignite Ideathon abstract must not exceed 200 characters.');
     }
     setError('');
     setStep(3);
@@ -452,7 +452,7 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
                   <div className="reg-field reg-field--full">
                     <div className="reg-field-header">
                       <label className="reg-field-label" htmlFor="ignite-abstract">
-                        IGNITE Project Idea / Abstract <span className="reg-required-star">*</span>
+                        Ignite Ideathon Project Idea / Abstract <span className="reg-required-star">*</span>
                       </label>
                       <span className={`reg-char-count ${igniteAbstract.length >= 200 ? 'reg-char-count--limit' : ''}`}>
                         {igniteAbstract.length}/200 chars
@@ -536,7 +536,7 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
                 </div>
                 {technicalEventId === 'ignite' && igniteAbstract.trim() && (
                   <div className="reg-review-item reg-review-item--full">
-                    <span className="reg-review-label">IGNITE PROJECT IDEA / ABSTRACT</span>
+                    <span className="reg-review-label">IGNITE IDEATHON PROJECT IDEA / ABSTRACT</span>
                     <strong className="reg-review-val reg-review-val--abstract">
                       {igniteAbstract.trim()}
                     </strong>

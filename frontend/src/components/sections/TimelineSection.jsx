@@ -12,7 +12,6 @@ import {
   CheckCircle,
   Award,
   Clock,
-  MapPin,
   Calendar,
   Sparkles,
   LayoutGrid,
@@ -109,8 +108,8 @@ const events = [
   },
   {
     id: 'ignite',
-    title: 'IGNITE (Idea Pitch)',
-    shortTitle: 'IGNITE Pitch',
+    title: 'Ignite Ideathon',
+    shortTitle: 'Ignite Ideathon',
     start: 10.0,
     end: 13.0,
     icon: Lightbulb,
@@ -148,8 +147,8 @@ const events = [
   },
   {
     id: 'ipl-bidverse',
-    title: 'IPL Bidverse',
-    shortTitle: 'IPL Bidverse',
+    title: 'IPL Auction Arena',
+    shortTitle: 'IPL Auction Arena',
     start: 10.0,
     end: 13.0,
     icon: Trophy,
@@ -364,7 +363,7 @@ export function TimelineSection() {
                 onMouseEnter={() => setHoveredEvent(event)}
                 onMouseLeave={() => setHoveredEvent(null)}
                 tabIndex={0}
-                aria-label={`${event.title}: ${formatTimeRange(event.start)} to ${formatTimeRange(event.end)} at ${event.venue}`}
+                aria-label={`${event.title}: ${formatTimeRange(event.start)} to ${formatTimeRange(event.end)}`}
               >
                 <div className="timeline-bar__content">
                   <EventIcon className="timeline-bar__icon" />
@@ -387,10 +386,6 @@ export function TimelineSection() {
                       <span className="tooltip-time">
                         <Clock size={12} />
                         {formatTimeRange(event.start)} – {formatTimeRange(event.end)}
-                      </span>
-                      <span className="tooltip-venue">
-                        <MapPin size={12} />
-                        {event.venue}
                       </span>
                     </div>
                     <p className="tooltip-desc">{event.description}</p>
@@ -423,7 +418,7 @@ export function TimelineSection() {
               <span className="time-group__time-badge">{group.formattedStart}</span>
               {group.isConcurrent && (
                 <span className="time-group__concurrency-tag">
-                  ⚡ {group.count} Parallel Events
+                  {group.count} Parallel Events
                 </span>
               )}
             </div>
@@ -450,10 +445,6 @@ export function TimelineSection() {
                         <span className="agenda-row__time">
                           <Clock size={12} />
                           {formatTimeRange(event.start)} – {formatTimeRange(event.end)} ({formatDuration(event.start, event.end)})
-                        </span>
-                        <span className="agenda-row__venue">
-                          <MapPin size={12} />
-                          {event.venue}
                         </span>
                       </div>
                       <p className="agenda-row__description">{event.description}</p>
