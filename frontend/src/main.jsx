@@ -2,6 +2,23 @@ import { Component, StrictMode, lazy, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import './styles.css';
 
+// ── Stale-deploy recovery ────────────────────────────────────────────────────
+// After a new Vite deploy, browsers with a cached index.html may try to load
+// old hashed asset filenames that no longer exist on the CDN, producing
+// "Unable to preload CSS/JS for /assets/..." errors.  Vite fires the
+// 'vite:preloadError' event in this case.  We do a single auto-reload so the
+// browser fetches the new index.html (which is served no-cache) and picks up
+// the correct asset hashes.  The sessionStorage flag prevents an infinite loop
+// if the reload itself somehow fails (e.g. the new build is also broken).
+window.addEventListener('vite:preloadError', () => {
+  const alreadyReloaded = sessionStorage.getItem('reloaded-after-preload-error');
+  if (!alreadyReloaded) {
+    sessionStorage.setItem('reloaded-after-preload-error', 'true');
+    window.location.reload();
+  }
+});
+
+
 class RootErrorBoundary extends Component {
   state = { hasError: false, error: null };
   static getDerivedStateFromError(error) {
