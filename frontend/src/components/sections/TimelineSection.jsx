@@ -385,7 +385,7 @@ export function TimelineSection() {
                     <div className="tooltip-meta">
                       <span className="tooltip-time">
                         <Clock size={12} />
-                        {formatTimeRange(event.start)} – {formatTimeRange(event.end)}
+                        {formatTimeRange(event.start)} - {formatTimeRange(event.end)}
                       </span>
                     </div>
                     <p className="tooltip-desc">{event.description}</p>
@@ -444,7 +444,7 @@ export function TimelineSection() {
                       <div className="agenda-row__meta">
                         <span className="agenda-row__time">
                           <Clock size={12} />
-                          {formatTimeRange(event.start)} – {formatTimeRange(event.end)} ({formatDuration(event.start, event.end)})
+                          {formatTimeRange(event.start)} - {formatTimeRange(event.end)} ({formatDuration(event.start, event.end)})
                         </span>
                       </div>
                       <p className="agenda-row__description">{event.description}</p>

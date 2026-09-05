@@ -400,7 +400,7 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
               <div className="reg-field-grid">
                 {/* Workshop Dropdown */}
                 <div className="reg-field reg-field--full">
-                  <label className="reg-field-label">Workshop (Exclusive Entry — ₹300)</label>
+                  <label className="reg-field-label">Workshop (Exclusive Entry - ₹300)</label>
                   <select
                     className="reg-input"
                     value={workshopEventId}
@@ -418,7 +418,7 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
                     <option value="">Nil (Choose Regular Technical &amp; Non-Technical Events)</option>
                     {workshopEvents.map((item) => (
                       <option key={item.id} value={item.id}>
-                        {item.name} — ₹{item.fee || 300}
+                        {item.name} - ₹{item.fee || 300}
                       </option>
                     ))}
                   </select>
@@ -616,7 +616,7 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
                       <div style={{ border: '1px dashed var(--line)', padding: '1rem' }}>
                         <span style={{ color: 'var(--muted)', fontSize: '0.8rem', fontFamily: 'IBM Plex Mono' }}>UPI Address:</span>
                         <button type="button" onClick={copyUpiId} style={{ background: 'var(--surface)', border: '1px solid var(--line)', color: 'var(--text)', width: '100%', padding: '0.5rem', cursor: 'pointer', marginTop: '0.5rem', fontFamily: 'IBM Plex Mono' }}>
-                          <code>{upiId}</code> — {copiedUpi ? 'COPIED' : 'TAP TO COPY'}
+                          <code>{upiId}</code> - {copiedUpi ? 'COPIED' : 'TAP TO COPY'}
                         </button>
                       </div>
                     )}
