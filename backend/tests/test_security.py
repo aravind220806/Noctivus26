@@ -113,6 +113,54 @@ def test_csrf_accepted_with_correct_token():
     assert resp.status_code != 403, f"Correct CSRF token was rejected: {resp.status_code}: {resp.text}"
 
 
+def test_clear_registration_data_requires_owner():
+    token, csrf = _make_admin_token()
+    with patch("app.middleware.admin_auth.resolve_admin_access", new=AsyncMock(return_value={"tabs": ["Verify Members"], "owner": False})), \
+         patch("app.middleware.admin_auth.session_exists", new=AsyncMock(return_value=True)):
+        client = TestClient(get_client().app, raise_server_exceptions=False)
+        client.cookies.set("noctivus_admin_session", token)
+        resp = client.post(
+            "/api/admin/registrations/clear-test-data",
+            json={"confirmation": "CLEAR MEMBERS"},
+            headers={"x-csrf-token": csrf},
+        )
+    assert resp.status_code == 403
+
+
+def test_owner_can_clear_registration_data_only():
+    token, csrf = sign_admin_token({
+        "email": "owner@example.com",
+        "name": "Owner",
+        "picture": "",
+        "tabs": ["Verify Members"],
+        "owner": True,
+    })
+    memory_registrations.clear()
+    memory_registrations.append({
+        "registrationId": "NOC26-CLEARME",
+        "normalizedUtr": "123456789012",
+        "paymentStatus": "confirmed",
+        "expectedAmount": 150,
+        "participant": {"name": "Clear Me", "email": "clear@example.com", "phone": "9876543210"},
+        "eventRegistrations": [{"eventId": "bug-hunt", "eventName": "Bug Hunt"}],
+    })
+    with patch("app.middleware.admin_auth.resolve_admin_access", new=AsyncMock(return_value={"tabs": ["Verify Members"], "owner": True})), \
+         patch("app.middleware.admin_auth.session_exists", new=AsyncMock(return_value=True)), \
+         patch("app.routes.admin_routes.sqlite_db.ready", return_value=False), \
+         patch("app.routes.admin_routes.record_admin_action", new=AsyncMock()):
+        client = TestClient(get_client().app, raise_server_exceptions=False)
+        client.cookies.set("noctivus_admin_session", token)
+        resp = client.post(
+            "/api/admin/registrations/clear-test-data",
+            json={"confirmation": "CLEAR MEMBERS"},
+            headers={"x-csrf-token": csrf},
+        )
+
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["deleted"] == 1
+    assert memory_registrations == []
+
+
 # ---------------------------------------------------------------------------
 # P0.2 — Public check-in rejects bare registration IDs
 # ---------------------------------------------------------------------------

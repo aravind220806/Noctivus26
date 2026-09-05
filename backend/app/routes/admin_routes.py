@@ -660,6 +660,45 @@ async def registrations(eventId: str | None = None, status: str | None = None, s
     return {"registrations": output}
 
 
+@router.post("/registrations/clear-test-data")
+@limiter.limit("3/hour")
+async def clear_registration_test_data(request: Request, admin=Depends(require_admin)):
+    if not admin.get("owner"):
+        raise HTTPException(status_code=403, detail="Owner admin access required.")
+    body = await request.json()
+    if str(body.get("confirmation") or "").strip() != "CLEAR MEMBERS":
+        raise HTTPException(status_code=400, detail="Type CLEAR MEMBERS to confirm registration cleanup.")
+
+    existing_count = len(await load_registrations())
+    if sqlite_db.ready():
+        await sqlite_db.delete_all("registrations")
+        slots = await sqlite_db.list_all("event_slots")
+        for slot in slots:
+            if slot.get("assigned_member_ids"):
+                slot["assigned_member_ids"] = []
+                await sqlite_db.upsert("event_slots", slot["id"], slot)
+
+    memory_registrations.clear()
+
+    try:
+        from app.db.memory_store import memory_event_slots
+        for slot in memory_event_slots:
+            slot["assigned_member_ids"] = []
+    except Exception:
+        pass
+
+    try:
+        from app.services.cache_service import qr_lookup_cache, events_cache
+        qr_lookup_cache.clear()
+        events_cache.clear()
+    except Exception:
+        pass
+
+    _trigger_sheets_sync()
+    await record_admin_action(admin["email"], "registration.clear_test_data", "registrations", {"deleted": existing_count})
+    return {"ok": True, "deleted": existing_count}
+
+
 @router.post("/registrations/bulk-verify")
 @limiter.limit("10/minute")
 async def bulk_verify(request: Request, admin=Depends(require_admin_tab("Verify Members"))):

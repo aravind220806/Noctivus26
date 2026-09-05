@@ -111,13 +111,15 @@ export default function AdminApp() {
     try {
       const needsOverview = ['Dashboard', 'Verify Members', 'Invitations', 'Export'].some(can);
       const needsRegistrations = ['Verify Members', 'Invitations', 'Export'].some(can);
+      const registrationParams = new URLSearchParams({
+        ...(eventId && { eventId }),
+        ...(activeTab !== 'Verify Members' && status && { status }),
+      });
       const [overviewResponse, registrationsResponse] = await Promise.all([
         needsOverview ? adminFetch(apiUrl('/api/admin/overview'), { headers: authHeaders }) : Promise.resolve(null),
         needsRegistrations
           ? adminFetch(
-              apiUrl(
-                `/api/admin/registrations?${new URLSearchParams({ ...(eventId && { eventId }), ...(status && { status }) })}`
-              ),
+              apiUrl(`/api/admin/registrations?${registrationParams}`),
               { headers: authHeaders }
             )
           : Promise.resolve(null),
@@ -194,6 +196,7 @@ export default function AdminApp() {
           setStatus={setStatus}
           selected={selected}
           setSelected={setSelected}
+          isOwner={session.user?.owner}
         />
       )}
       {activeTab === 'Check-in' && can('Check-in') && <CheckInTab authHeaders={authHeaders} />}

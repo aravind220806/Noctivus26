@@ -13,6 +13,7 @@ export function VerifyTab({
   setStatus,
   selected,
   setSelected,
+  isOwner = false,
 }) {
   const feedbackMessages = {
     confirmed: '✅ Payment confirmed. Email & Google Sheets sync in progress.',
@@ -25,6 +26,9 @@ export function VerifyTab({
   const [verifyingId, setVerifyingId] = useState(null);
   const [feedback, setFeedback] = useState({});
   const [activeRegistration, setActiveRegistration] = useState(null);
+  const [cleanupOpen, setCleanupOpen] = useState(false);
+  const [cleanupText, setCleanupText] = useState('');
+  const [cleanupBusy, setCleanupBusy] = useState(false);
 
   const verify = async (registrationId, nextStatus) => {
     setVerifyingId(registrationId);
@@ -76,6 +80,31 @@ export function VerifyTab({
   const changeStatusFilter = (nextStatus) => {
     setSelected([]);
     setStatus(nextStatus);
+  };
+
+  const clearTestMembers = async () => {
+    setCleanupBusy(true);
+    try {
+      const response = await adminFetch(apiPath('/api/admin/registrations/clear-test-data'), {
+        method: 'POST',
+        headers: { ...authHeaders, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirmation: cleanupText }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || 'Unable to clear member records.');
+      setCleanupOpen(false);
+      setCleanupText('');
+      setSelected([]);
+      setFeedback({});
+      if (onChanged) onChanged();
+    } catch (error) {
+      setFeedback((prev) => ({
+        ...prev,
+        cleanup: error instanceof Error ? error.message : 'Unable to clear member records.',
+      }));
+    } finally {
+      setCleanupBusy(false);
+    }
   };
 
   const detailRows = activeRegistration
@@ -147,7 +176,17 @@ export function VerifyTab({
         >
           Reject selected
         </button>
+        {isOwner && (
+          <button
+            type="button"
+            className="button button-danger"
+            onClick={() => setCleanupOpen(true)}
+          >
+            Clean test members
+          </button>
+        )}
       </div>
+      {feedback.cleanup && <p className="admin-message">{feedback.cleanup}</p>}
       <RegistrationTable
         registrations={status ? visibleRegistrations : groupedRegistrations.pending}
         selected={selected}
@@ -253,6 +292,41 @@ export function VerifyTab({
                   )}
                 </article>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+      {cleanupOpen && (
+        <div className="admin-modal-overlay" onClick={() => setCleanupOpen(false)}>
+          <div className="member-detail-modal cleanup-modal" role="dialog" aria-modal="true" aria-labelledby="cleanup-title" onClick={(event) => event.stopPropagation()}>
+            <header className="member-detail-modal__header">
+              <div>
+                <span>Owner action</span>
+                <h2 id="cleanup-title">Clean test member data</h2>
+              </div>
+              <button type="button" className="modal-close-btn" onClick={() => setCleanupOpen(false)} aria-label="Close cleanup dialog">
+                x
+              </button>
+            </header>
+            <div className="cleanup-modal__body">
+              <p>This removes only registrations, member payment records, UTR history, revenue totals, and slot member assignments. Events, admin access, scheduler slots, and app settings stay available.</p>
+              <label className="field">
+                <span>Type CLEAR MEMBERS</span>
+                <input value={cleanupText} onChange={(event) => setCleanupText(event.target.value)} placeholder="CLEAR MEMBERS" />
+              </label>
+              <div className="admin-modal-actions">
+                <button type="button" className="button button-secondary" onClick={() => setCleanupOpen(false)}>
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="button button-danger"
+                  disabled={cleanupBusy || cleanupText !== 'CLEAR MEMBERS'}
+                  onClick={clearTestMembers}
+                >
+                  {cleanupBusy ? 'Cleaning...' : 'Clean registrations'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

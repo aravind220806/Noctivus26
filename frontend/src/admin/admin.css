@@ -4689,6 +4689,19 @@
   color: #cbd5e1;
 }
 
+.cleanup-modal__body {
+  display: grid;
+  gap: 16px;
+  padding: 18px 20px 20px;
+}
+
+.cleanup-modal__body p {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
 .day-book {
   display: grid;
   gap: 18px;
