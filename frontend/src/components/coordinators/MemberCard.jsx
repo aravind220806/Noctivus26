@@ -35,10 +35,6 @@ export function MemberCard({ member }) {
       </div>
 
       {/* Footer Bar */}
-      <CardFooter
-        line1="PROPERTY OF COLLEGE UNION"
-        line2="STUDENT COUNCIL"
-      />
     </article>
   );
 }

@@ -7,7 +7,7 @@ export const CONTACTS_REVEAL_ON_CLICK = true;
 
 export const facultyCoordinators = [
   {
-    id: 'FAC-002',
+    id: 'FAC-001',
     name: 'RUBA A',
     role: 'FACULTY COORDINATOR',
     type: 'faculty',
@@ -24,7 +24,7 @@ export const facultyCoordinators = [
     ],
   },
   {
-    id: 'FAC-003',
+    id: 'FAC-002',
     name: 'PRAMILA K',
     role: 'FACULTY COORDINATOR',
     type: 'faculty',
