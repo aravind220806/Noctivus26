@@ -256,3 +256,77 @@ def test_excel_exports_escape_formula_like_values():
         ]
         assert escaped_cells
         assert all(cell.startswith("'") for cell in escaped_cells)
+
+
+def test_google_sheets_live_workbook_uses_clean_verified_event_attendance_flow():
+    from app.services.google_sheets_service import GoogleSheetsService
+
+    events = [
+        {"id": "ideathon", "name": "Ideathon Challenge"},
+        {"id": "bug-hunt", "name": "Bug Hunt"},
+    ]
+    registrations = [
+        {
+            "registrationId": "NOC26-PENDING",
+            "paymentStatus": "pending",
+            "participant": {
+                "name": "Pending User",
+                "email": "pending@example.com",
+                "phone": "9000000001",
+                "college": "Pending College",
+            },
+            "eventRegistrations": [{"eventId": "ideathon", "eventName": "Ideathon Challenge"}],
+        },
+        {
+            "registrationId": "NOC26-VERIFIED",
+            "paymentStatus": "confirmed",
+            "expectedAmount": 150,
+            "verifiedAt": "2026-09-26T09:00:00Z",
+            "verifiedBy": "admin@example.com",
+            "participant": {
+                "name": "Verified Leader",
+                "email": "verified@example.com",
+                "phone": "9000000002",
+                "college": "Verified College",
+                "department": "CSE",
+                "year": "3",
+                "rollNo": "CSE301",
+                "foodPreference": "Veg",
+            },
+            "eventRegistrations": [
+                {
+                    "eventId": "ideathon",
+                    "eventName": "Ideathon Challenge",
+                    "teamMembers": [{"name": "Team Mate", "rollNo": "CSE302"}],
+                    "attendance": {
+                        "markedAt": "2026-09-26T10:00:00Z",
+                        "markedBy": "staff@example.com",
+                        "members": [
+                            {"name": "VERIFIED LEADER", "present": True},
+                            {"name": "TEAM MATE", "present": False},
+                        ],
+                    },
+                }
+            ],
+        },
+    ]
+
+    workbook = GoogleSheetsService().build_live_workbook(events, registrations)
+
+    assert "Registered" in workbook
+    assert "Verified" in workbook
+    assert "Ideathon Challenge" in workbook
+    assert "Attendance - Ideathon Challenge" in workbook
+    assert "Master Event Slots" not in workbook
+    assert "Food Distribution" not in workbook
+
+    registered_ids = [row[1] for row in workbook["Registered"][1:]]
+    verified_ids = [row[1] for row in workbook["Verified"][1:]]
+    ideathon_ids = [row[1] for row in workbook["Ideathon Challenge"][1:]]
+    attendance_names = [row[2] for row in workbook["Attendance - Ideathon Challenge"][1:]]
+
+    assert registered_ids == ["NOC26-PENDING", "NOC26-VERIFIED"]
+    assert verified_ids == ["NOC26-VERIFIED"]
+    assert ideathon_ids == ["NOC26-VERIFIED"]
+    assert attendance_names == ["Verified Leader", "Team Mate"]
+    assert workbook["Attendance - Ideathon Challenge"][1][10] == "PRESENT"

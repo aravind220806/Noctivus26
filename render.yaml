@@ -38,3 +38,9 @@ services:
         sync: false
       - key: EVENT_CAPACITIES
         sync: false
+      - key: GOOGLE_SHEETS_LIVE_SYNC_ENABLED
+        value: "true"
+      - key: GOOGLE_SHEETS_SPREADSHEET_ID
+        sync: false
+      - key: GOOGLE_SERVICE_ACCOUNT_JSON
+        sync: false

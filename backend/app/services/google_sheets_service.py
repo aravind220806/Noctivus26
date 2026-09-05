@@ -311,6 +311,34 @@ class GoogleSheetsService:
         """Clears sheet and writes formatted data rows."""
         return await self.batch_write_all_sheets({sheet_title: rows})
 
+    async def sync_current_database(self, sync_type: str) -> bool:
+        """Re-read local state and publish the canonical Google Sheets view."""
+        if not self.is_enabled:
+            return False
+        global _sync_pending
+        _sync_pending = True
+        lock = _get_sync_lock()
+        if lock.locked():
+            return True
+        async with lock:
+            success = True
+            while _sync_pending:
+                _sync_pending = False
+                try:
+                    from app.services.event_service import list_events
+                    from app.services.registration_service import load_registrations
+                    from app.db.sqlite_db import sqlite_db
+
+                    events = await list_events()
+                    registrations = await load_registrations()
+                    slots = await sqlite_db.list_all("event_slots") if sqlite_db.ready() else []
+                    success = await self.sync_full_database(events, registrations, slots, sync_type=sync_type)
+                except Exception as err:
+                    success = False
+                    logger.error(f"Live sync {sync_type} error: {err}")
+                    _LAST_SYNC_STATUS["last_error"] = str(err)
+        return success
+
     # ================= ROW FORMATTERS =================
 
     @staticmethod
@@ -420,431 +448,204 @@ class GoogleSheetsService:
     # ================= LIVE EVENT SYNC HOOKS =================
 
     async def sync_new_registration(self, registration: dict):
-        """Live trigger: Append new registration to 'Registered' sheet."""
-        if not self.is_enabled:
-            return
-        try:
-            await self.ensure_sheets_exist(["Registered"])
-            row = self._format_registration_row(registration)
-            await self._api_request(
-                "POST",
-                "/values/'Registered'!A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS",
-                json_body={"values": [row]},
-            )
-            _LAST_SYNC_STATUS["last_synced_at"] = datetime.now(timezone.utc).isoformat()
-            _LAST_SYNC_STATUS["last_sync_type"] = "registration"
-            _LAST_SYNC_STATUS["total_sync_count"] += 1
-        except Exception as err:
-            logger.error(f"Live sync registration error: {err}")
-            _LAST_SYNC_STATUS["last_error"] = str(err)
+        """Live trigger: publish the full canonical workbook after registration."""
+        await self.sync_current_database("registration")
 
     async def sync_verified_registration(self, registration: dict):
-        """Live trigger: Append to 'Verified' sheet and update sync."""
-        if not self.is_enabled:
-            return
-        try:
-            await self.ensure_sheets_exist(["Verified"])
-            row = self._format_verified_row(registration)
-            await self._api_request(
-                "POST",
-                "/values/'Verified'!A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS",
-                json_body={"values": [row]},
-            )
-            _LAST_SYNC_STATUS["last_synced_at"] = datetime.now(timezone.utc).isoformat()
-            _LAST_SYNC_STATUS["last_sync_type"] = "verification"
-            _LAST_SYNC_STATUS["total_sync_count"] += 1
-        except Exception as err:
-            logger.error(f"Live sync verification error: {err}")
-            _LAST_SYNC_STATUS["last_error"] = str(err)
+        """Live trigger: publish the full canonical workbook after verification."""
+        await self.sync_current_database("verification")
 
     async def sync_check_in(self, registration: dict):
-        """Live trigger: serialized full-DB sync after a check-in.
+        """Live trigger: publish the full canonical workbook after gate or event attendance."""
+        await self.sync_current_database("attendance")
 
-        Concurrent check-ins collapse: if a sync is already running, we set
-        _sync_pending so the running sync will do one more pass after it
-        finishes, ensuring the latest state always lands in Sheets.
-        """
-        if not self.is_enabled:
-            return
-        global _sync_pending
-        _sync_pending = True
-        lock = _get_sync_lock()
-        if lock.locked():
-            return  # running sync will loop and pick up the pending flag
-        async with lock:
-            while _sync_pending:
-                _sync_pending = False
-                try:
-                    from app.services.event_service import list_events
-                    from app.services.registration_service import load_registrations
-                    from app.db.sqlite_db import sqlite_db
+    def build_live_workbook(self, events: list[dict], registrations: list[dict]) -> dict[str, list[list[Any]]]:
+        """Build the clean Sheets workbook for the registration -> verification -> attendance flow."""
+        sheets: dict[str, list[list[Any]]] = {}
 
-                    events = await list_events()
-                    all_regs = await load_registrations()
-                    slots = []
-                    if sqlite_db.ready():
-                        slots = await sqlite_db.list_all("event_slots")
+        registered_headers = [
+            "S.No", "Registration ID", "Participant Name", "Email", "Phone",
+            "College", "Department", "Year", "Food Preference", "Registered Events",
+            "Payment Status", "UTR Number", "Expected Amount", "Claimed Amount", "Submitted At",
+        ]
+        registered_rows = [registered_headers]
+        for idx, reg in enumerate(registrations, 1):
+            p = reg.get("participant") or {}
+            event_names = [e.get("eventName") or e.get("eventId") for e in reg.get("eventRegistrations", [])]
+            registered_rows.append([
+                idx,
+                reg.get("registrationId") or reg.get("member_id", ""),
+                p.get("name", ""),
+                p.get("email", ""),
+                p.get("phone", ""),
+                p.get("college", ""),
+                p.get("department", ""),
+                p.get("year", ""),
+                p.get("foodPreference", ""),
+                "; ".join(event_names),
+                (reg.get("paymentStatus") or "pending").capitalize(),
+                reg.get("utrNumber", ""),
+                reg.get("expectedAmount", 0),
+                reg.get("claimedAmount", 0),
+                reg.get("paymentSubmittedAt", "") or reg.get("createdAt", ""),
+            ])
+        sheets["Registered"] = registered_rows
 
-                    await self.sync_full_database(events, all_regs, slots)
-                    _LAST_SYNC_STATUS["last_synced_at"] = datetime.now(timezone.utc).isoformat()
-                    _LAST_SYNC_STATUS["last_sync_type"] = "check-in"
-                    _LAST_SYNC_STATUS["total_sync_count"] += 1
-                except Exception as err:
-                    logger.error(f"Live sync check-in error: {err}")
-                    _LAST_SYNC_STATUS["last_error"] = str(err)
+        verified_regs = [r for r in registrations if (r.get("paymentStatus") or "").lower() == "confirmed"]
+        verified_headers = [
+            "S.No", "Registration ID", "Participant Name", "Email", "Phone",
+            "College", "Department", "Year", "Food Preference", "Registered Events",
+            "UTR Number", "Verified Amount", "Verified At", "Verified By",
+        ]
+        verified_rows = [verified_headers]
+        for idx, reg in enumerate(verified_regs, 1):
+            p = reg.get("participant") or {}
+            event_names = [e.get("eventName") or e.get("eventId") for e in reg.get("eventRegistrations", [])]
+            verified_rows.append([
+                idx,
+                reg.get("registrationId") or reg.get("member_id", ""),
+                p.get("name", ""),
+                p.get("email", ""),
+                p.get("phone", ""),
+                p.get("college", ""),
+                p.get("department", ""),
+                p.get("year", ""),
+                p.get("foodPreference", ""),
+                "; ".join(event_names),
+                reg.get("utrNumber", ""),
+                reg.get("expectedAmount", 0),
+                reg.get("verifiedAt", ""),
+                reg.get("verifiedBy", ""),
+            ])
+        sheets["Verified"] = verified_rows
 
-    async def sync_full_database(self, events: list[dict], registrations: list[dict], slots: list[dict]) -> bool:
-        """Full database resync pushing all tables, event slots, and attendance sheets in batch."""
-        if not self.is_enabled:
-            return False
+        for event in events:
+            event_id = event.get("id")
+            event_name = event.get("name") or event_id or "Event"
+            event_sheet = _sanitize_sheet_title(event_name)
+            attendance_sheet = _sanitize_sheet_title(f"Attendance - {event_name}")
+            event_regs = [
+                reg for reg in verified_regs
+                if any(item.get("eventId") == event_id for item in reg.get("eventRegistrations", []))
+            ]
 
-        try:
-            events_map = {e["id"]: e for e in events}
-            slots_map = {s["id"]: s for s in slots}
-            all_sheets_payload: dict[str, list[list[Any]]] = {}
-
-            # 1. Prepare 'Registered' sheet
-            reg_headers = [
+            event_headers = [
                 "S.No", "Registration ID", "Participant Name", "Email", "Phone",
-                "College", "Department", "Year", "Food Preference", "Food Claimed?", "Food Claimed At",
-                "Registered Events", "Abstract / Topic", "Payment Status", "UTR Number", "Expected Amount",
-                "Claimed Amount", "Gate Check-In", "Checked In At", "Submitted At", "Verified At"
+                "College", "Department", "Year", "Food Preference", "Verified At",
             ]
-            reg_rows = [reg_headers]
-            for idx, r in enumerate(registrations, 1):
-                reg_rows.append(self._format_registration_row(r, idx))
-            all_sheets_payload["Registered"] = reg_rows
-
-            # 2. Prepare 'Verified' sheet
-            ver_headers = [
-                "S.No", "Registration ID", "Participant Name", "Email", "Phone",
-                "College", "Department", "Year", "Food Preference", "Food Claimed?", "Food Claimed At",
-                "Registered Events", "UTR Number", "Verified Amount", "Verified At", "Gate Check-In", "Checked In At"
-            ]
-            verified_regs = [r for r in registrations if (r.get("paymentStatus") or "").lower() == "confirmed"]
-            ver_rows = [ver_headers]
-            for idx, r in enumerate(verified_regs, 1):
-                ver_rows.append(self._format_verified_row(r, idx))
-            all_sheets_payload["Verified"] = ver_rows
-
-            # 3. Prepare 'Check-In List' sheet
-            chk_headers = [
-                "S.No", "Registration ID", "Participant Name", "Email", "Phone",
-                "College", "Department", "Food", "Registered Events", "Payment Status",
-                "Checked In At", "Checked In By"
-            ]
-            checked_in_regs = [r for r in registrations if bool(r.get("checkedIn"))]
-            chk_rows = [chk_headers]
-            for idx, r in enumerate(checked_in_regs, 1):
-                chk_rows.append(self._format_checkin_row(r, idx))
-            all_sheets_payload["Check-In List"] = chk_rows
-
-            # 4. Prepare 'Food Distribution' sheet
-            food_headers = [
-                "S.No", "Registration ID", "Participant Name", "Email", "Phone",
-                "College", "Food Preference", "Food Claimed?", "Claimed At", "Claimed By Desk", "Payment Status"
-            ]
-            food_claimed_regs = [r for r in registrations if bool(r.get("foodClaimed"))]
-            food_rows = [food_headers]
-            for idx, r in enumerate(food_claimed_regs, 1):
-                food_rows.append(self._format_food_row(r, idx))
-            all_sheets_payload["Food Distribution"] = food_rows
-
-            # 5. Prepare 'Master Event Slots' sheet
-            slots_headers = [
-                "Event Name", "Category", "Window", "Date", "Start Time", "End Time",
-                "Slot Timing", "Capacity", "Assigned Count", "Available", "Assigned Member IDs", "Assigned Member Names"
-            ]
-            reg_by_id = {(r.get("registrationId") or r.get("member_id")): r for r in registrations}
-            sorted_slots = sorted(
-                slots,
-                key=lambda s: (
-                    events_map.get(s.get("event_id"), {}).get("name", s.get("event_id", "")),
-                    0 if str(s.get("window")).lower() == "morning" else 1,
-                    s.get("start_time", ""),
-                ),
-            )
-            slot_rows = [slots_headers]
-            for s in sorted_slots:
-                ev = events_map.get(s.get("event_id"), {})
-                assigned_ids = s.get("assigned_member_ids") or []
-                assigned_count = len(assigned_ids)
-                capacity = s.get("capacity") or 30
-                available = max(0, capacity - assigned_count)
-                member_names = []
-                for mid in assigned_ids:
-                    reg = reg_by_id.get(mid)
-                    pname = (reg.get("participant") or {}).get("name", mid) if reg else mid
-                    member_names.append(f"{pname} ({mid})")
-
-                slot_rows.append([
-                    ev.get("name", s.get("event_id")),
-                    ev.get("category", "tech"),
-                    "Morning" if str(s.get("window")).lower() == "morning" else "Afternoon",
-                    s.get("date", "2026-09-26"),
-                    s.get("start_time", ""),
-                    s.get("end_time", ""),
-                    f"{s.get('start_time', '')} - {s.get('end_time', '')}",
-                    capacity,
-                    assigned_count,
-                    available,
-                    ", ".join(assigned_ids) if assigned_ids else "None",
-                    "; ".join(member_names) if member_names else "None",
-                ])
-            all_sheets_payload["Master Event Slots"] = slot_rows
-
-            # 5. Prepare 'Scheduler Summary' sheet
-            sched_sum_headers = [
-                "Event ID", "Event Name", "Category", "Duration (Mins)", "Total Registrations",
-                "Total Slots", "Morning Slots", "Afternoon Slots", "Total Capacity", "Total Assigned", "Utilization %"
-            ]
-            slots_by_ev = {}
-            for s in slots:
-                eid = s.get("event_id")
-                slots_by_ev.setdefault(eid, []).append(s)
-
-            sum_rows = [sched_sum_headers]
-            for ev in events:
-                eid = ev["id"]
-                ev_slots = slots_by_ev.get(eid, [])
-                m_count = sum(1 for s in ev_slots if str(s.get("window")).lower() == "morning")
-                a_count = sum(1 for s in ev_slots if str(s.get("window")).lower() == "afternoon")
-                tot_cap = sum(s.get("capacity", 30) for s in ev_slots)
-                tot_ass = sum(len(s.get("assigned_member_ids", [])) for s in ev_slots)
-                util = f"{(tot_ass / tot_cap * 100):.1f}%" if tot_cap > 0 else "0.0%"
-                sum_rows.append([
-                    eid,
-                    ev.get("name", eid),
-                    ev.get("category", "tech"),
-                    ev.get("duration_minutes", 90),
-                    ev.get("total_registrations", 0),
-                    len(ev_slots),
-                    m_count,
-                    a_count,
-                    tot_cap,
-                    tot_ass,
-                    util,
-                ])
-            all_sheets_payload["Scheduler Summary"] = sum_rows
-
-            # 6. Prepare 'Member Allocations' sheet
-            alloc_headers = [
-                "Registration ID", "Member Name", "Email", "College", "Registered Events",
-                "Abstract / Topic", "Assigned Slot IDs", "Slot Details (Window & Timing)"
-            ]
-            alloc_rows = [alloc_headers]
-            for r in verified_regs:
-                p = r.get("participant") or {}
-                assigned_slot_ids = r.get("assigned_slots") or []
-                slot_descriptions = []
-                for sid in assigned_slot_ids:
-                    sl = slots_map.get(sid)
-                    if sl:
-                        ev_name = events_map.get(sl.get("event_id"), {}).get("name", sl.get("event_id"))
-                        win = "Morning" if sl.get("window") == "morning" else "Afternoon"
-                        slot_descriptions.append(f"{ev_name}: {win} ({sl.get('start_time')} - {sl.get('end_time')})")
-                    else:
-                        slot_descriptions.append(sid)
-
-                event_names = [e.get("eventName") or e.get("eventId") for e in r.get("eventRegistrations", [])]
-                abstract_val = r.get("abstract") or r.get("igniteTopic") or p.get("abstract") or p.get("igniteTopic") or ""
-                alloc_rows.append([
-                    r.get("registrationId") or r.get("member_id"),
+            event_rows = [event_headers]
+            for idx, reg in enumerate(event_regs, 1):
+                p = reg.get("participant") or {}
+                event_rows.append([
+                    idx,
+                    reg.get("registrationId") or reg.get("member_id", ""),
                     p.get("name", ""),
                     p.get("email", ""),
+                    p.get("phone", ""),
                     p.get("college", ""),
-                    ", ".join(event_names),
-                    abstract_val,
-                    ", ".join(assigned_slot_ids) if assigned_slot_ids else "Unassigned",
-                    "; ".join(slot_descriptions) if slot_descriptions else "Unassigned",
+                    p.get("department", ""),
+                    p.get("year", ""),
+                    p.get("foodPreference", ""),
+                    reg.get("verifiedAt", ""),
                 ])
-            all_sheets_payload["Member Allocations"] = alloc_rows
+            sheets[event_sheet] = event_rows
 
-            # 7+. Per-Event Attendance Sheets
-            for s_idx, ev in enumerate(events, 1):
-                eid = ev.get("id")
-                ename = ev.get("name", eid)
-                clean_sheet_name = _sanitize_sheet_title(f"Att - {ename}")
+            attendance_headers = [
+                "S.No", "Registration ID", "Member Name", "Role", "Roll No / ID",
+                "College", "Department", "Year", "Email", "Phone", "Attendance Status",
+                "Marked At", "Marked By", "E-Certificate Eligible",
+            ]
+            attendance_rows = [attendance_headers]
+            attendance_members = []
+            for reg in event_regs:
+                p = reg.get("participant") or {}
+                ev_item = next((item for item in reg.get("eventRegistrations", []) if item.get("eventId") == event_id), None)
+                if not ev_item:
+                    continue
+                att_data = ev_item.get("attendance") or (reg.get("attendance") or {}).get(event_id) or {}
+                member_states = {
+                    (m.get("name") or "").strip().upper(): m
+                    for m in att_data.get("members", [])
+                    if isinstance(m, dict)
+                }
+                marked_at = att_data.get("markedAt") or ""
+                marked_by = att_data.get("markedBy") or ""
 
-                ev_headers = [
-                    "S.No", "Registration ID", "Member Name", "Role", "Roll No / ID",
-                    "College", "Department", "Year", "Email", "Phone", "Payment Status",
-                    "Gate Check-In", "Event Attendance", "E-Certificate Eligible",
-                    "Attendance Marked At", "Marked By"
-                ]
-                ev_rows = [ev_headers]
+                leader_name = (p.get("name") or "").strip()
+                leader_state = member_states.get(leader_name.upper(), {})
+                attendance_members.append({
+                    "registrationId": reg.get("registrationId") or reg.get("member_id", ""),
+                    "name": leader_name,
+                    "role": "Team Leader",
+                    "rollNo": p.get("rollNo") or p.get("collegeId") or "",
+                    "college": p.get("college", ""),
+                    "department": p.get("department", ""),
+                    "year": p.get("year", ""),
+                    "email": p.get("email", ""),
+                    "phone": p.get("phone", ""),
+                    "present": bool(leader_state.get("present", att_data.get("present", False))),
+                    "markedAt": marked_at,
+                    "markedBy": marked_by,
+                })
 
-                event_regs = [r for r in registrations if any(e.get("eventId") == eid for e in r.get("eventRegistrations", []))]
-                all_event_members = []
-                for r in event_regs:
-                    p = r.get("participant") or {}
-                    event_regs_list = r.get("eventRegistrations") or []
-                    ev_item = next((e for e in event_regs_list if e.get("eventId") == eid), None)
-                    if not ev_item:
+                for tm in ev_item.get("teamMembers") or []:
+                    if not isinstance(tm, dict):
                         continue
-                    att_data = ev_item.get("attendance") or (r.get("attendance") or {}).get(eid) or {}
-                    members_att = {
-                        (m.get("name") or "").strip().upper(): m.get("present", False)
-                        for m in att_data.get("members", []) if isinstance(m, dict)
-                    }
-                    marked_at = att_data.get("markedAt") or ""
-                    marked_by = att_data.get("markedBy") or ""
-
-                    leader_name = (p.get("name") or "").strip().upper()
-                    leader_present = members_att.get(leader_name, att_data.get("present", False) if "members" not in att_data else False)
-                    all_event_members.append({
-                        "registrationId": r.get("registrationId") or r.get("member_id", ""),
-                        "name": leader_name,
-                        "role": "Team Leader",
-                        "rollNo": p.get("rollNo") or p.get("collegeId") or "",
+                    tm_name = (tm.get("name") or "").strip()
+                    if not tm_name:
+                        continue
+                    tm_state = member_states.get(tm_name.upper(), {})
+                    attendance_members.append({
+                        "registrationId": reg.get("registrationId") or reg.get("member_id", ""),
+                        "name": tm_name,
+                        "role": "Team Member",
+                        "rollNo": tm.get("rollNo", ""),
                         "college": p.get("college", ""),
                         "department": p.get("department", ""),
                         "year": p.get("year", ""),
                         "email": p.get("email", ""),
                         "phone": p.get("phone", ""),
-                        "paymentStatus": r.get("paymentStatus", "pending"),
-                        "checkedIn": "Yes" if r.get("checkedIn") else "No",
-                        "present": leader_present,
+                        "present": bool(tm_state.get("present", False)),
                         "markedAt": marked_at,
                         "markedBy": marked_by,
                     })
 
-                    for tm in (ev_item.get("teamMembers") or []):
-                        if not isinstance(tm, dict):
-                            continue
-                        tm_name = (tm.get("name") or "").strip().upper()
-                        if not tm_name:
-                            continue
-                        all_event_members.append({
-                            "registrationId": r.get("registrationId") or r.get("member_id", ""),
-                            "name": tm_name,
-                            "role": "Team Member",
-                            "rollNo": tm.get("rollNo", ""),
-                            "college": p.get("college", ""),
-                            "department": p.get("department", ""),
-                            "year": p.get("year", ""),
-                            "email": p.get("email", ""),
-                            "phone": p.get("phone", ""),
-                            "paymentStatus": r.get("paymentStatus", "pending"),
-                            "checkedIn": "Yes" if r.get("checkedIn") else "No",
-                            "present": members_att.get(tm_name, False),
-                            "markedAt": marked_at,
-                            "markedBy": marked_by,
-                        })
+            attendance_members.sort(key=lambda item: (item["registrationId"], 0 if item["role"] == "Team Leader" else 1, item["name"]))
+            for idx, member in enumerate(attendance_members, 1):
+                present = member["present"]
+                attendance_rows.append([
+                    idx,
+                    member["registrationId"],
+                    member["name"],
+                    member["role"],
+                    member["rollNo"],
+                    member["college"],
+                    member["department"],
+                    member["year"],
+                    member["email"],
+                    member["phone"],
+                    "PRESENT" if present else "ABSENT",
+                    member["markedAt"],
+                    member["markedBy"],
+                    "YES" if present else "NO",
+                ])
+            sheets[attendance_sheet] = attendance_rows
 
-                sorted_m = sorted(
-                    all_event_members,
-                    key=lambda x: (0 if x.get("present") else 1, x.get("registrationId", ""), 0 if x.get("role") == "Team Leader" else 1)
-                )
+        return sheets
 
-                for m_idx, m in enumerate(sorted_m, 1):
-                    is_present = m.get("present", False)
-                    is_confirmed = (m.get("paymentStatus") or "").lower() == "confirmed"
-                    ev_rows.append([
-                        m_idx,
-                        m.get("registrationId", ""),
-                        m.get("name", ""),
-                        m.get("role", ""),
-                        m.get("rollNo", ""),
-                        m.get("college", ""),
-                        m.get("department", ""),
-                        m.get("year", ""),
-                        m.get("email", ""),
-                        m.get("phone", ""),
-                        (m.get("paymentStatus") or "").capitalize(),
-                        m.get("checkedIn", "No"),
-                        "PRESENT" if is_present else "ABSENT",
-                        "YES" if (is_present and is_confirmed) else "NO",
-                        m.get("markedAt", ""),
-                        m.get("markedBy", ""),
-                    ])
+    async def sync_full_database(self, events: list[dict], registrations: list[dict], slots: list[dict], sync_type: str = "full_database") -> bool:
+        """Full database resync for clean live Google Sheets."""
+        if not self.is_enabled:
+            return False
 
-                all_sheets_payload[clean_sheet_name] = ev_rows
-
-            # 8+. Per-Event Slot Allocation Sheets
-            for s_idx, ev in enumerate(events, 1):
-                eid = ev.get("id")
-                ename = ev.get("name", eid)
-                clean_slot_sheet_name = _sanitize_sheet_title(f"Slots - {ename}")
-
-                slot_headers = [
-                    "S.No", "Slot Window", "Timing", "Date", "Capacity", "Assigned", "Available",
-                    "Assigned Reg ID", "Member Name", "College", "Department", "Year",
-                    "Email", "Phone", "Payment Status", "Gate Check-In"
-                ]
-                slot_sheet_rows = [slot_headers]
-
-                ev_slots = [s for s in slots if s.get("event_id") == eid]
-                ev_slots_sorted = sorted(
-                    ev_slots,
-                    key=lambda s: (0 if str(s.get("window")).lower() == "morning" else 1, s.get("start_time", ""))
-                )
-
-                row_counter = 1
-                for sl in ev_slots_sorted:
-                    assigned_ids = sl.get("assigned_member_ids") or []
-                    assigned_count = len(assigned_ids)
-                    capacity = sl.get("capacity") or 30
-                    available = max(0, capacity - assigned_count)
-                    window_label = "Morning" if str(sl.get("window")).lower() == "morning" else "Afternoon"
-                    timing_label = f"{sl.get('start_time', '')} - {sl.get('end_time', '')}"
-                    date_label = sl.get("date", "2026-09-26")
-
-                    if not assigned_ids:
-                        slot_sheet_rows.append([
-                            row_counter,
-                            window_label,
-                            timing_label,
-                            date_label,
-                            capacity,
-                            0,
-                            available,
-                            "None",
-                            "Unassigned / Open Slot",
-                            "-",
-                            "-",
-                            "-",
-                            "-",
-                            "-",
-                            "-",
-                            "-",
-                        ])
-                        row_counter += 1
-                    else:
-                        for mid in assigned_ids:
-                            reg = reg_by_id.get(mid)
-                            p = (reg.get("participant") or {}) if reg else {}
-                            slot_sheet_rows.append([
-                                row_counter,
-                                window_label,
-                                timing_label,
-                                date_label,
-                                capacity,
-                                assigned_count,
-                                available,
-                                mid,
-                                p.get("name", mid),
-                                p.get("college", ""),
-                                p.get("department", ""),
-                                p.get("year", ""),
-                                p.get("email", ""),
-                                p.get("phone", ""),
-                                (reg.get("paymentStatus") or "").capitalize() if reg else "",
-                                "YES" if (reg and reg.get("checkedIn")) else "NO",
-                            ])
-                            row_counter += 1
-
-                all_sheets_payload[clean_slot_sheet_name] = slot_sheet_rows
-
-            # Single atomic batch write for all sheets in 1 request!
+        try:
+            all_sheets_payload = self.build_live_workbook(events, registrations)
             await self.batch_write_all_sheets(all_sheets_payload)
-
             _LAST_SYNC_STATUS["last_synced_at"] = datetime.now(timezone.utc).isoformat()
-            _LAST_SYNC_STATUS["last_sync_type"] = "full_database"
+            _LAST_SYNC_STATUS["last_sync_type"] = sync_type
             _LAST_SYNC_STATUS["last_error"] = None
             _LAST_SYNC_STATUS["total_sync_count"] += 1
             return True
-
         except Exception as err:
             logger.error(f"Full database sync error: {err}")
             _LAST_SYNC_STATUS["last_error"] = str(err)
