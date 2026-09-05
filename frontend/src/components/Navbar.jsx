@@ -115,9 +115,6 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
       // rAF: let drawer close + ResizeObserver update --navbar-height before scroll
       window.requestAnimationFrame(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        if (typeof window !== 'undefined' && window.history) {
-          window.history.pushState(null, '', '#home');
-        }
       });
       return;
     }
@@ -128,24 +125,18 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
     window.requestAnimationFrame(() => {
       if (item.eventId && onSelectEvent) {
         if (onNavigate) onNavigate('events');
-        const target = document.querySelector('#events');
+        const target = document.getElementById('events') || document.querySelector('#events');
         if (target) target.scrollIntoView({ behavior: 'smooth' });
         onSelectEvent(item.eventId);
       } else if (item.category) {
         if (onNavigate) onNavigate('events', item.category);
-        const target = document.querySelector('#events');
+        const target = document.getElementById('events') || document.querySelector('#events');
         if (target) target.scrollIntoView({ behavior: 'smooth' });
       } else if (onNavigate && item.id && item.href && item.href !== '#') {
         onNavigate(item.id);
-        if (typeof window !== 'undefined' && window.history) {
-          window.history.pushState(null, '', item.href);
-        }
       } else if (item.href && item.href !== '#') {
-        const target = document.querySelector(item.href);
+        const target = document.getElementById(item.id) || document.querySelector(item.href);
         if (target) target.scrollIntoView({ behavior: 'smooth' });
-        if (typeof window !== 'undefined' && window.history) {
-          window.history.pushState(null, '', item.href);
-        }
       }
     });
   };
@@ -165,7 +156,7 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
             onClick={(e) => {
               e.preventDefault();
               if (typeof window !== 'undefined' && window.location.pathname.toLowerCase().startsWith('/coordinators')) {
-                window.location.href = '/#home';
+                window.location.href = '/';
               } else {
                 handleNavClick(e, { id: 'home', href: '#home' });
               }

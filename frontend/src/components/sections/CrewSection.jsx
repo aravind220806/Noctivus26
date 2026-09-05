@@ -8,8 +8,8 @@ export function CrewSection() {
       id: 'faculty',
       title: 'Faculty\nCoordinator',
       role: 'Department of CSE (Cyber Security)',
-      contact: 'faculty@velammal.edu.in',
-      contactType: 'email',
+      contact: '+91 70942 57044',
+      contactType: 'phone',
       href: '/coordinators#faculty',
     },
     {
@@ -24,8 +24,8 @@ export function CrewSection() {
       id: 'registration',
       title: 'Registration\nDesk',
       role: 'Payments and confirmations',
-      contact: 'noctivus26@velammal.edu.in',
-      contactType: 'email',
+      contact: '+91 87540 77308',
+      contactType: 'phone',
       href: '/coordinators#registration',
     },
   ];

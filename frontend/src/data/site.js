@@ -299,7 +299,7 @@ export const posters = [
 ];
 
 export const crew = [
-  ['Faculty Coordinator', 'Department of CSE (Cyber Security)', 'faculty@velammal.edu.in'],
+  ['Faculty Coordinator', 'Department of CSE (Cyber Security)', '+91 70942 57044'],
   ['Student Coordinator', 'Noctivus Organizing Team', '+91 98840 17375'],
-  ['Registration Desk', 'Payments and confirmations', 'noctivus26@velammal.edu.in'],
+  ['Registration Desk', 'Payments and confirmations', '+91 87540 77308'],
 ];
