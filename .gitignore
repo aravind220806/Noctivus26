@@ -11,6 +11,7 @@ google_service_account.json
 backend/google_service_account.json
 backend/*service-account*.json
 backend/sympo-api-*.json
+sympo-api-*.json
 __pycache__/
 *.py[cod]
 *.db
