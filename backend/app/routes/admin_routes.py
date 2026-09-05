@@ -16,7 +16,7 @@ from app.services.admin_session_service import create_session, delete_all_sessio
 from app.services.analysis_service import build_overview
 from app.services.boarding_pass_service import create_pass_token, render_pass_artwork_bytes
 from app.services.browser_renderer import renderer_available
-from app.services.email_service import normalize_pass_template, queue_email, send_confirmation, send_invitation, send_member_pass, sendPaymentConfirmationEmail, sendPaymentIssueEmail
+from app.services.email_service import normalize_pass_template, send_confirmation, send_invitation, send_member_pass, sendPaymentConfirmationEmail, sendPaymentIssueEmail
 from app.services.event_service import admin_events, get_event, list_events, update_event
 from app.services.export_service import export_attendance_to_excel, export_full_live_backup_excel, export_scheduler_to_excel, registrations_to_csv
 from app.services.audit_service import list_admin_actions, record_admin_action
@@ -965,29 +965,6 @@ async def invitations_preview(request: Request, _admin=Depends(require_admin_tab
 
     preview_token = create_pass_token()[0]
     return Response(content=await render_pass_artwork_bytes(registration, pass_data, preview_token), media_type="image/png")
-
-
-@router.post("/announcements/send")
-@limiter.limit("10/minute")
-async def announcements_send(request: Request, admin=Depends(require_admin_tab("Announcements"))):
-    body = await request.json()
-    subject = str(body.get("subject") or "").strip()[:160]
-    message = str(body.get("message") or "").strip()[:5000]
-    channel = body.get("channel") or "email"
-    if not subject or not message:
-        raise HTTPException(status_code=400, detail="Subject and message are required.")
-    if channel == "sms":
-        raise HTTPException(status_code=503, detail="SMS delivery is not configured. Add an SMS provider before sending.")
-    audience = body.get("audience") or "confirmed"
-    rows = await load_registrations({"status": "confirmed"})
-    if audience.startswith("event:"):
-        rows = [row for row in rows if any(item.get("eventId") == audience.split(":", 1)[1] for item in row.get("eventRegistrations", []))]
-    if audience == "checked-in":
-        rows = [row for row in rows if row.get("checkedIn") is True]
-    for row in rows:
-        await queue_email("announcement", row, {"subject": subject, "message": message})
-    await record_admin_action(admin["email"], "announcement.send", audience, {"count": len(rows), "channel": channel})
-    return {"queued": len(rows), "channel": "email"}
 
 
 @router.get("/export")

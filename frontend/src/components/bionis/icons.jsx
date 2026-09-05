@@ -1,6 +1,5 @@
 import {
   BarChart3,
-  Bell,
   BrainCircuit,
   CalendarDays,
   CheckCircle2,
@@ -28,7 +27,6 @@ export const BionisIcons = {
   attendance: UserCheck,
   events: CalendarDays,
   invitations: Send,
-  announcements: Bell,
   analysis: BrainCircuit,
   export: Download,
   audit: FileClock,

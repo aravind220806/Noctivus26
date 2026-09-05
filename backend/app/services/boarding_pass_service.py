@@ -44,11 +44,14 @@ def _asset_data_uri(path: Path) -> str:
 
 def logo_data_uri() -> str:
     assets = Path(__file__).resolve().parents[1] / "assets"
+    project_root = Path(__file__).resolve().parents[3]
     candidates = [
+        assets / "noctivus-logo.png",
+        project_root / "frontend" / "public" / "logo.png",
         assets / "noctivus-emblem.png",
         assets / "noctivus-emblem.webp",
-        Path(__file__).resolve().parents[3] / "frontend" / "public" / "brand" / "noctivus-emblem.png",
-        Path(__file__).resolve().parents[3] / "frontend" / "public" / "brand" / "noctivus-emblem.webp",
+        project_root / "frontend" / "public" / "brand" / "noctivus-emblem.png",
+        project_root / "frontend" / "public" / "brand" / "noctivus-emblem.webp",
     ]
     for path in candidates:
         if path.exists() and path.is_file():

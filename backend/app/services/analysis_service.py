@@ -88,7 +88,7 @@ async def create_ai_analysis(overview: dict) -> str:
     if mismatch_rate > 10:
         recommendations.append("Check mismatch and duplicate cases manually before exporting final participant lists.")
     if slow_events:
-        recommendations.append("Push event-specific announcements for events with zero registrations.")
+        recommendations.append("Promote events with zero registrations through official channels.")
     if not recommendations:
         recommendations.append("Registration flow looks stable. Continue monitoring event-wise demand and payment confirmations.")
     lines.append("Recommended actions:")

@@ -17,7 +17,7 @@ import aiosmtplib
 import httpx
 
 from app.core.config import settings
-from app.services.boarding_pass_service import create_pass_token, render_pass_artwork_bytes
+from app.services.boarding_pass_service import create_pass_token, logo_data_uri, render_pass_artwork_bytes
 from app.services.event_service import get_event
 from app.services.registration_service import update_registration
 
@@ -31,6 +31,17 @@ def _registration_pass_token(registration: dict) -> tuple[str, str]:
     elif not qr_hash or len(qr_hash) != 64:
         qr_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
     return token, qr_hash
+
+
+def _logo_inline() -> tuple[str, bytes, str]:
+    data_uri = logo_data_uri()
+    header, payload = data_uri.split(",", 1)
+    ext = "png"
+    if "image/jpeg" in header:
+        ext = "jpg"
+    elif "image/webp" in header:
+        ext = "webp"
+    return make_msgid(domain="noctivus.site").strip("<>"), base64.b64decode(payload), f"noctivus-logo.{ext}"
 
 
 def normalize_pass_template(pass_data: dict | None) -> dict:
@@ -141,7 +152,8 @@ async def generatePassImage(member: dict) -> str:
 from app.services.receipt_service import render_receipt_artwork_bytes, generateReceiptImage
 
 
-def build_confirmation_html(full_name: str, event_names_str: str, cid: str | None = None) -> str:
+def build_confirmation_html(full_name: str, event_names_str: str, cid: str | None = None, logo_cid: str | None = None) -> str:
+    logo = f"cid:{logo_cid}" if logo_cid else logo_data_uri()
     receipt_img_tag = ""
     if cid:
         receipt_img_tag = f"""
@@ -186,8 +198,17 @@ def build_confirmation_html(full_name: str, event_names_str: str, cid: str | Non
 <body style="margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0b0f19; color: #f3f4f6;">
   <div style="max-width: 600px; margin: 0 auto; background: #111827; border: 1px solid #1f2937; border-radius: 12px; padding: 32px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
     <div style="margin-bottom: 24px; border-bottom: 1px solid #1f2937; padding-bottom: 16px;">
-      <h1 style="margin: 0; font-size: 24px; color: #00c8e0; font-weight: 800; letter-spacing: -0.02em;">NOCTIVUS '26</h1>
-      <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #9ca3af;">Official Payment Verification</span>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">
+        <tr>
+          <td style="width:58px;vertical-align:middle;padding-right:14px;">
+            <img src="{logo}" alt="Noctivus '26" width="52" height="52" style="display:block;width:52px;height:52px;object-fit:contain;border:0;" />
+          </td>
+          <td style="vertical-align:middle;">
+            <h1 style="margin: 0; font-size: 24px; color: #00c8e0; font-weight: 800; letter-spacing: -0.02em;">NOCTIVUS '26</h1>
+            <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #9ca3af;">Official Payment Verification</span>
+          </td>
+        </tr>
+      </table>
     </div>
     <p style="font-size: 16px; line-height: 1.6; margin: 0 0 16px;">Hi <strong>{html.escape(full_name)}</strong>,</p>
     <p style="font-size: 16px; line-height: 1.6; margin: 0 0 16px;">Welcome to <strong>Noctivus '26</strong>! We have verified your registration fee payment for <strong>{html.escape(event_names_str)}</strong>.</p>
@@ -230,12 +251,15 @@ async def send_smtp_email(
     inline_image_bytes: bytes | None = None,
     inline_image_cid: str | None = None,
     inline_image_name: str | None = None,
+    inline_logo_bytes: bytes | None = None,
+    inline_logo_cid: str | None = None,
+    inline_logo_name: str | None = None,
 ) -> None:
     sender_name = "Noctivus '26"
     sender_email = settings.smtp_from_email or "noctivus2026@gmail.com"
     from_header = formataddr((sender_name, sender_email))
 
-    if inline_image_bytes and inline_image_cid:
+    if (inline_image_bytes and inline_image_cid) or (inline_logo_bytes and inline_logo_cid):
         # Build multipart/related so the image is embedded inline — no attachment paperclip
         outer = MIMEMultipart("mixed")
         outer["From"] = from_header
@@ -246,10 +270,17 @@ async def send_smtp_email(
         html_part = MIMEText(html_body, "html", "utf-8")
         related.attach(html_part)
 
-        img_part = MIMEImage(inline_image_bytes, name=inline_image_name or "image.png")
-        img_part.add_header("Content-ID", f"<{inline_image_cid}>")
-        img_part.add_header("Content-Disposition", "inline")
-        related.attach(img_part)
+        if inline_image_bytes and inline_image_cid:
+            img_part = MIMEImage(inline_image_bytes, name=inline_image_name or "image.png")
+            img_part.add_header("Content-ID", f"<{inline_image_cid}>")
+            img_part.add_header("Content-Disposition", "inline")
+            related.attach(img_part)
+
+        if inline_logo_bytes and inline_logo_cid:
+            logo_part = MIMEImage(inline_logo_bytes, name=inline_logo_name or "noctivus-logo.png")
+            logo_part.add_header("Content-ID", f"<{inline_logo_cid}>")
+            logo_part.add_header("Content-Disposition", "inline")
+            related.attach(logo_part)
 
         outer.attach(related)
         message = outer
@@ -270,7 +301,7 @@ async def send_smtp_email(
             message.attach(image_part)
 
     if not settings.smtp_password:
-        print(f"[SMTP Dev Simulation] Email to {to_email} (Subject: {subject}, Inline image: {bool(inline_image_bytes)}) - set SMTP_PASSWORD to send live.")
+        print(f"[SMTP Dev Simulation] Email to {to_email} (Subject: {subject}, Inline image: {bool(inline_image_bytes or inline_logo_bytes)}) - set SMTP_PASSWORD to send live.")
         return
 
     use_tls = settings.smtp_port == 465
@@ -334,7 +365,8 @@ async def sendPaymentConfirmationEmail(member: dict) -> dict:
 
     subject = "Noctivus '26 — Payment Verified & Receipt ✅"
     cid = make_msgid(domain="noctivus.site").strip("<>")
-    html_content = build_confirmation_html(full_name, event_names_str, cid=cid)
+    logo_cid, logo_bytes, logo_name = _logo_inline()
+    html_content = build_confirmation_html(full_name, event_names_str, cid=cid, logo_cid=logo_cid)
     safe_name = re.sub(r"[^\w\s-]", "", full_name).strip().replace(" ", "_") or "Member"
     inline_name = f"Noctivus26_Receipt_{safe_name}.png"
 
@@ -352,6 +384,9 @@ async def sendPaymentConfirmationEmail(member: dict) -> dict:
             inline_image_bytes=receipt_bytes,
             inline_image_cid=cid,
             inline_image_name=inline_name,
+            inline_logo_bytes=logo_bytes,
+            inline_logo_cid=logo_cid,
+            inline_logo_name=logo_name,
         )
 
         now = datetime.now(timezone.utc)
@@ -373,7 +408,8 @@ async def sendPaymentConfirmationEmail(member: dict) -> dict:
         return {"success": False, "error": err_msg}
 
 
-def build_payment_issue_html(full_name: str, event_names_str: str, issue_label: str, message: str) -> str:
+def build_payment_issue_html(full_name: str, event_names_str: str, issue_label: str, message: str, logo_cid: str | None = None) -> str:
+    logo = f"cid:{logo_cid}" if logo_cid else logo_data_uri()
     contact_email = "noctivus26@velammal.edu.in"
     contact_phone = "+91 98840 17375"
     return f"""<!doctype html>
@@ -386,8 +422,17 @@ def build_payment_issue_html(full_name: str, event_names_str: str, issue_label: 
 <body style="margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0b0f19; color: #f3f4f6;">
   <div style="max-width: 600px; margin: 0 auto; background: #111827; border: 1px solid #1f2937; border-radius: 12px; padding: 32px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
     <div style="margin-bottom: 24px; border-bottom: 1px solid #1f2937; padding-bottom: 16px;">
-      <h1 style="margin: 0; font-size: 24px; color: #00c8e0; font-weight: 800;">NOCTIVUS '26</h1>
-      <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #9ca3af;">Payment Verification Update</span>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">
+        <tr>
+          <td style="width:58px;vertical-align:middle;padding-right:14px;">
+            <img src="{logo}" alt="Noctivus '26" width="52" height="52" style="display:block;width:52px;height:52px;object-fit:contain;border:0;" />
+          </td>
+          <td style="vertical-align:middle;">
+            <h1 style="margin: 0; font-size: 24px; color: #00c8e0; font-weight: 800;">NOCTIVUS '26</h1>
+            <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #9ca3af;">Payment Verification Update</span>
+          </td>
+        </tr>
+      </table>
     </div>
     <p style="font-size: 16px; line-height: 1.6; margin: 0 0 16px;">Hi <strong>{html.escape(full_name)}</strong>,</p>
     <p style="font-size: 16px; line-height: 1.6; margin: 0 0 16px;">We reviewed your registration payment for <strong>{html.escape(event_names_str)}</strong>.</p>
@@ -437,6 +482,7 @@ async def sendPaymentIssueEmail(member: dict, issue: str) -> dict:
     }
     issue_label, message = issue_copy.get(issue, issue_copy["mismatch"])
     subject = f"Noctivus '26 - {issue_label}"
+    logo_cid, logo_bytes, logo_name = _logo_inline()
 
     await update_registration(reg_id, {
         "payment_email_status": "processing",
@@ -447,7 +493,10 @@ async def sendPaymentIssueEmail(member: dict, issue: str) -> dict:
         await send_smtp_email(
             to_email=email,
             subject=subject,
-            html_body=build_payment_issue_html(full_name, event_names_str, issue_label, message),
+            html_body=build_payment_issue_html(full_name, event_names_str, issue_label, message, logo_cid=logo_cid),
+            inline_logo_bytes=logo_bytes,
+            inline_logo_cid=logo_cid,
+            inline_logo_name=logo_name,
         )
         now = datetime.now(timezone.utc)
         await update_registration(reg_id, {
@@ -472,7 +521,7 @@ async def queue_email(kind: str, registration: dict, pass_data: dict | None = No
         await sendPaymentConfirmationEmail(registration)
         return
 
-    factory = lambda: send_invitation(registration, pass_data or {}) if kind == "invitation" else send_announcement(registration, pass_data or {}) if kind == "announcement" else sendPaymentConfirmationEmail(registration)
+    factory = lambda: send_invitation(registration, pass_data or {}) if kind == "invitation" else sendPaymentConfirmationEmail(registration)
     asyncio.create_task(_safe_email(factory))
 
 
@@ -569,14 +618,18 @@ async def send_member_pass(registration: dict, admin_email: str = "") -> dict:
         event_names = event_entry.get("eventName") or event_rec.get("name") or "Noctivus '26"
         safe_name = re.sub(r"[^\w\s-]", "", name).strip().replace(" ", "_") or "Member"
         cid = make_msgid(domain="noctivus.site").strip("<>")
+        logo_cid, logo_bytes, logo_name = _logo_inline()
 
         await send_smtp_email(
             to_email=email,
             subject=f"{pass_data['title']}",
-            html_body=invitation_html(registration, pass_data, event_names, cid=cid),
+            html_body=invitation_html(registration, pass_data, event_names, cid=cid, logo_cid=logo_cid),
             inline_image_bytes=artwork,
             inline_image_cid=cid,
             inline_image_name=f"Noctivus26_Pass_{safe_name}.png",
+            inline_logo_bytes=logo_bytes,
+            inline_logo_cid=logo_cid,
+            inline_logo_name=logo_name,
         )
 
         now = datetime.now(timezone.utc)
@@ -626,14 +679,18 @@ async def send_invitation(registration: dict, pass_data: dict) -> None:
 
     reg_id = str(registration.get("registrationId") or "preview")
     cid = make_msgid(domain="noctivus.site").strip("<>")
+    logo_cid, logo_bytes, logo_name = _logo_inline()
 
     await send_smtp_email(
         to_email=email,
         subject=f"{pass_data['title']} - {reg_id}",
-        html_body=invitation_html(registration, pass_data, event_names, cid=cid),
+        html_body=invitation_html(registration, pass_data, event_names, cid=cid, logo_cid=logo_cid),
         inline_image_bytes=artwork,
         inline_image_cid=cid,
         inline_image_name=f"noctivus-boarding-pass-{reg_id}.png",
+        inline_logo_bytes=logo_bytes,
+        inline_logo_cid=logo_cid,
+        inline_logo_name=logo_name,
     )
     if reg_id and reg_id != "preview":
         invitation = dict(registration.get("invitation") or {})
@@ -649,18 +706,9 @@ async def send_confirmation(registration: dict) -> None:
     await sendPaymentConfirmationEmail(registration)
 
 
-async def send_announcement(registration: dict, data: dict) -> None:
+def invitation_html(registration: dict, pass_data: dict, event_names: str, artwork: bytes | None = None, cid: str | None = None, logo_cid: str | None = None) -> str:
     participant = registration.get("participant") or {}
-    email = str(participant.get("email") or "").strip()
-    if not email:
-        return
-    subject = str(data.get("subject") or "Noctivus '26 Announcement").strip()
-    message = str(data.get("message") or "").strip()
-    await send_smtp_email(email, subject, f"<h1>{html.escape(subject)}</h1><p>{html.escape(message)}</p>")
-
-
-def invitation_html(registration: dict, pass_data: dict, event_names: str, artwork: bytes | None = None, cid: str | None = None) -> str:
-    participant = registration.get("participant") or {}
+    logo = f"cid:{logo_cid}" if logo_cid else logo_data_uri()
     name = html.escape(str(participant.get("name") or "Member"))
     college = html.escape(str(participant.get("college") or "Institution"))
     reg_id = html.escape(str(registration.get("registrationId") or ""))
@@ -695,8 +743,17 @@ def invitation_html(registration: dict, pass_data: dict, event_names: str, artwo
           <!-- Header Banner -->
           <tr>
             <td style="padding:0 0 20px;border-bottom:1px solid #1e293b;text-align:left;">
-              <span style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#00c8e0;font-weight:700;display:block;margin-bottom:4px;">DEPARTMENT OF CSE (CYBER SECURITY)</span>
-              <h1 style="margin:0;font-size:24px;font-weight:800;color:#f8fafc;letter-spacing:-0.02em;">NOCTIVUS &rsquo;26 &bull; OFFICIAL EVENT PASS</h1>
+              <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">
+                <tr>
+                  <td style="width:62px;vertical-align:middle;padding-right:14px;">
+                    <img src="{logo}" alt="Noctivus '26" width="56" height="56" style="display:block;width:56px;height:56px;object-fit:contain;border:0;" />
+                  </td>
+                  <td style="vertical-align:middle;">
+                    <span style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#00c8e0;font-weight:700;display:block;margin-bottom:4px;">DEPARTMENT OF CSE (CYBER SECURITY)</span>
+                    <h1 style="margin:0;font-size:24px;font-weight:800;color:#f8fafc;letter-spacing:-0.02em;">NOCTIVUS &rsquo;26 &bull; OFFICIAL EVENT PASS</h1>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
 
