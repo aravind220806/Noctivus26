@@ -61,6 +61,21 @@ def _parse_time_to_minutes(time_str: str) -> int:
     return hours * 60 + mins
 
 
+def _is_valid_time(value: str) -> bool:
+    try:
+        minutes = _parse_time_to_minutes(value)
+    except (TypeError, ValueError, IndexError):
+        return False
+    return 0 <= minutes < 24 * 60
+
+
+def _validate_slot_window(start_time: str, end_time: str) -> None:
+    if not _is_valid_time(start_time) or not _is_valid_time(end_time):
+        raise ValueError("Slot start and end time must be valid times.")
+    if _parse_time_to_minutes(start_time) >= _parse_time_to_minutes(end_time):
+        raise ValueError("Slot end time must be after start time.")
+
+
 def slotsConflict(slotA: dict, slotB: dict) -> bool:
     if str(slotA.get("date") or "").strip() != str(slotB.get("date") or "").strip():
         return False
@@ -119,7 +134,7 @@ async def update_slot(slot_id: str, updates: dict) -> dict | None:
         if k in allowed:
             if k == "capacity":
                 try:
-                    clean_updates["capacity"] = max(1, int(v))
+                    clean_updates["capacity"] = max(1, min(300, int(v)))
                 except (ValueError, TypeError):
                     pass
             elif k in ("start_time", "end_time"):
@@ -130,16 +145,25 @@ async def update_slot(slot_id: str, updates: dict) -> dict | None:
                 clean_updates["date"] = str(v).strip()
 
     merged = {**slot, **clean_updates}
+    _validate_slot_window(merged.get("start_time", ""), merged.get("end_time", ""))
     await save_slot(merged)
+    await reconcile_slot_assignments()
     return merged
 
 
 async def create_custom_slot(data: dict) -> dict:
     event_id = str(data.get("event_id") or "").strip()
+    valid_event_ids = {event["id"] for event in await list_events()}
+    if event_id not in valid_event_ids:
+        raise ValueError("Select a valid event before creating a slot.")
     window = "afternoon" if str(data.get("window")).lower() == "afternoon" else "morning"
     start_time = str(data.get("start_time") or "09:00").strip()
     end_time = str(data.get("end_time") or "10:30").strip()
-    capacity = max(1, int(data.get("capacity") or 30))
+    _validate_slot_window(start_time, end_time)
+    try:
+        capacity = max(1, min(300, int(data.get("capacity") or 30)))
+    except (TypeError, ValueError):
+        raise ValueError("Slot capacity must be a number.") from None
     date = str(data.get("date") or "2026-09-26").strip()
     slot_id = f"slot_{event_id}_{window}_{int(datetime.now(timezone.utc).timestamp() * 1000) % 100000}"
 
@@ -203,11 +227,15 @@ async def create_next_auto_slot(event: dict, existing_slots: list[dict]) -> dict
 
 async def delete_slot(slot_id: str) -> bool:
     if sqlite_db.ready():
-        return await sqlite_db.delete("event_slots", slot_id)
+        deleted = await sqlite_db.delete("event_slots", slot_id)
+        if deleted:
+            await reconcile_slot_assignments()
+        return deleted
 
     for i, s in enumerate(memory_event_slots):
         if s.get("id") == slot_id:
             memory_event_slots.pop(i)
+            await reconcile_slot_assignments()
             return True
     return False
 
@@ -270,9 +298,9 @@ def generateSlotsForEvent(event: dict, registration_count: int = 0) -> list[dict
 async def generate_all_event_slots(regenerate: bool = False) -> dict:
     events = await list_events()
     existing_slots = await load_all_slots()
-    all_registrations = await load_registrations()
+    all_registrations = await load_registrations({"status": "confirmed"})
 
-    # Calculate registration count per event (all statuses — pending + confirmed)
+    # Calculate registration count per event from confirmed payments only.
     reg_counts: dict[str, int] = {}
     for r in all_registrations:
         for eid in _get_event_ids(r):
@@ -288,7 +316,7 @@ async def generate_all_event_slots(regenerate: bool = False) -> dict:
                 reg["assigned_slots"] = []
                 await sqlite_db.upsert("registrations", reg["registrationId"], reg)
         memory_event_slots.clear()
-        for reg in memory_event_slots:
+        for reg in memory_registrations:
             reg["assigned_slots"] = []
         existing_by_event.clear()
 
@@ -316,11 +344,7 @@ async def generate_all_event_slots(regenerate: bool = False) -> dict:
             "status": "generated",
         }
 
-    # Automatically assign registered members if any exist
-    try:
-        await assignMembersToSlots()
-    except Exception:
-        pass
+    await assignMembersToSlots(auto_generate=False)
 
     return {
         "success": True,
@@ -329,19 +353,28 @@ async def generate_all_event_slots(regenerate: bool = False) -> dict:
     }
 
 
-async def assignMembersToSlots() -> dict:
+async def assignMembersToSlots(auto_generate: bool = True) -> dict:
     global _last_assignment_summary
     events = await list_events()
     events_by_id = {e["id"]: e for e in events}
     
     slots = await load_all_slots()
     if not slots:
-        # Auto-generate slots if not already generated
-        await generate_all_event_slots()
+        if not auto_generate:
+            summary = {
+                "total_processed": 0,
+                "successfully_assigned": 0,
+                "unassigned_conflicts": [],
+                "unassigned_full": [],
+            }
+            _last_assignment_summary = summary
+            return summary
+        # Auto-generate slots if not already generated.
+        await generate_all_event_slots(regenerate=False)
         slots = await load_all_slots()
 
-    # 1. Fetch all registrations (both pending & confirmed) where assigned_slots is still empty
-    registrations = await load_registrations()
+    # 1. Fetch confirmed registrations where assigned_slots is still empty.
+    registrations = await load_registrations({"status": "confirmed"})
     unassigned_registrations = [
         r for r in registrations
         if not r.get("assigned_slots") or len(r.get("assigned_slots", [])) == 0
@@ -472,9 +505,9 @@ async def assignMembersToSlots() -> dict:
 async def get_scheduler_dashboard_data() -> dict:
     events = await list_events()
     slots = await load_all_slots()
-    all_registrations = await load_registrations()
+    all_registrations = await load_registrations({"status": "confirmed"})
 
-    # If any registered members exist but have not been assigned, auto-assign
+    # If any confirmed members exist but have not been assigned, auto-assign.
     unassigned = [r for r in all_registrations if not r.get("assigned_slots") or len(r.get("assigned_slots", [])) == 0]
     if unassigned:
         await assignMembersToSlots()
@@ -514,3 +547,14 @@ async def get_scheduler_dashboard_data() -> dict:
         "has_generated_slots": len(slots) > 0,
         "last_assignment_summary": _last_assignment_summary,
     }
+
+
+async def reconcile_slot_assignments() -> None:
+    slots = await load_all_slots()
+    valid_slot_ids = {slot.get("id") for slot in slots}
+    rows = await load_registrations()
+    for reg in rows:
+        current = reg.get("assigned_slots") or []
+        assigned = [slot_id for slot_id in current if slot_id in valid_slot_ids]
+        if assigned != current:
+            await update_registration(reg.get("registrationId") or reg.get("member_id"), {"assigned_slots": assigned})

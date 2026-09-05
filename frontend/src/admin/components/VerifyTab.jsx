@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { adminFetch, apiPath, bulkVerify } from '../adminUtils';
 import { RegistrationTable } from './AdminUIHelpers';
 
@@ -24,6 +24,7 @@ export function VerifyTab({
   const [search, setSearch] = useState('');
   const [verifyingId, setVerifyingId] = useState(null);
   const [feedback, setFeedback] = useState({});
+  const [activeRegistration, setActiveRegistration] = useState(null);
 
   const verify = async (registrationId, nextStatus) => {
     setVerifyingId(registrationId);
@@ -46,6 +47,53 @@ export function VerifyTab({
     }
   };
 
+  const visibleRegistrations = useMemo(() => {
+    const term = search.toLowerCase().trim();
+    return registrations.filter((item) => {
+      if (!term) return true;
+      return `${item.registrationId} ${item.participant?.name} ${item.participant?.email} ${item.participant?.phone} ${item.utrNumber}`
+        .toLowerCase()
+        .includes(term);
+    });
+  }, [registrations, search]);
+
+  const groupedRegistrations = useMemo(() => {
+    const groups = { pending: [], confirmed: [], mismatch: [], duplicate: [] };
+    visibleRegistrations.forEach((item) => {
+      const key = item.paymentStatus || 'pending';
+      if (groups[key]) groups[key].push(item);
+    });
+    return groups;
+  }, [visibleRegistrations]);
+
+  const statusFilters = [
+    { key: '', title: 'Pending Payment', count: groupedRegistrations.pending.length },
+    { key: 'confirmed', title: 'Confirmed Payment', count: status === 'confirmed' ? visibleRegistrations.length : groupedRegistrations.confirmed.length },
+    { key: 'mismatch', title: 'Mismatch', count: status === 'mismatch' ? visibleRegistrations.length : groupedRegistrations.mismatch.length },
+    { key: 'duplicate', title: 'Duplicate', count: status === 'duplicate' ? visibleRegistrations.length : groupedRegistrations.duplicate.length },
+  ];
+
+  const changeStatusFilter = (nextStatus) => {
+    setSelected([]);
+    setStatus(nextStatus);
+  };
+
+  const detailRows = activeRegistration
+    ? [
+        ['Registration ID', activeRegistration.registrationId],
+        ['Name', activeRegistration.participant?.name],
+        ['College', activeRegistration.participant?.college],
+        ['Email', activeRegistration.participant?.email],
+        ['Phone', activeRegistration.participant?.phone],
+        ['Food', activeRegistration.participant?.foodPreference],
+        ['UTR', activeRegistration.utrNumber],
+        ['Expected Amount', `₹${activeRegistration.expectedAmount || 0}`],
+        ['Claimed Amount', `₹${activeRegistration.claimedAmount || 0}`],
+        ['Status', activeRegistration.paymentStatus || 'pending'],
+        ['Notes', activeRegistration.verificationNotes],
+      ]
+    : [];
+
   return (
     <>
       <div className="admin-filters">
@@ -62,15 +110,19 @@ export function VerifyTab({
             ))}
           </select>
         </label>
-        <label className="field">
-          <span>Status</span>
-          <select value={status} onChange={(event) => setStatus(event.target.value)}>
-            <option value="">All statuses</option>
-            {['pending', 'confirmed', 'mismatch', 'duplicate'].map((item) => (
-              <option key={item} value={item}>{item}</option>
-            ))}
-          </select>
-        </label>
+      </div>
+      <div className="verify-status-tabs" aria-label="Payment status filters">
+        {statusFilters.map((item) => (
+          <button
+            key={item.title}
+            type="button"
+            className={`verify-status-tab ${status === item.key ? 'is-active' : ''}`}
+            onClick={() => changeStatusFilter(item.key)}
+          >
+            <span>{item.title}</span>
+            <strong>{item.count}</strong>
+          </button>
+        ))}
       </div>
       <div className="verify-bulk-actions">
         <button
@@ -97,19 +149,27 @@ export function VerifyTab({
         </button>
       </div>
       <RegistrationTable
-        registrations={registrations.filter((item) => {
-          const term = search.toLowerCase();
-          return (
-            !term ||
-            `${item.participant?.name} ${item.participant?.email} ${item.participant?.phone} ${item.utrNumber}`
-              .toLowerCase()
-              .includes(term)
-          );
-        })}
+        registrations={status ? visibleRegistrations : groupedRegistrations.pending}
         selected={selected}
         setSelected={setSelected}
+        onOpenDetails={setActiveRegistration}
         renderActions={(registration) => {
           const statusText = feedback[registration.registrationId];
+          const isPendingRow = (registration.paymentStatus || 'pending') === 'pending';
+
+          if (!isPendingRow) {
+            return (
+              <div className="verify-compact-actions">
+                <button
+                  type="button"
+                  className="button button-secondary button-small"
+                  onClick={() => setActiveRegistration(registration)}
+                >
+                  View Details
+                </button>
+              </div>
+            );
+          }
 
           return (
             <div className="verify-actions-column">
@@ -160,6 +220,43 @@ export function VerifyTab({
           );
         }}
       />
+      {activeRegistration && (
+        <div className="admin-modal-overlay" onClick={() => setActiveRegistration(null)}>
+          <div className="member-detail-modal" role="dialog" aria-modal="true" aria-labelledby="member-detail-title" onClick={(event) => event.stopPropagation()}>
+            <header className="member-detail-modal__header">
+              <div>
+                <span>{activeRegistration.registrationId}</span>
+                <h2 id="member-detail-title">{activeRegistration.participant?.name || 'Participant'}</h2>
+              </div>
+              <button type="button" className="modal-close-btn" onClick={() => setActiveRegistration(null)} aria-label="Close details">
+                x
+              </button>
+            </header>
+            <div className="member-detail-modal__grid">
+              {detailRows.map(([label, value]) => (
+                <div key={label}>
+                  <span>{label}</span>
+                  <strong>{value || '—'}</strong>
+                </div>
+              ))}
+            </div>
+            <div className="member-detail-modal__events">
+              <span>Events</span>
+              {(activeRegistration.eventRegistrations || []).map((event) => (
+                <article key={event.eventId}>
+                  <strong>{event.eventName}</strong>
+                  <small>{event.category} - Team size {event.teamSize}</small>
+                  {event.teamMembers?.length > 0 && (
+                    <small>
+                      Members: {event.teamMembers.map((member) => `${member.name}${member.rollNo ? ` (${member.rollNo})` : ''}`).join(', ')}
+                    </small>
+                  )}
+                </article>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

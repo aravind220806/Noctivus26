@@ -4,12 +4,12 @@ import { apiUrl } from '../lib/api';
 import { adminFetch, setGlobalCsrf, tabs } from './adminUtils';
 import { AdminAccessTab } from './components/AdminAccessTab';
 import { AdminLogin } from './components/AdminLogin';
-import { AnalysisTab } from './components/AnalysisTab';
 import { AttendanceTab } from './components/AttendanceTab';
 import { AuditLogTab } from './components/AuditLogTab';
 import { CheckInTab } from './components/CheckInTab';
 import { FoodScannerTab } from './components/FoodScannerTab';
 import { DashboardTab } from './components/DashboardTab';
+import { DayBookTab } from './components/DayBookTab';
 import { EventSchedulerTab } from './components/EventSchedulerTab';
 import { EventsTab } from './components/EventsTab';
 import { ExportTab } from './components/ExportTab';
@@ -109,7 +109,7 @@ export default function AdminApp() {
     if (!silent) setMessage('');
     setIsRefreshing(true);
     try {
-      const needsOverview = ['Dashboard', 'Verify Members', 'Invitations', 'AI Analysis', 'Export'].some(can);
+      const needsOverview = ['Dashboard', 'Verify Members', 'Invitations', 'Export'].some(can);
       const needsRegistrations = ['Verify Members', 'Invitations', 'Export'].some(can);
       const [overviewResponse, registrationsResponse] = await Promise.all([
         needsOverview ? adminFetch(apiUrl('/api/admin/overview'), { headers: authHeaders }) : Promise.resolve(null),
@@ -201,6 +201,7 @@ export default function AdminApp() {
       {activeTab === 'Attendance' && can('Attendance') && <AttendanceTab authHeaders={authHeaders} />}
       {activeTab === 'Events' && can('Events') && <EventsTab authHeaders={authHeaders} onEventChanged={refresh} />}
       {activeTab === 'Event Scheduler' && can('Event Scheduler') && <EventSchedulerTab authHeaders={authHeaders} />}
+      {activeTab === 'Day Book' && can('Day Book') && <DayBookTab authHeaders={authHeaders} />}
       {activeTab === 'Audit Log' && can('Audit Log') && <AuditLogTab authHeaders={authHeaders} />}
       {activeTab === 'Invitations' && can('Invitations') && (
         <InvitationsTab
@@ -212,7 +213,6 @@ export default function AdminApp() {
           }}
         />
       )}
-      {activeTab === 'AI Analysis' && can('AI Analysis') && <AnalysisTab overview={overview} authHeaders={authHeaders} />}
       {activeTab === 'Export' && can('Export') && (
         <ExportTab
           overview={overview}

@@ -278,7 +278,7 @@ def test_health_reports_sqlite_runtime():
 
 def test_rate_limits_match_documentation():
     """
-    BACKEND.md specifies 30/minute for registration and 60/minute for UTR check.
+    BACKEND.md specifies 5/minute for registration and 10/minute for UTR check.
     This test inspects the source to confirm the decorators match.
     Fails immediately if inflated limits (1000/min, 1200/min) reappear.
     """
@@ -286,10 +286,10 @@ def test_rate_limits_match_documentation():
     import app.routes.public_routes as pr
 
     source = inspect.getsource(pr)
-    assert '"30/minute"' in source or "'30/minute'" in source, \
-        "30/minute registration rate limit not found in public_routes.py"
-    assert '"60/minute"' in source or "'60/minute'" in source, \
-        "60/minute UTR check rate limit not found in public_routes.py"
+    assert '"5/minute"' in source or "'5/minute'" in source, \
+        "5/minute registration rate limit not found in public_routes.py"
+    assert '"10/minute"' in source or "'10/minute'" in source, \
+        "10/minute UTR check rate limit not found in public_routes.py"
     assert "1000/minute" not in source, \
         "Inflated 1000/minute registration limit is still present — security regression"
     assert "1200/minute" not in source, \
@@ -329,6 +329,157 @@ def test_all_events_accept_solo_registration():
         )
 
         assert result["valid"], f"{event['name']} rejected solo registration: {result['errors']}"
+
+
+def test_workshop_registration_cannot_bypass_additional_event_fee():
+    from app.events import EVENT_CATALOG
+    from app.services.validation_service import validate_registration
+
+    payload = {
+        "participant": {
+            "name": "Fee Test",
+            "email": "fee-test@example.com",
+            "phone": "9876543210",
+            "college": "Test College",
+            "foodPreference": "veg",
+        },
+        "events": [
+            {"eventId": "playground-of-hackers", "teamSize": 1, "teamMembers": []},
+            {"eventId": "mystery-hunt", "teamSize": 1, "teamMembers": []},
+        ],
+        "utrNumber": "123456789012",
+        "paymentReference": "NOC26-FEETEST",
+        "claimedAmount": 300,
+        "consent": {"privacyAccepted": True},
+    }
+
+    result = validate_registration(payload, EVENT_CATALOG)
+
+    assert not result["valid"]
+    assert result["value"]["expectedAmount"] == 450
+    assert "Workshop registration cannot be combined with other events." in result["errors"]
+    assert "Registration amount does not match the configured event fees." in result["errors"]
+
+
+def test_backend_rejects_phone_with_non_digit_characters():
+    from app.events import EVENT_CATALOG
+    from app.services.validation_service import validate_registration
+
+    result = validate_registration(
+        {
+            "participant": {
+                "name": "Phone Test",
+                "email": "phone-test@example.com",
+                "phone": "9876543210;id",
+                "college": "Test College",
+                "foodPreference": "veg",
+            },
+            "events": [{"eventId": "mystery-hunt", "teamSize": 1, "teamMembers": []}],
+            "utrNumber": "123456789012",
+            "paymentReference": "NOC26-PHONETEST",
+            "claimedAmount": 150,
+            "consent": {"privacyAccepted": True},
+        },
+        EVENT_CATALOG,
+    )
+
+    assert not result["valid"]
+    assert "A valid 10-digit phone number is required." in result["errors"]
+
+
+@pytest.mark.asyncio
+async def test_scheduler_assignment_without_slots_returns_without_recursion(monkeypatch):
+    import app.services.scheduler_service as scheduler
+
+    monkeypatch.setattr(scheduler, "load_all_slots", AsyncMock(return_value=[]))
+
+    summary = await scheduler.assignMembersToSlots(auto_generate=False)
+
+    assert summary["total_processed"] == 0
+    assert summary["successfully_assigned"] == 0
+
+
+@pytest.mark.asyncio
+async def test_scheduler_assigns_only_confirmed_registrations(monkeypatch):
+    import app.services.scheduler_service as scheduler
+
+    saved_updates = []
+    slot = {
+        "id": "slot_bug-hunt_morning_1",
+        "event_id": "bug-hunt",
+        "date": "2026-09-26",
+        "start_time": "09:00",
+        "end_time": "12:00",
+        "window": "morning",
+        "capacity": 30,
+        "assigned_member_ids": [],
+    }
+
+    async def fake_load_registrations(filters=None):
+        assert filters == {"status": "confirmed"}
+        return [
+            {
+                "registrationId": "NOC26-CONFIRMED",
+                "event_ids": ["bug-hunt"],
+                "paymentStatus": "confirmed",
+                "assigned_slots": [],
+            }
+        ]
+
+    async def fake_update_registration(registration_id, update):
+        saved_updates.append((registration_id, update))
+        return {"registrationId": registration_id, **update}
+
+    monkeypatch.setattr(scheduler, "load_all_slots", AsyncMock(return_value=[slot]))
+    monkeypatch.setattr(scheduler, "load_registrations", fake_load_registrations)
+    monkeypatch.setattr(scheduler, "save_slot", AsyncMock())
+    monkeypatch.setattr(scheduler, "update_registration", fake_update_registration)
+
+    summary = await scheduler.assignMembersToSlots(auto_generate=False)
+
+    assert summary["successfully_assigned"] == 1
+    assert saved_updates == [("NOC26-CONFIRMED", {"assigned_slots": ["slot_bug-hunt_morning_1"]})]
+
+
+@pytest.mark.asyncio
+async def test_scheduler_rejects_invalid_custom_slot(monkeypatch):
+    import app.services.scheduler_service as scheduler
+    from app.events import EVENT_CATALOG
+
+    monkeypatch.setattr(scheduler, "list_events", AsyncMock(return_value=EVENT_CATALOG))
+
+    with pytest.raises(ValueError, match="valid event"):
+        await scheduler.create_custom_slot({"event_id": "not-real", "start_time": "09:00", "end_time": "10:00"})
+
+    with pytest.raises(ValueError, match="after start"):
+        await scheduler.create_custom_slot({"event_id": "bug-hunt", "start_time": "11:00", "end_time": "10:00"})
+
+
+@pytest.mark.asyncio
+async def test_scheduler_reconcile_removes_deleted_slot_assignments(monkeypatch):
+    import app.services.scheduler_service as scheduler
+
+    updates = []
+
+    async def fake_load_registrations(filters=None):
+        return [
+            {
+                "registrationId": "NOC26-STALE",
+                "assigned_slots": ["slot_valid", "slot_deleted"],
+            }
+        ]
+
+    async def fake_update_registration(registration_id, update):
+        updates.append((registration_id, update))
+        return {"registrationId": registration_id, **update}
+
+    monkeypatch.setattr(scheduler, "load_all_slots", AsyncMock(return_value=[{"id": "slot_valid"}]))
+    monkeypatch.setattr(scheduler, "load_registrations", fake_load_registrations)
+    monkeypatch.setattr(scheduler, "update_registration", fake_update_registration)
+
+    await scheduler.reconcile_slot_assignments()
+
+    assert updates == [("NOC26-STALE", {"assigned_slots": ["slot_valid"]})]
 
 
 def test_authorization_bearer_is_not_admin_auth():

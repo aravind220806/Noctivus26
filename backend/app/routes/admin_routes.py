@@ -13,7 +13,7 @@ from app.core.rate_limit import limiter
 from app.middleware.admin_auth import require_admin, require_admin_tab, require_any_admin_tab, sign_admin_token, verify_admin_token
 from app.services.admin_access_service import ADMIN_TABS, deactivate_admin_access, is_owner_admin, list_admin_access, normalize_admin_tabs, resolve_admin_access, upsert_admin_access
 from app.services.admin_session_service import create_session, delete_all_sessions, delete_session, delete_sessions_for_email
-from app.services.analysis_service import build_overview, create_ai_analysis
+from app.services.analysis_service import build_overview
 from app.services.boarding_pass_service import create_pass_token, render_pass_artwork_bytes
 from app.services.browser_renderer import renderer_available
 from app.services.email_service import normalize_pass_template, queue_email, send_confirmation, send_invitation, send_member_pass, sendPaymentConfirmationEmail, sendPaymentIssueEmail
@@ -108,7 +108,8 @@ async def events(request: Request, _admin=Depends(require_any_admin_tab(["Events
 
 
 @router.get("/scheduler")
-async def scheduler_get(_admin=Depends(require_admin_tab("Event Scheduler"))):
+@limiter.limit("60/minute")
+async def scheduler_get(request: Request, _admin=Depends(require_admin_tab("Event Scheduler"))):
     return await get_scheduler_dashboard_data()
 
 
@@ -128,6 +129,7 @@ def _trigger_sheets_sync():
 
 
 @router.post("/scheduler/generate-slots")
+@limiter.limit("10/minute")
 async def scheduler_generate_slots(request: Request, admin=Depends(require_admin_tab("Event Scheduler"))):
     try:
         body = await request.json()
@@ -146,7 +148,8 @@ async def scheduler_generate_slots(request: Request, admin=Depends(require_admin
 
 
 @router.post("/scheduler/run-assignment")
-async def scheduler_run_assignment(admin=Depends(require_admin_tab("Event Scheduler"))):
+@limiter.limit("10/minute")
+async def scheduler_run_assignment(request: Request, admin=Depends(require_admin_tab("Event Scheduler"))):
     try:
         summary = await assignMembersToSlots()
         _trigger_sheets_sync()
@@ -164,9 +167,13 @@ async def scheduler_run_assignment(admin=Depends(require_admin_tab("Event Schedu
 
 
 @router.post("/scheduler/slots")
+@limiter.limit("20/minute")
 async def scheduler_create_slot(request: Request, admin=Depends(require_admin_tab("Event Scheduler"))):
     body = await request.json()
-    new_slot = await create_custom_slot(body)
+    try:
+        new_slot = await create_custom_slot(body)
+    except ValueError as err:
+        raise HTTPException(status_code=400, detail=str(err)) from err
     _trigger_sheets_sync()
     await record_admin_action(
         admin["email"],
@@ -178,9 +185,13 @@ async def scheduler_create_slot(request: Request, admin=Depends(require_admin_ta
 
 
 @router.patch("/scheduler/slots/{slot_id}")
+@limiter.limit("30/minute")
 async def scheduler_update_slot(slot_id: str, request: Request, admin=Depends(require_admin_tab("Event Scheduler"))):
     body = await request.json()
-    updated = await update_slot(slot_id, body)
+    try:
+        updated = await update_slot(slot_id, body)
+    except ValueError as err:
+        raise HTTPException(status_code=400, detail=str(err)) from err
     if not updated:
         raise HTTPException(status_code=404, detail="Slot not found.")
     _trigger_sheets_sync()
@@ -194,7 +205,8 @@ async def scheduler_update_slot(slot_id: str, request: Request, admin=Depends(re
 
 
 @router.delete("/scheduler/slots/{slot_id}")
-async def scheduler_delete_slot(slot_id: str, admin=Depends(require_admin_tab("Event Scheduler"))):
+@limiter.limit("20/minute")
+async def scheduler_delete_slot(slot_id: str, request: Request, admin=Depends(require_admin_tab("Event Scheduler"))):
     deleted = await delete_slot(slot_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Slot not found.")
@@ -209,7 +221,8 @@ async def scheduler_delete_slot(slot_id: str, admin=Depends(require_admin_tab("E
 
 
 @router.get("/scheduler/export")
-async def scheduler_export_excel(admin=Depends(require_admin_tab("Event Scheduler"))):
+@limiter.limit("20/minute")
+async def scheduler_export_excel(request: Request, admin=Depends(require_admin_tab("Event Scheduler"))):
     events = await list_events()
     slots = await load_all_slots()
     registrations = await load_registrations()
@@ -621,7 +634,7 @@ async def revoke_all_sessions(admin=Depends(require_admin)):
 
 
 @router.get("/overview")
-async def overview(_admin=Depends(require_any_admin_tab(["Dashboard", "Verify Members", "Invitations", "AI Analysis", "Export"]))):
+async def overview(_admin=Depends(require_any_admin_tab(["Dashboard", "Verify Members", "Invitations", "Day Book", "Export"]))):
     result = build_overview(await load_registrations(), await list_events())
     result["storage"] = {"available": sqlite_db.ready(), "engine": "sqlite"}
     return result
@@ -948,10 +961,84 @@ async def export(eventId: str | None = None, status: str | None = None, variant:
     return Response(content=csv, media_type="text/csv", headers={"Content-Disposition": f'attachment; filename="noctivus-{filename_event}-registrations.csv"'})
 
 
-@router.post("/analysis/ai")
-async def analysis(_request: Request, _admin=Depends(require_admin_tab("AI Analysis"))):
-    overview = build_overview(await load_registrations(), await list_events())
-    return {"analysis": await create_ai_analysis(overview), "generatedAt": datetime.now(timezone.utc).isoformat(), "mode": "offline"}
+def _parse_registration_datetime(value) -> datetime:
+    if isinstance(value, datetime):
+        parsed = value
+    else:
+        text = str(value or "").strip()
+        if not text:
+            return datetime.now(timezone.utc)
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+@router.get("/day-book")
+async def day_book(_admin=Depends(require_any_admin_tab(["Day Book", "Dashboard", "Export"]))):
+    rows = await load_registrations()
+    today_key = datetime.now(timezone.utc).date().isoformat()
+    days: dict[str, dict] = {}
+    totals = {
+        "registrations": 0,
+        "confirmed": 0,
+        "pending": 0,
+        "mismatch": 0,
+        "duplicate": 0,
+        "expectedAmount": 0,
+        "confirmedAmount": 0,
+    }
+
+    for row in rows:
+        created_key = _parse_registration_datetime(row.get("createdAt")).date().isoformat()
+        day = days.setdefault(created_key, {
+            "date": created_key,
+            "registrations": 0,
+            "confirmed": 0,
+            "pending": 0,
+            "mismatch": 0,
+            "duplicate": 0,
+            "expectedAmount": 0,
+            "confirmedAmount": 0,
+            "records": [],
+        })
+        status = row.get("paymentStatus") or "pending"
+        expected = int(row.get("expectedAmount") or 0)
+        confirmed_amount = expected if status == "confirmed" else 0
+        day["registrations"] += 1
+        day[status] = day.get(status, 0) + 1
+        day["expectedAmount"] += expected
+        day["confirmedAmount"] += confirmed_amount
+        totals["registrations"] += 1
+        totals[status] = totals.get(status, 0) + 1
+        totals["expectedAmount"] += expected
+        totals["confirmedAmount"] += confirmed_amount
+        day["records"].append({
+            "registrationId": row.get("registrationId"),
+            "name": (row.get("participant") or {}).get("name"),
+            "phone": (row.get("participant") or {}).get("phone"),
+            "status": status,
+            "amount": expected,
+            "utrNumber": row.get("utrNumber"),
+            "events": [event.get("eventName") for event in row.get("eventRegistrations", [])],
+        })
+
+    ordered_days = sorted(days.values(), key=lambda item: item["date"], reverse=True)
+    return {
+        "today": next((day for day in ordered_days if day["date"] == today_key), {
+            "date": today_key,
+            "registrations": 0,
+            "confirmed": 0,
+            "pending": 0,
+            "mismatch": 0,
+            "duplicate": 0,
+            "expectedAmount": 0,
+            "confirmedAmount": 0,
+            "records": [],
+        }),
+        "totals": totals,
+        "days": ordered_days,
+    }
 
 
 # ══════════════════════════════════════════════════════════════════════════════

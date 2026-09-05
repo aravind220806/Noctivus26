@@ -82,8 +82,18 @@ async def events(request: Request, response: Response):
     return data
 
 
-@router.post("/utr/check")
+@router.get("/payment-config")
 @limiter.limit("60/minute")
+async def payment_config(request: Request):
+    return {
+        "upiId": settings.upi_id,
+        "payee": settings.upi_payee,
+        "configured": bool(settings.upi_id and settings.upi_payee),
+    }
+
+
+@router.post("/utr/check")
+@limiter.limit("10/minute")
 async def utr_check(request: Request, response: Response):
     payload = await request.json()
     status_code, body = await check_utr_availability((payload or {}).get("utrNumber"))
@@ -92,7 +102,7 @@ async def utr_check(request: Request, response: Response):
 
 
 @router.post("/register")
-@limiter.limit("30/minute")
+@limiter.limit("5/minute")
 async def register(request: Request, response: Response):
     idempotency_key = request.headers.get("idempotency-key") or None
     if idempotency_key and len(idempotency_key) > 128:

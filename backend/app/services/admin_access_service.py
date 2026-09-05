@@ -4,7 +4,7 @@ from app.core.config import settings
 from app.db.memory_store import memory_admin_access
 from app.db.sqlite_db import sqlite_db
 
-ADMIN_TABS = ["Dashboard", "Verify Members", "Check-in", "Food Scanner", "Attendance", "Events", "Event Scheduler", "Invitations", "AI Analysis", "Export", "Audit Log", "Admin Access"]
+ADMIN_TABS = ["Dashboard", "Verify Members", "Check-in", "Food Scanner", "Attendance", "Events", "Event Scheduler", "Invitations", "Day Book", "Export", "Audit Log", "Admin Access"]
 
 
 def owner_emails() -> list[str]:

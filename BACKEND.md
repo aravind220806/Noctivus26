@@ -103,8 +103,8 @@ Admin tab permissions are enforced by backend dependencies, not only by hidden f
 
 Rate limits are currently per source IP:
 
-- Registration: `30/minute`
-- UTR check: `60/minute`
+- Registration: `5/minute`
+- UTR check: `10/minute`
 
 These limits reduce abuse while allowing users behind a shared campus network to register during a rush.
 

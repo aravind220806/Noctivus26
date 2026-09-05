@@ -7,9 +7,16 @@ import './RegistrationModal.css';
 const emptyForm = { name: '', college: '', phone: '', email: '', foodPreference: '' };
 
 const createPaymentReference = () => {
-  const timestamp = Date.now().toString(36).toUpperCase();
-  const random = Math.random().toString(36).slice(2, 8).toUpperCase();
-  return `NOC26-${timestamp}-${random}`.slice(0, 35);
+  const bytes = new Uint8Array(12);
+  if (globalThis.crypto?.getRandomValues) {
+    globalThis.crypto.getRandomValues(bytes);
+  } else {
+    bytes.forEach((_, index) => {
+      bytes[index] = Math.floor(Math.random() * 256);
+    });
+  }
+  const random = Array.from(bytes, (byte) => byte.toString(36).padStart(2, '0')).join('').toUpperCase();
+  return `NOC26-${random}`.slice(0, 35);
 };
 
 const isCategoryTech = (cat) => {
@@ -46,6 +53,10 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
   const [submitting, setSubmitting] = useState(false);
   const [receipt, setReceipt] = useState(null);
   const [receiptQrDataUrl, setReceiptQrDataUrl] = useState('');
+  const [paymentConfig, setPaymentConfig] = useState({
+    upiId: (import.meta.env.VITE_UPI_ID || '').trim(),
+    payee: (import.meta.env.VITE_UPI_PAYEE || '').trim(),
+  });
 
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768);
   const [showUpiFallback, setShowUpiFallback] = useState(false);
@@ -96,9 +107,26 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
     (event) => (event.category || '').toLowerCase() === 'workshop' || event.id === 'playground-of-hackers' || event.fee === 300
   );
   const amount = !selectedEvents.length ? 0 : hasWorkshop ? 300 : 150;
-  const upiId = (import.meta.env.VITE_UPI_ID || '').trim();
-  const payee = (import.meta.env.VITE_UPI_PAYEE || '').trim();
+  const upiId = paymentConfig.upiId;
+  const payee = paymentConfig.payee;
   const paymentConfigured = Boolean(upiId && payee);
+
+  useEffect(() => {
+    let active = true;
+    fetch(`${getApiBase()}/api/payment-config`)
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (!active || !data?.configured) return;
+        setPaymentConfig({
+          upiId: String(data.upiId || '').trim(),
+          payee: String(data.payee || '').trim(),
+        });
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
   const upiLink = useMemo(() => {
     if (!selectedEvents.length || !amount || !upiId) return '';
     const parameters = new URLSearchParams({

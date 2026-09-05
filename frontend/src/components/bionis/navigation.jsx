@@ -17,7 +17,7 @@ export const navigationGroups = [
     label: 'OPERATIONS',
     items: [
       { label: 'Invitations', icon: BionisIcons.invitations },
-      { label: 'AI Analysis', icon: BionisIcons.analysis },
+      { label: 'Day Book', icon: BionisIcons.chart },
       { label: 'Export', icon: BionisIcons.export },
       { label: 'Audit Log', icon: BionisIcons.audit },
       { label: 'Admin Access', icon: BionisIcons.access },

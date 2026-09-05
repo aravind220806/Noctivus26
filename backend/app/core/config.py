@@ -57,6 +57,8 @@ class Settings:
     smtp_user = env("SMTP_USER", "noctivus2026@gmail.com")
     smtp_password = env("SMTP_PASSWORD", "")
     smtp_from_email = env("SMTP_FROM_EMAIL", "noctivus2026@gmail.com")
+    upi_id = env("UPI_ID")
+    upi_payee = env("UPI_PAYEE")
     # Google Sheets Live Sync Configuration
     google_sheets_spreadsheet_id = env("GOOGLE_SHEETS_SPREADSHEET_ID")
     google_service_account_file = env("GOOGLE_SERVICE_ACCOUNT_FILE")

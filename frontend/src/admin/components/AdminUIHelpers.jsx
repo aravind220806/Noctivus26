@@ -29,7 +29,7 @@ export function Filters({ overview, eventId, setEventId, status, setStatus }) {
   );
 }
 
-export function RegistrationTable({ registrations, selected, setSelected, renderActions }) {
+export function RegistrationTable({ registrations, selected, setSelected, renderActions, onOpenDetails }) {
   const toggle = (id) =>
     setSelected((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
 
@@ -48,7 +48,13 @@ export function RegistrationTable({ registrations, selected, setSelected, render
             <span className="reg-card__id">{registration.registrationId}</span>
           </label>
           <div className="reg-card__participant">
-            <strong className="reg-card__name">{registration.participant?.name || '—'}</strong>
+            <button
+              type="button"
+              className="reg-card__name-button"
+              onClick={() => onOpenDetails?.(registration)}
+            >
+              {registration.participant?.name || '—'}
+            </button>
             <small className="reg-card__college">{registration.participant?.college || '—'}</small>
           </div>
           <div className="reg-card__events">

@@ -28,7 +28,8 @@ def validate_registration(input_data: dict | None, configured_events: list[dict]
     errors: list[str] = []
     participant = data.get("participant") or {}
     email = normalize_email(participant.get("email"))
-    phone = normalize_digits(participant.get("phone"))
+    raw_phone = str(participant.get("phone") or "").strip()
+    phone = normalize_digits(raw_phone)
     utr_number = normalize_digits(data.get("utrNumber"))
     payment_reference = normalize_text(data.get("paymentReference")).upper()
     food_preference = normalize_text(participant.get("foodPreference")).lower()
@@ -41,7 +42,7 @@ def validate_registration(input_data: dict | None, configured_events: list[dict]
         errors.append("Participant name is too long.")
     if not re.match(r"^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,24}$", email):
         errors.append("A valid email is required.")
-    if not re.match(r"^\d{10}$", phone):
+    if raw_phone != phone or not re.match(r"^\d{10}$", phone):
         errors.append("A valid 10-digit phone number is required.")
     if len(college) < 2:
         errors.append("College is required.")
@@ -148,14 +149,15 @@ def validate_registration(input_data: dict | None, configured_events: list[dict]
             "teamMembers": [{"name": normalize_text(member.get("name")).upper(), "rollNo": normalize_text(member.get("rollNo")).upper()} for member in members if isinstance(member, dict)],
         })
 
-    # Flat registration fee of ₹150 covers symposium admission (₹300 if workshop is included)
     has_workshop = any(
         (e.get("category") or "").lower() == "workshop"
         or e.get("eventId") == "playground-of-hackers"
         or e.get("feeSnapshot") == 300
         for e in event_registrations
     )
-    expected_amount = (300 if has_workshop else 150) if event_registrations else 0
+    if has_workshop and len(event_registrations) > 1:
+        errors.append("Workshop registration cannot be combined with other events.")
+    expected_amount = sum(int(e.get("feeSnapshot") or 0) for e in event_registrations)
     if data.get("claimedAmount") != expected_amount:
         errors.append("Registration amount does not match the configured event fees.")
 
