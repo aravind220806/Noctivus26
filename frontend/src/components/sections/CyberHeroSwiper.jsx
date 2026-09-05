@@ -1,8 +1,7 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useMemo, useState } from 'react';
 import Swiper from 'swiper';
-import { Pagination, Autoplay } from 'swiper/modules';
+import { Autoplay } from 'swiper/modules';
 import 'swiper/css';
-import 'swiper/css/pagination';
 import { events as defaultEvents } from '../../data/site.js';
 import { NotchedButton } from '../ui/NotchedButton/NotchedButton';
 import './CyberHeroSwiper.css';
@@ -10,14 +9,75 @@ import './CyberHeroSwiper.css';
 export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegister }) {
   const swiperContainerRef = useRef(null);
   const swiperInstanceRef = useRef(null);
+  const [activeBulletIndex, setActiveBulletIndex] = useState(0);
+
+  // Swiper's loop mode with slidesPerView: 'auto' and centeredSlides requires
+  // enough slides in the DOM to seamlessly populate both sides and loop buffers.
+  // When there are few items (e.g. 3 non-tech, 5 tech), Swiper runs out of slides
+  // and teleports DOM elements, causing vanishing cards, jumping, and glitching.
+  // Repeating items until count >= 9 provides ample buffer slides for infinite looping.
+  const slides = useMemo(() => {
+    if (!eventsData || eventsData.length === 0) return [];
+    if (eventsData.length === 1) {
+      return eventsData.map((event) => ({
+        ...event,
+        _uniqueKey: `${event.id}-single`,
+        _originalIndex: 0,
+      }));
+    }
+
+    const minSlides = 9;
+    const repeatCount = Math.ceil(minSlides / eventsData.length);
+    const result = [];
+    for (let r = 0; r < repeatCount; r++) {
+      for (let i = 0; i < eventsData.length; i++) {
+        result.push({
+          ...eventsData[i],
+          _uniqueKey: `${eventsData[i].id}-rep-${r}-${i}`,
+          _originalIndex: i,
+        });
+      }
+    }
+    return result;
+  }, [eventsData]);
+
+  // Reset active bullet to first item when category/events change
+  useEffect(() => {
+    setActiveBulletIndex(0);
+  }, [eventsData]);
 
   const handlePrev = useCallback(() => {
-    swiperInstanceRef.current?.slidePrev(800);
+    swiperInstanceRef.current?.slidePrev(600);
   }, []);
 
   const handleNext = useCallback(() => {
-    swiperInstanceRef.current?.slideNext(800);
+    swiperInstanceRef.current?.slideNext(600);
   }, []);
+
+  const handleBulletClick = useCallback((targetIndex) => {
+    const swiper = swiperInstanceRef.current;
+    if (!swiper || swiper.destroyed || eventsData.length <= 1) return;
+
+    const currentEventIndex = swiper.realIndex % eventsData.length;
+    const diff = targetIndex - currentEventIndex;
+    if (diff === 0) return;
+
+    let step = diff;
+    const half = eventsData.length / 2;
+    if (step > half) {
+      step -= eventsData.length;
+    } else if (step < -half) {
+      step += eventsData.length;
+    }
+
+    if (step === 1) {
+      swiper.slideNext(600);
+    } else if (step === -1) {
+      swiper.slidePrev(600);
+    } else {
+      swiper.slideTo(swiper.activeIndex + step, 600);
+    }
+  }, [eventsData.length]);
 
   useEffect(() => {
     if (!swiperContainerRef.current) return;
@@ -32,14 +92,13 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
       swiperInstanceRef.current = null;
     }
 
-    if (!eventsData || eventsData.length === 0) return;
+    if (!slides || slides.length === 0) return;
 
-    const hasMultiple = eventsData.length > 1;
-    const paginationEl = swiperContainerRef.current?.closest('.cyber-hero-carousel-section')?.querySelector('.swiper-pagination');
+    const hasMultiple = slides.length > 1;
 
     // Initialize Swiper instance with true seamless infinite loop
     const instance = new Swiper(swiperContainerRef.current, {
-      modules: [Pagination, Autoplay],
+      modules: [Autoplay],
       initialSlide: 0,
       slidesPerView: 'auto',
       centeredSlides: true,
@@ -48,6 +107,7 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
       rewind: false,
       spaceBetween: 16,
       speed: 600,
+      watchSlidesProgress: true,
       observer: true,
       observeParents: true,
       autoplay: hasMultiple
@@ -57,15 +117,18 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
             pauseOnMouseEnter: true,
           }
         : false,
-      pagination: {
-        el: paginationEl,
-        clickable: true,
-      },
       breakpoints: {
         901: {
           slidesPerView: 'auto',
           spaceBetween: 28,
           centeredSlides: true,
+        },
+      },
+      on: {
+        slideChange: (swiper) => {
+          if (eventsData.length > 0) {
+            setActiveBulletIndex(swiper.realIndex % eventsData.length);
+          }
         },
       },
     });
@@ -82,7 +145,7 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
         swiperInstanceRef.current = null;
       }
     };
-  }, [eventsData]);
+  }, [slides, eventsData.length]);
 
   // Keyboard arrow keys navigation when events section is in viewport
   useEffect(() => {
@@ -108,7 +171,7 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [eventsData.length, handlePrev, handleNext]);
 
-  // Click delegation handler to support clicks on Swiper cloned duplicate slides
+  // Click delegation handler to support clicks on slides and duplicate slides
   const handleSwiperClick = (e) => {
     const regBtn = e.target.closest('[data-action="register"]');
     if (regBtn) {
@@ -128,10 +191,33 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
       if (selected && onSelect) {
         onSelect(selected);
       }
+      return;
+    }
+
+    // Clicking an adjacent peek slide smoothly slides it into center
+    const slideEl = e.target.closest('.swiper-slide');
+    if (slideEl && !slideEl.classList.contains('swiper-slide-active')) {
+      const swiper = swiperInstanceRef.current;
+      if (swiper && !swiper.destroyed) {
+        const slideIndex = swiper.slides.indexOf(slideEl);
+        if (slideIndex !== -1) {
+          swiper.slideTo(slideIndex, 600);
+        }
+      }
     }
   };
 
   const carouselKey = eventsData.map((e) => e.id).join('_');
+
+  if (!eventsData || eventsData.length === 0) {
+    return (
+      <div className="cyber-hero-carousel-section">
+        <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
+          No events found in this category.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="cyber-hero-carousel-section" key={carouselKey}>
@@ -142,7 +228,7 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
         onClick={handleSwiperClick}
       >
         <div className="swiper-wrapper">
-          {eventsData.map((slide, index) => {
+          {slides.map((slide) => {
             const heading = slide.heading || slide.name || "WHAT'S NEW";
             const description = slide.description || slide.format || '';
             const accent = slide.accent || 'cyan';
@@ -150,14 +236,14 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
             return (
               <div
                 className="swiper-slide"
-                data-swiper-slide-index={index}
-                key={slide.id || index}
+                key={slide._uniqueKey}
               >
                 <div className="item">
                   <img
                     src={slide.image}
                     alt={heading}
                     style={slide.imagePosition ? { objectPosition: slide.imagePosition } : undefined}
+                    loading="lazy"
                   />
                   <div className="item-content">
                     {slide.category && (
@@ -216,7 +302,19 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
             </svg>
           </button>
 
-          <div className="swiper-pagination"></div>
+          <div className="swiper-pagination" role="tablist" aria-label="Event slides">
+            {eventsData.map((item, i) => (
+              <button
+                key={item.id || i}
+                type="button"
+                className={`swiper-pagination-bullet ${i === activeBulletIndex ? 'swiper-pagination-bullet-active' : ''}`}
+                onClick={() => handleBulletClick(i)}
+                aria-label={`Go to ${item.name || `event ${i + 1}`}`}
+                aria-selected={i === activeBulletIndex}
+                role="tab"
+              />
+            ))}
+          </div>
 
           <button
             type="button"
