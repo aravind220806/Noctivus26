@@ -30,7 +30,8 @@
   box-sizing: border-box;
 }
 
-.cyber-hero-carousel-section .swiper-slide-active {
+.cyber-hero-carousel-section .swiper-slide-active,
+.cyber-hero-carousel-section .swiper-slide-duplicate-active {
   opacity: 1;
   transform: scale(1);
 }
@@ -241,7 +242,8 @@
     box-sizing: border-box;
   }
 
-  .cyber-hero-carousel-section .swiper-slide-active {
+  .cyber-hero-carousel-section .swiper-slide-active,
+  .cyber-hero-carousel-section .swiper-slide-duplicate-active {
     opacity: 1;
     transform: scale(1);
   }

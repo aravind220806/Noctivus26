@@ -37,14 +37,15 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
     const hasMultiple = eventsData.length > 1;
     const paginationEl = swiperContainerRef.current?.closest('.cyber-hero-carousel-section')?.querySelector('.swiper-pagination');
 
-    // Initialize Swiper instance with initialSlide 0 and continuous rewind loop
+    // Initialize Swiper instance with true seamless infinite loop
     const instance = new Swiper(swiperContainerRef.current, {
       modules: [Pagination, Autoplay],
       initialSlide: 0,
       slidesPerView: 'auto',
       centeredSlides: true,
-      rewind: hasMultiple,
-      loop: false,
+      loop: hasMultiple,
+      loopAdditionalSlides: hasMultiple ? 2 : 0,
+      rewind: false,
       spaceBetween: 16,
       speed: 600,
       observer: true,
@@ -107,11 +108,39 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [eventsData.length, handlePrev, handleNext]);
 
+  // Click delegation handler to support clicks on Swiper cloned duplicate slides
+  const handleSwiperClick = (e) => {
+    const regBtn = e.target.closest('[data-action="register"]');
+    if (regBtn) {
+      e.preventDefault();
+      const eventId = regBtn.getAttribute('data-event-id');
+      if (eventId && onRegister) {
+        onRegister(eventId);
+      }
+      return;
+    }
+
+    const viewBtn = e.target.closest('[data-action="select"]');
+    if (viewBtn) {
+      e.preventDefault();
+      const eventId = viewBtn.getAttribute('data-event-id');
+      const selected = eventsData.find((item) => String(item.id) === String(eventId));
+      if (selected && onSelect) {
+        onSelect(selected);
+      }
+    }
+  };
+
   const carouselKey = eventsData.map((e) => e.id).join('_');
 
   return (
     <div className="cyber-hero-carousel-section" key={carouselKey}>
-      <div className="swiper" key={carouselKey} ref={swiperContainerRef}>
+      <div 
+        className="swiper" 
+        key={carouselKey} 
+        ref={swiperContainerRef}
+        onClick={handleSwiperClick}
+      >
         <div className="swiper-wrapper">
           {eventsData.map((slide, index) => {
             const heading = slide.heading || slide.name || "WHAT'S NEW";
@@ -149,6 +178,8 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
                       <NotchedButton
                         variant="primary"
                         accent={accent}
+                        data-action="register"
+                        data-event-id={slide.id}
                         onClick={() => onRegister?.(slide.id)}
                       >
                         REGISTER NOW
@@ -156,6 +187,8 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
                       <NotchedButton
                         variant="ghost"
                         accent={accent}
+                        data-action="select"
+                        data-event-id={slide.id}
                         onClick={() => onSelect?.(slide)}
                       >
                         VIEW DETAILS
