@@ -31,12 +31,14 @@
   position: fixed;
   z-index: 200;
   inset: 0;
-  padding: 1.5rem;
+  padding: calc(var(--navbar-height, 64px) + 1.25rem) 1.5rem max(2rem, env(safe-area-inset-bottom, 2rem)) 1.5rem;
   display: grid;
-  place-items: center;
+  place-items: start center;
   overflow-y: auto;
   background: rgba(0, 0, 0, 0.82);
   backdrop-filter: blur(8px);
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
 }
 
 .event-modal-panel {
@@ -472,8 +474,8 @@
    ═══════════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 600px) {
   .event-modal-shell {
-    padding: 0.5rem;
-    align-items: center;
+    padding: calc(var(--navbar-height, 58px) + 0.85rem) 0.5rem max(1.5rem, env(safe-area-inset-bottom, 1.5rem)) 0.5rem;
+    place-items: start center;
   }
 
   .event-modal-panel {

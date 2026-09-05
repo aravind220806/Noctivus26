@@ -142,7 +142,7 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
 
   useEffect(() => {
     document.body.classList.add('modal-open');
-    closeButtonRef.current?.focus();
+    closeButtonRef.current?.focus({ preventScroll: true });
     const onKeyDown = (event) => event.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKeyDown);
     return () => {

@@ -4,17 +4,23 @@
   position: fixed;
   z-index: 200;
   inset: 0;
-  padding: 1.5rem;
+  padding: calc(var(--navbar-height, 64px) + 1.5rem) 1.5rem max(2rem, env(safe-area-inset-bottom, 2rem)) 1.5rem;
   display: grid;
-  place-items: center;
+  place-items: start center;
   overflow-y: auto;
   background: rgba(0, 0, 0, 0.85);
   box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+}
+
+.reg-modal-shell > .hud-corners-container {
+  width: min(780px, 100%);
+  max-width: 100%;
 }
 
 .reg-modal-panel {
   position: relative;
-  width: min(780px, calc(100vw - 32px));
+  width: 100%;
   background: var(--surface);
   border: 1px solid var(--line);
   box-shadow: 0 0 32px -4px var(--line);
@@ -402,8 +408,8 @@
 /* ── Mobile Viewport Optimizations (320px – 480px) ── */
 @media (max-width: 480px) {
   .reg-modal-shell {
-    padding: 0.5rem;
-    align-items: flex-start;
+    padding: calc(var(--navbar-height, 58px) + 0.85rem) 0.65rem max(2rem, env(safe-area-inset-bottom, 2rem)) 0.65rem;
+    place-items: start center;
   }
 
   .reg-modal-panel {
