@@ -234,11 +234,12 @@
   min-height: 100vh;
   box-sizing: border-box;
   background: var(--bg);
+  padding-top: var(--navbar-height, 64px); /* Always offset for fixed navbar */
 }
 
 @media (max-width: 900px) {
   .main-container {
-    padding-top: 60px;
+    /* padding-top is handled globally via --navbar-height; remove per-screen hack */
     margin-right: 0;
   }
 }

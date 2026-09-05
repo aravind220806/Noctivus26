@@ -27,12 +27,26 @@
 
 /* Inner Container */
 .footer-hud-container {
-  max-width: 1400px;
+  max-width: var(--site-max-width, 1360px);
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 var(--window-padding-desktop, 28px);
   position: relative;
   z-index: 10;
+  box-sizing: border-box;
 }
+
+@media (max-width: 960px) {
+  .footer-hud-container {
+    padding: 0 var(--window-padding-mobile, 16px);
+  }
+}
+
+@media (max-width: 480px) {
+  .footer-hud-container {
+    padding: 0 var(--window-padding-xs, 12px);
+  }
+}
+
 
 /* ─────────────────────────────────────────────────────────────────────────────
    MAIN FOOTER CONTENT LAYOUT (COMPACT DETAILS LEFT, COMPACT MAP RIGHT)

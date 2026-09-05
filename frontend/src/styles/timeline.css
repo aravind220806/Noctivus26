@@ -6,29 +6,44 @@
    SECTION SHELL
    ═══════════════════════════════════════════════════════════════════════════════ */
 .timeline-section {
-  margin-top: 3rem;
-  margin-bottom: 3rem;
-  padding: 3rem 1rem 4rem;
+  padding: var(--section-space-y-desktop, 4.5rem) 0;
   color: var(--text);
   font-family: var(--mono-font);
   background: var(--bg);
   border-top: 1px solid var(--line);
   box-sizing: border-box;
   position: relative;
+  scroll-margin-top: var(--nav-scroll-offset, 96px);
 }
 
-@media (min-width: 768px) {
+@media (max-width: 960px) {
   .timeline-section {
-    padding: 4rem 3.5rem 5rem;
-  }
-}
-
-@media (max-width: 900px) {
-  .timeline-section {
+    padding: var(--section-space-y-mobile, 3rem) 0;
+    scroll-margin-top: var(--nav-scroll-offset-mobile, 76px);
     clip-path: polygon(0 0, 100% 0, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0 100%);
-    padding-bottom: 4rem;
   }
 }
+
+.timeline-container {
+  width: 100%;
+  max-width: var(--site-max-width, 1360px);
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: 0 var(--window-padding-desktop, 28px);
+}
+
+@media (max-width: 960px) {
+  .timeline-container {
+    padding: 0 var(--window-padding-mobile, 16px);
+  }
+}
+
+@media (max-width: 480px) {
+  .timeline-container {
+    padding: 0 var(--window-padding-xs, 12px);
+  }
+}
+
 
 /* ─────────────────────────────────────────────────────────────────────────────
    HUD Corner Brackets Motif

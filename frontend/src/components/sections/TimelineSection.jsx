@@ -470,102 +470,104 @@ export function TimelineSection() {
 
   return (
     <section className="timeline-section" id="schedule">
-      <HeadingBar level="h2" text="SCHEDULE" sectionIndex="04 / 05" />
+      <div className="timeline-container">
+        <HeadingBar level="h2" text="SCHEDULE" sectionIndex="04 / 05" />
 
-      {/* Interactive Controls Bar: Category Filters & Desktop View Switcher */}
-      <div className="timeline-controls">
-        <div className="timeline-filters">
-          {/* Desktop: buttons */}
-          <div className="timeline-filters-buttons">
-            <button
-              type="button"
-              className={`timeline-filter-btn ${selectedCategory === 'ALL' ? 'timeline-filter-btn--active' : ''}`}
-              onClick={() => setSelectedCategory('ALL')}
-            >
-              All Events ({events.length})
-            </button>
-            <button
-              type="button"
-              className={`timeline-filter-btn ${selectedCategory === 'TECHNICAL' ? 'timeline-filter-btn--active' : ''}`}
-              onClick={() => setSelectedCategory('TECHNICAL')}
-            >
-              <span className="filter-dot filter-dot--cyan" /> Technical
-            </button>
-            <button
-              type="button"
-              className={`timeline-filter-btn ${selectedCategory === 'NON-TECHNICAL' ? 'timeline-filter-btn--active' : ''}`}
-              onClick={() => setSelectedCategory('NON-TECHNICAL')}
-            >
-              <span className="filter-dot filter-dot--lime" /> Non-Technical
-            </button>
-            <button
-              type="button"
-              className={`timeline-filter-btn ${selectedCategory === 'WORKSHOP' ? 'timeline-filter-btn--active' : ''}`}
-              onClick={() => setSelectedCategory('WORKSHOP')}
-            >
-              <span className="filter-dot filter-dot--violet" /> Workshop
-            </button>
-            <button
-              type="button"
-              className={`timeline-filter-btn ${selectedCategory === 'CEREMONY' ? 'timeline-filter-btn--active' : ''}`}
-              onClick={() => setSelectedCategory('CEREMONY')}
-            >
-              <span className="filter-dot filter-dot--teal" /> Plenary & Breaks
-            </button>
+        {/* Interactive Controls Bar: Category Filters & Desktop View Switcher */}
+        <div className="timeline-controls">
+          <div className="timeline-filters">
+            {/* Desktop: buttons */}
+            <div className="timeline-filters-buttons">
+              <button
+                type="button"
+                className={`timeline-filter-btn ${selectedCategory === 'ALL' ? 'timeline-filter-btn--active' : ''}`}
+                onClick={() => setSelectedCategory('ALL')}
+              >
+                All Events ({events.length})
+              </button>
+              <button
+                type="button"
+                className={`timeline-filter-btn ${selectedCategory === 'TECHNICAL' ? 'timeline-filter-btn--active' : ''}`}
+                onClick={() => setSelectedCategory('TECHNICAL')}
+              >
+                <span className="filter-dot filter-dot--cyan" /> Technical
+              </button>
+              <button
+                type="button"
+                className={`timeline-filter-btn ${selectedCategory === 'NON-TECHNICAL' ? 'timeline-filter-btn--active' : ''}`}
+                onClick={() => setSelectedCategory('NON-TECHNICAL')}
+              >
+                <span className="filter-dot filter-dot--lime" /> Non-Technical
+              </button>
+              <button
+                type="button"
+                className={`timeline-filter-btn ${selectedCategory === 'WORKSHOP' ? 'timeline-filter-btn--active' : ''}`}
+                onClick={() => setSelectedCategory('WORKSHOP')}
+              >
+                <span className="filter-dot filter-dot--violet" /> Workshop
+              </button>
+              <button
+                type="button"
+                className={`timeline-filter-btn ${selectedCategory === 'CEREMONY' ? 'timeline-filter-btn--active' : ''}`}
+                onClick={() => setSelectedCategory('CEREMONY')}
+              >
+                <span className="filter-dot filter-dot--teal" /> Plenary & Breaks
+              </button>
+            </div>
+            {/* Mobile: dropdown */}
+            <div className="timeline-filters-dropdown">
+              <select
+                className="timeline-filter-select"
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                aria-label="Filter schedule by category"
+              >
+                <option value="ALL">All Events ({events.length})</option>
+                <option value="TECHNICAL">Technical</option>
+                <option value="NON-TECHNICAL">Non-Technical</option>
+                <option value="WORKSHOP">Workshop</option>
+                <option value="CEREMONY">Plenary & Breaks</option>
+              </select>
+              <span className="timeline-filter-chevron" aria-hidden="true">▾</span>
+            </div>
           </div>
-          {/* Mobile: dropdown */}
-          <div className="timeline-filters-dropdown">
-            <select
-              className="timeline-filter-select"
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              aria-label="Filter schedule by category"
+
+          {/* Desktop View Switcher (Hidden on Mobile) */}
+          <div className="timeline-view-switch" role="tablist" aria-label="Schedule View">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'timeline'}
+              className={`timeline-switch-btn ${activeTab === 'timeline' ? 'timeline-switch-btn--active' : ''}`}
+              onClick={() => setActiveTab('timeline')}
+              title="Gantt Timeline View"
             >
-              <option value="ALL">All Events ({events.length})</option>
-              <option value="TECHNICAL">Technical</option>
-              <option value="NON-TECHNICAL">Non-Technical</option>
-              <option value="WORKSHOP">Workshop</option>
-              <option value="CEREMONY">Plenary & Breaks</option>
-            </select>
-            <span className="timeline-filter-chevron" aria-hidden="true">▾</span>
+              <LayoutGrid size={14} />
+              <span>Timeline</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'agenda'}
+              className={`timeline-switch-btn ${activeTab === 'agenda' ? 'timeline-switch-btn--active' : ''}`}
+              onClick={() => setActiveTab('agenda')}
+              title="Chronological Agenda List"
+            >
+              <ListFilter size={14} />
+              <span>Agenda</span>
+            </button>
           </div>
         </div>
 
-        {/* Desktop View Switcher (Hidden on Mobile) */}
-        <div className="timeline-view-switch" role="tablist" aria-label="Schedule View">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === 'timeline'}
-            className={`timeline-switch-btn ${activeTab === 'timeline' ? 'timeline-switch-btn--active' : ''}`}
-            onClick={() => setActiveTab('timeline')}
-            title="Gantt Timeline View"
-          >
-            <LayoutGrid size={14} />
-            <span>Timeline</span>
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === 'agenda'}
-            className={`timeline-switch-btn ${activeTab === 'agenda' ? 'timeline-switch-btn--active' : ''}`}
-            onClick={() => setActiveTab('agenda')}
-            title="Chronological Agenda List"
-          >
-            <ListFilter size={14} />
-            <span>Agenda</span>
-          </button>
+        {/* VIEW 1: Desktop View (> 900px) — Switches between Timeline and Agenda based on activeTab */}
+        <div className="timeline-desktop-view">
+          {activeTab === 'timeline' ? renderTimelineContent() : renderAgendaContent()}
         </div>
-      </div>
 
-      {/* VIEW 1: Desktop View (> 900px) — Switches between Timeline and Agenda based on activeTab */}
-      <div className="timeline-desktop-view">
-        {activeTab === 'timeline' ? renderTimelineContent() : renderAgendaContent()}
-      </div>
-
-      {/* VIEW 2: Mobile View (<= 900px) — Always renders Agenda View */}
-      <div className="timeline-mobile-view">
-        {renderAgendaContent()}
+        {/* VIEW 2: Mobile View (<= 900px) — Always renders Agenda View */}
+        <div className="timeline-mobile-view">
+          {renderAgendaContent()}
+        </div>
       </div>
     </section>
   );

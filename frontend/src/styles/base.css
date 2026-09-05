@@ -5,11 +5,20 @@
 * { box-sizing: border-box; }
 html {
   scroll-behavior: smooth;
+  /* Use --navbar-height so anchor scroll landing always clears the fixed navbar */
+  scroll-padding-top: calc(var(--navbar-height, 64px) + 24px);
   background: var(--bg);
   width: 100%;
   max-width: 100vw;
   overflow-x: hidden;
 }
+
+@media (max-width: 960px) {
+  html {
+    scroll-padding-top: calc(var(--navbar-height, 52px) + 18px);
+  }
+}
+
 body {
   margin: 0;
   background: var(--bg);
@@ -40,10 +49,40 @@ img { max-width: 100%; }
 
 .page-width {
   width: 100%;
-  max-width: var(--page-max);
+  max-width: var(--site-max-width, 1360px);
   margin-inline: auto;
-  padding-inline: var(--page-gutter-mobile);
+  padding-inline: var(--window-padding-desktop, 28px);
 }
+
+@media (max-width: 960px) {
+  .page-width {
+    padding-inline: var(--window-padding-mobile, 16px);
+  }
+}
+
+@media (max-width: 480px) {
+  .page-width {
+    padding-inline: var(--window-padding-xs, 12px);
+  }
+}
+
+/* Standard scroll-margin-top for all navigable sections */
+.about-section,
+.events-section,
+.timeline-section,
+.crew-section {
+  scroll-margin-top: calc(var(--navbar-height, 64px) + 24px);
+}
+
+@media (max-width: 960px) {
+  .about-section,
+  .events-section,
+  .timeline-section,
+  .crew-section {
+    scroll-margin-top: calc(var(--navbar-height, 52px) + 18px);
+  }
+}
+
 
 .skip-link {
   position: fixed;

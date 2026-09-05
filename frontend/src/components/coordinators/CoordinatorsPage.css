@@ -12,17 +12,26 @@
 }
 
 .noc-database-main {
-  max-width: 1400px;
+  max-width: var(--site-max-width, 1360px);
   margin: 0 auto;
-  padding: 100px 1.5rem 6rem;
+  /* Use --navbar-height so page content always clears the fixed navbar,
+     regardless of screen size or whether the navbar wraps to two lines. */
+  padding: var(--navbar-height, 64px) var(--window-padding-desktop, 28px) 6rem;
   box-sizing: border-box;
 }
 
-@media (min-width: 768px) {
+@media (max-width: 960px) {
   .noc-database-main {
-    padding: 120px 3rem 8rem;
+    padding: var(--navbar-height, 52px) var(--window-padding-mobile, 16px) 5rem;
   }
 }
+
+@media (max-width: 480px) {
+  .noc-database-main {
+    padding: var(--navbar-height, 52px) var(--window-padding-xs, 12px) 4rem;
+  }
+}
+
 
 /* ── Page Hero ── */
 .noc-db-hero {
@@ -76,7 +85,7 @@
 /* ── Category Navigation Bar ── */
 .noc-cat-nav-wrapper {
   position: sticky;
-  top: 70px;
+  top: var(--navbar-height, 64px);
   z-index: 40;
   background: rgba(2, 9, 13, 0.85);
   backdrop-filter: blur(12px);
@@ -166,7 +175,8 @@
 
 /* ── Section Structure ── */
 .noc-coord-section {
-  scroll-margin-top: 180px;
+  /* Account for fixed navbar + sticky category nav (~50px) above sections */
+  scroll-margin-top: calc(var(--navbar-height, 64px) + 60px);
   padding-top: 1.5rem;
   padding-bottom: 5rem;
 }

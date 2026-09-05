@@ -50,10 +50,26 @@
   --sp-24: 96px;
   --sp-32: 128px;
 
-  /* ── Layout tokens (mobile-first defaults) ── */
-  --page-max: 1200px;
-  --page-gutter-desktop: 40px;  /* 40px */
-  --page-gutter-mobile: 8px;    /* 8px */
-  --page: calc(100% - var(--page-gutter-mobile) * 2);
-  --space-section: var(--sp-12);       /* 48px mobile default */
+  /* ── Layout & Window Padding Tokens ── */
+  --site-max-width: 1360px;
+  --page-max: 1360px;
+  --nav-height-desktop: 72px;
+  --nav-height-mobile: 58px;
+  /* --navbar-height is the single source of truth for the current rendered navbar
+     height. It starts as a CSS-only fallback and is kept accurate at all times
+     by a small JS snippet in Navbar.jsx (runs on mount, resize, ResizeObserver). */
+  --navbar-height: 64px;            /* Pre-JS fallback (between mobile/desktop) */
+  --nav-scroll-offset: 96px;        /* 72px nav + 24px comfortable breathing gap */
+  --nav-scroll-offset-mobile: 76px; /* 58px nav + 18px comfortable breathing gap */
+  --window-padding-desktop: 28px;   /* Standard horizontal container padding */
+  --window-padding-tablet: 20px;    /* Tablet padding */
+  --window-padding-mobile: 16px;    /* Mobile padding */
+  --window-padding-xs: 12px;        /* Narrow mobile padding */
+  --section-space-y-desktop: 4.5rem;
+  --section-space-y-mobile: 3rem;
+  --page-gutter-desktop: var(--window-padding-desktop);
+  --page-gutter-mobile: var(--window-padding-mobile);
+  --page: calc(100% - var(--window-padding-mobile) * 2);
+  --space-section: var(--sp-12);
 }
+

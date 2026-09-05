@@ -6,16 +6,38 @@
   background: var(--bg);
   border-bottom: 1px solid var(--line);
   box-sizing: border-box;
-  padding: 4rem 1.5rem;
+  padding: var(--section-space-y-desktop, 4.5rem) 0;
   position: relative;
-  scroll-margin-top: 70px;
+  scroll-margin-top: var(--nav-scroll-offset, 96px);
 }
 
-@media (min-width: 768px) {
+@media (max-width: 960px) {
   .events-section {
-    padding: 4rem 3.5rem;
+    padding: var(--section-space-y-mobile, 3rem) 0;
+    scroll-margin-top: var(--nav-scroll-offset-mobile, 76px);
   }
 }
+
+.events-container {
+  width: 100%;
+  max-width: var(--site-max-width, 1360px);
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: 0 var(--window-padding-desktop, 28px);
+}
+
+@media (max-width: 960px) {
+  .events-container {
+    padding: 0 var(--window-padding-mobile, 16px);
+  }
+}
+
+@media (max-width: 480px) {
+  .events-container {
+    padding: 0 var(--window-padding-xs, 12px);
+  }
+}
+
 
 /* --- Filter Bar --- */
 .event-filters {

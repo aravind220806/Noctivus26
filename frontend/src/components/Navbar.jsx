@@ -1,6 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import './Navbar.css';
 
+// Update --navbar-height CSS variable to the actual rendered height of the navbar.
+// Called on mount, on resize, and whenever the mobile drawer opens/closes.
+function updateNavbarHeightVar(headerEl) {
+  if (!headerEl) return;
+  const h = headerEl.offsetHeight;
+  document.documentElement.style.setProperty('--navbar-height', `${h}px`);
+}
+
+
 export default function Navbar({ activeSection, onNavigate, onRegister, onSelectEvent }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -22,18 +31,28 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
 
   useEffect(() => {
     checkProximity();
+    // Measure actual navbar height immediately and update CSS variable
+    updateNavbarHeightVar(headerRef.current);
 
-    window.addEventListener('resize', checkProximity, { passive: true });
+    const handleResize = () => {
+      checkProximity();
+      updateNavbarHeightVar(headerRef.current);
+    };
+
+    window.addEventListener('resize', handleResize, { passive: true });
     window.addEventListener('scroll', checkProximity, { passive: true });
 
     let resizeObserver = null;
     if (headerRef.current && typeof ResizeObserver !== 'undefined') {
-      resizeObserver = new ResizeObserver(() => checkProximity());
+      resizeObserver = new ResizeObserver(() => {
+        checkProximity();
+        updateNavbarHeightVar(headerRef.current);
+      });
       resizeObserver.observe(headerRef.current);
     }
 
     return () => {
-      window.removeEventListener('resize', checkProximity);
+      window.removeEventListener('resize', handleResize);
       window.removeEventListener('scroll', checkProximity);
       if (resizeObserver) resizeObserver.disconnect();
     };
@@ -45,6 +64,8 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
     } else {
       document.body.style.overflow = '';
     }
+    // Drawer open/close may change the navbar's rendered height — re-measure
+    updateNavbarHeightVar(headerRef.current);
     return () => {
       document.body.style.overflow = '';
     };
@@ -65,7 +86,7 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
     { id: 'home', label: 'HOME', href: '#home' },
     { id: 'about', label: 'ABOUT', href: '#about' },
     { id: 'events', label: 'EVENTS', href: '#events' },
-    { id: 'schedule', label: 'TIMELINE', href: '#schedule' },
+    { id: 'schedule', label: 'SCHEDULE', href: '#schedule' },
     { id: 'coordinators', label: 'COORDINATORS', href: '#coordinators' },
   ];
 
@@ -89,22 +110,44 @@ export default function Navbar({ activeSection, onNavigate, onRegister, onSelect
       return;
     }
 
-    if (item.eventId && onSelectEvent) {
-      if (onNavigate) onNavigate('events');
-      const target = document.querySelector('#events');
-      if (target) target.scrollIntoView({ behavior: 'smooth' });
-      onSelectEvent(item.eventId);
-    } else if (item.category) {
-      if (onNavigate) onNavigate('events', item.category);
-      const target = document.querySelector('#events');
-      if (target) target.scrollIntoView({ behavior: 'smooth' });
-    } else if (onNavigate && item.id && item.href && item.href !== '#') {
-      onNavigate(item.id);
-    } else if (item.href && item.href !== '#') {
-      const target = document.querySelector(item.href);
-      if (target) target.scrollIntoView({ behavior: 'smooth' });
+    if (item.id === 'home') {
+      setMobileOpen(false);
+      // rAF: let drawer close + ResizeObserver update --navbar-height before scroll
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (typeof window !== 'undefined' && window.history) {
+          window.history.pushState(null, '', '#home');
+        }
+      });
+      return;
     }
+
+    // Close drawer first, then scroll on the next frame so --navbar-height
+    // reflects the closed-navbar height before scroll-padding-top is applied.
     setMobileOpen(false);
+    window.requestAnimationFrame(() => {
+      if (item.eventId && onSelectEvent) {
+        if (onNavigate) onNavigate('events');
+        const target = document.querySelector('#events');
+        if (target) target.scrollIntoView({ behavior: 'smooth' });
+        onSelectEvent(item.eventId);
+      } else if (item.category) {
+        if (onNavigate) onNavigate('events', item.category);
+        const target = document.querySelector('#events');
+        if (target) target.scrollIntoView({ behavior: 'smooth' });
+      } else if (onNavigate && item.id && item.href && item.href !== '#') {
+        onNavigate(item.id);
+        if (typeof window !== 'undefined' && window.history) {
+          window.history.pushState(null, '', item.href);
+        }
+      } else if (item.href && item.href !== '#') {
+        const target = document.querySelector(item.href);
+        if (target) target.scrollIntoView({ behavior: 'smooth' });
+        if (typeof window !== 'undefined' && window.history) {
+          window.history.pushState(null, '', item.href);
+        }
+      }
+    });
   };
 
   return (
