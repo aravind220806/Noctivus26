@@ -9,6 +9,7 @@
   padding: var(--section-space-y-desktop, 4.5rem) 0;
   position: relative;
   scroll-margin-top: var(--nav-scroll-offset, 96px);
+  overflow-x: clip;
 }
 
 @media (max-width: 960px) {

@@ -41,19 +41,19 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
     const instance = new Swiper(swiperContainerRef.current, {
       modules: [Pagination, Autoplay],
       initialSlide: 0,
-      slidesPerView: hasMultiple ? 1.25 : 1,
+      slidesPerView: 'auto',
       centeredSlides: true,
       rewind: hasMultiple,
       loop: false,
-      spaceBetween: 20,
-      speed: 800,
+      spaceBetween: 16,
+      speed: 600,
       observer: true,
       observeParents: true,
       autoplay: hasMultiple
         ? {
             delay: 5000,
             disableOnInteraction: false,
-            pauseOnMouseEnter: false,
+            pauseOnMouseEnter: true,
           }
         : false,
       pagination: {
@@ -61,13 +61,10 @@ export function CyberHeroSwiper({ eventsData = defaultEvents, onSelect, onRegist
         clickable: true,
       },
       breakpoints: {
-        320: {
-          slidesPerView: 1,
-          spaceBetween: 10,
-        },
         901: {
-          slidesPerView: hasMultiple ? 1.25 : 1,
-          spaceBetween: 20,
+          slidesPerView: 'auto',
+          spaceBetween: 28,
+          centeredSlides: true,
         },
       },
     });
