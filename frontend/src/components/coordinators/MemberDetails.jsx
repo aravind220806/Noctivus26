@@ -102,10 +102,6 @@ export function MemberDetails({ member }) {
           </svg>
         </div>
         <p className="noc-auth-text">{authText}</p>
-        <div className="noc-validity-row">
-          <span className="noc-valid-label">VALID FOR:</span>
-          <span className="noc-valid-val">ACADEMIC YEAR 2025–2026</span>
-        </div>
       </section>
     </div>
   );

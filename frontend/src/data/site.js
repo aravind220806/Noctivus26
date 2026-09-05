@@ -85,7 +85,7 @@ export const events = [
     fee: 150,
     laptopRequirement: 'None',
     accent: 'cyan',
-    image: '/images/prompt-heist.jpg',
+    image: '/images/prompt-heist.webp',
     imagePosition: 'center center',
     format: 'An adversarial prompt engineering challenge where participants trick secured LLM systems into revealing secret flags.',
     details: [
