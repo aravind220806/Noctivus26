@@ -189,7 +189,7 @@ class GoogleSheetsService:
 
     @property
     def is_enabled(self) -> bool:
-        return bool(settings.google_sheets_live_sync_enabled and self.is_configured)
+        return bool(settings.google_sheets_live_sync_enabled and self.is_configured and self.spreadsheet_id)
 
     async def create_new_spreadsheet(self, title: str = "Noctivus '26 Live Database") -> dict | None:
         """Automatically creates a new Google Spreadsheet in Google Cloud."""
@@ -206,10 +206,6 @@ class GoogleSheetsService:
             "sheets": [
                 {"properties": {"title": "Registered"}},
                 {"properties": {"title": "Verified"}},
-                {"properties": {"title": "Check-In List"}},
-                {"properties": {"title": "Master Event Slots"}},
-                {"properties": {"title": "Scheduler Summary"}},
-                {"properties": {"title": "Member Allocations"}},
             ],
         }
         async with httpx.AsyncClient(timeout=30.0) as client:
@@ -225,6 +221,11 @@ class GoogleSheetsService:
     def get_status(self) -> dict:
         sa_info = _get_service_account_info()
         sid = self.spreadsheet_id
+        config_error = None
+        if settings.google_sheets_live_sync_enabled and not sa_info:
+            config_error = "Google Service Account credentials are missing or unreadable."
+        elif settings.google_sheets_live_sync_enabled and not sid:
+            config_error = "GOOGLE_SHEETS_SPREADSHEET_ID is missing."
         return {
             "configured": self.is_configured,
             "enabled": self.is_enabled,
@@ -233,13 +234,17 @@ class GoogleSheetsService:
             "serviceAccountEmail": sa_info.get("client_email") if sa_info else None,
             "lastSyncedAt": _LAST_SYNC_STATUS["last_synced_at"],
             "lastSyncType": _LAST_SYNC_STATUS["last_sync_type"],
-            "lastError": _LAST_SYNC_STATUS["last_error"],
+            "lastError": _LAST_SYNC_STATUS["last_error"] or config_error,
             "totalSyncCount": _LAST_SYNC_STATUS["total_sync_count"],
         }
 
     async def _api_request(self, method: str, path: str, json_body: dict | None = None, params: dict | None = None) -> dict | None:
         token = await get_google_access_token()
-        if not token or not self.spreadsheet_id:
+        if not token:
+            _LAST_SYNC_STATUS["last_error"] = "Unable to get Google access token. Check service account credentials and enabled Google APIs."
+            return None
+        if not self.spreadsheet_id:
+            _LAST_SYNC_STATUS["last_error"] = "GOOGLE_SHEETS_SPREADSHEET_ID is missing."
             return None
 
         url = f"https://sheets.googleapis.com/v4/spreadsheets/{self.spreadsheet_id}{path}"
@@ -314,6 +319,7 @@ class GoogleSheetsService:
     async def sync_current_database(self, sync_type: str) -> bool:
         """Re-read local state and publish the canonical Google Sheets view."""
         if not self.is_enabled:
+            _LAST_SYNC_STATUS["last_error"] = self.get_status().get("lastError") or "Google Sheets sync is disabled."
             return False
         global _sync_pending
         _sync_pending = True
@@ -449,15 +455,15 @@ class GoogleSheetsService:
 
     async def sync_new_registration(self, registration: dict):
         """Live trigger: publish the full canonical workbook after registration."""
-        await self.sync_current_database("registration")
+        return await self.sync_current_database("registration")
 
     async def sync_verified_registration(self, registration: dict):
         """Live trigger: publish the full canonical workbook after verification."""
-        await self.sync_current_database("verification")
+        return await self.sync_current_database("verification")
 
     async def sync_check_in(self, registration: dict):
         """Live trigger: publish the full canonical workbook after gate or event attendance."""
-        await self.sync_current_database("attendance")
+        return await self.sync_current_database("attendance")
 
     def build_live_workbook(self, events: list[dict], registrations: list[dict]) -> dict[str, list[list[Any]]]:
         """Build the clean Sheets workbook for the registration -> verification -> attendance flow."""

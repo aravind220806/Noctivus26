@@ -115,10 +115,7 @@ async def scheduler_get(request: Request, _admin=Depends(require_admin_tab("Even
 
 async def _run_sheets_sync():
     try:
-        events = await list_events()
-        registrations = await load_registrations()
-        slots = await load_all_slots()
-        await google_sheets_service.sync_full_database(events, registrations, slots)
+        await google_sheets_service.sync_current_database("admin_update")
     except Exception as err:
         logger.error(f"Background sheets sync failed: {err}")
 

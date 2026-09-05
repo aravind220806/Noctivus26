@@ -1,5 +1,6 @@
 import asyncio
 import hashlib
+import logging
 import secrets
 import re
 from datetime import datetime, timezone
@@ -9,6 +10,8 @@ from app.db.memory_store import memory_registrations
 from app.db.sqlite_db import sqlite_db
 from app.services.event_service import list_events, public_event, _is_closed
 from app.services.validation_service import normalize_digits, validate_registration
+
+logger = logging.getLogger(__name__)
 
 
 def create_registration_id() -> str:
@@ -132,15 +135,25 @@ async def create_registration(payload: dict | None, idempotency_key: str | None 
     except Exception:
         pass
 
+    sheets_synced = None
+    sheets_error = None
     try:
         from app.services.google_sheets_service import google_sheets_service
-        asyncio.create_task(google_sheets_service.sync_new_registration(record))
-    except Exception:
-        pass
+        sheets_synced = await asyncio.wait_for(google_sheets_service.sync_new_registration(record), timeout=15)
+        status = google_sheets_service.get_status()
+        if not sheets_synced:
+            sheets_error = status.get("lastError") or "Google Sheets sync is not enabled or not configured."
+            logger.error("Google Sheets sync did not complete for registration %s: %s", reg_id, sheets_error)
+    except Exception as err:
+        sheets_synced = False
+        sheets_error = str(err)
+        logger.exception("Google Sheets sync failed for registration %s", reg_id)
 
     return 201, {
         "registrationId": record["registrationId"],
         "message": "Registration received and awaiting payment verification.",
+        "sheetsSynced": sheets_synced,
+        "sheetsError": sheets_error,
     }
 
 
