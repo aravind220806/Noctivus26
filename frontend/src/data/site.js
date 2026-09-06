@@ -23,7 +23,7 @@ export const events = [
     id: 'ctf',
     name: 'NULL CORE 2.0 CTF',
     category: 'Technical',
-    teamSize: 'Individual',
+    teamSize: '2-4 Members',
     fee: 150,
     laptopRequirement: 'Laptop is mandatory for this event.',
     accent: 'cyan',
@@ -31,6 +31,7 @@ export const events = [
     imagePosition: 'center center',
     format: 'A cybersecurity challenge where participants solve problems and find flags using ethical security techniques.',
     details: [
+      'Team size: 2-4 members per team, each participant can join only one team.',
       'Use ethical and legal methods only.',
       'Do not attack, disrupt, or damage the competition system.',
       'Do not share flags or solutions with other participants.',
@@ -108,7 +109,7 @@ export const events = [
     id: 'secure-x-vibecode',
     name: 'Secure X Vibe Coding',
     category: 'Technical',
-    teamSize: 'Individual',
+    teamSize: '1-2 Members',
     fee: 150,
     laptopRequirement: 'Laptop is mandatory for this event.',
     accent: 'cyan',
@@ -116,6 +117,7 @@ export const events = [
     imagePosition: 'center 45%',
     format: 'Build a useful and working solution based on a problem statement given by the organizers. AI-assisted coding is allowed.',
     details: [
+      'Team size: 1-2 members per team, each participant can join only one team.',
       'Choose one problem statement provided by the organizers.',
       'Build the project during the event.',
       'AI tools such as ChatGPT, GitHub Copilot, Cursor, and Gemini are allowed.',
