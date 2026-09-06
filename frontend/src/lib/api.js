@@ -8,6 +8,10 @@ export function getApiBase() {
     return `http://${host}:4000`;
   }
 
+  if (typeof window !== 'undefined' && window.location.hostname.endsWith('.vercel.app')) {
+    return 'https://noctivus.site';
+  }
+
   return '';
 }
 
