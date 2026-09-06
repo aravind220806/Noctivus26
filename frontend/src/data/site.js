@@ -222,7 +222,7 @@ export const events = [
     accent: 'lime',
     image: '/images/ipl-auction.webp',
     imagePosition: 'center center',
-    format: 'A solo cricket strategy event with two rounds: Rapid Fire and IPL Auction. Participants compete to build a strong 15-player squad using a ₹120 Crore budget.',
+    format: 'Team Cricket strategy event with two rounds: Rapid Fire and IPL Auction. Participants compete to build a strong 15-player squad using a ₹120 Crore budget.',
     details: [
       'The first round is Rapid Fire.',
       'Top 10 teams qualify for the auction round.',
