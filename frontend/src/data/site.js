@@ -190,7 +190,7 @@ export const events = [
     id: 'tune-trap',
     name: 'Tune Trap',
     category: 'Non-Technical',
-    teamSize: 'Individual',
+    teamSize: '2-4',
     fee: 150,
     laptopRequirement: 'None',
     accent: 'lime',
