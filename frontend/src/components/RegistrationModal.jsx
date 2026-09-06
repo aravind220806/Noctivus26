@@ -378,7 +378,13 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
 
               {error && <p className="reg-error" role="alert">{error}</p>}
 
-              <div className="reg-actions">
+              <div className="reg-actions reg-actions--with-note">
+                <div className="reg-note-box">
+                  <span className="reg-note-tag">[NOTE]</span>
+                  <p className="reg-note-text">
+                    Registration is individual, teams can be formed after participants are added to the respective event WhatsApp group.
+                  </p>
+                </div>
                 <NotchedButton variant="primary" onClick={continueToEvents}>
                   CHOOSE EVENTS &gt;
                 </NotchedButton>
