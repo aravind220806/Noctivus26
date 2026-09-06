@@ -1,11 +1,11 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
 Allow: /
-Allow: /device
+Disallow: /device
 Disallow: /coordinators
 Disallow: /admin
 Disallow: /adimn
 Disallow: /login
 Disallow: /api/admin/
 
-Sitemap: https://noctivus.in/sitemap.xml
+Sitemap: https://noctivus.site/sitemap.xml

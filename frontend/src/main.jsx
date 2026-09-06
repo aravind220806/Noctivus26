@@ -55,14 +55,14 @@ class RootErrorBoundary extends Component {
 const App = lazy(() => import('./App.jsx').then(m => ({ default: m.default || m.App })));
 const AdminApp = lazy(() => import('./admin/AdminApp.jsx').then(m => ({ default: m.default || m.AdminApp })));
 const PassVerification = lazy(() => import('./pages/PassVerification.jsx').then(m => ({ default: m.default || m.PassVerification })));
-const DeviceDemo = lazy(() => import('./components/registration-device/DeviceDemo.jsx').then(m => ({ default: m.default || m.DeviceDemo })));
+// const DeviceDemo = lazy(() => import('./components/registration-device/DeviceDemo.jsx').then(m => ({ default: m.default || m.DeviceDemo })));
 const CoordinatorsPage = lazy(() => import('./pages/CoordinatorsPage.jsx').then(m => ({ default: m.default || m.CoordinatorsPage })));
 
 const currentPath = window.location.pathname.toLowerCase();
 const isAdminRoute = currentPath.startsWith('/admin') || currentPath.startsWith('/adimn');
 const isLoginRoute = currentPath.startsWith('/login');
 const isPassRoute = currentPath.startsWith('/p/');
-const isDeviceRoute = currentPath.startsWith('/device');
+// const isDeviceRoute = currentPath.startsWith('/device');
 const isCoordinatorsRoute = currentPath.startsWith('/coordinators');
 
 createRoot(document.getElementById('root')).render(
@@ -76,10 +76,11 @@ createRoot(document.getElementById('root')).render(
         <Suspense fallback={<div className="admin-loading">Verifying pass...</div>}>
           <PassVerification />
         </Suspense>
-      ) : isDeviceRoute ? (
-        <Suspense fallback={<div className="admin-loading">Loading device demo...</div>}>
-          <DeviceDemo />
-        </Suspense>
+      // /device route commented out — uncomment below and DeviceDemo import to re-enable
+      // } : isDeviceRoute ? (
+      //   <Suspense fallback={<div className="admin-loading">Loading device demo...</div>}>
+      //     <DeviceDemo />
+      //   </Suspense>
       ) : isCoordinatorsRoute ? (
         <Suspense fallback={<div className="admin-loading">Accessing Personnel Database...</div>}>
           <CoordinatorsPage />
