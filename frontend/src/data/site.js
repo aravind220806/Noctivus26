@@ -136,7 +136,7 @@ export const events = [
     id: 'ignite',
     name: 'Ignite Ideathon',
     category: 'Technical',
-    teamSize: '2-3 Members',
+    teamSize: 'Solo registration only',
     fee: 150,
     laptopRequirement: 'None',
     accent: 'cyan',
@@ -145,7 +145,8 @@ export const events = [
     format: "Present one original idea using the official PPT template. Each team gets 5-6 minutes for the pitch and 2-3 minutes for judges' Q&A.",
     details: [
       'Use the official PPT template.',
-      'Teams of 2-3 members.',
+      'Solo registration only.',
+      'Each team member must register separately with the same abstract.',
       'Each team can present only one idea.',
       'The idea must be original.',
       "Do not copy other people's work.",
