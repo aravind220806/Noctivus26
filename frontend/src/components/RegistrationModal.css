@@ -455,6 +455,12 @@
   letter-spacing: 0.05em;
 }
 
+.reg-ticket-note {
+  max-width: 320px;
+  width: 100%;
+  text-align: left;
+}
+
 /* ── Mobile Viewport Optimizations (320px – 480px) ── */
 @media (max-width: 480px) {
   .reg-modal-shell {

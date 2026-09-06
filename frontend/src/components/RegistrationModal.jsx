@@ -122,7 +122,7 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
           payee: String(data.payee || '').trim(),
         });
       })
-      .catch(() => {});
+      .catch(() => { });
     return () => {
       active = false;
     };
@@ -172,7 +172,7 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
       width: 180,
       margin: 1,
       color: { dark: '#0c0a09', light: '#e8ede8' },
-    })).then((url) => active && setReceiptQrDataUrl(url)).catch(() => {});
+    })).then((url) => active && setReceiptQrDataUrl(url)).catch(() => { });
     return () => { active = false; };
   }, [receipt]);
 
@@ -289,7 +289,7 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
     <div className="reg-modal-shell" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
       <HudCorners accent="cyan">
         <section className="reg-modal-panel panel" role="dialog" aria-modal="true" aria-labelledby="registration-title">
-          
+
           {/* Header */}
           <header className="reg-header">
             <div className="reg-title-wrap">
@@ -603,39 +603,39 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
               </div>
 
               {paymentConfigured ? (
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '260px 1fr', gap: '2rem', border: '1px solid var(--line)', padding: '1.5rem', background: 'rgba(0, 0, 0, 0.2)' }}>
-                {!isMobile ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', background: '#fff', padding: '1rem', boxSizing: 'border-box' }}>
-                    {qrDataUrl ? (
-                      <img src={qrDataUrl} width="220" height="220" alt="UPI Pay QR" />
-                    ) : (
-                      <div style={{ color: 'var(--bg)', fontFamily: 'IBM Plex Mono', fontSize: '0.8rem', height: '220px', display: 'flex', alignItems: 'center' }}>Generating QR…</div>
-                    )}
-                    <span style={{ color: 'var(--bg)', fontFamily: 'IBM Plex Mono', fontSize: '0.75rem', fontWeight: 600 }}>SCAN WITH UPI APP</span>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    <a className="button button-primary pay-upi-btn" href={upiLink} onClick={handleUpiClick} style={{ textAlign: 'center', display: 'block', padding: '1rem' }}>
-                      OPEN IN PAYMENTS APP
-                    </a>
-                    {showUpiFallback && (
-                      <div style={{ border: '1px dashed var(--line)', padding: '1rem' }}>
-                        <span style={{ color: 'var(--muted)', fontSize: '0.8rem', fontFamily: 'IBM Plex Mono' }}>UPI Address:</span>
-                        <button type="button" onClick={copyUpiId} style={{ background: 'var(--surface)', border: '1px solid var(--line)', color: 'var(--text)', width: '100%', padding: '0.5rem', cursor: 'pointer', marginTop: '0.5rem', fontFamily: 'IBM Plex Mono' }}>
-                          <code>{upiId}</code> - {copiedUpi ? 'COPIED' : 'TAP TO COPY'}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '260px 1fr', gap: '2rem', border: '1px solid var(--line)', padding: '1.5rem', background: 'rgba(0, 0, 0, 0.2)' }}>
+                  {!isMobile ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', background: '#fff', padding: '1rem', boxSizing: 'border-box' }}>
+                      {qrDataUrl ? (
+                        <img src={qrDataUrl} width="220" height="220" alt="UPI Pay QR" />
+                      ) : (
+                        <div style={{ color: 'var(--bg)', fontFamily: 'IBM Plex Mono', fontSize: '0.8rem', height: '220px', display: 'flex', alignItems: 'center' }}>Generating QR…</div>
+                      )}
+                      <span style={{ color: 'var(--bg)', fontFamily: 'IBM Plex Mono', fontSize: '0.75rem', fontWeight: 600 }}>SCAN WITH UPI APP</span>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      <a className="button button-primary pay-upi-btn" href={upiLink} onClick={handleUpiClick} style={{ textAlign: 'center', display: 'block', padding: '1rem' }}>
+                        OPEN IN PAYMENTS APP
+                      </a>
+                      {showUpiFallback && (
+                        <div style={{ border: '1px dashed var(--line)', padding: '1rem' }}>
+                          <span style={{ color: 'var(--muted)', fontSize: '0.8rem', fontFamily: 'IBM Plex Mono' }}>UPI Address:</span>
+                          <button type="button" onClick={copyUpiId} style={{ background: 'var(--surface)', border: '1px solid var(--line)', color: 'var(--text)', width: '100%', padding: '0.5rem', cursor: 'pointer', marginTop: '0.5rem', fontFamily: 'IBM Plex Mono' }}>
+                            <code>{upiId}</code> - {copiedUpi ? 'COPIED' : 'TAP TO COPY'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
-                <div style={{ fontFamily: 'IBM Plex Mono', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                  <span className="reg-kicker">UPI CREDENTIALS</span>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>UPI ID:</span><span style={{ color: 'var(--cyan)' }}>{upiId}</span></div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>PAYEE:</span><span>{payee}</span></div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>REFERENCE:</span><span>{paymentReference}</span></div>
+                  <div style={{ fontFamily: 'IBM Plex Mono', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                    <span className="reg-kicker">UPI CREDENTIALS</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>UPI ID:</span><span style={{ color: 'var(--cyan)' }}>{upiId}</span></div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>PAYEE:</span><span>{payee}</span></div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>REFERENCE:</span><span>{paymentReference}</span></div>
+                  </div>
                 </div>
-              </div>
               ) : (
                 <div style={{ border: '1px solid var(--error)', padding: '1.5rem', background: 'rgba(239, 68, 68, 0.08)', color: 'var(--text)', fontFamily: 'IBM Plex Mono' }}>
                   Payments are not configured yet. Please contact the organizers.
@@ -707,6 +707,13 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
                 <small style={{ fontFamily: 'IBM Plex Mono', fontSize: '0.75rem', color: 'var(--muted)', textAlign: 'center' }}>
                   Present this QR check-in voucher at the help desk.
                 </small>
+              </div>
+
+              <div className="reg-note-box reg-ticket-note">
+                <span className="reg-note-tag">[NOTE]</span>
+                <p className="reg-note-text">
+                  Take a screenshot of this ticket to check your Registration and Payment Status.
+                </p>
               </div>
 
               <NotchedButton variant="primary" onClick={onClose}>
