@@ -289,13 +289,17 @@ class GoogleSheetsService:
     async def batch_write_all_sheets(self, sheets_data: dict[str, list[list[Any]]]) -> bool:
         """Writes multiple sheets in a single atomic batch API request."""
         # 1. Ensure all sheet tabs exist in 1 call
-        await self.ensure_sheets_exist(list(sheets_data.keys()))
+        if not await self.ensure_sheets_exist(list(sheets_data.keys())):
+            if not _LAST_SYNC_STATUS.get("last_error"):
+                _LAST_SYNC_STATUS["last_error"] = "Unable to create or verify required Google Sheet tabs."
+            return False
 
         # 2. Batch clear all sheet ranges in 1 call
         clear_body = {
             "ranges": [f"'{title}'!A1:Z10000" for title in sheets_data.keys()]
         }
-        await self._api_request("POST", "/values:batchClear", json_body=clear_body)
+        if await self._api_request("POST", "/values:batchClear", json_body=clear_body) is None:
+            return False
 
         # 3. Batch update all sheet values in 1 call
         data_payload = [
@@ -646,7 +650,10 @@ class GoogleSheetsService:
 
         try:
             all_sheets_payload = self.build_live_workbook(events, registrations)
-            await self.batch_write_all_sheets(all_sheets_payload)
+            if not await self.batch_write_all_sheets(all_sheets_payload):
+                if not _LAST_SYNC_STATUS.get("last_error"):
+                    _LAST_SYNC_STATUS["last_error"] = "Google Sheets batch update did not complete."
+                return False
             _LAST_SYNC_STATUS["last_synced_at"] = datetime.now(timezone.utc).isoformat()
             _LAST_SYNC_STATUS["last_sync_type"] = sync_type
             _LAST_SYNC_STATUS["last_error"] = None

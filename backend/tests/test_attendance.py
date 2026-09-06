@@ -330,3 +330,27 @@ def test_google_sheets_live_workbook_uses_clean_verified_event_attendance_flow()
     assert ideathon_ids == ["NOC26-VERIFIED"]
     assert attendance_names == ["Verified Leader", "Team Mate"]
     assert workbook["Attendance - Ideathon Challenge"][1][10] == "PRESENT"
+
+
+@pytest.mark.asyncio
+async def test_google_sheets_sync_reports_failed_batch_write(monkeypatch):
+    from app.services.google_sheets_service import GoogleSheetsService, _LAST_SYNC_STATUS
+
+    service = GoogleSheetsService()
+    previous_error = _LAST_SYNC_STATUS.get("last_error")
+    previous_sync_count = _LAST_SYNC_STATUS.get("total_sync_count", 0)
+
+    async def failed_batch_write(_sheets_data):
+        _LAST_SYNC_STATUS["last_error"] = "Google Sheets API error (403): sheet not shared"
+        return False
+
+    monkeypatch.setattr(GoogleSheetsService, "is_enabled", property(lambda _self: True))
+    monkeypatch.setattr(service, "batch_write_all_sheets", failed_batch_write)
+
+    try:
+        success = await service.sync_full_database([], [], [])
+        assert success is False
+        assert _LAST_SYNC_STATUS["last_error"] == "Google Sheets API error (403): sheet not shared"
+        assert _LAST_SYNC_STATUS["total_sync_count"] == previous_sync_count
+    finally:
+        _LAST_SYNC_STATUS["last_error"] = previous_error
