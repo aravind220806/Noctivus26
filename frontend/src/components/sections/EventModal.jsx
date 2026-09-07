@@ -22,6 +22,7 @@ export function EventModal({ event, onClose, onRegister }) {
   const pages = [
     { key: 'overview', title: 'OVERVIEW' },
     { key: 'rules', title: 'RULES & REGULATIONS' },
+    ...(event.topics ? [{ key: 'topics', title: 'TOPICS' }] : []),
     { key: 'coordinators', title: 'COORDINATORS' },
   ];
 
@@ -135,7 +136,44 @@ export function EventModal({ event, onClose, onRegister }) {
             </div>
           )}
 
-          {page === 2 && (
+          {event.topics && page === 2 && (
+            <div className="em-content">
+              <ol className="em-rules-list">
+                {event.topics.map((topic) => (
+                  <li key={topic} className="em-rule-item">
+                    <span className="em-rule-bullet" aria-hidden="true">▸</span>
+                    <span>{topic}</span>
+                  </li>
+                ))}
+              </ol>
+              {event.pptTemplate && (
+                <a
+                  href={event.pptTemplate}
+                  download
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    marginTop: '1.25rem',
+                    padding: '0.5rem 1rem',
+                    border: '1px solid var(--accent, var(--cyan))',
+                    color: 'var(--accent, var(--cyan))',
+                    fontFamily: 'JetBrains Mono, monospace',
+                    fontSize: '0.75rem',
+                    letterSpacing: '0.08em',
+                    textDecoration: 'none',
+                    transition: 'background 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0,240,255,0.08)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                >
+                  ↓ DOWNLOAD PPT TEMPLATE
+                </a>
+              )}
+            </div>
+          )}
+
+          {pages[page]?.key === 'coordinators' && (
             <div className="em-content">
               {event.coordinators && event.coordinators.length > 0 && (
                 <div style={{ marginBottom: '1.25rem' }}>
@@ -167,15 +205,6 @@ export function EventModal({ event, onClose, onRegister }) {
         </div>
 
         <footer className="em-footer">
-          <div className="em-page-counter">
-            {pages.map((_, i) => (
-              <span
-                key={i}
-                className={`em-dot ${page === i ? 'active' : ''}`}
-                aria-hidden="true"
-              />
-            ))}
-          </div>
           {isRegisterable && (
             <NotchedButton
               variant="primary"

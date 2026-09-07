@@ -217,7 +217,7 @@
 /* Footer */
 .em-footer {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   padding-top: 1rem;
   border-top: 1px dashed var(--line);

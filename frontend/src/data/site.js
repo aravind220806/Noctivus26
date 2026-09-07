@@ -160,6 +160,15 @@ export const events = [
       { name: 'Harinisha C', phone: '9655514532' },
       { name: 'Sri R', phone: '8015458886' },
     ],
+    topics: [
+      'AI & Cybersecurity Fusion',
+      'Cybercrime and Forensics',
+      'IoT',
+      'Inclusive Innovation',
+      'From Ideas to APK',
+      'Emerging Technologies',
+    ],
+    pptTemplate: '/templates/ignite-ppt-template.pptx',
   },
   {
     id: 'mystery-hunt',
