@@ -35,7 +35,6 @@ const events = [
     description: 'Participant check-in, ID verification.',
     color: 'teal',
     icon: User,
-    trackRow: 0,
     timeDisplay: '08:00 AM - 08:45 AM',
     durationDisplay: '45 mins',
     bars: [
@@ -61,7 +60,6 @@ const events = [
     description: 'Welcome address, dignitary speeches, and symposium commencement.',
     color: 'teal',
     icon: User,
-    trackRow: 1,
     timeDisplay: '08:45 AM - 10:00 AM',
     durationDisplay: '1h 15m',
     bars: [
@@ -87,7 +85,6 @@ const events = [
     description: 'Complimentary lunch buffet, refreshments, and networking. All event tracks paused.',
     color: 'teal',
     icon: Coffee,
-    trackRow: 0,
     timeDisplay: '12:00 PM - 01:00 PM',
     durationDisplay: '1 hr',
     bars: [
@@ -115,7 +112,6 @@ const events = [
     description: 'High-intensity cybersecurity & ethical hacking challenges (continuous competition running through 3:30 PM with lunch break).',
     color: 'cyan',
     icon: Shield,
-    trackRow: 2,
     isFullDay: true,
     timeDisplay: '10:15 AM - 03:30 PM (Break: 12:00 PM - 01:00 PM)',
     durationDisplay: '4h 15m active',
@@ -153,7 +149,6 @@ const events = [
     description: 'An intensive hands-on offensive & defensive cybersecurity workshop uncovering real-world exploit vectors, ethical hacking techniques, and live labs.',
     color: 'violet',
     icon: Terminal,
-    trackRow: 10,
     isFullDay: true,
     timeDisplay: '10:15 AM - 03:30 PM (Break: 12:00 PM - 01:00 PM)',
     durationDisplay: '4h 15m active',
@@ -193,7 +188,6 @@ const events = [
     description: 'Hands-on live system vulnerability discovery and exploit reporting.',
     color: 'cyan',
     icon: Search,
-    trackRow: 3,
     timeDisplay: 'Session 1: 10:15 AM - 12:00 PM | Session 2: 01:00 PM - 03:30 PM',
     durationDisplay: '1h 45m / 2h 30m',
     bars: [
@@ -228,7 +222,6 @@ const events = [
     description: 'Adversarial prompt injection and LLM jailbreaking battle.',
     color: 'cyan',
     icon: Bot,
-    trackRow: 4,
     timeDisplay: 'Session 1: 10:15 AM - 12:00 PM | Session 2: 01:00 PM - 03:30 PM',
     durationDisplay: '1h 45m / 2h 30m',
     bars: [
@@ -263,7 +256,6 @@ const events = [
     description: 'Rapid AI-assisted secure application development showdown.',
     color: 'cyan',
     icon: Code,
-    trackRow: 5,
     timeDisplay: 'Session 1: 10:15 AM - 12:00 PM | Session 2: 01:00 PM - 03:30 PM',
     durationDisplay: '1h 45m / 2h 30m',
     bars: [
@@ -298,7 +290,6 @@ const events = [
     description: 'Innovation, product prototyping, and venture pitch presentations.',
     color: 'cyan',
     icon: Lightbulb,
-    trackRow: 6,
     timeDisplay: 'Session 1: 10:15 AM - 12:00 PM | Session 2: 01:00 PM - 03:30 PM',
     durationDisplay: '1h 45m / 2h 30m',
     bars: [
@@ -335,7 +326,6 @@ const events = [
     description: 'Solve a crime case using the clues and evidence given by the organizers.',
     color: 'lime',
     icon: Search,
-    trackRow: 7,
     timeDisplay: 'Session 1: 10:15 AM - 12:00 PM | Session 2: 01:00 PM - 03:30 PM',
     durationDisplay: '1h 45m / 2h 30m',
     bars: [
@@ -370,7 +360,6 @@ const events = [
     description: 'Music trivia, audio reverse analysis, and rhythm challenges.',
     color: 'lime',
     icon: Music,
-    trackRow: 8,
     timeDisplay: 'Session 1: 10:15 AM - 12:00 PM | Session 2: 01:00 PM - 03:30 PM',
     durationDisplay: '1h 45m / 2h 30m',
     bars: [
@@ -405,7 +394,6 @@ const events = [
     description: 'Strategic auction simulation and sports management battle.',
     color: 'lime',
     icon: Trophy,
-    trackRow: 9,
     timeDisplay: 'Session 1: 10:15 AM - 12:00 PM | Session 2: 01:00 PM - 03:30 PM',
     durationDisplay: '1h 45m / 2h 30m',
     bars: [
@@ -437,6 +425,53 @@ const startHour = 8.0;
 const endHour = 16.0;
 const totalHalfHours = Math.round((endHour - startHour) * 2); // 16 half-hours → 8:00 AM to 4:00 PM
 const rowHeight = 52;
+
+/** Continuous span an event occupies for lane packing (covers lunch gaps on multi-bar tracks). */
+function getEventSpan(event) {
+  const starts = event.bars.map((b) => b.start);
+  const ends = event.bars.map((b) => b.end);
+  return { start: Math.min(...starts), end: Math.max(...ends) };
+}
+
+/**
+ * Greedy lane packing: put each event on the first row that has no time overlap.
+ * Sequential events share a line; a new line opens only when that slot is taken.
+ * Shorter events are placed first so plenary/breaks keep the top spine and
+ * long parallel tracks open new rows instead of stealing those gaps.
+ * Workshop is preferred above other same-span tracks (e.g. CTF).
+ */
+function assignTrackLanes(eventList) {
+  const sorted = [...eventList].sort((a, b) => {
+    const spanA = getEventSpan(a);
+    const spanB = getEventSpan(b);
+    const durA = spanA.end - spanA.start;
+    const durB = spanB.end - spanB.start;
+    if (durA !== durB) return durA - durB;
+    if (spanA.start !== spanB.start) return spanA.start - spanB.start;
+    if (a.category === 'Workshop' && b.category !== 'Workshop') return -1;
+    if (b.category === 'Workshop' && a.category !== 'Workshop') return 1;
+    return 0;
+  });
+
+  const laneIntervals = []; // laneIntervals[i] = [{ start, end }, ...]
+  const laneById = {};
+
+  const fitsLane = (occupied, span) =>
+    occupied.every((block) => block.end <= span.start || span.end <= block.start);
+
+  sorted.forEach((event) => {
+    const span = getEventSpan(event);
+    let lane = laneIntervals.findIndex((occupied) => fitsLane(occupied, span));
+    if (lane === -1) {
+      lane = laneIntervals.length;
+      laneIntervals.push([]);
+    }
+    laneIntervals[lane].push(span);
+    laneById[event.id] = lane;
+  });
+
+  return { laneById, laneCount: laneIntervals.length };
+}
 
 function formatTime(hour24) {
   const h = Math.floor(hour24);
@@ -491,12 +526,10 @@ export function TimelineSection() {
     return events;
   }, [selectedCategory]);
 
-  const maxRows = useMemo(() => {
-    const rows = events.map((e) => e.trackRow ?? 0);
-    return Math.max(...rows, 0) + 1;
-  }, []);
+  // Pack all events into the fewest rows (non-overlapping share a line)
+  const { laneById, laneCount } = useMemo(() => assignTrackLanes(events), []);
 
-  const containerHeight = maxRows * rowHeight;
+  const containerHeight = Math.max(laneCount, 1) * rowHeight;
 
   // Process chronological agenda groups
   const agendaGroups = useMemo(() => {
@@ -593,11 +626,6 @@ export function TimelineSection() {
               <div key={i} className="timeline-grid__line" />
             ))}
           </div>
-          {/* 3:30 PM Event Conclusion Marker Line */}
-          <div className="timeline-grid__conclude-line" aria-hidden="true">
-            <span className="timeline-grid__conclude-badge">3:30 PM CONCLUDE</span>
-          </div>
-
           {/* Render event bars & connectors */}
           {events.map((event) => {
             const isDimmed =
@@ -609,22 +637,10 @@ export function TimelineSection() {
 
             const isEventHovered = hoveredEventId === event.id;
             const EventIcon = event.icon;
-            const top = (event.trackRow ?? 0) * rowHeight;
+            const top = (laneById[event.id] ?? 0) * rowHeight;
 
             return (
               <div key={event.id} style={{ '--accent-color': `var(--${event.color})` }}>
-                {/* Visual dashed connector bridge across the 12:00-1:00 PM lunch pause for full-day tracks (CTF & Workshop) */}
-                {event.isFullDay && (
-                  <div
-                    className={`timeline-bar__connector ${isDimmed ? 'timeline-bar--dimmed' : ''} ${isEventHovered ? 'timeline-bar__connector--active' : ''}`}
-                    style={{ top: `${top}px` }}
-                    aria-hidden="true"
-                  >
-                    <div className="timeline-bar__connector-line" />
-                    <span className="timeline-bar__connector-label">Lunch Pause</span>
-                  </div>
-                )}
-
                 {/* Individual segment blocks for the event */}
                 {event.bars.map((bar) => {
                   const widthPercent =
