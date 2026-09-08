@@ -113,19 +113,86 @@ def test_csrf_accepted_with_correct_token():
     assert resp.status_code != 403, f"Correct CSRF token was rejected: {resp.status_code}: {resp.text}"
 
 
-def test_clear_registration_data_requires_owner():
+def test_trash_requires_verify_members_tab():
     token, csrf = _make_admin_token()
-    with patch("app.middleware.admin_auth.resolve_admin_access", new=AsyncMock(return_value={"tabs": ["Verify Members"], "owner": False})), \
+    with patch("app.middleware.admin_auth.resolve_admin_access", new=AsyncMock(return_value={"tabs": ["Dashboard"], "owner": False})), \
          patch("app.middleware.admin_auth.session_exists", new=AsyncMock(return_value=True)):
         client = TestClient(get_client().app, raise_server_exceptions=False)
         client.cookies.set("noctivus_admin_session", token)
         resp = client.post(
-            "/api/admin/registrations/clear-test-data",
-            json={"confirmation": "CLEAR MEMBERS"},
+            "/api/admin/registrations/trash",
+            json={"registrationIds": ["NOC26-TEST"]},
             headers={"x-csrf-token": csrf},
         )
     assert resp.status_code == 403
 
+
+def test_admin_can_trash_and_empty_selected_members():
+    token, csrf = sign_admin_token({
+        "email": "admin@example.com",
+        "name": "Admin",
+        "picture": "",
+        "tabs": ["Verify Members"],
+        "owner": False,
+    })
+    memory_registrations.clear()
+    memory_registrations.append({
+        "registrationId": "NOC26-CLEARME",
+        "normalizedUtr": "123456789012",
+        "paymentStatus": "confirmed",
+        "expectedAmount": 150,
+        "participant": {"name": "Clear Me", "email": "clear@example.com", "phone": "9876543210"},
+        "eventRegistrations": [{"eventId": "bug-hunt", "eventName": "Bug Hunt"}],
+    })
+    memory_registrations.append({
+        "registrationId": "NOC26-KEEPME",
+        "normalizedUtr": "123456789013",
+        "paymentStatus": "pending",
+        "expectedAmount": 150,
+        "participant": {"name": "Keep Me", "email": "keep@example.com", "phone": "9876543211"},
+        "eventRegistrations": [{"eventId": "bug-hunt", "eventName": "Bug Hunt"}],
+    })
+    with patch("app.middleware.admin_auth.resolve_admin_access", new=AsyncMock(return_value={"tabs": ["Verify Members"], "owner": False})), \
+         patch("app.middleware.admin_auth.session_exists", new=AsyncMock(return_value=True)), \
+         patch("app.routes.admin_routes.sqlite_db.ready", return_value=False), \
+         patch("app.services.registration_service.sqlite_db.ready", return_value=False), \
+         patch("app.routes.admin_routes.record_admin_action", new=AsyncMock()), \
+         patch("app.routes.admin_routes._trigger_sheets_sync"):
+        client = TestClient(get_client().app, raise_server_exceptions=False)
+        client.cookies.set("noctivus_admin_session", token)
+
+        trash_resp = client.post(
+            "/api/admin/registrations/trash",
+            json={"registrationIds": ["NOC26-CLEARME"]},
+            headers={"x-csrf-token": csrf},
+        )
+        assert trash_resp.status_code == 200, trash_resp.text
+        assert trash_resp.json()["trashed"] == 1
+
+        active = [r for r in memory_registrations if not r.get("trashedAt")]
+        trashed = [r for r in memory_registrations if r.get("trashedAt")]
+        assert len(active) == 1
+        assert active[0]["registrationId"] == "NOC26-KEEPME"
+        assert len(trashed) == 1
+
+        list_resp = client.get(
+            "/api/admin/registrations?trashed=true",
+            headers={"x-csrf-token": csrf},
+        )
+        assert list_resp.status_code == 200
+        assert list_resp.json()["trashCount"] == 1
+        assert list_resp.json()["registrations"][0]["registrationId"] == "NOC26-CLEARME"
+
+        empty_resp = client.post(
+            "/api/admin/registrations/trash/empty",
+            json={"confirmation": "EMPTY TRASH"},
+            headers={"x-csrf-token": csrf},
+        )
+        assert empty_resp.status_code == 200, empty_resp.text
+        assert empty_resp.json()["deleted"] == 1
+        assert [r["registrationId"] for r in memory_registrations] == ["NOC26-KEEPME"]
+
+    memory_registrations.clear()
 
 def test_owner_can_clear_registration_data_only():
     token, csrf = sign_admin_token({

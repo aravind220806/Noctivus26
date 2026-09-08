@@ -14,6 +14,10 @@ from app.services.validation_service import normalize_digits, validate_registrat
 logger = logging.getLogger(__name__)
 
 
+def is_trashed(registration: dict | None) -> bool:
+    return bool(registration and registration.get("trashedAt"))
+
+
 def create_registration_id() -> str:
     """Return a human-readable registration ID with 60+ bits of cryptographic entropy.
 
@@ -52,10 +56,19 @@ async def check_utr_availability(input_value) -> tuple[int, dict]:
 
     if sqlite_db.ready():
         duplicate = await sqlite_db.find_one("registrations", "normalizedUtr", utr_number)
+        if is_trashed(duplicate):
+            duplicate = None
     else:
         if settings.node_env == "production" or not settings.allow_memory_db:
             return 503, {"available": False, "message": "UTR verification is temporarily unavailable."}
-        duplicate = next((item for item in memory_registrations if item.get("normalizedUtr") == utr_number), None)
+        duplicate = next(
+            (
+                item
+                for item in memory_registrations
+                if item.get("normalizedUtr") == utr_number and not is_trashed(item)
+            ),
+            None,
+        )
     return 200, {"available": not bool(duplicate), "message": "This UTR has already been submitted." if duplicate else "UTR is available."}
 
 
@@ -113,19 +126,28 @@ async def create_registration(payload: dict | None, idempotency_key: str | None 
         norm_email = result["value"]["normalized"]["email"]
         if any(
             r.get("normalized", {}).get("email") == norm_email
+            and not is_trashed(r)
             and any(e.get("eventId") in event_ids for e in r.get("eventRegistrations", []))
             for r in all_regs
         ):
             return 409, {"message": "This email is already registered for one of the selected events."}
-        if any(r.get("normalizedUtr") == result["value"]["normalizedUtr"] for r in all_regs):
+        if any(r.get("normalizedUtr") == result["value"]["normalizedUtr"] and not is_trashed(r) for r in all_regs):
             return 409, {"message": "This UTR has already been submitted."}
         await sqlite_db.upsert("registrations", reg_id, record)
     else:
         if settings.node_env == "production" or not settings.allow_memory_db:
             return 503, {"message": "Registration service is not connected to its database."}
-        if any(r["normalized"]["email"] == result["value"]["normalized"]["email"] and any(e["eventId"] in event_ids for e in r.get("eventRegistrations", [])) for r in memory_registrations):
+        if any(
+            r["normalized"]["email"] == result["value"]["normalized"]["email"]
+            and not is_trashed(r)
+            and any(e["eventId"] in event_ids for e in r.get("eventRegistrations", []))
+            for r in memory_registrations
+        ):
             return 409, {"message": "This email is already registered for one of the selected events."}
-        if any(r.get("normalizedUtr") == result["value"]["normalizedUtr"] for r in memory_registrations):
+        if any(
+            r.get("normalizedUtr") == result["value"]["normalizedUtr"] and not is_trashed(r)
+            for r in memory_registrations
+        ):
             return 409, {"message": "This UTR has already been submitted."}
         memory_registrations.append(record)
 
@@ -184,7 +206,116 @@ async def load_registrations(filters: dict | None = None) -> list[dict]:
     if filters.get("search"):
         term = str(filters["search"]).lower()
         rows = [item for item in rows if term in f"{item.get('participant', {}).get('name', '')} {item.get('participant', {}).get('email', '')} {item.get('participant', {}).get('phone', '')} {item.get('normalizedUtr', '')}".lower()]
+
+    if filters.get("trashedOnly"):
+        rows = [item for item in rows if is_trashed(item)]
+    elif not filters.get("includeTrashed"):
+        rows = [item for item in rows if not is_trashed(item)]
+
     return rows
+
+
+async def _remove_members_from_slots(member_ids: set[str]) -> None:
+    if not member_ids:
+        return
+
+    if sqlite_db.ready():
+        slots = await sqlite_db.list_all("event_slots")
+        for slot in slots:
+            assigned = slot.get("assigned_member_ids") or []
+            if not assigned:
+                continue
+            filtered = [mid for mid in assigned if mid not in member_ids]
+            if len(filtered) != len(assigned):
+                slot["assigned_member_ids"] = filtered
+                await sqlite_db.upsert("event_slots", slot["id"], slot)
+
+    try:
+        from app.db.memory_store import memory_event_slots
+        for slot in memory_event_slots:
+            assigned = slot.get("assigned_member_ids") or []
+            if assigned:
+                slot["assigned_member_ids"] = [mid for mid in assigned if mid not in member_ids]
+    except Exception:
+        pass
+
+
+async def hard_delete_registration(registration_id: str) -> bool:
+    deleted = False
+    if sqlite_db.ready():
+        deleted = await sqlite_db.delete("registrations", registration_id) or deleted
+
+    before = len(memory_registrations)
+    memory_registrations[:] = [item for item in memory_registrations if item.get("registrationId") != registration_id]
+    deleted = deleted or len(memory_registrations) < before
+
+    if deleted:
+        try:
+            from app.services.cache_service import qr_lookup_cache, events_cache
+            qr_lookup_cache.clear()
+            events_cache.clear()
+        except Exception:
+            pass
+    return deleted
+
+
+async def trash_registrations(registration_ids: list[str], trashed_by: str | None = None) -> int:
+    now = datetime.now(timezone.utc).isoformat()
+    trashed_ids: list[str] = []
+    for registration_id in registration_ids:
+        existing = None
+        if sqlite_db.ready():
+            existing = await sqlite_db.get("registrations", registration_id)
+        if not existing:
+            existing = next((item for item in memory_registrations if item.get("registrationId") == registration_id), None)
+        if not existing or is_trashed(existing):
+            continue
+        updated = await update_registration(
+            registration_id,
+            {
+                "trashedAt": now,
+                "trashedBy": trashed_by,
+                "assigned_slots": [],
+            },
+        )
+        if updated:
+            trashed_ids.append(registration_id)
+
+    await _remove_members_from_slots(set(trashed_ids))
+    return len(trashed_ids)
+
+
+async def restore_registrations(registration_ids: list[str]) -> int:
+    restored = 0
+    for registration_id in registration_ids:
+        existing = None
+        if sqlite_db.ready():
+            existing = await sqlite_db.get("registrations", registration_id)
+        if not existing:
+            existing = next((item for item in memory_registrations if item.get("registrationId") == registration_id), None)
+        if not existing or not is_trashed(existing):
+            continue
+        updated = await update_registration(
+            registration_id,
+            {
+                "trashedAt": None,
+                "trashedBy": None,
+            },
+        )
+        if updated:
+            restored += 1
+    return restored
+
+
+async def empty_registration_trash() -> int:
+    trashed = await load_registrations({"trashedOnly": True})
+    deleted = 0
+    for registration in trashed:
+        registration_id = registration.get("registrationId")
+        if registration_id and await hard_delete_registration(registration_id):
+            deleted += 1
+    await _remove_members_from_slots({r.get("registrationId") for r in trashed if r.get("registrationId")})
+    return deleted
 
 
 async def update_registration(registration_id: str, update: dict) -> dict | None:
@@ -245,4 +376,6 @@ def serialize_registration(registration: dict) -> dict:
         "verificationNotes": registration.get("verificationNotes"),
         "invitation": registration.get("invitation"),
         "createdAt": registration.get("createdAt"),
+        "trashedAt": registration.get("trashedAt"),
+        "trashedBy": registration.get("trashedBy"),
     }

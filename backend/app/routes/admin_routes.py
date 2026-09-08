@@ -22,7 +22,15 @@ from app.services.export_service import export_attendance_to_excel, export_full_
 from app.services.audit_service import list_admin_actions, record_admin_action
 from app.services.google_auth_service import verify_google_credential
 from app.services.google_sheets_service import google_sheets_service
-from app.services.registration_service import create_registration_id, load_registrations, serialize_registration, update_registration
+from app.services.registration_service import (
+    create_registration_id,
+    empty_registration_trash,
+    load_registrations,
+    restore_registrations,
+    serialize_registration,
+    trash_registrations,
+    update_registration,
+)
 from app.services.scheduler_service import assignMembersToSlots, create_custom_slot, delete_slot, generate_all_event_slots, get_scheduler_dashboard_data, load_all_slots, slotsConflict, update_slot
 from app.db.memory_store import memory_registrations
 from app.db.sqlite_db import sqlite_db
@@ -638,9 +646,18 @@ async def overview(_admin=Depends(require_any_admin_tab(["Dashboard", "Verify Me
 
 
 @router.get("/registrations")
-async def registrations(eventId: str | None = None, status: str | None = None, search: str | None = None, _admin=Depends(require_any_admin_tab(["Verify Members", "Invitations", "Export"]))):
-    rows = await load_registrations({"eventId": eventId, "status": status, "search": search})
-    all_rows = await load_registrations()
+async def registrations(
+    eventId: str | None = None,
+    status: str | None = None,
+    search: str | None = None,
+    trashed: bool = False,
+    _admin=Depends(require_any_admin_tab(["Verify Members", "Invitations", "Export"])),
+):
+    filters = {"eventId": eventId, "status": status, "search": search}
+    if trashed:
+        filters["trashedOnly"] = True
+    rows = await load_registrations(filters)
+    all_rows = await load_registrations({"includeTrashed": True} if trashed else None)
     values = {"utr": {}, "email": {}, "phone": {}}
     for row in all_rows:
         participant = row.get("participant") or {}
@@ -654,19 +671,67 @@ async def registrations(eventId: str | None = None, status: str | None = None, s
         item = serialize_registration(row)
         item["duplicateFlags"] = flags
         output.append(item)
-    return {"registrations": output}
+    trash_count = len(await load_registrations({"trashedOnly": True}))
+    return {"registrations": output, "trashCount": trash_count}
+
+
+@router.post("/registrations/trash")
+@limiter.limit("20/minute")
+async def move_registrations_to_trash(request: Request, admin=Depends(require_admin_tab("Verify Members"))):
+    body = await request.json()
+    ids = [str(value).strip() for value in body.get("registrationIds", []) if str(value).strip()][:200]
+    if not ids:
+        raise HTTPException(status_code=400, detail="Select at least one registration.")
+    trashed = await trash_registrations(ids, trashed_by=admin.get("email"))
+    _trigger_sheets_sync()
+    await record_admin_action(admin["email"], "registration.trash", "registrations", {"count": trashed, "ids": ids[:50]})
+    return {"ok": True, "trashed": trashed}
+
+
+@router.post("/registrations/trash/restore")
+@limiter.limit("20/minute")
+async def restore_registrations_from_trash(request: Request, admin=Depends(require_admin_tab("Verify Members"))):
+    body = await request.json()
+    ids = [str(value).strip() for value in body.get("registrationIds", []) if str(value).strip()][:200]
+    if not ids:
+        raise HTTPException(status_code=400, detail="Select at least one registration.")
+    restored = await restore_registrations(ids)
+    _trigger_sheets_sync()
+    await record_admin_action(admin["email"], "registration.restore", "registrations", {"count": restored, "ids": ids[:50]})
+    return {"ok": True, "restored": restored}
+
+
+@router.post("/registrations/trash/empty")
+@limiter.limit("3/hour")
+async def empty_registrations_trash(request: Request, admin=Depends(require_admin_tab("Verify Members"))):
+    body = await request.json()
+    if str(body.get("confirmation") or "").strip() != "EMPTY TRASH":
+        raise HTTPException(status_code=400, detail="Type EMPTY TRASH to permanently delete trashed members.")
+
+    deleted = await empty_registration_trash()
+    try:
+        from app.services.cache_service import qr_lookup_cache, events_cache
+        qr_lookup_cache.clear()
+        events_cache.clear()
+    except Exception:
+        pass
+
+    _trigger_sheets_sync()
+    await record_admin_action(admin["email"], "registration.empty_trash", "registrations", {"deleted": deleted})
+    return {"ok": True, "deleted": deleted}
 
 
 @router.post("/registrations/clear-test-data")
 @limiter.limit("3/hour")
 async def clear_registration_test_data(request: Request, admin=Depends(require_admin)):
+    """Legacy owner wipe — prefer trash + empty trash. Kept for compatibility."""
     if not admin.get("owner"):
         raise HTTPException(status_code=403, detail="Owner admin access required.")
     body = await request.json()
     if str(body.get("confirmation") or "").strip() != "CLEAR MEMBERS":
         raise HTTPException(status_code=400, detail="Type CLEAR MEMBERS to confirm registration cleanup.")
 
-    existing_count = len(await load_registrations())
+    existing_count = len(await load_registrations({"includeTrashed": True}))
     if sqlite_db.ready():
         await sqlite_db.delete_all("registrations")
         slots = await sqlite_db.list_all("event_slots")
