@@ -23,7 +23,7 @@ export const events = [
     id: 'ctf',
     name: 'NULL CORE 2.0 CTF',
     category: 'Technical',
-    teamSize: '2-3 Members',
+    teamSize: '1-3 Members',
     fee: 150,
     laptopRequirement: 'Laptop is mandatory for this event.',
     accent: 'cyan',
