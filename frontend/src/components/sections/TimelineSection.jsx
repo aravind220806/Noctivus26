@@ -128,7 +128,7 @@ const events = [
     icon: Search,
     category: 'Non-Technical',
     venue: 'Campus Arena',
-    description: 'Campus-wide cryptic clues, logic puzzles, and treasure hunt.',
+    description: 'Solve a crime case using the clues and evidence given by the organizers.',
     color: 'lime',
     trackRow: 5,
   },
@@ -338,9 +338,9 @@ export function TimelineSection() {
           {events.map((event) => {
             const isFilteredOut = selectedCategory !== 'ALL' &&
               ((selectedCategory === 'TECHNICAL' && (event.category !== 'Technical' || event.category === 'Workshop')) ||
-               (selectedCategory === 'NON-TECHNICAL' && event.category !== 'Non-Technical') ||
-               (selectedCategory === 'WORKSHOP' && event.category !== 'Workshop') ||
-               (selectedCategory === 'CEREMONY' && event.category !== 'General'));
+                (selectedCategory === 'NON-TECHNICAL' && event.category !== 'Non-Technical') ||
+                (selectedCategory === 'WORKSHOP' && event.category !== 'Workshop') ||
+                (selectedCategory === 'CEREMONY' && event.category !== 'General'));
 
             const widthPercent =
               ((event.end - event.start) / (endHour - startHour)) * 100 - 0.4;
