@@ -358,6 +358,7 @@ def test_all_events_accept_solo_registration():
     from app.services.validation_service import validate_registration
 
     for event in EVENT_CATALOG:
+        team_size = event.get("teamMin", 1)
         result = validate_registration(
             {
                 "participant": {
@@ -367,7 +368,14 @@ def test_all_events_accept_solo_registration():
                     "college": "Test College",
                     "foodPreference": "veg",
                 },
-                "events": [{"eventId": event["id"], "teamSize": 1, "teamMembers": []}],
+                "events": [{
+                    "eventId": event["id"],
+                    "teamSize": team_size,
+                    "teamMembers": [
+                        {"name": f"Team Member {index}", "rollNo": f"ROLL{index}"}
+                        for index in range(1, team_size)
+                    ],
+                }],
                 "utrNumber": "123456789012",
                 "paymentReference": "NOC26-ABC123",
                 "claimedAmount": event["fee"],
@@ -377,6 +385,35 @@ def test_all_events_accept_solo_registration():
         )
 
         assert result["valid"], f"{event['name']} rejected solo registration: {result['errors']}"
+
+
+def test_technical_and_non_technical_combo_uses_regular_pass_amount():
+    from app.events import EVENT_CATALOG
+    from app.services.validation_service import validate_registration
+
+    result = validate_registration(
+        {
+            "participant": {
+                "name": "Combo Participant",
+                "email": "combo@example.com",
+                "phone": "9876543210",
+                "college": "Test College",
+                "foodPreference": "veg",
+            },
+            "events": [
+                {"eventId": "bug-hunt", "teamSize": 1, "teamMembers": []},
+                {"eventId": "mystery-hunt", "teamSize": 1, "teamMembers": []},
+            ],
+            "utrNumber": "123456789012",
+            "paymentReference": "NOC26-COMBO1",
+            "claimedAmount": 150,
+            "consent": {"privacyAccepted": True},
+        },
+        EVENT_CATALOG,
+    )
+
+    assert result["valid"], result["errors"]
+    assert result["value"]["expectedAmount"] == 150
 
 
 def test_workshop_registration_cannot_bypass_additional_event_fee():

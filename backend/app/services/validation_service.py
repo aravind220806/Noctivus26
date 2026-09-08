@@ -23,6 +23,22 @@ def too_long(value: str, limit: int) -> bool:
 from app.events import EVENT_ALIASES, EVENT_CATALOG
 
 
+def calculate_expected_amount(event_registrations: list[dict]) -> int:
+    if not event_registrations:
+        return 0
+
+    has_workshop = any(
+        (e.get("category") or "").lower() == "workshop"
+        or e.get("eventId") == "playground-of-hackers"
+        or e.get("feeSnapshot") == 300
+        for e in event_registrations
+    )
+    if has_workshop:
+        return sum(int(e.get("feeSnapshot") or 0) for e in event_registrations)
+
+    return max(int(e.get("feeSnapshot") or 0) for e in event_registrations)
+
+
 def validate_registration(input_data: dict | None, configured_events: list[dict]) -> dict:
     data = input_data or {}
     errors: list[str] = []
@@ -157,7 +173,7 @@ def validate_registration(input_data: dict | None, configured_events: list[dict]
     )
     if has_workshop and len(event_registrations) > 1:
         errors.append("Workshop registration cannot be combined with other events.")
-    expected_amount = sum(int(e.get("feeSnapshot") or 0) for e in event_registrations)
+    expected_amount = calculate_expected_amount(event_registrations)
     if data.get("claimedAmount") != expected_amount:
         errors.append("Registration amount does not match the configured event fees.")
 
