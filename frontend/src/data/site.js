@@ -31,7 +31,7 @@ export const events = [
     imagePosition: 'center center',
     format: 'A cybersecurity challenge where participants solve problems and find flags using ethical security techniques.',
     details: [
-      'Team size: 2-3 members per team, each participant can join only one team.',
+      'Team size: 1-3 members per team, each participant can join only one team.',
       'Use ethical and legal methods only.',
       'Do not attack, disrupt, or damage the competition system.',
       'Do not share flags or solutions with other participants.',
