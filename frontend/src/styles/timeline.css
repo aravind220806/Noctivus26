@@ -709,3 +709,65 @@
   line-height: 1.4;
   margin: 2px 0 0;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Timeline Grid Highlights: Dedicated Lunch Break Lane & 3:30 PM Conclusion Line
+   ───────────────────────────────────────────────────────────────────────────── */
+.timeline-grid__lunch-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 12.5%;
+  background: rgba(32, 178, 170, 0.035);
+  border-left: 1px dashed rgba(32, 178, 170, 0.25);
+  border-right: 1px dashed rgba(32, 178, 170, 0.25);
+  pointer-events: none;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 8px;
+}
+
+.timeline-grid__lunch-label {
+  font-size: 0.62rem;
+  color: var(--teal);
+  letter-spacing: 0.08em;
+  opacity: 0.6;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Agenda Conclusion Card
+   ───────────────────────────────────────────────────────────────────────────── */
+.agenda-conclusion-card {
+  background: rgba(32, 178, 170, 0.05);
+  border: 1px solid rgba(32, 178, 170, 0.25);
+  border-radius: 4px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text);
+  font-size: 0.8rem;
+}
+
+.agenda-conclusion-card__icon {
+  color: var(--teal);
+  flex-shrink: 0;
+}
+
+.agenda-conclusion-card__title {
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 2px;
+}
+
+.agenda-conclusion-card__desc {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin: 0;
+}
+

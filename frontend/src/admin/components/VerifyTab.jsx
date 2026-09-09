@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { adminFetch, apiPath, bulkVerify } from '../adminUtils';
 import { RegistrationTable } from './AdminUIHelpers';
 
@@ -13,7 +13,6 @@ export function VerifyTab({
   setStatus,
   selected,
   setSelected,
-  isOwner = false,
 }) {
   const feedbackMessages = {
     confirmed: '✅ Payment confirmed. Email & Google Sheets sync in progress.',
@@ -26,9 +25,43 @@ export function VerifyTab({
   const [verifyingId, setVerifyingId] = useState(null);
   const [feedback, setFeedback] = useState({});
   const [activeRegistration, setActiveRegistration] = useState(null);
-  const [cleanupOpen, setCleanupOpen] = useState(false);
-  const [cleanupText, setCleanupText] = useState('');
-  const [cleanupBusy, setCleanupBusy] = useState(false);
+  const [showTrash, setShowTrash] = useState(false);
+  const [trashItems, setTrashItems] = useState([]);
+  const [trashCount, setTrashCount] = useState(0);
+  const [trashBusy, setTrashBusy] = useState(false);
+  const [emptyTrashOpen, setEmptyTrashOpen] = useState(false);
+  const [emptyTrashText, setEmptyTrashText] = useState('');
+
+  const loadTrash = async () => {
+    const response = await adminFetch(apiPath('/api/admin/registrations?trashed=true'), {
+      headers: authHeaders,
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.message || data.detail || 'Unable to load trash.');
+    setTrashItems(data.registrations || []);
+    setTrashCount(data.trashCount ?? (data.registrations || []).length);
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await adminFetch(apiPath('/api/admin/registrations?trashed=true'), {
+          headers: authHeaders,
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!cancelled && response.ok) {
+          setTrashCount(data.trashCount ?? (data.registrations || []).length);
+          if (showTrash) setTrashItems(data.registrations || []);
+        }
+      } catch {
+        /* ignore count prefetch errors */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authHeaders, showTrash, registrations]);
 
   const verify = async (registrationId, nextStatus) => {
     setVerifyingId(registrationId);
@@ -52,14 +85,15 @@ export function VerifyTab({
   };
 
   const visibleRegistrations = useMemo(() => {
+    const source = showTrash ? trashItems : registrations;
     const term = search.toLowerCase().trim();
-    return registrations.filter((item) => {
+    return source.filter((item) => {
       if (!term) return true;
       return `${item.registrationId} ${item.participant?.name} ${item.participant?.email} ${item.participant?.phone} ${item.utrNumber}`
         .toLowerCase()
         .includes(term);
     });
-  }, [registrations, search]);
+  }, [registrations, trashItems, showTrash, search]);
 
   const groupedRegistrations = useMemo(() => {
     const groups = { pending: [], confirmed: [], mismatch: [], duplicate: [] };
@@ -82,28 +116,109 @@ export function VerifyTab({
     setStatus(nextStatus);
   };
 
-  const clearTestMembers = async () => {
-    setCleanupBusy(true);
+  const moveSelectedToTrash = async () => {
+    if (!selected.length) return;
+    setTrashBusy(true);
+    setFeedback((prev) => ({ ...prev, cleanup: '' }));
     try {
-      const response = await adminFetch(apiPath('/api/admin/registrations/clear-test-data'), {
+      const response = await adminFetch(apiPath('/api/admin/registrations/trash'), {
         method: 'POST',
         headers: { ...authHeaders, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ confirmation: cleanupText }),
+        body: JSON.stringify({ registrationIds: selected }),
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.message || 'Unable to clear member records.');
-      setCleanupOpen(false);
-      setCleanupText('');
+      if (!response.ok) throw new Error(data.message || data.detail || 'Unable to move members to trash.');
       setSelected([]);
-      setFeedback({});
+      setFeedback((prev) => ({
+        ...prev,
+        cleanup: `Moved ${data.trashed || selected.length} member(s) to trash.`,
+      }));
+      if (onChanged) onChanged();
+      await loadTrash();
+    } catch (error) {
+      setFeedback((prev) => ({
+        ...prev,
+        cleanup: error instanceof Error ? error.message : 'Unable to move members to trash.',
+      }));
+    } finally {
+      setTrashBusy(false);
+    }
+  };
+
+  const restoreSelected = async () => {
+    if (!selected.length) return;
+    setTrashBusy(true);
+    setFeedback((prev) => ({ ...prev, cleanup: '' }));
+    try {
+      const response = await adminFetch(apiPath('/api/admin/registrations/trash/restore'), {
+        method: 'POST',
+        headers: { ...authHeaders, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ registrationIds: selected }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || data.detail || 'Unable to restore members.');
+      setSelected([]);
+      setFeedback((prev) => ({
+        ...prev,
+        cleanup: `Restored ${data.restored || 0} member(s) from trash.`,
+      }));
+      await loadTrash();
       if (onChanged) onChanged();
     } catch (error) {
       setFeedback((prev) => ({
         ...prev,
-        cleanup: error instanceof Error ? error.message : 'Unable to clear member records.',
+        cleanup: error instanceof Error ? error.message : 'Unable to restore members.',
       }));
     } finally {
-      setCleanupBusy(false);
+      setTrashBusy(false);
+    }
+  };
+
+  const emptyTrash = async () => {
+    setTrashBusy(true);
+    setFeedback((prev) => ({ ...prev, cleanup: '' }));
+    try {
+      const response = await adminFetch(apiPath('/api/admin/registrations/trash/empty'), {
+        method: 'POST',
+        headers: { ...authHeaders, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirmation: emptyTrashText }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || data.detail || 'Unable to empty trash.');
+      setEmptyTrashOpen(false);
+      setEmptyTrashText('');
+      setSelected([]);
+      setTrashItems([]);
+      setTrashCount(0);
+      setFeedback((prev) => ({
+        ...prev,
+        cleanup: `Permanently deleted ${data.deleted || 0} trashed member(s).`,
+      }));
+      if (onChanged) onChanged();
+    } catch (error) {
+      setFeedback((prev) => ({
+        ...prev,
+        cleanup: error instanceof Error ? error.message : 'Unable to empty trash.',
+      }));
+    } finally {
+      setTrashBusy(false);
+    }
+  };
+
+  const openTrash = async () => {
+    setShowTrash(true);
+    setSelected([]);
+    setStatus('');
+    setTrashBusy(true);
+    try {
+      await loadTrash();
+    } catch (error) {
+      setFeedback((prev) => ({
+        ...prev,
+        cleanup: error instanceof Error ? error.message : 'Unable to load trash.',
+      }));
+    } finally {
+      setTrashBusy(false);
     }
   };
 
@@ -120,6 +235,12 @@ export function VerifyTab({
         ['Claimed Amount', `₹${activeRegistration.claimedAmount || 0}`],
         ['Status', activeRegistration.paymentStatus || 'pending'],
         ['Notes', activeRegistration.verificationNotes],
+        ...(activeRegistration.trashedAt
+          ? [
+              ['Trashed At', activeRegistration.trashedAt],
+              ['Trashed By', activeRegistration.trashedBy],
+            ]
+          : []),
       ]
     : [];
 
@@ -132,7 +253,7 @@ export function VerifyTab({
         </label>
         <label className="field">
           <span>Event</span>
-          <select value={eventId} onChange={(event) => setEventId(event.target.value)}>
+          <select value={eventId} onChange={(event) => setEventId(event.target.value)} disabled={showTrash}>
             <option value="">All events</option>
             {overview?.events?.map((event) => (
               <option key={event.eventId} value={event.eventId}>{event.eventName}</option>
@@ -140,59 +261,121 @@ export function VerifyTab({
           </select>
         </label>
       </div>
-      <div className="verify-status-tabs" aria-label="Payment status filters">
-        {statusFilters.map((item) => (
-          <button
-            key={item.title}
-            type="button"
-            className={`verify-status-tab ${status === item.key ? 'is-active' : ''}`}
-            onClick={() => changeStatusFilter(item.key)}
-          >
-            <span>{item.title}</span>
-            <strong>{item.count}</strong>
-          </button>
-        ))}
+
+      <div className="verify-status-tabs" aria-label="Members or trash">
+        <button
+          type="button"
+          className={`verify-status-tab ${!showTrash ? 'is-active' : ''}`}
+          onClick={() => {
+            setShowTrash(false);
+            setSelected([]);
+          }}
+        >
+          <span>Active members</span>
+        </button>
+        <button
+          type="button"
+          className={`verify-status-tab ${showTrash ? 'is-active' : ''}`}
+          onClick={openTrash}
+        >
+          <span>Trash</span>
+          <strong>{trashCount}</strong>
+        </button>
       </div>
+
+      {!showTrash && (
+        <div className="verify-status-tabs" aria-label="Payment status filters">
+          {statusFilters.map((item) => (
+            <button
+              key={item.title}
+              type="button"
+              className={`verify-status-tab ${status === item.key ? 'is-active' : ''}`}
+              onClick={() => changeStatusFilter(item.key)}
+            >
+              <span>{item.title}</span>
+              <strong>{item.count}</strong>
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="verify-bulk-actions">
-        <button
-          className="button button-secondary"
-          disabled={!selected.length}
-          onClick={async () => {
-            await bulkVerify(authHeaders, selected, 'confirmed');
-            setSelected([]);
-            onChanged();
-          }}
-        >
-          Confirm selected
-        </button>
-        <button
-          className="button button-secondary"
-          disabled={!selected.length}
-          onClick={async () => {
-            await bulkVerify(authHeaders, selected, 'mismatch');
-            setSelected([]);
-            onChanged();
-          }}
-        >
-          Reject selected
-        </button>
-        {isOwner && (
-          <button
-            type="button"
-            className="button button-danger"
-            onClick={() => setCleanupOpen(true)}
-          >
-            Clean test members
-          </button>
+        {!showTrash && (
+          <>
+            <button
+              className="button button-secondary"
+              disabled={!selected.length}
+              onClick={async () => {
+                await bulkVerify(authHeaders, selected, 'confirmed');
+                setSelected([]);
+                onChanged();
+              }}
+            >
+              Confirm selected
+            </button>
+            <button
+              className="button button-secondary"
+              disabled={!selected.length}
+              onClick={async () => {
+                await bulkVerify(authHeaders, selected, 'mismatch');
+                setSelected([]);
+                onChanged();
+              }}
+            >
+              Reject selected
+            </button>
+            <button
+              type="button"
+              className="button button-danger"
+              disabled={!selected.length || trashBusy}
+              onClick={moveSelectedToTrash}
+            >
+              {trashBusy ? 'Moving...' : `Move selected to trash${selected.length ? ` (${selected.length})` : ''}`}
+            </button>
+          </>
+        )}
+        {showTrash && (
+          <>
+            <button
+              type="button"
+              className="button button-secondary"
+              disabled={!selected.length || trashBusy}
+              onClick={restoreSelected}
+            >
+              {trashBusy ? 'Working...' : `Restore selected${selected.length ? ` (${selected.length})` : ''}`}
+            </button>
+            <button
+              type="button"
+              className="button button-danger"
+              disabled={!trashCount || trashBusy}
+              onClick={() => setEmptyTrashOpen(true)}
+            >
+              Empty trash
+            </button>
+          </>
         )}
       </div>
       {feedback.cleanup && <p className="admin-message">{feedback.cleanup}</p>}
       <RegistrationTable
-        registrations={status ? visibleRegistrations : groupedRegistrations.pending}
+        registrations={showTrash ? visibleRegistrations : (status ? visibleRegistrations : groupedRegistrations.pending)}
         selected={selected}
         setSelected={setSelected}
         onOpenDetails={setActiveRegistration}
         renderActions={(registration) => {
+          if (showTrash) {
+            return (
+              <div className="verify-compact-actions">
+                <button
+                  type="button"
+                  className="button button-secondary button-small"
+                  onClick={() => setActiveRegistration(registration)}
+                >
+                  View Details
+                </button>
+              </div>
+            );
+          }
+
           const statusText = feedback[registration.registrationId];
           const isPendingRow = (registration.paymentStatus || 'pending') === 'pending';
 
@@ -296,35 +479,38 @@ export function VerifyTab({
           </div>
         </div>
       )}
-      {cleanupOpen && (
-        <div className="admin-modal-overlay" onClick={() => setCleanupOpen(false)}>
-          <div className="member-detail-modal cleanup-modal" role="dialog" aria-modal="true" aria-labelledby="cleanup-title" onClick={(event) => event.stopPropagation()}>
+      {emptyTrashOpen && (
+        <div className="admin-modal-overlay" onClick={() => setEmptyTrashOpen(false)}>
+          <div className="member-detail-modal cleanup-modal" role="dialog" aria-modal="true" aria-labelledby="empty-trash-title" onClick={(event) => event.stopPropagation()}>
             <header className="member-detail-modal__header">
               <div>
-                <span>Owner action</span>
-                <h2 id="cleanup-title">Clean test member data</h2>
+                <span>Admin action</span>
+                <h2 id="empty-trash-title">Empty trash</h2>
               </div>
-              <button type="button" className="modal-close-btn" onClick={() => setCleanupOpen(false)} aria-label="Close cleanup dialog">
+              <button type="button" className="modal-close-btn" onClick={() => setEmptyTrashOpen(false)} aria-label="Close empty trash dialog">
                 x
               </button>
             </header>
             <div className="cleanup-modal__body">
-              <p>This removes only registrations, member payment records, UTR history, revenue totals, and slot member assignments. Events, admin access, scheduler slots, and app settings stay available.</p>
+              <p>
+                Permanently deletes {trashCount} trashed member registration(s). This cannot be undone.
+                Active members are not affected.
+              </p>
               <label className="field">
-                <span>Type CLEAR MEMBERS</span>
-                <input value={cleanupText} onChange={(event) => setCleanupText(event.target.value)} placeholder="CLEAR MEMBERS" />
+                <span>Type EMPTY TRASH</span>
+                <input value={emptyTrashText} onChange={(event) => setEmptyTrashText(event.target.value)} placeholder="EMPTY TRASH" />
               </label>
               <div className="admin-modal-actions">
-                <button type="button" className="button button-secondary" onClick={() => setCleanupOpen(false)}>
+                <button type="button" className="button button-secondary" onClick={() => setEmptyTrashOpen(false)}>
                   Cancel
                 </button>
                 <button
                   type="button"
                   className="button button-danger"
-                  disabled={cleanupBusy || cleanupText !== 'CLEAR MEMBERS'}
-                  onClick={clearTestMembers}
+                  disabled={trashBusy || emptyTrashText !== 'EMPTY TRASH'}
+                  onClick={emptyTrash}
                 >
-                  {cleanupBusy ? 'Cleaning...' : 'Clean registrations'}
+                  {trashBusy ? 'Deleting...' : 'Empty trash'}
                 </button>
               </div>
             </div>

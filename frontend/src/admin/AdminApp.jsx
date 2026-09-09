@@ -196,7 +196,6 @@ export default function AdminApp() {
           setStatus={setStatus}
           selected={selected}
           setSelected={setSelected}
-          isOwner={session.user?.owner}
         />
       )}
       {activeTab === 'Check-in' && can('Check-in') && <CheckInTab authHeaders={authHeaders} />}

@@ -9,14 +9,11 @@ import {
   Music,
   Trophy,
   Coffee,
-  CheckCircle,
-  Award,
   Clock,
-  Calendar,
-  Sparkles,
   LayoutGrid,
   ListFilter,
   Terminal,
+  MapPin,
 } from 'lucide-react';
 import { HeadingBar } from '../ui/HeadingBar/HeadingBar';
 
@@ -28,194 +25,453 @@ const RAIL_COLORS = {
 };
 
 const events = [
+  // ── Plenary & Breaks ──────────────────────────────────────────────────────
   {
     id: 'registration',
     title: 'Registration & Check-in',
     shortTitle: 'Registration & Kit',
-    start: 8.0,
-    end: 9.25,
-    icon: User,
     category: 'General',
     venue: 'Main Reception & Desk',
-    description: 'Participant check-in, ID verification, and welcome kit distribution.',
+    description: 'Participant check-in, ID verification.',
     color: 'teal',
-    trackRow: 0,
+    icon: User,
+    timeDisplay: '08:00 AM - 08:45 AM',
+    durationDisplay: '45 mins',
+    bars: [
+      { id: 'registration-b1', start: 8.0, end: 8.75, label: 'Registration & Kit', tooltipDuration: '45 mins' },
+    ],
+    agendaEntries: [
+      {
+        id: 'registration-ag',
+        startTime: 8.0,
+        timeDisplay: '08:00 AM - 08:45 AM',
+        duration: '45 mins',
+        title: 'Registration & Check-in',
+        badge: 'Plenary',
+      },
+    ],
   },
   {
     id: 'inauguration',
     title: 'Inauguration Ceremony',
     shortTitle: 'Inauguration',
-    start: 9.25,
-    end: 10.0,
-    icon: User,
     category: 'General',
     venue: 'Main Auditorium',
     description: 'Welcome address, dignitary speeches, and symposium commencement.',
     color: 'teal',
-    trackRow: 1,
-  },
-  {
-    id: 'ctf',
-    title: 'NULL CORE 2.0 CTF',
-    shortTitle: 'NULL CORE CTF',
-    start: 10.0,
-    end: 16.0,
-    icon: Shield,
-    category: 'Technical',
-    venue: 'Cyber Security Lab 1',
-    description: 'High-intensity cybersecurity & ethical hacking challenges.',
-    color: 'cyan',
-    trackRow: 0,
-  },
-  {
-    id: 'bug-hunt',
-    title: 'Bug Hunt',
-    shortTitle: 'Bug Hunt',
-    start: 10.0,
-    end: 13.0,
-    icon: Search,
-    category: 'Technical',
-    venue: 'Cyber Security Lab 2',
-    description: 'Hands-on live system vulnerability discovery and exploit reporting.',
-    color: 'cyan',
-    trackRow: 1,
-  },
-  {
-    id: 'prompt-heist',
-    title: 'Prompt Heist',
-    shortTitle: 'Prompt Heist',
-    start: 10.0,
-    end: 13.0,
-    icon: Bot,
-    category: 'Technical',
-    venue: 'AI & Data Lab',
-    description: 'Adversarial prompt injection and LLM jailbreaking battle.',
-    color: 'cyan',
-    trackRow: 2,
-  },
-  {
-    id: 'vibe-coding',
-    title: 'Secure X Vibe Coding',
-    shortTitle: 'Secure X Coding',
-    start: 10.0,
-    end: 13.0,
-    icon: Code,
-    category: 'Technical',
-    venue: 'Software Lab 3',
-    description: 'Rapid AI-assisted secure application development showdown.',
-    color: 'cyan',
-    trackRow: 3,
-  },
-  {
-    id: 'ignite',
-    title: 'Ignite Ideathon',
-    shortTitle: 'Ignite Ideathon',
-    start: 10.0,
-    end: 13.0,
-    icon: Lightbulb,
-    category: 'Technical',
-    venue: 'Seminar Hall 1',
-    description: 'Innovation, product prototyping, and venture pitch presentations.',
-    color: 'cyan',
-    trackRow: 4,
-  },
-  {
-    id: 'mystery-hunt',
-    title: 'Mystery Hunt',
-    shortTitle: 'Mystery Hunt',
-    start: 10.0,
-    end: 13.0,
-    icon: Search,
-    category: 'Non-Technical',
-    venue: 'Campus Arena',
-    description: 'Solve a crime case using the clues and evidence given by the organizers.',
-    color: 'lime',
-    trackRow: 5,
-  },
-  {
-    id: 'tune-trap',
-    title: 'Tune Trap',
-    shortTitle: 'Tune Trap',
-    start: 10.0,
-    end: 13.0,
-    icon: Music,
-    category: 'Non-Technical',
-    venue: 'Open Air Theatre',
-    description: 'Music trivia, audio reverse analysis, and rhythm challenges.',
-    color: 'lime',
-    trackRow: 6,
-  },
-  {
-    id: 'ipl-bidverse',
-    title: 'IPL Auction Arena',
-    shortTitle: 'IPL Auction Arena',
-    start: 10.0,
-    end: 13.0,
-    icon: Trophy,
-    category: 'Non-Technical',
-    venue: 'Seminar Hall 2',
-    description: 'Strategic auction simulation and sports management battle.',
-    color: 'lime',
-    trackRow: 7,
-  },
-  {
-    id: 'playground-of-hackers',
-    title: 'Playground of Hackers',
-    shortTitle: 'Playground of Hackers',
-    start: 10.0,
-    end: 16.0,
-    icon: Terminal,
-    category: 'Workshop',
-    venue: 'Cyber Security Lab 2',
-    description: 'An intensive hands-on offensive & defensive cybersecurity workshop uncovering real-world exploit vectors, ethical hacking techniques, and live labs.',
-    color: 'violet',
-    trackRow: 8,
+    icon: User,
+    timeDisplay: '08:45 AM - 10:00 AM',
+    durationDisplay: '1h 15m',
+    bars: [
+      { id: 'inauguration-b1', start: 8.75, end: 10.0, label: 'Inauguration Ceremony', tooltipDuration: '1h 15m' },
+    ],
+    agendaEntries: [
+      {
+        id: 'inauguration-ag',
+        startTime: 8.75,
+        timeDisplay: '08:45 AM - 10:00 AM',
+        duration: '1h 15m',
+        title: 'Inauguration Ceremony',
+        badge: 'Plenary',
+      },
+    ],
   },
   {
     id: 'lunch',
     title: 'Lunch Break & Refreshments',
     shortTitle: 'Lunch Break',
-    start: 13.0,
-    end: 14.0,
-    icon: Coffee,
     category: 'General',
     venue: 'Dining Arena',
-    description: 'Complimentary lunch buffet, refreshments, and networking.',
+    description: 'Complimentary lunch buffet, refreshments, and networking. All event tracks paused.',
     color: 'teal',
-    trackRow: 0,
+    icon: Coffee,
+    timeDisplay: '12:00 PM - 01:00 PM',
+    durationDisplay: '1 hr',
+    bars: [
+      { id: 'lunch-b1', start: 12.0, end: 13.0, label: 'Lunch Break & Refreshments', tooltipDuration: '1 hr' },
+    ],
+    agendaEntries: [
+      {
+        id: 'lunch-ag',
+        startTime: 12.0,
+        timeDisplay: '12:00 PM - 01:00 PM',
+        duration: '1 hr',
+        title: 'Lunch Break & Refreshments',
+        badge: 'Symposium Break',
+      },
+    ],
   },
+
+  // ── Full-Day Events (Continuous with Lunch Break — NOT 2 Sessions) ─────────
   {
-    id: 'finals',
-    title: 'Finals & Project Evaluations',
-    shortTitle: 'Finals & Evaluations',
-    start: 14.0,
-    end: 15.25,
-    icon: CheckCircle,
+    id: 'ctf',
+    title: 'NULL CORE 2.0 CTF',
+    shortTitle: 'NULL CORE CTF',
     category: 'Technical',
-    venue: 'Main Evaluation Labs',
-    description: 'Final round defense, live demonstrations, and jury scorings.',
+    venue: 'Cyber Security Lab 1',
+    description: 'High-intensity cybersecurity & ethical hacking challenges (continuous competition running through 3:30 PM with lunch break).',
     color: 'cyan',
-    trackRow: 0,
+    icon: Shield,
+    isFullDay: true,
+    timeDisplay: '10:15 AM - 03:30 PM (Break: 12:00 PM - 01:00 PM)',
+    durationDisplay: '4h 15m active',
+    bars: [
+      { id: 'ctf-b1', start: 10.25, end: 12.0, label: 'NULL CORE 2.0 CTF', tooltipDuration: '4h 15m active' },
+      { id: 'ctf-b2', start: 13.0, end: 15.5, label: 'NULL CORE 2.0 CTF', tooltipDuration: '4h 15m active' },
+    ],
+    agendaEntries: [
+      {
+        id: 'ctf-ag1',
+        startTime: 10.25,
+        timeDisplay: '10:15 AM - 12:00 PM',
+        duration: '1h 45m',
+        title: 'NULL CORE 2.0 CTF',
+        badge: 'Full-Day Event',
+        description: 'High-intensity cybersecurity & ethical hacking challenges (continues after lunch break).',
+      },
+      {
+        id: 'ctf-ag2',
+        startTime: 13.0,
+        timeDisplay: '01:00 PM - 03:30 PM',
+        duration: '2h 30m',
+        title: 'NULL CORE 2.0 CTF (Continuation)',
+        badge: 'Continuation',
+        description: 'Continuous competition resumes from morning session through 3:30 PM.',
+      },
+    ],
   },
   {
-    id: 'valedictory',
-    title: 'Valedictory & Awards Ceremony',
-    shortTitle: 'Valedictory & Awards',
-    start: 15.25,
-    end: 16.5,
-    icon: Award,
-    category: 'General',
-    venue: 'Main Auditorium',
-    description: 'Winner felicitations, cash prize distributions, and closing ceremony.',
-    color: 'teal',
-    trackRow: 1,
+    id: 'playground-of-hackers',
+    title: 'Playground of Hackers',
+    shortTitle: 'Playground of Hackers',
+    category: 'Workshop',
+    venue: 'Cyber Security Lab 2',
+    description: 'An intensive hands-on offensive & defensive cybersecurity workshop uncovering real-world exploit vectors, ethical hacking techniques, and live labs.',
+    color: 'violet',
+    icon: Terminal,
+    isFullDay: true,
+    timeDisplay: '10:15 AM - 03:30 PM (Break: 12:00 PM - 01:00 PM)',
+    durationDisplay: '4h 15m active',
+    bars: [
+      { id: 'workshop-b1', start: 10.25, end: 12.0, label: 'Playground of Hackers', tooltipDuration: '4h 15m active' },
+      { id: 'workshop-b2', start: 13.0, end: 15.5, label: 'Playground of Hackers', tooltipDuration: '4h 15m active' },
+    ],
+    agendaEntries: [
+      {
+        id: 'workshop-ag1',
+        startTime: 10.25,
+        timeDisplay: '10:15 AM - 12:00 PM',
+        duration: '1h 45m',
+        title: 'Playground of Hackers',
+        badge: 'Full-Day Workshop',
+        description: 'Intensive hands-on offensive & defensive cybersecurity workshop (continues after lunch break).',
+      },
+      {
+        id: 'workshop-ag2',
+        startTime: 13.0,
+        timeDisplay: '01:00 PM - 03:30 PM',
+        duration: '2h 30m',
+        title: 'Playground of Hackers (Continuation)',
+        badge: 'Continuation',
+        description: 'Hands-on cybersecurity workshop resumes through 3:30 PM.',
+      },
+    ],
+  },
+
+  // ── Two-Session Technical Events (Session 1 & Session 2) ───────────────────
+  {
+    id: 'bug-hunt',
+    title: 'Bug Hunt',
+    shortTitle: 'Bug Hunt',
+    category: 'Technical',
+    venue: 'Cyber Security Lab 2',
+    description: 'Hands-on live system vulnerability discovery and exploit reporting.',
+    color: 'cyan',
+    icon: Search,
+    timeDisplay: 'Session 1: 10:15 AM - 12:00 PM | Session 2: 01:00 PM - 03:30 PM',
+    durationDisplay: '1h 45m / 2h 30m',
+    bars: [
+      { id: 'bug-hunt-b1', start: 10.25, end: 12.0, label: 'Bug Hunt (Session 1)', sessionName: 'Session 1', tooltipDuration: '1h 45m' },
+      { id: 'bug-hunt-b2', start: 13.0, end: 15.5, label: 'Bug Hunt (Session 2)', sessionName: 'Session 2', tooltipDuration: '2h 30m' },
+    ],
+    agendaEntries: [
+      {
+        id: 'bug-hunt-ag1',
+        startTime: 10.25,
+        timeDisplay: '10:15 AM - 12:00 PM',
+        duration: '1h 45m',
+        title: 'Bug Hunt (Session 1)',
+        badge: 'Session 1',
+      },
+      {
+        id: 'bug-hunt-ag2',
+        startTime: 13.0,
+        timeDisplay: '01:00 PM - 03:30 PM',
+        duration: '2h 30m',
+        title: 'Bug Hunt (Session 2)',
+        badge: 'Session 2',
+      },
+    ],
+  },
+  {
+    id: 'prompt-heist',
+    title: 'Prompt Heist',
+    shortTitle: 'Prompt Heist',
+    category: 'Technical',
+    venue: 'AI & Data Lab',
+    description: 'Adversarial prompt injection and LLM jailbreaking battle.',
+    color: 'cyan',
+    icon: Bot,
+    timeDisplay: 'Session 1: 10:15 AM - 12:00 PM | Session 2: 01:00 PM - 03:30 PM',
+    durationDisplay: '1h 45m / 2h 30m',
+    bars: [
+      { id: 'prompt-heist-b1', start: 10.25, end: 12.0, label: 'Prompt Heist (Session 1)', sessionName: 'Session 1', tooltipDuration: '1h 45m' },
+      { id: 'prompt-heist-b2', start: 13.0, end: 15.5, label: 'Prompt Heist (Session 2)', sessionName: 'Session 2', tooltipDuration: '2h 30m' },
+    ],
+    agendaEntries: [
+      {
+        id: 'prompt-heist-ag1',
+        startTime: 10.25,
+        timeDisplay: '10:15 AM - 12:00 PM',
+        duration: '1h 45m',
+        title: 'Prompt Heist (Session 1)',
+        badge: 'Session 1',
+      },
+      {
+        id: 'prompt-heist-ag2',
+        startTime: 13.0,
+        timeDisplay: '01:00 PM - 03:30 PM',
+        duration: '2h 30m',
+        title: 'Prompt Heist (Session 2)',
+        badge: 'Session 2',
+      },
+    ],
+  },
+  {
+    id: 'vibe-coding',
+    title: 'Secure X Vibe Coding',
+    shortTitle: 'Secure X Coding',
+    category: 'Technical',
+    venue: 'Software Lab 3',
+    description: 'Rapid AI-assisted secure application development showdown.',
+    color: 'cyan',
+    icon: Code,
+    timeDisplay: 'Session 1: 10:15 AM - 12:00 PM | Session 2: 01:00 PM - 03:30 PM',
+    durationDisplay: '1h 45m / 2h 30m',
+    bars: [
+      { id: 'vibe-coding-b1', start: 10.25, end: 12.0, label: 'Secure X Coding (Session 1)', sessionName: 'Session 1', tooltipDuration: '1h 45m' },
+      { id: 'vibe-coding-b2', start: 13.0, end: 15.5, label: 'Secure X Coding (Session 2)', sessionName: 'Session 2', tooltipDuration: '2h 30m' },
+    ],
+    agendaEntries: [
+      {
+        id: 'vibe-coding-ag1',
+        startTime: 10.25,
+        timeDisplay: '10:15 AM - 12:00 PM',
+        duration: '1h 45m',
+        title: 'Secure X Vibe Coding (Session 1)',
+        badge: 'Session 1',
+      },
+      {
+        id: 'vibe-coding-ag2',
+        startTime: 13.0,
+        timeDisplay: '01:00 PM - 03:30 PM',
+        duration: '2h 30m',
+        title: 'Secure X Vibe Coding (Session 2)',
+        badge: 'Session 2',
+      },
+    ],
+  },
+  {
+    id: 'ignite',
+    title: 'Ignite Ideathon',
+    shortTitle: 'Ignite Ideathon',
+    category: 'Technical',
+    venue: 'Seminar Hall 1',
+    description: 'Innovation, product prototyping, and venture pitch presentations.',
+    color: 'cyan',
+    icon: Lightbulb,
+    timeDisplay: 'Session 1: 10:15 AM - 12:00 PM | Session 2: 01:00 PM - 03:30 PM',
+    durationDisplay: '1h 45m / 2h 30m',
+    bars: [
+      { id: 'ignite-b1', start: 10.25, end: 12.0, label: 'Ignite Ideathon (Session 1)', sessionName: 'Session 1', tooltipDuration: '1h 45m' },
+      { id: 'ignite-b2', start: 13.0, end: 15.5, label: 'Ignite Ideathon (Session 2)', sessionName: 'Session 2', tooltipDuration: '2h 30m' },
+    ],
+    agendaEntries: [
+      {
+        id: 'ignite-ag1',
+        startTime: 10.25,
+        timeDisplay: '10:15 AM - 12:00 PM',
+        duration: '1h 45m',
+        title: 'Ignite Ideathon (Session 1)',
+        badge: 'Session 1',
+      },
+      {
+        id: 'ignite-ag2',
+        startTime: 13.0,
+        timeDisplay: '01:00 PM - 03:30 PM',
+        duration: '2h 30m',
+        title: 'Ignite Ideathon (Session 2)',
+        badge: 'Session 2',
+      },
+    ],
+  },
+
+  // ── Two-Session Non-Technical Events (Session 1 & Session 2) ───────────────
+  {
+    id: 'mystery-hunt',
+    title: 'Mystery Hunt',
+    shortTitle: 'Mystery Hunt',
+    category: 'Non-Technical',
+    venue: 'Campus Arena',
+    description: 'Solve a crime case using the clues and evidence given by the organizers.',
+    color: 'lime',
+    icon: Search,
+    timeDisplay: 'Session 1: 10:15 AM - 12:00 PM | Session 2: 01:00 PM - 03:30 PM',
+    durationDisplay: '1h 45m / 2h 30m',
+    bars: [
+      { id: 'mystery-hunt-b1', start: 10.25, end: 12.0, label: 'Mystery Hunt (Session 1)', sessionName: 'Session 1', tooltipDuration: '1h 45m' },
+      { id: 'mystery-hunt-b2', start: 13.0, end: 15.5, label: 'Mystery Hunt (Session 2)', sessionName: 'Session 2', tooltipDuration: '2h 30m' },
+    ],
+    agendaEntries: [
+      {
+        id: 'mystery-hunt-ag1',
+        startTime: 10.25,
+        timeDisplay: '10:15 AM - 12:00 PM',
+        duration: '1h 45m',
+        title: 'Mystery Hunt (Session 1)',
+        badge: 'Session 1',
+      },
+      {
+        id: 'mystery-hunt-ag2',
+        startTime: 13.0,
+        timeDisplay: '01:00 PM - 03:30 PM',
+        duration: '2h 30m',
+        title: 'Mystery Hunt (Session 2)',
+        badge: 'Session 2',
+      },
+    ],
+  },
+  {
+    id: 'tune-trap',
+    title: 'Tune Trap',
+    shortTitle: 'Tune Trap',
+    category: 'Non-Technical',
+    venue: 'Open Air Theatre',
+    description: 'Music trivia, audio reverse analysis, and rhythm challenges.',
+    color: 'lime',
+    icon: Music,
+    timeDisplay: 'Session 1: 10:15 AM - 12:00 PM | Session 2: 01:00 PM - 03:30 PM',
+    durationDisplay: '1h 45m / 2h 30m',
+    bars: [
+      { id: 'tune-trap-b1', start: 10.25, end: 12.0, label: 'Tune Trap (Session 1)', sessionName: 'Session 1', tooltipDuration: '1h 45m' },
+      { id: 'tune-trap-b2', start: 13.0, end: 15.5, label: 'Tune Trap (Session 2)', sessionName: 'Session 2', tooltipDuration: '2h 30m' },
+    ],
+    agendaEntries: [
+      {
+        id: 'tune-trap-ag1',
+        startTime: 10.25,
+        timeDisplay: '10:15 AM - 12:00 PM',
+        duration: '1h 45m',
+        title: 'Tune Trap (Session 1)',
+        badge: 'Session 1',
+      },
+      {
+        id: 'tune-trap-ag2',
+        startTime: 13.0,
+        timeDisplay: '01:00 PM - 03:30 PM',
+        duration: '2h 30m',
+        title: 'Tune Trap (Session 2)',
+        badge: 'Session 2',
+      },
+    ],
+  },
+  {
+    id: 'ipl-bidverse',
+    title: 'IPL Auction Arena',
+    shortTitle: 'IPL Auction Arena',
+    category: 'Non-Technical',
+    venue: 'Seminar Hall 2',
+    description: 'Strategic auction simulation and sports management battle.',
+    color: 'lime',
+    icon: Trophy,
+    timeDisplay: 'Session 1: 10:15 AM - 12:00 PM | Session 2: 01:00 PM - 03:30 PM',
+    durationDisplay: '1h 45m / 2h 30m',
+    bars: [
+      { id: 'ipl-b1', start: 10.25, end: 12.0, label: 'IPL Auction (Session 1)', sessionName: 'Session 1', tooltipDuration: '1h 45m' },
+      { id: 'ipl-b2', start: 13.0, end: 15.5, label: 'IPL Auction (Session 2)', sessionName: 'Session 2', tooltipDuration: '2h 30m' },
+    ],
+    agendaEntries: [
+      {
+        id: 'ipl-ag1',
+        startTime: 10.25,
+        timeDisplay: '10:15 AM - 12:00 PM',
+        duration: '1h 45m',
+        title: 'IPL Auction Arena (Session 1)',
+        badge: 'Session 1',
+      },
+      {
+        id: 'ipl-ag2',
+        startTime: 13.0,
+        timeDisplay: '01:00 PM - 03:30 PM',
+        duration: '2h 30m',
+        title: 'IPL Auction Arena (Session 2)',
+        badge: 'Session 2',
+      },
+    ],
   },
 ];
 
 const startHour = 8.0;
-const endHour = 16.5;
-const totalHalfHours = Math.round((endHour - startHour) * 2);
+const endHour = 16.0;
+const totalHalfHours = Math.round((endHour - startHour) * 2); // 16 half-hours → 8:00 AM to 4:00 PM
 const rowHeight = 52;
+
+/** Continuous span an event occupies for lane packing (covers lunch gaps on multi-bar tracks). */
+function getEventSpan(event) {
+  const starts = event.bars.map((b) => b.start);
+  const ends = event.bars.map((b) => b.end);
+  return { start: Math.min(...starts), end: Math.max(...ends) };
+}
+
+/**
+ * Greedy lane packing: put each event on the first row that has no time overlap.
+ * Sequential events share a line; a new line opens only when that slot is taken.
+ * Shorter events are placed first so plenary/breaks keep the top spine and
+ * long parallel tracks open new rows instead of stealing those gaps.
+ * Workshop is preferred above other same-span tracks (e.g. CTF).
+ */
+function assignTrackLanes(eventList) {
+  const sorted = [...eventList].sort((a, b) => {
+    const spanA = getEventSpan(a);
+    const spanB = getEventSpan(b);
+    const durA = spanA.end - spanA.start;
+    const durB = spanB.end - spanB.start;
+    if (durA !== durB) return durA - durB;
+    if (spanA.start !== spanB.start) return spanA.start - spanB.start;
+    if (a.category === 'Workshop' && b.category !== 'Workshop') return -1;
+    if (b.category === 'Workshop' && a.category !== 'Workshop') return 1;
+    return 0;
+  });
+
+  const laneIntervals = []; // laneIntervals[i] = [{ start, end }, ...]
+  const laneById = {};
+
+  const fitsLane = (occupied, span) =>
+    occupied.every((block) => block.end <= span.start || span.end <= block.start);
+
+  sorted.forEach((event) => {
+    const span = getEventSpan(event);
+    let lane = laneIntervals.findIndex((occupied) => fitsLane(occupied, span));
+    if (lane === -1) {
+      lane = laneIntervals.length;
+      laneIntervals.push([]);
+    }
+    laneIntervals[lane].push(span);
+    laneById[event.id] = lane;
+  });
+
+  return { laneById, laneCount: laneIntervals.length };
+}
 
 function formatTime(hour24) {
   const h = Math.floor(hour24);
@@ -247,48 +503,83 @@ function formatDuration(start, end) {
 export function TimelineSection() {
   const [activeTab, setActiveTab] = useState('timeline'); // 'timeline' | 'agenda' on desktop
   const [selectedCategory, setSelectedCategory] = useState('ALL');
-  const [hoveredEvent, setHoveredEvent] = useState(null);
+  const [hoveredEventId, setHoveredEventId] = useState(null);
+  const [hoveredBarId, setHoveredBarId] = useState(null);
+
+  // Category event counts (distinct events)
+  const categoryCounts = useMemo(() => {
+    return {
+      ALL: events.length,
+      TECHNICAL: events.filter((e) => e.category === 'Technical').length,
+      'NON-TECHNICAL': events.filter((e) => e.category === 'Non-Technical').length,
+      WORKSHOP: events.filter((e) => e.category === 'Workshop').length,
+      CEREMONY: events.filter((e) => e.category === 'General').length,
+    };
+  }, []);
 
   const filteredEvents = useMemo(() => {
     if (selectedCategory === 'ALL') return events;
-    if (selectedCategory === 'TECHNICAL') return events.filter((e) => (e.category === 'Technical' || e.category === 'tech') && e.category !== 'Workshop' && e.category !== 'workshop');
-    if (selectedCategory === 'NON-TECHNICAL') return events.filter((e) => e.category === 'Non-Technical' || e.category === 'non-tech');
-    if (selectedCategory === 'WORKSHOP') return events.filter((e) => e.category === 'Workshop' || e.category === 'workshop');
+    if (selectedCategory === 'TECHNICAL') return events.filter((e) => e.category === 'Technical');
+    if (selectedCategory === 'NON-TECHNICAL') return events.filter((e) => e.category === 'Non-Technical');
+    if (selectedCategory === 'WORKSHOP') return events.filter((e) => e.category === 'Workshop');
     if (selectedCategory === 'CEREMONY') return events.filter((e) => e.category === 'General');
     return events;
   }, [selectedCategory]);
 
-  const maxRows = useMemo(() => {
-    const rows = events.map((e) => e.trackRow ?? 0);
-    return Math.max(...rows, 0) + 1;
-  }, []);
+  // Pack all events into the fewest rows (non-overlapping share a line)
+  const { laneById, laneCount } = useMemo(() => assignTrackLanes(events), []);
 
-  const containerHeight = maxRows * rowHeight;
+  const containerHeight = Math.max(laneCount, 1) * rowHeight;
 
-  // Process mobile / agenda groups chronologically sorted
+  // Process chronological agenda groups
   const agendaGroups = useMemo(() => {
-    const sorted = [...filteredEvents].sort((a, b) => a.start - b.start);
+    const allEntries = [];
+    filteredEvents.forEach((event) => {
+      event.agendaEntries.forEach((entry) => {
+        allEntries.push({
+          ...entry,
+          parentEvent: event,
+          category: event.category,
+          color: event.color,
+          icon: event.icon,
+          venue: event.venue,
+          description: entry.description || event.description,
+        });
+      });
+    });
 
+    // Group entries by startTime
     const groupsMap = {};
-    sorted.forEach((event) => {
-      if (!groupsMap[event.start]) {
-        groupsMap[event.start] = [];
+    allEntries.forEach((entry) => {
+      if (!groupsMap[entry.startTime]) {
+        groupsMap[entry.startTime] = [];
       }
-      groupsMap[event.start].push(event);
+      groupsMap[entry.startTime].push(entry);
     });
 
     return Object.keys(groupsMap)
       .map(Number)
       .sort((a, b) => a - b)
       .map((startTime) => {
-        const groupEvents = groupsMap[startTime];
-        const isConcurrent = groupEvents.length > 1;
+        const groupEntries = groupsMap[startTime];
+        const isConcurrent = groupEntries.length > 1;
+
+        let sessionSubtitle = '';
+        if (startTime === 10.25) {
+          sessionSubtitle = 'Morning Session & Full-Day Events';
+        } else if (startTime === 12.0) {
+          sessionSubtitle = 'Symposium Lunch Break';
+        } else if (startTime === 13.0) {
+          sessionSubtitle = 'Afternoon Session 2 & Event Continuations';
+        }
+
         return {
           startTime,
           formattedStart: formatTimeRange(startTime),
           isConcurrent,
-          count: groupEvents.length,
-          events: groupEvents,
+          count: groupEntries.length,
+          subtitle: sessionSubtitle,
+          entries: groupEntries,
         };
       });
   }, [filteredEvents]);
@@ -326,6 +617,7 @@ export function TimelineSection() {
 
         {/* Grid lines & timeline bars */}
         <div className="timeline-grid" style={{ height: `${containerHeight}px` }}>
+          {/* Half-hour grid lines */}
           <div
             className="timeline-grid__lines"
             style={{ gridTemplateColumns: `repeat(${totalHalfHours}, minmax(0, 1fr))` }}
@@ -334,63 +626,96 @@ export function TimelineSection() {
               <div key={i} className="timeline-grid__line" />
             ))}
           </div>
-
+          {/* Render event bars & connectors */}
           {events.map((event) => {
-            const isFilteredOut = selectedCategory !== 'ALL' &&
-              ((selectedCategory === 'TECHNICAL' && (event.category !== 'Technical' || event.category === 'Workshop')) ||
+            const isDimmed =
+              selectedCategory !== 'ALL' &&
+              ((selectedCategory === 'TECHNICAL' && event.category !== 'Technical') ||
                 (selectedCategory === 'NON-TECHNICAL' && event.category !== 'Non-Technical') ||
                 (selectedCategory === 'WORKSHOP' && event.category !== 'Workshop') ||
                 (selectedCategory === 'CEREMONY' && event.category !== 'General'));
 
-            const widthPercent =
-              ((event.end - event.start) / (endHour - startHour)) * 100 - 0.4;
-            const leftPercent =
-              ((event.start - startHour) / (endHour - startHour)) * 100;
-            const top = (event.trackRow ?? 0) * rowHeight;
+            const isEventHovered = hoveredEventId === event.id;
             const EventIcon = event.icon;
-            const isHovered = hoveredEvent?.id === event.id;
+            const top = (laneById[event.id] ?? 0) * rowHeight;
 
             return (
-              <div
-                key={event.id}
-                className={`timeline-bar timeline-bar--${event.color} ${isFilteredOut ? 'timeline-bar--dimmed' : ''} ${isHovered ? 'timeline-bar--hovered' : ''}`}
-                style={{
-                  left: `${leftPercent}%`,
-                  width: `${widthPercent}%`,
-                  top: `${top}px`,
-                  height: '42px',
-                }}
-                onMouseEnter={() => setHoveredEvent(event)}
-                onMouseLeave={() => setHoveredEvent(null)}
-                tabIndex={0}
-                aria-label={`${event.title}: ${formatTimeRange(event.start)} to ${formatTimeRange(event.end)}`}
-              >
-                <div className="timeline-bar__content">
-                  <EventIcon className="timeline-bar__icon" />
-                  <span className="timeline-bar__label">{event.title}</span>
-                </div>
+              <div key={event.id} style={{ '--accent-color': `var(--${event.color})` }}>
+                {/* Individual segment blocks for the event */}
+                {event.bars.map((bar) => {
+                  const widthPercent =
+                    ((bar.end - bar.start) / (endHour - startHour)) * 100 - 0.4;
+                  const leftPercent =
+                    ((bar.start - startHour) / (endHour - startHour)) * 100;
+                  const isThisBarHovered = hoveredBarId === bar.id;
+                  const isBarActive = isEventHovered || isThisBarHovered;
 
-                {/* Interactive Neon HUD Tooltip on Hover */}
-                {isHovered && (
-                  <div className="timeline-bar__tooltip" role="tooltip">
-                    <div className="tooltip-header">
-                      <span className={`tooltip-tag tooltip-tag--${event.color}`}>
-                        {event.category.toUpperCase()}
-                      </span>
-                      <span className="tooltip-duration">
-                        {formatDuration(event.start, event.end)}
-                      </span>
+                  return (
+                    <div
+                      key={bar.id}
+                      className={`timeline-bar timeline-bar--${event.color} ${isDimmed ? 'timeline-bar--dimmed' : ''} ${isBarActive ? 'timeline-bar--hovered' : ''}`}
+                      style={{
+                        left: `${leftPercent}%`,
+                        width: `${widthPercent}%`,
+                        top: `${top}px`,
+                        height: '42px',
+                      }}
+                      onMouseEnter={() => {
+                        setHoveredEventId(event.id);
+                        setHoveredBarId(bar.id);
+                      }}
+                      onMouseLeave={() => {
+                        setHoveredEventId(null);
+                        setHoveredBarId(null);
+                      }}
+                      tabIndex={0}
+                      aria-label={`${bar.label || event.title}: ${formatTimeRange(bar.start)} to ${formatTimeRange(bar.end)}`}
+                    >
+                      <div className="timeline-bar__content">
+                        <EventIcon className="timeline-bar__icon" />
+                        <span className="timeline-bar__label">{bar.label || event.title}</span>
+                      </div>
+
+                      {/* Interactive Neon HUD Tooltip on Hover */}
+                      {isThisBarHovered && (
+                        <div className="timeline-bar__tooltip" role="tooltip">
+                          <div className="tooltip-header">
+                            <span className={`tooltip-tag tooltip-tag--${event.color}`}>
+                              {event.category.toUpperCase()}
+                            </span>
+                            <span className="tooltip-duration">
+                              {event.isFullDay
+                                ? '4h 15m (Active)'
+                                : bar.tooltipDuration || formatDuration(bar.start, bar.end)}
+                            </span>
+                          </div>
+                          <div className="tooltip-title">
+                            {event.isFullDay
+                              ? event.title
+                              : bar.sessionName
+                                ? `${event.title} (${bar.sessionName})`
+                                : event.title}
+                          </div>
+                          <div className="tooltip-meta">
+                            <span className="tooltip-time">
+                              <Clock size={12} />
+                              {event.isFullDay
+                                ? '10:15 AM - 03:30 PM (Break: 12:00 - 1:00 PM)'
+                                : `${formatTimeRange(bar.start)} - ${formatTimeRange(bar.end)}`}
+                            </span>
+                            {event.venue && (
+                              <span className="tooltip-venue">
+                                <MapPin size={12} />
+                                {event.venue}
+                              </span>
+                            )}
+                          </div>
+                          <p className="tooltip-desc">{event.description}</p>
+                        </div>
+                      )}
                     </div>
-                    <div className="tooltip-title">{event.title}</div>
-                    <div className="tooltip-meta">
-                      <span className="tooltip-time">
-                        <Clock size={12} />
-                        {formatTimeRange(event.start)} - {formatTimeRange(event.end)}
-                      </span>
-                    </div>
-                    <p className="tooltip-desc">{event.description}</p>
-                  </div>
-                )}
+                  );
+                })}
               </div>
             );
           })}
@@ -421,33 +746,38 @@ export function TimelineSection() {
                   {group.count} Parallel Events
                 </span>
               )}
+              {group.subtitle && (
+                <span className="time-group__concurrency-tag" style={{ color: 'var(--cyan)', borderColor: 'rgba(0, 221, 242, 0.25)', background: 'rgba(0, 221, 242, 0.08)' }}>
+                  {group.subtitle}
+                </span>
+              )}
             </div>
 
             <div className="time-group__cards">
-              {group.events.map((event) => {
-                const EventIcon = event.icon;
+              {group.entries.map((entry) => {
+                const EntryIcon = entry.icon;
                 return (
                   <div
-                    className={`agenda-row agenda-row--${event.color}`}
-                    key={event.id}
+                    className={`agenda-row agenda-row--${entry.color}`}
+                    key={entry.id}
                   >
                     <div className="agenda-row__icon-wrap">
-                      <EventIcon size={18} />
+                      <EntryIcon size={18} />
                     </div>
                     <div className="agenda-row__details">
                       <div className="agenda-row__top">
-                        <span className="agenda-row__title">{event.title}</span>
-                        <span className={`agenda-row__category-badge agenda-row__category-badge--${event.color}`}>
-                          {event.category}
+                        <span className="agenda-row__title">{entry.title}</span>
+                        <span className={`agenda-row__category-badge agenda-row__category-badge--${entry.color}`}>
+                          {entry.badge || entry.category}
                         </span>
                       </div>
                       <div className="agenda-row__meta">
                         <span className="agenda-row__time">
                           <Clock size={12} />
-                          {formatTimeRange(event.start)} - {formatTimeRange(event.end)} ({formatDuration(event.start, event.end)})
+                          {entry.timeDisplay} {entry.duration && !entry.timeDisplay.includes('(') ? `(${entry.duration})` : ''}
                         </span>
                       </div>
-                      <p className="agenda-row__description">{event.description}</p>
+                      <p className="agenda-row__description">{entry.description}</p>
                     </div>
                   </div>
                 );
@@ -455,6 +785,26 @@ export function TimelineSection() {
             </div>
           </div>
         ))}
+
+        {/* Closing Wrap-up Card at 3:30 PM */}
+        <div className="time-group">
+          <span className="time-group__tick" style={{ background: 'var(--teal)', boxShadow: '0 0 10px var(--teal)' }} aria-hidden="true" />
+          <div className="time-group__header">
+            <span className="time-group__time-badge">03:30 PM</span>
+            <span className="time-group__concurrency-tag" style={{ color: 'var(--teal)', borderColor: 'rgba(32, 178, 170, 0.25)', background: 'rgba(32, 178, 170, 0.08)' }}>
+              Symposium Conclusion
+            </span>
+          </div>
+          <div className="agenda-conclusion-card">
+            <Clock className="agenda-conclusion-card__icon" size={20} />
+            <div>
+              <div className="agenda-conclusion-card__title">All Events Conclude</div>
+              <p className="agenda-conclusion-card__desc">
+                All competition tracks and workshops wrap up by 3:30 PM.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -474,35 +824,35 @@ export function TimelineSection() {
                 className={`timeline-filter-btn ${selectedCategory === 'ALL' ? 'timeline-filter-btn--active' : ''}`}
                 onClick={() => setSelectedCategory('ALL')}
               >
-                All Events ({events.length})
+                All Events ({categoryCounts.ALL})
               </button>
               <button
                 type="button"
                 className={`timeline-filter-btn ${selectedCategory === 'TECHNICAL' ? 'timeline-filter-btn--active' : ''}`}
                 onClick={() => setSelectedCategory('TECHNICAL')}
               >
-                <span className="filter-dot filter-dot--cyan" /> Technical
+                <span className="filter-dot filter-dot--cyan" /> Technical ({categoryCounts.TECHNICAL})
               </button>
               <button
                 type="button"
                 className={`timeline-filter-btn ${selectedCategory === 'NON-TECHNICAL' ? 'timeline-filter-btn--active' : ''}`}
                 onClick={() => setSelectedCategory('NON-TECHNICAL')}
               >
-                <span className="filter-dot filter-dot--lime" /> Non-Technical
+                <span className="filter-dot filter-dot--lime" /> Non-Technical ({categoryCounts['NON-TECHNICAL']})
               </button>
               <button
                 type="button"
                 className={`timeline-filter-btn ${selectedCategory === 'WORKSHOP' ? 'timeline-filter-btn--active' : ''}`}
                 onClick={() => setSelectedCategory('WORKSHOP')}
               >
-                <span className="filter-dot filter-dot--violet" /> Workshop
+                <span className="filter-dot filter-dot--violet" /> Workshop ({categoryCounts.WORKSHOP})
               </button>
               <button
                 type="button"
                 className={`timeline-filter-btn ${selectedCategory === 'CEREMONY' ? 'timeline-filter-btn--active' : ''}`}
                 onClick={() => setSelectedCategory('CEREMONY')}
               >
-                <span className="filter-dot filter-dot--teal" /> Plenary & Breaks
+                <span className="filter-dot filter-dot--teal" /> Plenary & Breaks ({categoryCounts.CEREMONY})
               </button>
             </div>
             {/* Mobile: dropdown */}
@@ -513,11 +863,11 @@ export function TimelineSection() {
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 aria-label="Filter schedule by category"
               >
-                <option value="ALL">All Events ({events.length})</option>
-                <option value="TECHNICAL">Technical</option>
-                <option value="NON-TECHNICAL">Non-Technical</option>
-                <option value="WORKSHOP">Workshop</option>
-                <option value="CEREMONY">Plenary & Breaks</option>
+                <option value="ALL">All Events ({categoryCounts.ALL})</option>
+                <option value="TECHNICAL">Technical ({categoryCounts.TECHNICAL})</option>
+                <option value="NON-TECHNICAL">Non-Technical ({categoryCounts['NON-TECHNICAL']})</option>
+                <option value="WORKSHOP">Workshop ({categoryCounts.WORKSHOP})</option>
+                <option value="CEREMONY">Plenary & Breaks ({categoryCounts.CEREMONY})</option>
               </select>
               <span className="timeline-filter-chevron" aria-hidden="true">▾</span>
             </div>

@@ -23,7 +23,7 @@ export const events = [
     id: 'ctf',
     name: 'NULL CORE 2.0 CTF',
     category: 'Technical',
-    teamSize: '2-3 Members',
+    teamSize: '1-3 Members',
     fee: 150,
     laptopRequirement: 'Laptop is mandatory for this event.',
     accent: 'cyan',
@@ -31,7 +31,7 @@ export const events = [
     imagePosition: 'center center',
     format: 'A cybersecurity challenge where participants solve problems and find flags using ethical security techniques.',
     details: [
-      'Team size: 2-3 members per team, each participant can join only one team.',
+      'Team size: 1-3 members per team, each participant can join only one team.',
       'Use ethical and legal methods only.',
       'Do not attack, disrupt, or damage the competition system.',
       'Do not share flags or solutions with other participants.',
@@ -276,13 +276,13 @@ export const events = [
 ];
 
 export const timeline = [
-  ['08:30 AM', 'Registration desk opens', 'Check in, collect your participant confirmation badge, and proceed to the inaugural venue.'],
-  ['09:00 AM - 10:00 AM', 'Inauguration Ceremony', 'Welcome address, ceremonial lighting, and symposium briefing in the Main Auditorium.'],
-  ['10:00 AM - 01:00 PM', 'Technical & Non-Technical Events', 'All Technical (NULL CORE 2.0 CTF, Bug Hunt, Prompt Heist, Secure X Vibe Coding, Ignite Ideathon) and Non-Technical (Mystery Hunt, Tune Trap, IPL Auction Arena) events commence simultaneously.'],
-  ['10:00 AM - 03:00 PM', 'Workshop: Playground of Hackers', 'Hands-on intensive offensive & defensive cybersecurity workshop uncovering real-world exploit vectors, ethical hacking techniques, and live labs.'],
-  ['01:00 PM - 02:00 PM', 'Lunch Break', 'Lunch and refreshments served at the designated campus dining areas.'],
-  ['02:00 PM - 03:00 PM', 'Final Rounds & Evaluation', 'Shortlisted finalists compete in project demonstrations and final rounds before the judging panel.'],
-  ['03:00 PM - 04:00 PM', 'Valedictory & Awards Ceremony', 'Announcement of winners, trophy and cash prize distribution, and closing valedictory.'],
+  ['08:00 AM - 08:45 AM', 'Registration & Check-in', 'Check in, collect your participant confirmation badge, and proceed to the inaugural venue.'],
+  ['08:45 AM - 10:00 AM', 'Inauguration Ceremony', 'Welcome address, ceremonial lighting, and symposium briefing in the Main Auditorium.'],
+  ['10:15 AM - 03:30 PM', 'Technical & Non-Technical Events', 'All Technical (NULL CORE 2.0 CTF, Bug Hunt, Prompt Heist, Secure X Vibe Coding, Ignite Ideathon) and Non-Technical (Mystery Hunt, Tune Trap, IPL Auction Arena) events commence at 10:15 AM.'],
+  ['10:15 AM - 03:30 PM', 'Workshop: Playground of Hackers', 'Hands-on intensive offensive & defensive cybersecurity workshop uncovering real-world exploit vectors, ethical hacking techniques, and live labs.'],
+  ['12:00 PM - 01:00 PM', 'Lunch Break', 'Lunch and refreshments served at the designated campus dining areas.'],
+  ['01:00 PM - 03:30 PM', 'Final Rounds & Evaluation', 'Shortlisted finalists compete in project demonstrations and final rounds before the judging panel.'],
+  ['03:30 PM', 'Symposium Concludes', 'All event tracks and workshops conclude.'],
 ];
 
 export const brochure = {
