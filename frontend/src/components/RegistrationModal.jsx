@@ -58,32 +58,6 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
     payee: (import.meta.env.VITE_UPI_PAYEE || '').trim(),
   });
 
-  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768);
-  const [showUpiFallback, setShowUpiFallback] = useState(false);
-  const [copiedUpi, setCopiedUpi] = useState(false);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  const handleUpiClick = () => {
-    window.setTimeout(() => {
-      if (document.hasFocus()) {
-        setShowUpiFallback(true);
-      }
-    }, 2000);
-  };
-
-  const copyUpiId = () => {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(upiId);
-      setCopiedUpi(true);
-      setTimeout(() => setCopiedUpi(false), 2000);
-    }
-  };
-
   const technicalEvents = useMemo(() => (events || []).filter((event) => isCategoryTech(event.category)), [events]);
   const nonTechnicalEvents = useMemo(() => (events || []).filter((event) => isCategoryNonTech(event.category)), [events]);
   const workshopEvents = useMemo(() => (events || []).filter((event) => isCategoryWorkshop(event.category)), [events]);
@@ -603,56 +577,60 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
               </div>
 
               {paymentConfigured ? (
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '260px 1fr', gap: '2rem', border: '1px solid var(--line)', padding: '1.5rem', background: 'rgba(0, 0, 0, 0.2)' }}>
-                  {!isMobile ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', background: '#fff', padding: '1rem', boxSizing: 'border-box' }}>
+                <div className="reg-payment-container">
+                  {/* QR Code Section - Visible on both Mobile & Desktop */}
+                  <div className="reg-payment-qr-card">
+                    <div className="reg-payment-qr-box">
                       {qrDataUrl ? (
-                        <img src={qrDataUrl} width="220" height="220" alt="UPI Pay QR" />
+                        <img className="reg-payment-qr-img" src={qrDataUrl} width="220" height="220" alt="UPI Pay QR" />
                       ) : (
-                        <div style={{ color: 'var(--bg)', fontFamily: 'IBM Plex Mono', fontSize: '0.8rem', height: '220px', display: 'flex', alignItems: 'center' }}>Generating QR…</div>
-                      )}
-                      <span style={{ color: 'var(--bg)', fontFamily: 'IBM Plex Mono', fontSize: '0.75rem', fontWeight: 600 }}>SCAN WITH UPI APP</span>
-                    </div>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                      <a className="button button-primary pay-upi-btn" href={upiLink} onClick={handleUpiClick} style={{ textAlign: 'center', display: 'block', padding: '1rem' }}>
-                        OPEN IN PAYMENTS APP
-                      </a>
-                      {showUpiFallback && (
-                        <div style={{ border: '1px dashed var(--line)', padding: '1rem' }}>
-                          <span style={{ color: 'var(--muted)', fontSize: '0.8rem', fontFamily: 'IBM Plex Mono' }}>UPI Address:</span>
-                          <button type="button" onClick={copyUpiId} style={{ background: 'var(--surface)', border: '1px solid var(--line)', color: 'var(--text)', width: '100%', padding: '0.5rem', cursor: 'pointer', marginTop: '0.5rem', fontFamily: 'IBM Plex Mono' }}>
-                            <code>{upiId}</code> - {copiedUpi ? 'COPIED' : 'TAP TO COPY'}
-                          </button>
+                        <div className="reg-payment-qr-loading">
+                          <span className="reg-loading-pulse" />
+                          <span>Generating QR…</span>
                         </div>
                       )}
                     </div>
-                  )}
+                    <div className="reg-payment-qr-caption">
+                      <span className="reg-payment-qr-badge">SCAN WITH ANY UPI APP</span>
+                      <small className="reg-payment-qr-subtext">GPay • PhonePe • Paytm • BHIM</small>
+                    </div>
+                  </div>
 
-                  <div style={{ fontFamily: 'IBM Plex Mono', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                    <span className="reg-kicker">UPI CREDENTIALS</span>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>UPI ID:</span><span style={{ color: 'var(--cyan)' }}>{upiId}</span></div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>PAYEE:</span><span>{payee}</span></div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>REFERENCE:</span><span>{paymentReference}</span></div>
+                  {/* Direct Pay Action */}
+                  <div className="reg-payment-quick-pay">
+                    <a
+                      className="notched-button btn-primary reg-pay-btn"
+                      href={upiLink}
+                    >
+                      OPEN IN UPI APP (PAY ₹{amount})
+                    </a>
                   </div>
                 </div>
               ) : (
-                <div style={{ border: '1px solid var(--error)', padding: '1.5rem', background: 'rgba(239, 68, 68, 0.08)', color: 'var(--text)', fontFamily: 'IBM Plex Mono' }}>
+                <div className="reg-payment-error-box">
                   Payments are not configured yet. Please contact the organizers.
                 </div>
               )}
 
-              <div className="reg-field">
-                <label className="reg-field-label">12-Digit Transaction UTR</label>
+              <div className="reg-field reg-utr-field">
+                <div className="reg-field-header">
+                  <label className="reg-field-label" htmlFor="utr-input">
+                    12-Digit Transaction UTR / Ref No. <span className="reg-required-star">*</span>
+                  </label>
+                  <span className={`reg-char-count ${utr.length === 12 ? 'reg-char-count--ready' : ''}`}>
+                    {utr.length}/12 digits
+                  </span>
+                </div>
                 <input
-                  className="reg-input"
+                  id="utr-input"
+                  className="reg-input reg-utr-input"
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9]{12}"
                   minLength="12"
                   maxLength="12"
                   autoComplete="off"
-                  placeholder="Enter UTR reference after paying"
+                  placeholder="Enter 12-digit UTR after payment"
                   value={utr}
                   aria-invalid={utrStatus.state === 'duplicate'}
                   onChange={(e) => {
@@ -660,15 +638,23 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
                     setUtr(e.target.value.replace(/\D/g, '').slice(0, 12));
                   }}
                 />
-                <small style={{ color: utrStatus.state === 'duplicate' ? 'var(--error)' : 'var(--muted)', fontFamily: 'IBM Plex Mono', fontSize: '0.75rem', marginTop: '0.3rem' }}>
-                  {utrStatus.message}
-                </small>
+                <div className={`reg-utr-status reg-utr-status--${utrStatus.state}`}>
+                  {utrStatus.state === 'checking' && <span className="reg-status-dot reg-status-dot--pulse" />}
+                  {utrStatus.state === 'available' && <span className="reg-status-dot reg-status-dot--success" />}
+                  {utrStatus.state === 'duplicate' && <span className="reg-status-dot reg-status-dot--error" />}
+                  <span>{utrStatus.message}</span>
+                </div>
               </div>
 
-              <label className="reg-food-label" style={{ alignItems: 'flex-start', gap: '0.8rem', marginTop: '1rem' }}>
-                <input className="reg-food-input" type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} style={{ marginTop: '0.2rem' }} />
-                <span style={{ fontSize: '0.8rem', color: 'var(--muted)', lineHeight: '1.4' }}>
-                  I declare that I have made the payment of ₹{amount} and all details are correct.
+              <label className="reg-consent-label">
+                <input
+                  className="reg-food-input reg-consent-checkbox"
+                  type="checkbox"
+                  checked={consent}
+                  onChange={(e) => setConsent(e.target.checked)}
+                />
+                <span className="reg-consent-text">
+                  I declare that I have completed the payment of ₹{amount} and all entered information is authentic.
                 </span>
               </label>
 
