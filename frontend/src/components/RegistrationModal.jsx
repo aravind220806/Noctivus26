@@ -487,6 +487,13 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
 
               {error && <p className="reg-error" role="alert">{error}</p>}
 
+              <div className="reg-note-box" style={{ marginTop: '0.5rem' }}>
+                <span className="reg-note-tag">[NOTE]</span>
+                <p className="reg-note-text">
+                  Choose <strong>one Tech</strong> + <strong>one Non-Tech</strong> event for ₹150. Workshop & CTF are standalone full-day events.
+                </p>
+              </div>
+
               <div className="reg-actions reg-actions--split">
                 <NotchedButton variant="ghost" onClick={() => setStep(1)}>
                   &lt; BACK
@@ -553,6 +560,13 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
               </div>
 
               {error && <p className="reg-error" role="alert">{error}</p>}
+
+              <div className="reg-note-box" style={{ marginTop: '0.5rem' }}>
+                <span className="reg-note-tag">[NOTE]</span>
+                <p className="reg-note-text">
+                  Choose <strong>one Tech</strong> + <strong>one Non-Tech</strong> event (₹150). Workshop & CTF are standalone full-day events.
+                </p>
+              </div>
 
               <div className="reg-actions reg-actions--split">
                 <NotchedButton variant="ghost" onClick={() => setStep(2)}>
