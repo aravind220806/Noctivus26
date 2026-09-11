@@ -67,7 +67,7 @@
   }
 }
 
-/* Left Side: Info Columns (Venue, Contact, Bus Route) */
+/* Left Side: Info Columns (Venue, Contact) */
 .footer-info-columns {
   display: grid;
   grid-template-columns: 1fr;
@@ -77,8 +77,8 @@
 
 @media (min-width: 600px) {
   .footer-info-columns {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.25rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
   }
 }
 
@@ -130,29 +130,6 @@
   color: #caff00;
 }
 
-.footer-bus-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  background: transparent;
-  border: none;
-  padding: 0;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.74rem;
-  font-weight: 600;
-  color: #00f0ff;
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-
-.footer-bus-btn:hover {
-  color: #caff00;
-}
-
-.footer-ext-icon {
-  width: 0.75rem;
-  height: 0.75rem;
-}
 
 /* Right Side: Compact Google Map */
 .footer-map-side {
@@ -339,152 +316,3 @@
   transform: translateY(-2px);
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   BUS ROUTE MODAL
-   ───────────────────────────────────────────────────────────────────────────── */
-.bus-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(3, 7, 12, 0.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  z-index: 10000;
-  animation: fadeIn 0.2s ease;
-}
-
-.bus-modal-panel {
-  width: 100%;
-  max-width: 540px;
-  background-color: #050B10;
-  border: 1px solid #00f0ff;
-  box-shadow: 0 0 25px rgba(0, 240, 255, 0.3);
-  padding: 1.5rem;
-  box-sizing: border-box;
-  animation: scaleUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.bus-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid rgba(0, 240, 255, 0.2);
-  padding-bottom: 0.6rem;
-  margin-bottom: 0.75rem;
-}
-
-.bus-modal-title {
-  font-family: 'Aldrich', sans-serif;
-  font-size: 1.15rem;
-  color: #00f0ff;
-  margin: 0;
-  letter-spacing: 0.05em;
-}
-
-.bus-modal-close {
-  background: transparent;
-  border: none;
-  color: #7C8BA1;
-  font-size: 1.15rem;
-  cursor: pointer;
-  padding: 0.2rem 0.4rem;
-  transition: color 0.2s;
-}
-
-.bus-modal-close:hover {
-  color: #00f0ff;
-}
-
-.bus-modal-subtitle {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.78rem;
-  color: #7C8BA1;
-  line-height: 1.45;
-  margin: 0 0 1rem 0;
-}
-
-.bus-routes-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  max-height: 280px;
-  overflow-y: auto;
-  padding-right: 0.4rem;
-}
-
-.bus-route-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  background: rgba(5, 20, 28, 0.7);
-  border: 1px solid rgba(0, 240, 255, 0.2);
-  padding: 0.75rem 0.85rem;
-}
-
-.bus-route-badge {
-  background: #00f0ff;
-  color: #000000;
-  font-family: 'Aldrich', sans-serif;
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 2px 6px;
-  white-space: nowrap;
-}
-
-.bus-route-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.bus-route-from {
-  font-family: 'Aldrich', sans-serif;
-  font-size: 0.88rem;
-  color: #EAF6F5;
-}
-
-.bus-route-via {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.74rem;
-  color: #7C8BA1;
-  line-height: 1.35;
-}
-
-.bus-modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 1.25rem;
-  border-top: 1px solid rgba(0, 240, 255, 0.2);
-  padding-top: 0.75rem;
-}
-
-.bus-modal-btn {
-  background: #00f0ff;
-  color: #000000;
-  border: none;
-  font-family: 'Aldrich', sans-serif;
-  font-weight: 700;
-  font-size: 0.8rem;
-  letter-spacing: 0.1em;
-  padding: 6px 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.bus-modal-btn:hover {
-  background: #caff00;
-  box-shadow: 0 0 10px rgba(202, 255, 0, 0.6);
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes scaleUp {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
