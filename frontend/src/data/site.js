@@ -72,6 +72,8 @@ export const events = [
       'Laptop is mandatory for this event.',
       'Breaking the rules may lead to disqualification.',
       "Judges' and organizers' decision is final and binding.",
+      "Scoring is based on CVSS and PoC validation.",
+      "If severe network traffic is made either using automated tools, the participant will be temporarily banned."
     ],
     coordinators: [
       { name: 'Madhumitha T', phone: '7200291695' },
