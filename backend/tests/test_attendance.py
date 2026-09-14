@@ -354,3 +354,37 @@ async def test_google_sheets_sync_reports_failed_batch_write(monkeypatch):
         assert _LAST_SYNC_STATUS["total_sync_count"] == previous_sync_count
     finally:
         _LAST_SYNC_STATUS["last_error"] = previous_error
+
+
+@pytest.mark.parametrize("abstract_fields", [
+    {"abstract": "FraudTrace project"},
+    {"igniteTopic": "FraudTrace project"},
+    {"participant": {"abstract": "FraudTrace project"}},
+    {"participant": {"igniteTopic": "FraudTrace project"}},
+    {"eventRegistrations": [
+        {"eventId": "ignite", "abstract": "FraudTrace project"},
+        {"eventId": "hunt"},
+    ]},
+])
+def test_live_sheets_include_current_and_legacy_abstracts(abstract_fields):
+    from app.services.google_sheets_service import GoogleSheetsService
+
+    registration = {
+        "registrationId": "NOC26-ABSTRACT",
+        "paymentStatus": "confirmed",
+        "eventRegistrations": [{"eventId": "ignite"}, {"eventId": "hunt"}],
+        **abstract_fields,
+    }
+    events = [{"id": "ignite", "name": "IGNITE"}, {"id": "hunt", "name": "Mystery Hunt"}]
+    service = GoogleSheetsService()
+    workbook = service.build_live_workbook(events, [registration])
+    for title in ("Registered", "Verified", "IGNITE", "Mystery Hunt"):
+        headers, row = workbook[title]
+        assert len(headers) == len(row)
+        assert row[headers.index("Abstract")] == ("" if title == "Mystery Hunt" else "FraudTrace project")
+
+    pending = service.build_live_workbook(events, [{**registration, "paymentStatus": "pending"}])
+    assert pending["Registered"][1][-1] == "FraudTrace project"
+    assert len(pending["Verified"]) == 1
+    blank = service.build_live_workbook(events, [{"paymentStatus": "pending"}])
+    assert blank["Registered"][1][-1] == ""

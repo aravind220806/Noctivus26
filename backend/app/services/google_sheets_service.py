@@ -171,6 +171,21 @@ def _safe_cell(val: Any) -> Any:
     return s
 
 
+def _registration_abstract(reg: dict, event_id: str | None = None) -> str:
+    event_regs = reg.get("eventRegistrations") or []
+    for event in event_regs:
+        if event_id is None or event.get("eventId") == event_id:
+            value = event.get("abstract") or event.get("igniteTopic")
+            if value:
+                return value
+    # Legacy registration-level fields describe the IGNITE submission.
+    if event_id is not None and event_id != "ignite":
+        return ""
+    participant = reg.get("participant") or {}
+    return (reg.get("abstract") or reg.get("igniteTopic")
+            or participant.get("abstract") or participant.get("igniteTopic") or "")
+
+
 class GoogleSheetsService:
     @property
     def spreadsheet_id(self) -> str:
@@ -476,7 +491,7 @@ class GoogleSheetsService:
         registered_headers = [
             "S.No", "Registration ID", "Participant Name", "Email", "Phone",
             "College", "Department", "Year", "Food Preference", "Registered Events",
-            "Payment Status", "UTR Number", "Expected Amount", "Claimed Amount", "Submitted At",
+            "Payment Status", "UTR Number", "Expected Amount", "Claimed Amount", "Submitted At", "Abstract",
         ]
         registered_rows = [registered_headers]
         for idx, reg in enumerate(registrations, 1):
@@ -498,6 +513,7 @@ class GoogleSheetsService:
                 reg.get("expectedAmount", 0),
                 reg.get("claimedAmount", 0),
                 reg.get("paymentSubmittedAt", "") or reg.get("createdAt", ""),
+                _registration_abstract(reg),
             ])
         sheets["Registered"] = registered_rows
 
@@ -505,7 +521,7 @@ class GoogleSheetsService:
         verified_headers = [
             "S.No", "Registration ID", "Participant Name", "Email", "Phone",
             "College", "Department", "Year", "Food Preference", "Registered Events",
-            "UTR Number", "Verified Amount", "Verified At", "Verified By",
+            "UTR Number", "Verified Amount", "Verified At", "Verified By", "Abstract",
         ]
         verified_rows = [verified_headers]
         for idx, reg in enumerate(verified_regs, 1):
@@ -526,6 +542,7 @@ class GoogleSheetsService:
                 reg.get("expectedAmount", 0),
                 reg.get("verifiedAt", ""),
                 reg.get("verifiedBy", ""),
+                _registration_abstract(reg),
             ])
         sheets["Verified"] = verified_rows
 
@@ -541,7 +558,7 @@ class GoogleSheetsService:
 
             event_headers = [
                 "S.No", "Registration ID", "Participant Name", "Email", "Phone",
-                "College", "Department", "Year", "Food Preference", "Verified At",
+                "College", "Department", "Year", "Food Preference", "Verified At", "Abstract",
             ]
             event_rows = [event_headers]
             for idx, reg in enumerate(event_regs, 1):
@@ -557,6 +574,7 @@ class GoogleSheetsService:
                     p.get("year", ""),
                     p.get("foodPreference", ""),
                     reg.get("verifiedAt", ""),
+                    _registration_abstract(reg, event_id),
                 ])
             sheets[event_sheet] = event_rows
 
