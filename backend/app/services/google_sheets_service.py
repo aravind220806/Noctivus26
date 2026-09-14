@@ -486,7 +486,15 @@ class GoogleSheetsService:
 
     def build_live_workbook(self, events: list[dict], registrations: list[dict]) -> dict[str, list[list[Any]]]:
         """Build the clean Sheets workbook for the registration -> verification -> attendance flow."""
-        sheets: dict[str, list[list[Any]]] = {}
+        certificate_headers = [
+            "S.No", "Registration ID", "Event", "Member Name", "Role", "Roll No / ID",
+            "College", "Department", "Year", "Email", "Phone", "Payment Status",
+            "Attendance Status", "Marked At", "Marked By", "E-Certificate Eligible", "Reason",
+        ]
+        sheets: dict[str, list[list[Any]]] = {
+            "E-Certificate Eligible": [certificate_headers.copy()],
+            "E-Certificate Non-Eligible": [certificate_headers.copy()],
+        }
 
         registered_headers = [
             "S.No", "Registration ID", "Participant Name", "Email", "Phone",
@@ -585,7 +593,7 @@ class GoogleSheetsService:
             ]
             attendance_rows = [attendance_headers]
             attendance_members = []
-            for reg in event_regs:
+            for reg in registrations:
                 p = reg.get("participant") or {}
                 ev_item = next((item for item in reg.get("eventRegistrations", []) if item.get("eventId") == event_id), None)
                 if not ev_item:
@@ -603,6 +611,7 @@ class GoogleSheetsService:
                 leader_state = member_states.get(leader_name.upper(), {})
                 attendance_members.append({
                     "registrationId": reg.get("registrationId") or reg.get("member_id", ""),
+                    "paymentStatus": (reg.get("paymentStatus") or "pending").lower(),
                     "name": leader_name,
                     "role": "Team Leader",
                     "rollNo": p.get("rollNo") or p.get("collegeId") or "",
@@ -625,6 +634,7 @@ class GoogleSheetsService:
                     tm_state = member_states.get(tm_name.upper(), {})
                     attendance_members.append({
                         "registrationId": reg.get("registrationId") or reg.get("member_id", ""),
+                        "paymentStatus": (reg.get("paymentStatus") or "pending").lower(),
                         "name": tm_name,
                         "role": "Team Member",
                         "rollNo": tm.get("rollNo", ""),
@@ -641,8 +651,25 @@ class GoogleSheetsService:
             attendance_members.sort(key=lambda item: (item["registrationId"], 0 if item["role"] == "Team Leader" else 1, item["name"]))
             for idx, member in enumerate(attendance_members, 1):
                 present = member["present"]
+                confirmed = member["paymentStatus"] == "confirmed"
+                eligible = confirmed and present
+                reasons = []
+                if not confirmed:
+                    reasons.append("Payment not confirmed")
+                if not present:
+                    reasons.append("Absent" if member["markedAt"] else "Attendance not marked")
+                target = sheets["E-Certificate Eligible" if eligible else "E-Certificate Non-Eligible"]
+                target.append([
+                    len(target), member["registrationId"], event_name, member["name"],
+                    member["role"], member["rollNo"], member["college"], member["department"],
+                    member["year"], member["email"], member["phone"], member["paymentStatus"].capitalize(),
+                    "PRESENT" if present else ("ABSENT" if member["markedAt"] else "NOT MARKED"),
+                    member["markedAt"], member["markedBy"], "YES" if eligible else "NO", "; ".join(reasons),
+                ])
+                if not confirmed:
+                    continue
                 attendance_rows.append([
-                    idx,
+                    len(attendance_rows),
                     member["registrationId"],
                     member["name"],
                     member["role"],

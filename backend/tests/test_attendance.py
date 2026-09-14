@@ -388,3 +388,44 @@ def test_live_sheets_include_current_and_legacy_abstracts(abstract_fields):
     assert len(pending["Verified"]) == 1
     blank = service.build_live_workbook(events, [{"paymentStatus": "pending"}])
     assert blank["Registered"][1][-1] == ""
+
+
+def test_certificate_master_sheets_cover_all_events_and_payment_states():
+    from app.services.google_sheets_service import GoogleSheetsService
+
+    events = [{"id": "ignite", "name": "IGNITE"}, {"id": "hunt", "name": "Mystery Hunt"}]
+    registrations = [
+        {
+            "registrationId": "CONFIRMED", "paymentStatus": "confirmed",
+            "participant": {"name": "Leader"},
+            "eventRegistrations": [
+                {"eventId": "ignite", "teamMembers": [{"name": "Present Mate"}, {"name": "Absent Mate"}],
+                 "attendance": {"markedAt": "2026-09-26", "members": [
+                     {"name": "Leader", "present": True}, {"name": "Present Mate", "present": True},
+                     {"name": "Absent Mate", "present": False},
+                 ]}},
+                {"eventId": "hunt"},
+            ],
+        },
+        {"registrationId": "PENDING", "paymentStatus": "pending", "participant": {"name": "Pending"},
+         "eventRegistrations": [{"eventId": "ignite", "attendance": {"present": True}}]},
+    ]
+    workbook = GoogleSheetsService().build_live_workbook(events, registrations)
+    eligible = workbook["E-Certificate Eligible"]
+    noneligible = workbook["E-Certificate Non-Eligible"]
+    def records(rows):
+        return [dict(zip(rows[0], row)) for row in rows[1:]]
+    approved = records(eligible)
+    rejected = records(noneligible)
+    assert {(r["Member Name"], r["Event"]) for r in approved} == {("Leader", "IGNITE"), ("Present Mate", "IGNITE")}
+    assert {(r["Member Name"], r["Event"], r["Reason"]) for r in rejected} == {
+        ("Absent Mate", "IGNITE", "Absent"),
+        ("Leader", "Mystery Hunt", "Attendance not marked"),
+        ("Pending", "IGNITE", "Payment not confirmed"),
+    }
+    for rows in (eligible, noneligible):
+        assert all(len(row) == len(rows[0]) for row in rows)
+        assert [row[0] for row in rows[1:]] == list(range(1, len(rows)))
+    assert all(row[1] != "PENDING" for row in workbook["Attendance - IGNITE"][1:])
+    empty = GoogleSheetsService().build_live_workbook([], [])
+    assert len(empty["E-Certificate Eligible"]) == len(empty["E-Certificate Non-Eligible"]) == 1
