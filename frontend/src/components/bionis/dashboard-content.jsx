@@ -7,8 +7,10 @@ export function DashboardContent({
   overview,
   onToggleEventStatus,
 }) {
-  const usedBytes = overview.storage?.storageBytes || overview.storage?.dataBytes || 0;
-  const usage = overview.storage?.available && overview.storage.limitBytes ? Math.min(100, Math.round((usedBytes / overview.storage.limitBytes) * 100)) : null;
+  const storage = overview.storage || {};
+  const sync = overview.liveSync;
+  const usage = storage.diskTotalBytes > 0 ? Math.min(100, Math.round((storage.diskUsedBytes / storage.diskTotalBytes) * 100)) : null;
+  const syncStatus = !sync ? 'Unknown' : sync.lastError ? 'Sync issue' : !sync.enabled ? 'Disabled' : sync.lastSyncedAt ? 'Last sync successful' : 'Waiting for first sync';
   const eventData = [...(overview.events || [])].sort((a, b) => eventOrder.indexOf(a.eventName) - eventOrder.indexOf(b.eventName));
   const totalEventRegistrations = eventData.reduce((total, event) => total + (event.registrations || 0), 0);
   const hasRegistrations = eventData.some((e) => (e.registrations || 0) > 0);
@@ -132,22 +134,30 @@ export function DashboardContent({
             <span className="kicker">DATABASE STORAGE</span>
             <h2>System Health &amp; Storage</h2>
           </div>
-          <strong>{usage === null ? 'Operational' : `${usage}% used`}</strong>
+          <strong>{storage.available === true ? 'Database ready' : storage.available === false ? 'Database issue' : 'Status unavailable'}</strong>
         </div>
-        {usage === null ? (
-          <p>Database connection and replica state are healthy. Registration, scheduling, and email workers are operational.</p>
-        ) : (
+        <div className="storage-monitor__values">
+          <span>Database file: {formatBytes(storage.databaseBytes)}</span>
+          <span>Pending database writes (WAL): {formatBytes(storage.walBytes)}</span>
+          <span>Total database storage: {formatBytes(storage.storageBytes)}</span>
+        </div>
+        {storage.measurementError && <p>{storage.measurementError}</p>}
+        {usage !== null && (
           <>
+            <p>Server disk: {usage >= 85 ? 'Low space' : 'Space available'} · {usage}% used by all files</p>
             <div className={`storage-meter ${usage >= 85 ? 'storage-meter--warning' : ''}`}>
               <i style={{ width: `${usage}%` }} />
             </div>
             <div className="storage-monitor__values">
-              <span>{formatBytes(usedBytes)} used</span>
-              <span>{formatBytes(overview.storage?.limitBytes || 0)} limit</span>
-              <span>{formatBytes(overview.storage?.indexBytes || 0)} indexes</span>
+              <span>{formatBytes(storage.diskFreeBytes)} free</span>
+              <span>{formatBytes(storage.diskTotalBytes)} disk capacity</span>
             </div>
           </>
         )}
+        <p>Hosting-plan storage limit: not reported. Disk capacity is shared with other server files.</p>
+        <p><strong>Live sheet sync: {syncStatus}</strong></p>
+        {sync?.lastSyncedAt && <p>Last successful sync: {new Date(sync.lastSyncedAt).toLocaleString()}</p>}
+        {sync?.lastError && <p>Check the live-sheet connection under Export, then retry “Sync Everything to Google Sheet Now”.</p>}
       </Card>
     </div>
   );
@@ -164,5 +174,7 @@ function MetricCard({ label, value, subtext, tone }) {
 }
 
 function formatBytes(value) {
+  if (value == null) return 'Unavailable';
+  if (value >= 1024 ** 3) return `${(value / (1024 ** 3)).toFixed(1)} GB`;
   return value >= 1024 * 1024 ? `${(value / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(0, Math.round(value / 1024))} KB`;
 }

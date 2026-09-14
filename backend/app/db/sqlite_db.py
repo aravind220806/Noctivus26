@@ -25,6 +25,7 @@ Usage
 import json
 import logging
 import os
+import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -146,6 +147,19 @@ class _SQLiteDB:
 
     def ready(self) -> bool:
         return self._ready
+
+    def storage_status(self) -> dict:
+        status = {"available": self.ready(), "engine": "sqlite", "fileName": DB_PATH.name}
+        try:
+            status["databaseBytes"] = DB_PATH.stat().st_size
+            wal_path = Path(str(DB_PATH) + "-wal")
+            status["walBytes"] = wal_path.stat().st_size if wal_path.exists() else 0
+            status["storageBytes"] = status["databaseBytes"] + status["walBytes"]
+            disk = shutil.disk_usage(DB_PATH.parent)
+            status.update(diskTotalBytes=disk.total, diskUsedBytes=disk.used, diskFreeBytes=disk.free)
+        except OSError:
+            status["measurementError"] = "Storage size could not be read."
+        return status
 
     # ── Generic KV operations ──────────────────────────────────────────────────
 

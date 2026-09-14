@@ -641,7 +641,9 @@ async def revoke_all_sessions(admin=Depends(require_admin)):
 @router.get("/overview")
 async def overview(_admin=Depends(require_any_admin_tab(["Dashboard", "Verify Members", "Invitations", "Day Book", "Export"]))):
     result = build_overview(await load_registrations(), await list_events())
-    result["storage"] = {"available": sqlite_db.ready(), "engine": "sqlite"}
+    result["storage"] = await asyncio.to_thread(sqlite_db.storage_status)
+    sync = google_sheets_service.get_status()
+    result["liveSync"] = {key: sync[key] for key in ("enabled", "lastSyncedAt", "lastError")}
     return result
 
 
