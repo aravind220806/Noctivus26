@@ -10,6 +10,7 @@ export function DashboardContent({
   const usedBytes = overview.storage?.storageBytes || overview.storage?.dataBytes || 0;
   const usage = overview.storage?.available && overview.storage.limitBytes ? Math.min(100, Math.round((usedBytes / overview.storage.limitBytes) * 100)) : null;
   const eventData = [...(overview.events || [])].sort((a, b) => eventOrder.indexOf(a.eventName) - eventOrder.indexOf(b.eventName));
+  const totalEventRegistrations = eventData.reduce((total, event) => total + (event.registrations || 0), 0);
   const hasRegistrations = eventData.some((e) => (e.registrations || 0) > 0);
   const chartHeight = eventData.length * 36; // ~288px for 8 rows
   const recentList = overview.recent || [];
@@ -18,7 +19,8 @@ export function DashboardContent({
     <div className="dashboard-content-wrapper">
       {/* Top Stat Cards */}
       <section className="admin-metrics">
-        <MetricCard label="TOTAL REGISTRATIONS" value={overview.total ?? 0} subtext="Registered attendees" tone="blue" />
+        <MetricCard label="TOTAL REGISTRATIONS" value={overview.total ?? 0} subtext="Registration records" tone="blue" />
+        <MetricCard label="EVENT REGISTRATIONS" value={totalEventRegistrations} subtext="Total entries across all events" tone="blue" />
         <MetricCard label="PENDING VERIFICATION" value={overview.statuses?.pending ?? 0} subtext="Awaiting admin approval" tone="orange" />
         <MetricCard label="CONFIRMED PAYMENTS" value={overview.statuses?.confirmed ?? 0} subtext="Verified & confirmed" tone="green" />
         <MetricCard label="TOTAL REVENUE" value={`Rs.${overview.confirmedRevenue ?? 0}`} subtext="Collected fees" tone="purple" />

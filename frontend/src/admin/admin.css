@@ -9200,3 +9200,9 @@ html, body, #root {
     display: none !important;
   }
 }
+
+@media (min-width: 1200px) {
+  .dashboard-content-wrapper > .admin-metrics {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+}
