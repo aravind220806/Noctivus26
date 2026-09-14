@@ -62,6 +62,7 @@ export function Topbar({
           className="button button-refresh"
           type="button"
           onClick={() => onRefresh && onRefresh(false)}
+          aria-label="Refresh admin data"
           disabled={isRefreshing}
           title={timeString ? `Last updated: ${timeString}` : 'Refresh admin data'}
         >

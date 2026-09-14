@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Card, CardTitle } from './shared';
 
@@ -7,6 +8,7 @@ export function DashboardContent({
   overview,
   onToggleEventStatus,
 }) {
+  const [showAllActivity, setShowAllActivity] = useState(false);
   const storage = overview.storage || {};
   const sync = overview.liveSync;
   const usage = storage.diskTotalBytes > 0 ? Math.min(100, Math.round((storage.diskUsedBytes / storage.diskTotalBytes) * 100)) : null;
@@ -14,7 +16,7 @@ export function DashboardContent({
   const eventData = [...(overview.events || [])].sort((a, b) => eventOrder.indexOf(a.eventName) - eventOrder.indexOf(b.eventName));
   const totalEventRegistrations = eventData.reduce((total, event) => total + (event.registrations || 0), 0);
   const hasRegistrations = eventData.some((e) => (e.registrations || 0) > 0);
-  const chartHeight = eventData.length * 36; // ~288px for 8 rows
+  const chartHeight = Math.max(180, eventData.length * 28); // ~288px for 8 rows
   const recentList = overview.recent || [];
 
   return (
@@ -91,7 +93,7 @@ export function DashboardContent({
                   <XAxis type="number" hide />
                   <YAxis type="category" dataKey="eventName" width={140} tick={{ fill: '#94a3b8', fontSize: 12 }} axisLine={false} tickLine={false} />
                   <Tooltip cursor={{ fill: 'rgba(255, 255, 255, 0.04)' }} />
-                  <Bar dataKey="registrations" fill="#38bdf8" radius={[0, 6, 6, 0]} barSize={14} />
+                  <Bar isAnimationActive={false} dataKey="registrations" fill="#38bdf8" radius={[0, 6, 6, 0]} barSize={14} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -105,10 +107,10 @@ export function DashboardContent({
         <Card className="bionis-recent-activity">
           <CardTitle>Recent Activity</CardTitle>
           {recentList.length > 0 ? (
-            <div className="recent-list">
-              {recentList.map((registration) => (
-                <div key={registration.registrationId} className="recent-item">
-                  <span>{registration.registrationId}</span>
+            <div className="dashboard-activity-list">
+              {(showAllActivity ? recentList : recentList.slice(0, 4)).map((registration) => (
+                <div key={registration.registrationId} className="dashboard-activity-row">
+                  <span className="dashboard-activity-id">{registration.registrationId}</span>
                   <strong>{registration.participant?.name}</strong>
                   <small>{registration.eventRegistrations?.map((event) => event.eventName).join(', ')}</small>
                   <span className={`status-pill status-pill--${registration.paymentStatus}`}>{registration.paymentStatus}</span>
@@ -123,6 +125,11 @@ export function DashboardContent({
               </svg>
               <p>No recent registrations yet.</p>
             </div>
+          )}
+          {recentList.length > 4 && (
+            <button type="button" className="dashboard-activity-toggle" aria-expanded={showAllActivity} onClick={() => setShowAllActivity((value) => !value)}>
+              {showAllActivity ? 'Show fewer' : `Show all ${recentList.length} recent registrations`}
+            </button>
           )}
         </Card>
       </div>

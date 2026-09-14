@@ -124,7 +124,11 @@ export function AttendanceTab({ authHeaders }) {
   // Camera QR Scanner hook
   useEffect(() => {
     if (!cameraOpen) return undefined;
+    if (window.matchMedia('(max-width: 900px)').matches) {
+      document.getElementById('attendance-qr-reader')?.scrollIntoView({ block: 'center' });
+    }
     let active = true;
+    let decoded = false;
     import('html5-qrcode')
       .then(({ Html5Qrcode, Html5QrcodeSupportedFormats }) => {
         if (!active) return;
@@ -148,6 +152,8 @@ export function AttendanceTab({ authHeaders }) {
             aspectRatio: 1.0,
           },
           (scannedVal) => {
+              if (!active || decoded) return;
+              decoded = true;
             const clean = extractCleanId(scannedVal);
             setScanInput(clean);
             setCameraOpen(false);
@@ -302,9 +308,10 @@ export function AttendanceTab({ authHeaders }) {
         setScanInput('');
         loadSummary();
         loadRoster();
-        // Focus back to input
+        if (window.matchMedia('(max-width: 900px)').matches) setCameraOpen(true);
+        // Focus manual input on desktop; avoid opening the mobile keyboard.
         setTimeout(() => {
-          scanInputRef.current?.focus();
+          if (!window.matchMedia('(max-width: 900px)').matches) scanInputRef.current?.focus();
         }, 150);
       } else {
         const err = await response.json().catch(() => ({}));
@@ -489,8 +496,8 @@ export function AttendanceTab({ authHeaders }) {
 
       {/* ─── Scanned Boarding Pass Modal Popup (Mobile & Desktop) ────────── */}
       {activeRegistration && (
-        <div className="attendance-modal-backdrop" onClick={() => setActiveRegistration(null)}>
-          <div className="attendance-modal-card" onClick={(e) => e.stopPropagation()}>
+        <div className="attendance-modal-backdrop scanner-result-overlay" onClick={() => setActiveRegistration(null)}>
+          <div className="attendance-modal-card scanner-result-dialog" role="dialog" aria-modal="true" aria-label="Event attendance" onClick={(e) => e.stopPropagation()}>
             <div className="attendance-modal-header">
               <div className="modal-header-info">
                 <span className="modal-reg-id">{activeRegistration.registrationId}</span>
@@ -508,6 +515,7 @@ export function AttendanceTab({ authHeaders }) {
             </div>
 
             {/* Event Tabs inside Modal */}
+            {message && <p className="admin-message" role="alert">{message}</p>}
             <div className="modal-event-tabs">
               {activeRegistration.eventAttendanceList?.map((ev, idx) => (
                 <button

@@ -1,3 +1,4 @@
+import { useMobileScanReturn } from './useMobileScanReturn';
 import { useEffect, useRef, useState } from 'react';
 import { adminFetch, apiPath } from '../adminUtils';
 
@@ -15,7 +16,15 @@ export function CheckInTab({ authHeaders }) {
   const [cameraOpen, setCameraOpen] = useState(false);
   const [walkIn, setWalkIn] = useState({ name: '', college: '', eventId: '' });
   const [verifiedModalData, setVerifiedModalData] = useState(null);
+  const returnToScanner = () => {
+    setVerifiedModalData(null);
+    setResult(null);
+    setRegistrationId('');
+    setCameraOpen(true);
+  };
+  useMobileScanReturn(Boolean(verifiedModalData) && result?.status !== 'already-checked-in', returnToScanner);
   const scannerRef = useRef(null);
+  const processingRef = useRef(false);
 
   const extractCleanId = (raw) => {
     const trimmed = (raw || '').trim();
@@ -51,7 +60,11 @@ export function CheckInTab({ authHeaders }) {
 
   useEffect(() => {
     if (!cameraOpen) return undefined;
+    if (window.matchMedia('(max-width: 900px)').matches) {
+      document.getElementById('admin-qr-reader')?.scrollIntoView({ block: 'center' });
+    }
     let active = true;
+    let decoded = false;
     import('html5-qrcode')
       .then(({ Html5Qrcode, Html5QrcodeSupportedFormats }) => {
         if (!active) return;
@@ -76,6 +89,8 @@ export function CheckInTab({ authHeaders }) {
               aspectRatio: 1.0,
             },
             (value) => {
+              if (!active || decoded) return;
+              decoded = true;
               const clean = extractCleanId(value);
               setRegistrationId(clean);
               setCameraOpen(false);
@@ -108,7 +123,9 @@ export function CheckInTab({ authHeaders }) {
 
   const performCheckIn = async (idToScan) => {
     const cleanId = extractCleanId(idToScan);
-    if (!cleanId) return;
+    if (!cleanId || processingRef.current) return;
+    processingRef.current = true;
+    try {
     const response = await adminFetch(apiPath(`/api/admin/check-in/${encodeURIComponent(cleanId)}`), {
       method: 'POST',
       headers: authHeaders,
@@ -139,6 +156,11 @@ export function CheckInTab({ authHeaders }) {
       });
     }
     setRegistrationId('');
+    } catch {
+      setResult({ ok: false, status: 'error', message: 'Check-in could not be confirmed. Check your connection and retry.' });
+    } finally {
+      processingRef.current = false;
+    }
   };
 
   const scan = async (event) => {
@@ -336,8 +358,9 @@ export function CheckInTab({ authHeaders }) {
 
       {/* Verified Member Details Popup Modal */}
       {verifiedModalData && (
-        <div className="admin-modal-overlay" onClick={() => setVerifiedModalData(null)}>
-          <div className="verified-checkin-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="admin-modal-overlay scanner-result-overlay" onClick={() => setVerifiedModalData(null)}>
+          <div className="verified-checkin-modal scanner-result-dialog"
+            role="dialog" aria-modal="true" aria-label="Scan result" onClick={(e) => e.stopPropagation()}>
             <div className="verified-modal-badges">
               <span className="badge-authentic">✓ AUTHENTIC PASS</span>
               <span className="badge-verified">
@@ -391,6 +414,7 @@ export function CheckInTab({ authHeaders }) {
               </div>
             </div>
 
+            {Boolean(verifiedModalData) && result?.status !== 'already-checked-in' && <p className="mobile-scan-return-note" role="status">Verified. Returning to scanner in 4 seconds…</p>}
             <button
               type="button"
               className="continue-scanning-btn"

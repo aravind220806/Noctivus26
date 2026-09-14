@@ -16,6 +16,7 @@ import { ExportTab } from './components/ExportTab';
 import { InvitationsTab } from './components/InvitationsTab';
 import { VerifyTab } from './components/VerifyTab';
 import './admin.css';
+import './dashboard-responsive.css';
 
 export default function AdminApp() {
   const [session, setSession] = useState(null);

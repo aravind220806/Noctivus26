@@ -1,3 +1,4 @@
+import { useMobileScanReturn } from './useMobileScanReturn';
 import { useEffect, useRef, useState } from 'react';
 import { adminFetch, apiPath } from '../adminUtils';
 import {
@@ -42,7 +43,15 @@ export function FoodScannerTab({ authHeaders }) {
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [filterType, setFilterType] = useState('all'); // all | veg | non-veg
   const [searchTerm, setSearchTerm] = useState('');
+  const returnToScanner = () => {
+    setVerifiedModalData(null);
+    setResult(null);
+    setQueryId('');
+    setCameraOpen(true);
+  };
+  useMobileScanReturn(verifiedModalData?.status === 'claimed', returnToScanner);
   const scannerRef = useRef(null);
+  const processingRef = useRef(false);
   const audioCtxRef = useRef(null);
 
   // Audio synthesize function for high-speed feedback
@@ -130,7 +139,11 @@ export function FoodScannerTab({ authHeaders }) {
   // HTML5 QR Scanner
   useEffect(() => {
     if (!cameraOpen) return undefined;
+    if (window.matchMedia('(max-width: 900px)').matches) {
+      document.getElementById('food-qr-reader')?.scrollIntoView({ block: 'center' });
+    }
     let active = true;
+    let decoded = false;
     import('html5-qrcode')
       .then(({ Html5Qrcode, Html5QrcodeSupportedFormats }) => {
         if (!active) return;
@@ -155,6 +168,8 @@ export function FoodScannerTab({ authHeaders }) {
               aspectRatio: 1.0,
             },
             (value) => {
+              if (!active || decoded) return;
+              decoded = true;
               const clean = extractCleanId(value);
               setQueryId(clean);
               setCameraOpen(false); // Stop camera immediately on recognition
@@ -196,7 +211,8 @@ export function FoodScannerTab({ authHeaders }) {
 
   const claimFood = async (rawInput) => {
     const clean = extractCleanId(rawInput || queryId);
-    if (!clean || isProcessing) return;
+    if (!clean || processingRef.current) return;
+    processingRef.current = true;
 
     setIsProcessing(true);
     try {
@@ -272,6 +288,7 @@ export function FoodScannerTab({ authHeaders }) {
       setResult(netErr);
       setVerifiedModalData(netErr);
     } finally {
+      processingRef.current = false;
       setIsProcessing(false);
     }
   };
@@ -652,14 +669,15 @@ export function FoodScannerTab({ authHeaders }) {
       {/* ── VERIFIED FOOD CLAIM MODAL POPUP ── */}
       {verifiedModalData && (
         <div
-          className="admin-modal-overlay"
+          className="admin-modal-overlay scanner-result-overlay"
           onClick={() => {
             setVerifiedModalData(null);
             setResult(null);
           }}
         >
           <div
-            className="verified-checkin-modal"
+            className="verified-checkin-modal scanner-result-dialog"
+            role="dialog" aria-modal="true" aria-label="Scan result"
             onClick={(e) => e.stopPropagation()}
             style={{ maxWidth: '520px', border: verifiedModalData.status === 'claimed' ? '1px solid rgba(74, 222, 128, 0.4)' : verifiedModalData.status === 'already-claimed' ? '1px solid rgba(239, 68, 68, 0.5)' : '1px solid #334155' }}
           >
@@ -782,6 +800,7 @@ export function FoodScannerTab({ authHeaders }) {
               </div>
             )}
 
+            {verifiedModalData?.status === 'claimed' && <p className="mobile-scan-return-note" role="status">Verified. Returning to scanner in 4 seconds…</p>}
             {/* PRIMARY ACTION: PROCEED & SCAN NEXT */}
             <button
               type="button"
