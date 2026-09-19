@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from app.core.config import settings
 from app.db.memory_store import memory_events
 from app.db.sqlite_db import sqlite_db
-from app.events import EVENT_ALIASES, EVENT_CATALOG
+from app.events import EVENT_ALIASES, EVENT_CATALOG, EVENTS_BY_ID
 
 VALID_STATUSES = {"open", "closed", "coming-soon"}
 SOLO_TEAM_SIZE = 1
@@ -79,6 +79,11 @@ async def list_events() -> list[dict]:
         if catalog_event["id"] not in db_by_id:
             db_events.append(catalog_event)
             db_by_id[catalog_event["id"]] = catalog_event
+
+    # Apply the renamed title to existing stored events as well as new seeds.
+    for event in db_events:
+        if event.get("id") == "ipl-bidverse":
+            event["name"] = EVENTS_BY_ID["ipl-bidverse"]["name"]
 
     return [event for event in db_events if _is_canonical_event(event)]
 

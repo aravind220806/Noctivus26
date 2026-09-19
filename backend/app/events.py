@@ -6,7 +6,7 @@ EVENT_CATALOG = [
     {"id": "ignite", "name": "IGNITE", "category": "tech", "duration_minutes": 180, "is_ctf": False, "fee": 150, "teamMin": 1, "teamMax": 1, "detailsComplete": True, "status": "open", "venue": "Main Auditorium", "date": "2026-09-26", "time": "10:00", "gate": "VEC Gate 1"},
     {"id": "mystery-hunt", "name": "Mystery Hunt", "category": "non-tech", "duration_minutes": 180, "is_ctf": False, "fee": 150, "teamMin": 1, "teamMax": 1, "detailsComplete": True, "status": "open", "venue": "Seminar Hall A", "date": "2026-09-26", "time": "10:00", "gate": "VEC Gate 1"},
     {"id": "tune-trap", "name": "Tune Trap", "category": "non-tech", "duration_minutes": 180, "is_ctf": False, "fee": 150, "teamMin": 1, "teamMax": 1, "detailsComplete": True, "status": "open", "venue": "Open Air Theatre", "date": "2026-09-26", "time": "10:00", "gate": "VEC Gate 1"},
-    {"id": "ipl-bidverse", "name": "IPL Bidverse", "category": "non-tech", "duration_minutes": 180, "is_ctf": False, "fee": 150, "teamMin": 1, "teamMax": 1, "detailsComplete": True, "status": "open", "venue": "Mini Auditorium", "date": "2026-09-26", "time": "10:00", "gate": "VEC Gate 1"},
+    {"id": "ipl-bidverse", "name": "Auction Arena", "category": "non-tech", "duration_minutes": 180, "is_ctf": False, "fee": 150, "teamMin": 1, "teamMax": 1, "detailsComplete": True, "status": "open", "venue": "Mini Auditorium", "date": "2026-09-26", "time": "10:00", "gate": "VEC Gate 1"},
     {"id": "playground-of-hackers", "name": "Playground of Hackers", "category": "workshop", "duration_minutes": 300, "is_ctf": False, "fee": 300, "teamMin": 1, "teamMax": 1, "detailsComplete": True, "status": "open", "venue": "Cyber Security Lab 2", "date": "2026-09-26", "time": "10:00", "gate": "VEC Gate 1"},
 ]
 
