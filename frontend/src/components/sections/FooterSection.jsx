@@ -20,7 +20,7 @@ export function FooterSection() {
         {/* Main Content: Info on Left, Map on Right */}
         <div className="footer-main-layout">
 
-          {/* LEFT SIDE: Venue, Contact */}
+          {/* LEFT SIDE: Venue, Contact, Bus Route */}
           <div className="footer-info-columns">
 
             {/* Venue */}
@@ -60,6 +60,36 @@ export function FooterSection() {
                     +91 98840 17375
                   </a>
                 </p>
+              </div>
+            </div>
+
+            {/* Bus Route */}
+            <div className="footer-info-block">
+              <div className="footer-info-heading">
+                <svg className="footer-info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="3" width="18" height="15" rx="2" />
+                  <path d="M3 9h18" />
+                  <circle cx="7" cy="15" r="1" />
+                  <circle cx="17" cy="15" r="1" />
+                  <path d="M5 18v2" />
+                  <path d="M19 18v2" />
+                </svg>
+                <span>BUS ROUTE</span>
+              </div>
+              <div className="footer-info-body">
+                <a
+                  href="/busroutes.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="footer-bus-btn"
+                >
+                  <span>View Bus Route</span>
+                  <svg className="footer-ext-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    <polyline points="15 3 21 3 21 9" />
+                    <line x1="10" y1="14" x2="21" y2="3" />
+                  </svg>
+                </a>
               </div>
             </div>
 
