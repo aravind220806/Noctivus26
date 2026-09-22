@@ -5,6 +5,7 @@ import { HudCorners } from './ui/HudCorners/HudCorners';
 import './RegistrationModal.css';
 
 const emptyForm = { name: '', college: '', phone: '', email: '', foodPreference: '' };
+const fallbackUpiId = '7695827158@okbizaxis';
 
 const createPaymentReference = () => {
   const bytes = new Uint8Array(12);
@@ -45,6 +46,7 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
   const [igniteAbstract, setIgniteAbstract] = useState('');
   const [paymentReference] = useState(createPaymentReference);
   const [paymentStarted, setPaymentStarted] = useState(false);
+  const [upiCopyStatus, setUpiCopyStatus] = useState('');
   const [utr, setUtr] = useState('');
   const [utrStatus, setUtrStatus] = useState({ state: 'idle', message: 'Enter all 12 digits to check this UTR.' });
   const [consent, setConsent] = useState(false);
@@ -84,6 +86,15 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
   const upiId = paymentConfig.upiId;
   const payee = paymentConfig.payee;
   const paymentConfigured = Boolean(upiId && payee);
+
+  const copyFallbackUpiId = async () => {
+    try {
+      await navigator.clipboard.writeText(fallbackUpiId);
+      setUpiCopyStatus('UPI ID copied.');
+    } catch {
+      setUpiCopyStatus('Unable to copy. Please select and copy the UPI ID manually.');
+    }
+  };
 
   useEffect(() => {
     let active = true;
@@ -604,6 +615,24 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
                         </div>
                       )}
                     </div>
+                    <div className="reg-upi-details">
+                      <div className="reg-upi-row">
+                        <code className="reg-upi-id">{fallbackUpiId}</code>
+                        <button type="button" className="reg-upi-copy" onClick={copyFallbackUpiId} aria-label="Copy UPI ID" title={upiCopyStatus === 'UPI ID copied.' ? 'Copied!' : 'Copy UPI ID'}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            {upiCopyStatus === 'UPI ID copied.' ? (
+                              <path d="m5 12 4 4L19 6" />
+                            ) : (
+                              <>
+                                <rect x="9" y="9" width="12" height="12" rx="2" />
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                              </>
+                            )}
+                          </svg>
+                        </button>
+                      </div>
+                      <small role="status" className={upiCopyStatus === 'UPI ID copied.' ? 'reg-upi-copy-success' : undefined}>{upiCopyStatus}</small>
+                    </div>
                     <div className="reg-payment-qr-caption">
                       <span className="reg-payment-qr-badge">SCAN WITH ANY UPI APP</span>
                       <small className="reg-payment-qr-subtext">GPay • PhonePe • Paytm • BHIM</small>
@@ -618,6 +647,7 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
                     >
                       OPEN IN UPI APP (PAY ₹{amount})
                     </a>
+
                   </div>
                 </div>
               ) : (
