@@ -13,8 +13,6 @@ export function EventSchedulerTab({ authHeaders }) {
   const [addingSlotEvent, setAddingSlotEvent] = useState(null);
   const [slotForm, setSlotForm] = useState({ window: 'morning', start_time: '10:00', end_time: '11:30', capacity: 30, date: '2026-09-26' });
   const [slotSaving, setSlotSaving] = useState(false);
-  const [slotCounts, setSlotCounts] = useState({});
-  const [configuringEvent, setConfiguringEvent] = useState(null);
   const [exporting, setExporting] = useState(false);
   const [managingEventSlots, setManagingEventSlots] = useState(null);
 
@@ -52,9 +50,10 @@ export function EventSchedulerTab({ authHeaders }) {
       });
       const res = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(res.detail || res.message || 'Failed to generate slots.');
+      setAssignmentSummary(res.assignment_summary || null);
       setMessage({
         type: 'success',
-        text: regenerate ? 'Slots regenerated and previous assignments reset.' : res.message || 'Time slots generated successfully.',
+        text: res.message || 'Event slots repaired and members reassigned.',
       });
       await load();
     } catch (err) {
@@ -81,7 +80,7 @@ export function EventSchedulerTab({ authHeaders }) {
       setAssignmentSummary(res);
       setMessage({
         type: 'success',
-        text: `Assignment batch finished: ${res.successfully_assigned} members assigned successfully (${res.total_processed} processed).`,
+        text: `Schedule repair finished: ${res.successfully_assigned} members assigned successfully (${res.total_processed} processed).`,
       });
       await load();
     } catch (err) {
@@ -160,27 +159,6 @@ export function EventSchedulerTab({ authHeaders }) {
     }
   };
 
-  const applySlotCount = async (event) => {
-    setConfiguringEvent(event.id);
-    try {
-      const count = slotCounts[event.id] ?? event.slot_count ?? 1;
-      const response = await adminFetch(apiPath(`/api/admin/scheduler/events/${event.id}/slot-count`), {
-        method: 'PUT',
-        headers: { ...authHeaders, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slot_count: count }),
-      });
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(result.detail || 'Unable to update slot count.');
-      setAssignmentSummary(result.assignment_summary);
-      setMessage({ type: 'success', text: `${event.name}: ${count} slot${count === 1 ? '' : 's'} applied and members reassigned. Check the summary for any timing conflicts.` });
-      await load();
-    } catch (err) {
-      setMessage({ type: 'error', text: err.message });
-    } finally {
-      setConfiguringEvent(null);
-    }
-  };
-
   const handleExportExcel = async () => {
     setExporting(true);
     try {
@@ -233,7 +211,7 @@ export function EventSchedulerTab({ authHeaders }) {
       <header className="scheduler-header">
         <div>
           <h2>Event Scheduler</h2>
-          <p className="admin-help">Auto-generate conflict-free time slots and assign registered members with zero time overlap.</p>
+          <p className="admin-help">Repair event timings and assign members without overlapping their registered events.</p>
         </div>
         <div className="scheduler-actions">
           <button
@@ -258,9 +236,9 @@ export function EventSchedulerTab({ authHeaders }) {
             className="button button-primary"
             onClick={handleRunAssignment}
             disabled={!data.has_generated_slots || assigning || generating}
-            title={!data.has_generated_slots ? 'Generate slots first before running assignment' : 'Assign registered members into slots'}
+            title={!data.has_generated_slots ? 'Generate slots first before running assignment' : 'Apply event slot counts, repair overlapping timings, and reassign all confirmed members'}
           >
-            {assigning ? 'Assigning members...' : 'Run Assignment'}
+            {assigning ? 'Assigning members...' : 'Auto-fix Schedule'}
           </button>
         </div>
       </header>
@@ -272,11 +250,26 @@ export function EventSchedulerTab({ authHeaders }) {
         </div>
       )}
 
+      {assignmentSummary?.late_sessions?.length > 0 && (
+        <div className="admin-alert" role="status">
+          <div>
+            <strong>Sessions ending after 5:00 PM (event durations preserved)</strong>
+            <ul>
+              {assignmentSummary.late_sessions.map((slot) => (
+                <li key={`${slot.event_id}-${slot.start_time}`}>
+                  {data.events.find((event) => event.id === slot.event_id)?.name || slot.event_id}: {slot.start_time}–{slot.end_time}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
       {/* Events & Slot Overview Table */}
       <section className="scheduler-section">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <h3>Events Overview</h3>
-          <small style={{ color: 'var(--muted)' }}>Choose one slot for all members or two to split them. Assignment checks timing conflicts.</small>
+          <small style={{ color: 'var(--muted)' }}>NULL CORE CTF, Bug Hunt, Prompt Heist, and Ignite: 1 slot each. All other events: 2 slots.</small>
         </div>
         <div className="admin-table-wrap">
           <table className="admin-table scheduler-events-table">
@@ -314,21 +307,7 @@ export function EventSchedulerTab({ authHeaders }) {
                     <strong>{ev.slots_count}</strong> slots
                   </td>
                   <td>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <select
-                        aria-label={`Slot count for ${ev.name}`}
-                        value={slotCounts[ev.id] ?? ev.slot_count ?? 1}
-                        onChange={(e) => setSlotCounts((previous) => ({ ...previous, [ev.id]: Number(e.target.value) }))}
-                        disabled={configuringEvent !== null}
-                      >
-                        <option value={1}>1 slot — all members</option>
-                        <option value={2}>2 slots — split members</option>
-                      </select>
-                      <button type="button" className="button button-secondary button-small"
-                        disabled={configuringEvent !== null} onClick={() => applySlotCount(ev)}>
-                        {configuringEvent === ev.id ? 'Applying...' : 'Apply'}
-                      </button>
-                    </div>
+                    {ev.slot_count} {ev.slot_count === 1 ? 'slot — all members' : 'slots — split members'}
                   </td>
                   <td>
                     <span className={`status-pill ${ev.slots_count > 0 ? 'status-pill--ready' : 'status-pill--pending'}`}>
@@ -349,7 +328,8 @@ export function EventSchedulerTab({ authHeaders }) {
                         type="button"
                         className="button button-secondary button-small"
                         onClick={() => openAddSlot(ev)}
-                        title="Add a new custom slot"
+                        disabled={ev.slots_count >= ev.slot_count}
+                        title="Add a missing slot within this event’s slot limit"
                       >
                         + Add Slot
                       </button>

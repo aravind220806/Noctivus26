@@ -31,7 +31,7 @@ from app.services.registration_service import (
     trash_registrations,
     update_registration,
 )
-from app.services.scheduler_service import assignMembersToSlots, configure_event_slots, create_custom_slot, delete_slot, generate_all_event_slots, get_scheduler_dashboard_data, load_all_slots, slotsConflict, update_slot
+from app.services.scheduler_service import assignMembersToSlots, repair_event_schedule, configure_event_slots, create_custom_slot, delete_slot, generate_all_event_slots, get_scheduler_dashboard_data, load_all_slots, slotsConflict, update_slot
 from app.db.memory_store import memory_registrations
 from app.db.sqlite_db import sqlite_db
 
@@ -141,7 +141,10 @@ async def scheduler_generate_slots(request: Request, admin=Depends(require_admin
     except Exception:
         body = {}
     regenerate = bool(body.get("regenerate", False))
-    result = await generate_all_event_slots(regenerate=regenerate)
+    try:
+        result = await generate_all_event_slots(regenerate=regenerate)
+    except ValueError as err:
+        raise HTTPException(status_code=400, detail=str(err)) from err
     _trigger_sheets_sync()
     await record_admin_action(
         admin["email"],
@@ -170,7 +173,7 @@ async def scheduler_set_slot_count(event_id: str, request: Request, admin=Depend
 @limiter.limit("10/minute")
 async def scheduler_run_assignment(request: Request, admin=Depends(require_admin_tab("Event Scheduler"))):
     try:
-        summary = await assignMembersToSlots()
+        summary = await repair_event_schedule()
         _trigger_sheets_sync()
         await record_admin_action(
             admin["email"],

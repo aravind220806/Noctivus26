@@ -15,7 +15,6 @@ async def store(request, monkeypatch, tmp_path):
     monkeypatch.setattr(scheduler, 'sqlite_db', db)
     monkeypatch.setattr(event_service, 'sqlite_db', db)
     monkeypatch.setattr(scheduler, 'memory_event_slots', [])
-    monkeypatch.setattr(scheduler, 'memory_registrations', [])
     monkeypatch.setattr(event_service, 'memory_events', [])
     monkeypatch.setattr(scheduler, '_last_assignment_summary', None)
     if request.param == 'sqlite':
@@ -24,7 +23,7 @@ async def store(request, monkeypatch, tmp_path):
 
     async def load(filters=None):
         return [deepcopy(row) for row in rows.values()
-                if not filters or all(row.get(key) == value for key, value in filters.items())]
+                if not filters or all(row.get('paymentStatus' if key == 'status' else key) == value for key, value in filters.items())]
 
     async def update(member_id, changes):
         rows[member_id].update(deepcopy(changes))
@@ -36,7 +35,7 @@ async def store(request, monkeypatch, tmp_path):
 
 
 def registration(member_id, events, assigned=()):
-    return {'registrationId': member_id, 'status': 'confirmed', 'event_ids': events,
+    return {'registrationId': member_id, 'paymentStatus': 'confirmed', 'event_ids': events,
             'eventRegistrations': [{'eventId': eid} for eid in events], 'assigned_slots': list(assigned)}
 
 
@@ -46,22 +45,22 @@ def slot(slot_id, event='bug-hunt', start='10:00', end='13:00', members=(), capa
 
 
 @pytest.mark.asyncio
-async def test_choose_two_splits_and_choose_one_combines_all_members(store):
+async def test_policy_combines_single_event_and_splits_other_event(store):
     for index in range(65):
         mid = f'm{index}'
-        store[mid] = registration(mid, ['bug-hunt'])
-    result = await scheduler.configure_event_slots('bug-hunt', 2, 'admin')
+        store[mid] = registration(mid, ['bug-hunt', 'tune-trap'])
+    result = await scheduler.repair_event_schedule()
     slots = await scheduler.load_all_slots()
-    assert len(slots) == 2
-    assert sorted(len(s['assigned_member_ids']) for s in slots) == [32, 33]
-    assert result['assignment_summary']['successfully_assigned'] == 65
-    assert (await event_service.get_event('bug-hunt'))['slot_count'] == 2
-    await scheduler.configure_event_slots('bug-hunt', 1, 'admin')
-    slots = await scheduler.load_all_slots()
-    assert len(slots) == 1
-    assert len(slots[0]['assigned_member_ids']) == 65
-    assert slots[0]['capacity'] >= 65
-    assert all(row['assigned_slots'] == [slots[0]['id']] for row in store.values())
+    bug_slots = [slot for slot in slots if slot['event_id'] == 'bug-hunt']
+    tune_slots = [slot for slot in slots if slot['event_id'] == 'tune-trap']
+    assert len(bug_slots) == 1
+    assert len(tune_slots) == 2
+    assert len(bug_slots[0]['assigned_member_ids']) == 65
+    assert result['successfully_assigned'] == 65
+    assert result['unassigned_conflicts'] == []
+    assert result['unassigned_full'] == []
+    assert (await event_service.get_event('bug-hunt'))['slot_count'] == 1
+    assert (await event_service.get_event('tune-trap'))['slot_count'] == 2
 
 
 @pytest.mark.asyncio
@@ -150,19 +149,19 @@ async def test_invalid_slot_count_rejected_without_mutation(store, count):
 @pytest.mark.parametrize('count', [1, 2])
 def test_generation_respects_choice_regardless_of_registration_count(event_id, count):
     slots = scheduler.generateSlotsForEvent({'id': event_id, 'slot_count': count, 'duration_minutes': 180}, 200)
-    assert len(slots) == count
+    assert len(slots) == scheduler.required_slot_count(event_id)
     assert slots[0]['start_time'] == '10:00'
     assert sum(s['capacity'] for s in slots) >= 200
-    if count == 2:
+    if len(slots) == 2:
         assert not scheduler.slotsConflict(*slots)
 
 
 @pytest.mark.asyncio
 async def test_splitting_remaining_afternoon_slot_uses_distinct_ids(store):
-    store['member'] = registration('member', ['bug-hunt'])
-    await scheduler.configure_event_slots('bug-hunt', 2, 'admin')
-    await scheduler.delete_slot('slot_bug-hunt_morning_1')
-    await scheduler.configure_event_slots('bug-hunt', 2, 'admin')
+    store['member'] = registration('member', ['tune-trap'])
+    await scheduler.configure_event_slots('tune-trap', 2, 'admin')
+    await scheduler.delete_slot('slot_tune-trap_morning_1')
+    await scheduler.configure_event_slots('tune-trap', 2, 'admin')
     slots = await scheduler.load_all_slots()
     assert len(slots) == 2
     assert len({slot['id'] for slot in slots}) == 2
@@ -178,3 +177,118 @@ async def test_new_members_fit_configured_single_slot_without_expansion(store):
     summary = await scheduler.assignMembersToSlots(auto_generate=False)
     assert summary['successfully_assigned'] == 40
     assert len(await scheduler.load_all_slots()) == 1
+
+
+def assert_valid_assignments(rows, slots):
+    by_id = {slot['id']: slot for slot in slots}
+    for mid, reg in rows.items():
+        assigned = [by_id[sid] for sid in reg['assigned_slots']]
+        assert {s['event_id'] for s in assigned} == set(scheduler._get_event_ids(reg))
+        for index, left in enumerate(assigned):
+            assert mid in left['assigned_member_ids']
+            for right in assigned[index + 1:]:
+                assert not scheduler.slotsConflict(left, right)
+    for slot in slots:
+        assert len(slot['assigned_member_ids']) == len(set(slot['assigned_member_ids']))
+        assert len(slot['assigned_member_ids']) <= slot['capacity']
+
+
+@pytest.mark.asyncio
+async def test_auto_upgrade_repairs_112_conflicting_members(store):
+    from app.events import EVENT_CATALOG
+    for event in EVENT_CATALOG:
+        await scheduler.save_slot(slot(f"old-{event['id']}", event['id']))
+    for index in range(112):
+        tech = ['bug-hunt', 'prompt-heist', 'ignite', 'secure-x-vibecode'][index % 4]
+        other = ['mystery-hunt', 'tune-trap', 'ipl-bidverse'][index % 3]
+        mid = f'm{index}'
+        # Include fully assigned but overlapping members as well as unassigned.
+        assigned = [f'old-{tech}', f'old-{other}'] if index % 2 else []
+        store[mid] = registration(mid, [tech, other], assigned)
+    dashboard = await scheduler.get_scheduler_dashboard_data()
+    summary = dashboard['last_assignment_summary']
+    assert summary['successfully_assigned'] == 112
+    assert summary['unassigned_conflicts'] == []
+    assert summary['unassigned_full'] == []
+    for event in dashboard['events']:
+        assert event['slots_count'] == (1 if event['id'] in {'ctf', 'bug-hunt', 'prompt-heist', 'ignite'} else 2)
+    slots = await scheduler.load_all_slots()
+    assert_valid_assignments(store, slots)
+    await scheduler.get_scheduler_dashboard_data()
+    assert await scheduler.load_all_slots() == slots
+
+
+@pytest.mark.asyncio
+async def test_staggers_single_sessions_with_shared_members(store):
+    for index, pair in enumerate([['bug-hunt', 'prompt-heist'], ['prompt-heist', 'ignite'], ['ignite', 'bug-hunt']]):
+        store[str(index)] = registration(str(index), pair)
+    summary = await scheduler.repair_event_schedule()
+    assert summary['unassigned_conflicts'] == []
+    assert_valid_assignments(store, await scheduler.load_all_slots())
+
+
+@pytest.mark.asyncio
+async def test_workshop_and_other_event_keep_duration_and_have_valid_pair(store):
+    store['member'] = registration('member', ['playground-of-hackers', 'bug-hunt'])
+    summary = await scheduler.repair_event_schedule()
+    assert_valid_assignments(store, await scheduler.load_all_slots())
+    workshops = [s for s in await scheduler.load_all_slots() if s['event_id'] == 'playground-of-hackers']
+    assert len(workshops) == 2
+    for workshop in workshops:
+        assert scheduler._parse_time_to_minutes(workshop['end_time']) - scheduler._parse_time_to_minutes(workshop['start_time']) == 300
+    assert not scheduler.slotsConflict(*workshops)
+    assert any(s['event_id'] == 'playground-of-hackers' for s in summary['late_sessions'])
+
+
+@pytest.mark.asyncio
+async def test_standalone_members_are_balanced_between_two_slots(store):
+    for index in range(65):
+        store[str(index)] = registration(str(index), ['tune-trap'])
+    await scheduler.repair_event_schedule()
+    slots = [s for s in await scheduler.load_all_slots() if s['event_id'] == 'tune-trap']
+    assert sorted(len(s['assigned_member_ids']) for s in slots) == [32, 33]
+
+
+@pytest.mark.asyncio
+async def test_invalid_plan_leaves_existing_schedule_and_members_unchanged(store, monkeypatch):
+    from unittest.mock import AsyncMock
+    store['member'] = registration('member', ['tune-trap'], ['old'])
+    await scheduler.save_slot(slot('old', 'tune-trap', members=['member']))
+    before = deepcopy(store)
+    slots_before = await scheduler.load_all_slots()
+    monkeypatch.setattr(scheduler, 'list_events', AsyncMock(return_value=[{'id': 'tune-trap', 'duration_minutes': 1000}]))
+    with pytest.raises(ValueError):
+        await scheduler.repair_event_schedule()
+    assert store == before
+    assert await scheduler.load_all_slots() == slots_before
+
+
+@pytest.mark.asyncio
+async def test_rechecks_complete_but_overlapping_assignments(store):
+    store['member'] = registration('member', ['bug-hunt', 'tune-trap'], ['bug', 'morning'])
+    for s in [slot('bug'), slot('morning', 'tune-trap'), slot('afternoon', 'tune-trap', '13:00', '16:00')]:
+        await scheduler.save_slot(s)
+    summary = await scheduler.assignMembersToSlots(auto_generate=False)
+    assert summary['successfully_assigned'] == 1
+    assert_valid_assignments(store, await scheduler.load_all_slots())
+
+
+@pytest.mark.asyncio
+async def test_dashboard_discards_stale_conflict_summary(store, monkeypatch):
+    store['member'] = registration('member', ['bug-hunt', 'tune-trap'])
+    await scheduler.repair_event_schedule()
+    monkeypatch.setattr(scheduler, '_last_assignment_summary', {
+        'total_processed': 112, 'successfully_assigned': 0, 'unassigned_conflicts': ['member'], 'unassigned_full': []
+    })
+    dashboard = await scheduler.get_scheduler_dashboard_data()
+    assert dashboard['last_assignment_summary']['successfully_assigned'] == 1
+    assert dashboard['last_assignment_summary']['unassigned_conflicts'] == []
+
+
+@pytest.mark.asyncio
+async def test_cannot_add_extra_slots_above_event_policy(store):
+    await scheduler.repair_event_schedule()
+    with pytest.raises(ValueError, match='limited to 1'):
+        await scheduler.create_custom_slot({'event_id': 'bug-hunt'})
+    with pytest.raises(ValueError, match='limited to 2'):
+        await scheduler.create_custom_slot({'event_id': 'tune-trap'})
