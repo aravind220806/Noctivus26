@@ -8,8 +8,9 @@ from app.services.event_service import list_events, update_event
 from app.services.registration_service import load_registrations, update_registration
 
 _last_assignment_summary: dict | None = None
-SINGLE_SLOT_EVENTS = {"ctf", "bug-hunt", "prompt-heist", "ignite"}
-SCHEDULE_POLICY = "fixed-counts-conflict-repair-v1"
+WORKSHOP_EVENT = "playground-of-hackers"
+SINGLE_SLOT_EVENTS = {"ctf", "bug-hunt", "prompt-heist", "ignite", WORKSHOP_EVENT}
+SCHEDULE_POLICY = "fixed-counts-workshop-10-to-16-v2"
 
 
 def required_slot_count(event_id: str) -> int:
@@ -154,6 +155,10 @@ async def update_slot(slot_id: str, updates: dict) -> dict | None:
     if "capacity" in clean_updates:
         merged["auto_capacity"] = False
     _validate_slot_window(merged.get("start_time", ""), merged.get("end_time", ""))
+    if slot["event_id"] == WORKSHOP_EVENT and (
+        _parse_time_to_minutes(merged["start_time"]) != 600 or _parse_time_to_minutes(merged["end_time"]) != 960
+    ):
+        raise ValueError("The workshop runs from 10:00 AM to 4:00 PM.")
     await save_slot(merged)
     await reconcile_slot_assignments()
     return merged
@@ -170,6 +175,8 @@ async def create_custom_slot(data: dict) -> dict:
     window = "afternoon" if str(data.get("window")).lower() == "afternoon" else "morning"
     start_time = str(data.get("start_time") or "10:00").strip()
     end_time = str(data.get("end_time") or "11:30").strip()
+    if event_id == WORKSHOP_EVENT:
+        start_time, end_time = "10:00", "16:00"
     _validate_slot_window(start_time, end_time)
     try:
         capacity = max(1, min(300, int(data.get("capacity") or 30)))
@@ -249,6 +256,8 @@ async def configure_event_slots(event_id: str, count: int, updated_by: str) -> d
             new_slot["id"] = f"slot_{event_id}_split_{suffix}"
             suffix += 1
         replacements.append(new_slot)
+    if event_id == WORKSHOP_EVENT:
+        replacements[0].update(start_time="10:00", end_time="16:00", window="morning")
     for slot in replacements:
         _validate_slot_window(slot["start_time"], slot["end_time"])
     await update_event(event_id, {"slot_count": count}, updated_by)
@@ -272,7 +281,7 @@ async def configure_event_slots(event_id: str, count: int, updated_by: str) -> d
 
 
 def generateSlotsForEvent(event: dict, registration_count: int = 0) -> list[dict]:
-    duration = max(1, int(event.get("duration_minutes") or 90))
+    duration = 360 if event["id"] == WORKSHOP_EVENT else max(1, int(event.get("duration_minutes") or 90))
     count = required_slot_count(event["id"])
     capacity = max(30, registration_count)
     # Keep the requested slot count even when registrations increase.
@@ -310,7 +319,7 @@ def plan_event_schedule(events: list[dict], registrations: list[dict]) -> list[d
 
     scheduled = {}
     singles = sorted((eid for eid in by_event if len(by_event[eid]) == 1),
-                     key=lambda eid: (-len(neighbors[eid] & SINGLE_SLOT_EVENTS), eid))
+                     key=lambda eid: (eid != WORKSHOP_EVENT, -len(neighbors[eid] & SINGLE_SLOT_EVENTS), eid))
     for eid in singles:
         slot = by_event[eid][0]
         duration = _parse_time_to_minutes(slot["end_time"]) - _parse_time_to_minutes(slot["start_time"])

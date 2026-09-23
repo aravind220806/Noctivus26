@@ -269,7 +269,7 @@ export function EventSchedulerTab({ authHeaders }) {
       <section className="scheduler-section">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <h3>Events Overview</h3>
-          <small style={{ color: 'var(--muted)' }}>NULL CORE CTF, Bug Hunt, Prompt Heist, and Ignite: 1 slot each. All other events: 2 slots.</small>
+          <small style={{ color: 'var(--muted)' }}>NULL CORE CTF, Bug Hunt, Prompt Heist, and Ignite: 1 slot each. Workshop: 1 session, 10:00 AM–4:00 PM. Remaining events: 2 slots.</small>
         </div>
         <div className="admin-table-wrap">
           <table className="admin-table scheduler-events-table">

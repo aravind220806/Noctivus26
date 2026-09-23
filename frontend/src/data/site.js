@@ -281,10 +281,10 @@ export const timeline = [
   ['08:00 AM - 08:45 AM', 'Registration & Check-in', 'Check in, collect your participant confirmation badge, and proceed to the inaugural venue.'],
   ['08:45 AM - 10:00 AM', 'Inauguration Ceremony', 'Welcome address, ceremonial lighting, and symposium briefing in the Main Auditorium.'],
   ['10:15 AM - 03:30 PM', 'Technical & Non-Technical Events', 'All Technical (NULL CORE 2.0 CTF, Bug Hunt, Prompt Heist, Secure X Vibe Coding, Ignite Ideathon) and Non-Technical (Mystery Hunt, Tune Trap, IPL Auction Arena) events commence at 10:15 AM.'],
-  ['10:15 AM - 03:30 PM', 'Workshop: Playground of Hackers', 'Hands-on intensive offensive & defensive cybersecurity workshop uncovering real-world exploit vectors, ethical hacking techniques, and live labs.'],
+  ['10:00 AM - 04:00 PM', 'Workshop: Playground of Hackers', 'Hands-on intensive offensive & defensive cybersecurity workshop uncovering real-world exploit vectors, ethical hacking techniques, and live labs.'],
   ['12:00 PM - 01:00 PM', 'Lunch Break', 'Lunch and refreshments served at the designated campus dining areas.'],
   ['01:00 PM - 03:30 PM', 'Final Rounds & Evaluation', 'Shortlisted finalists compete in project demonstrations and final rounds before the judging panel.'],
-  ['03:30 PM', 'Symposium Concludes', 'All event tracks and workshops conclude.'],
+  ['04:00 PM', 'Symposium Concludes', 'All event tracks and workshops conclude.'],
 ];
 
 export const brochure = {

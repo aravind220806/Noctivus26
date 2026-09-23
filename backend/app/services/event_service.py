@@ -10,6 +10,8 @@ SOLO_TEAM_SIZE = 1
 
 
 def _solo_event(event: dict) -> dict:
+    if event.get("id") == "playground-of-hackers":
+        event = {**event, "duration_minutes": 360, "time": "10:00", "slot_count": 1}
     return {**event, "teamMin": SOLO_TEAM_SIZE, "teamMax": SOLO_TEAM_SIZE}
 
 

@@ -211,7 +211,7 @@ async def test_auto_upgrade_repairs_112_conflicting_members(store):
     assert summary['unassigned_conflicts'] == []
     assert summary['unassigned_full'] == []
     for event in dashboard['events']:
-        assert event['slots_count'] == (1 if event['id'] in {'ctf', 'bug-hunt', 'prompt-heist', 'ignite'} else 2)
+        assert event['slots_count'] == (1 if event['id'] in {'ctf', 'bug-hunt', 'prompt-heist', 'ignite', 'playground-of-hackers'} else 2)
     slots = await scheduler.load_all_slots()
     assert_valid_assignments(store, slots)
     await scheduler.get_scheduler_dashboard_data()
@@ -233,11 +233,12 @@ async def test_workshop_and_other_event_keep_duration_and_have_valid_pair(store)
     summary = await scheduler.repair_event_schedule()
     assert_valid_assignments(store, await scheduler.load_all_slots())
     workshops = [s for s in await scheduler.load_all_slots() if s['event_id'] == 'playground-of-hackers']
-    assert len(workshops) == 2
-    for workshop in workshops:
-        assert scheduler._parse_time_to_minutes(workshop['end_time']) - scheduler._parse_time_to_minutes(workshop['start_time']) == 300
-    assert not scheduler.slotsConflict(*workshops)
-    assert any(s['event_id'] == 'playground-of-hackers' for s in summary['late_sessions'])
+    assert len(workshops) == 1
+    assert workshops[0]['start_time'] == '10:00'
+    assert workshops[0]['end_time'] == '16:00'
+    assert not any(s['event_id'] == 'playground-of-hackers' for s in summary['late_sessions'])
+    event = await event_service.get_event('playground-of-hackers')
+    assert event['duration_minutes'] == 360
 
 
 @pytest.mark.asyncio
@@ -292,3 +293,27 @@ async def test_cannot_add_extra_slots_above_event_policy(store):
         await scheduler.create_custom_slot({'event_id': 'bug-hunt'})
     with pytest.raises(ValueError, match='limited to 2'):
         await scheduler.create_custom_slot({'event_id': 'tune-trap'})
+
+
+@pytest.mark.asyncio
+async def test_old_two_session_workshop_is_migrated_to_fixed_window(store):
+    store['member'] = registration('member', ['playground-of-hackers'], ['old-workshop'])
+    old = slot('old-workshop', 'playground-of-hackers', '15:00', '20:00', ['member'])
+    old['schedule_policy'] = 'fixed-counts-conflict-repair-v1'
+    await scheduler.save_slot(old)
+    dashboard = await scheduler.get_scheduler_dashboard_data()
+    workshop = next(e for e in dashboard['events'] if e['id'] == 'playground-of-hackers')
+    assert workshop['duration_minutes'] == 360
+    assert workshop['slots_count'] == 1
+    assert workshop['slots'][0]['start_time'] == '10:00'
+    assert workshop['slots'][0]['end_time'] == '16:00'
+    assert_valid_assignments(store, await scheduler.load_all_slots())
+
+
+@pytest.mark.asyncio
+async def test_workshop_window_cannot_be_changed_by_slot_edit(store):
+    await scheduler.repair_event_schedule()
+    workshop = next(s for s in await scheduler.load_all_slots() if s['event_id'] == 'playground-of-hackers')
+    with pytest.raises(ValueError, match='10:00 AM to 4:00 PM'):
+        await scheduler.update_slot(workshop['id'], {'start_time': '11:00'})
+    assert (await scheduler.get_slot(workshop['id']))['start_time'] == '10:00'
