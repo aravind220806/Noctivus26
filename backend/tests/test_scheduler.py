@@ -317,3 +317,30 @@ async def test_workshop_window_cannot_be_changed_by_slot_edit(store):
     with pytest.raises(ValueError, match='10:00 AM to 4:00 PM'):
         await scheduler.update_slot(workshop['id'], {'start_time': '11:00'})
     assert (await scheduler.get_slot(workshop['id']))['start_time'] == '10:00'
+
+
+@pytest.mark.asyncio
+async def test_supplied_csv_event_distribution_assigns_all_205_members(store):
+    import json
+    from pathlib import Path
+    fixture = json.loads((Path(__file__).parent / 'fixtures' / 'scheduler_registration_counts.json').read_text())
+    for combination in fixture['combinations']:
+        for _ in range(combination['count']):
+            member_id = f'ANONYMOUS-{len(store) + 1:04d}'
+            store[member_id] = registration(member_id, combination['event_ids'])
+    summary = await scheduler.repair_event_schedule()
+    slots = await scheduler.load_all_slots()
+    assert len(store) == fixture['confirmed_count'] == 205
+    assert summary['successfully_assigned'] == 205
+    assert summary['unassigned_conflicts'] == []
+    assert summary['unassigned_full'] == []
+    assert summary['late_sessions'] == []
+    assert sum(len(reg['assigned_slots']) for reg in store.values()) == 306
+    assert len(slots) == 13
+    assert_valid_assignments(store, slots)
+    for slot in slots:
+        assert slot['start_time'] >= '10:00'
+        assert slot['end_time'] <= '16:00'
+    workshop = next(s for s in slots if s['event_id'] == 'playground-of-hackers')
+    assert (workshop['start_time'], workshop['end_time']) == ('10:00', '16:00')
+    assert len(workshop['assigned_member_ids']) == 12

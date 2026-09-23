@@ -1,0 +1,123 @@
+{
+  "description": "Anonymized event-combination counts from the supplied 205-row registration export. No participant identifiers or personal details.",
+  "confirmed_count": 205,
+  "combinations": [
+    {
+      "event_ids": [
+        "bug-hunt"
+      ],
+      "count": 5
+    },
+    {
+      "event_ids": [
+        "bug-hunt",
+        "mystery-hunt"
+      ],
+      "count": 4
+    },
+    {
+      "event_ids": [
+        "ctf"
+      ],
+      "count": 69
+    },
+    {
+      "event_ids": [
+        "ignite"
+      ],
+      "count": 6
+    },
+    {
+      "event_ids": [
+        "ignite",
+        "ipl-bidverse"
+      ],
+      "count": 14
+    },
+    {
+      "event_ids": [
+        "ignite",
+        "mystery-hunt"
+      ],
+      "count": 22
+    },
+    {
+      "event_ids": [
+        "ignite",
+        "tune-trap"
+      ],
+      "count": 19
+    },
+    {
+      "event_ids": [
+        "ipl-bidverse"
+      ],
+      "count": 2
+    },
+    {
+      "event_ids": [
+        "ipl-bidverse",
+        "secure-x-vibecode"
+      ],
+      "count": 5
+    },
+    {
+      "event_ids": [
+        "mystery-hunt"
+      ],
+      "count": 5
+    },
+    {
+      "event_ids": [
+        "mystery-hunt",
+        "prompt-heist"
+      ],
+      "count": 2
+    },
+    {
+      "event_ids": [
+        "mystery-hunt",
+        "secure-x-vibecode"
+      ],
+      "count": 12
+    },
+    {
+      "event_ids": [
+        "playground-of-hackers"
+      ],
+      "count": 12
+    },
+    {
+      "event_ids": [
+        "prompt-heist"
+      ],
+      "count": 2
+    },
+    {
+      "event_ids": [
+        "prompt-heist",
+        "tune-trap"
+      ],
+      "count": 11
+    },
+    {
+      "event_ids": [
+        "secure-x-vibecode"
+      ],
+      "count": 2
+    },
+    {
+      "event_ids": [
+        "secure-x-vibecode",
+        "tune-trap"
+      ],
+      "count": 12
+    },
+    {
+      "event_ids": [
+        "tune-trap"
+      ],
+      "count": 1
+    }
+  ]
+}
