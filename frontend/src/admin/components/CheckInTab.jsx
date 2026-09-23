@@ -395,7 +395,7 @@ export function CheckInTab({ authHeaders }) {
                       <span className="event-cat-tag">{ev.category || 'Technical'}</span>
                     </div>
                     <div className="verified-event-meta">
-                      <span>⏰ {ev.time || '09:00 AM'}</span>
+                      <span>⏰ {ev.time || '10:00 AM'}</span>
                       <span>📍 {ev.venue || 'Main Auditorium'}</span>
                       <span>🚪 {ev.gate || 'VEC Gate 1'}</span>
                     </div>

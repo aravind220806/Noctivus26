@@ -214,7 +214,7 @@ export function EventsTab({ authHeaders, onEventChanged }) {
                         className="event-text-input"
                         value={drafts[event.id]?.time || ''}
                         onChange={(e) => changeDraft(event.id, 'time', e.target.value)}
-                        placeholder="09:00 AM"
+                        placeholder="10:00 AM"
                       />
                     </label>
                     <label className="event-field">

@@ -132,7 +132,7 @@ async def get_pass_details(request: Request, token_or_id: str):
             "name": re_entry.get("eventName") or cfg.get("name") or "Noctivus '26",
             "category": re_entry.get("category") or cfg.get("category") or "Technical",
             "venue": cfg.get("venue") or re_entry.get("venue") or "Velammal Engineering College",
-            "time": re_entry.get("batchTime") or cfg.get("time") or "09:00 AM",
+            "time": re_entry.get("batchTime") or cfg.get("time") or "10:00 AM",
             "gate": cfg.get("gate") or "VEC Gate 1",
             "terminal": cfg.get("terminal") or "MAIN HALL",
             "date": cfg.get("date") or "26 SEP 2026",

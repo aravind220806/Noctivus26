@@ -148,7 +148,7 @@ export default function PassVerification() {
                       <span style={styles.eventCategory}>{ev.category}</span>
                     </div>
                     <div style={styles.eventMeta}>
-                      <span>⏰ {ev.time || '09:00 AM'}</span>
+                      <span>⏰ {ev.time || '10:00 AM'}</span>
                       <span>📍 {ev.venue || 'Main Auditorium'}</span>
                       {ev.gate && <span>🚪 {ev.gate}</span>}
                     </div>

@@ -1,7 +1,7 @@
 export const site = {
   eyebrow: 'Department of CSE (Cyber Security) presents',
   date: '26 September 2026',
-  eventStart: '2026-09-26T09:00:00+05:30',
+  eventStart: '2026-09-26T10:00:00+05:30',
   contactEmail: 'noctivus26@velammal.edu.in',
   contactPhone: '+91 98840 17375',
   address: 'Velammal Engineering College, Ambattur-Red Hills Road, Surapet, Chennai, Tamil Nadu 600066',

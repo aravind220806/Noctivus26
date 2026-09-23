@@ -82,7 +82,7 @@ def pass_tag_values(registration: dict, event_id: str = "") -> dict[str, str]:
         "registrationId": str(registration.get("registrationId") or ""),
         "amount": str(registration.get("expectedAmount") or event.get("feeSnapshot") or ""),
         "date": str(event.get("date") or "26 SEP 2026"),
-        "time": str(event.get("time") or "09:00 AM"),
+        "time": str(event.get("time") or "10:00 AM"),
         "gate": str(event.get("gate") or "VEC Gate 1"),
         "venue": str(event.get("venue") or "Main Auditorium"),
         "terminal": str(event.get("terminal") or "Main Hall"),
@@ -123,7 +123,7 @@ async def generatePassImage(member: dict) -> str:
         "eventName": str(event_entry.get("eventName") or event_rec.get("name") or "Noctivus '26"),
         "venue": str(event_rec.get("venue") or event_entry.get("venue") or "Main Auditorium"),
         "date": str(event_rec.get("date") or event_entry.get("date") or "26 SEP 2026"),
-        "time": str(event_entry.get("batchTime") or event_rec.get("time") or event_entry.get("time") or "09:00 AM"),
+        "time": str(event_entry.get("batchTime") or event_rec.get("time") or event_entry.get("time") or "10:00 AM"),
         "gate": str(event_rec.get("gate") or "VEC Gate 1"),
         "terminal": str(event_rec.get("terminal") or "Main Hall"),
     }
@@ -608,7 +608,7 @@ async def send_member_pass(registration: dict, admin_email: str = "") -> dict:
             "eventName": event_entry.get("eventName") or event_rec.get("name") or "Noctivus '26",
             "venue": event_rec.get("venue") or event_entry.get("venue") or "Main Auditorium",
             "date": event_rec.get("date") or "26 SEP 2026",
-            "time": event_entry.get("batchTime") or event_rec.get("time") or "09:00 AM",
+            "time": event_entry.get("batchTime") or event_rec.get("time") or "10:00 AM",
             "gate": event_rec.get("gate") or "VEC Gate 1",
             "terminal": event_rec.get("terminal") or "Main Hall",
         })
@@ -714,7 +714,7 @@ def invitation_html(registration: dict, pass_data: dict, event_names: str, artwo
     reg_id = html.escape(str(registration.get("registrationId") or ""))
     event_esc = html.escape(str(event_names or "Noctivus '26 Events"))
     date_esc = html.escape(str(pass_data.get("date") or "26 September 2026"))
-    time_esc = html.escape(str(pass_data.get("time") or "09:00 AM"))
+    time_esc = html.escape(str(pass_data.get("time") or "10:00 AM"))
     venue_esc = html.escape(str(pass_data.get("venue") or "Velammal Engineering College, Chennai"))
     title_esc = html.escape(str(pass_data.get("title") or "Noctivus '26 Official Event Pass"))
 

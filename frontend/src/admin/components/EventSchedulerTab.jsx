@@ -11,8 +11,10 @@ export function EventSchedulerTab({ authHeaders }) {
   const [assignmentSummary, setAssignmentSummary] = useState(null);
   const [editingSlot, setEditingSlot] = useState(null);
   const [addingSlotEvent, setAddingSlotEvent] = useState(null);
-  const [slotForm, setSlotForm] = useState({ window: 'morning', start_time: '09:00', end_time: '10:30', capacity: 30, date: '2026-09-26' });
+  const [slotForm, setSlotForm] = useState({ window: 'morning', start_time: '10:00', end_time: '11:30', capacity: 30, date: '2026-09-26' });
   const [slotSaving, setSlotSaving] = useState(false);
+  const [slotCounts, setSlotCounts] = useState({});
+  const [configuringEvent, setConfiguringEvent] = useState(null);
   const [exporting, setExporting] = useState(false);
   const [managingEventSlots, setManagingEventSlots] = useState(null);
 
@@ -93,8 +95,8 @@ export function EventSchedulerTab({ authHeaders }) {
     setEditingSlot(slot);
     setSlotForm({
       window: slot.window || 'morning',
-      start_time: slot.start_time || '09:00',
-      end_time: slot.end_time || '10:30',
+      start_time: slot.start_time || '10:00',
+      end_time: slot.end_time || '11:30',
       capacity: slot.capacity || 30,
       date: slot.date || '2026-09-26',
     });
@@ -104,8 +106,8 @@ export function EventSchedulerTab({ authHeaders }) {
     setAddingSlotEvent(eventObj);
     setSlotForm({
       window: 'morning',
-      start_time: '09:00',
-      end_time: '10:30',
+      start_time: '10:00',
+      end_time: '11:30',
       capacity: 30,
       date: eventObj.date || '2026-09-26',
     });
@@ -158,6 +160,27 @@ export function EventSchedulerTab({ authHeaders }) {
     }
   };
 
+  const applySlotCount = async (event) => {
+    setConfiguringEvent(event.id);
+    try {
+      const count = slotCounts[event.id] ?? event.slot_count ?? 1;
+      const response = await adminFetch(apiPath(`/api/admin/scheduler/events/${event.id}/slot-count`), {
+        method: 'PUT',
+        headers: { ...authHeaders, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slot_count: count }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.detail || 'Unable to update slot count.');
+      setAssignmentSummary(result.assignment_summary);
+      setMessage({ type: 'success', text: `${event.name}: ${count} slot${count === 1 ? '' : 's'} applied and members reassigned. Check the summary for any timing conflicts.` });
+      await load();
+    } catch (err) {
+      setMessage({ type: 'error', text: err.message });
+    } finally {
+      setConfiguringEvent(null);
+    }
+  };
+
   const handleExportExcel = async () => {
     setExporting(true);
     try {
@@ -190,7 +213,7 @@ export function EventSchedulerTab({ authHeaders }) {
       });
       const res = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(res.detail || res.message || 'Failed to delete slot.');
-      setMessage({ type: 'success', text: `Slot ${slotId} deleted.` });
+      setMessage({ type: 'success', text: `Slot ${slotId} deleted. Members reassigned where space and timing allow; check the assignment summary for any remaining members.` });
       await load();
     } catch (err) {
       setMessage({ type: 'error', text: err.message });
@@ -253,7 +276,7 @@ export function EventSchedulerTab({ authHeaders }) {
       <section className="scheduler-section">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <h3>Events Overview</h3>
-          <small style={{ color: 'var(--muted)' }}>Slots auto-scale to accommodate all registered participants</small>
+          <small style={{ color: 'var(--muted)' }}>Choose one slot for all members or two to split them. Assignment checks timing conflicts.</small>
         </div>
         <div className="admin-table-wrap">
           <table className="admin-table scheduler-events-table">
@@ -264,6 +287,7 @@ export function EventSchedulerTab({ authHeaders }) {
                 <th>Duration</th>
                 <th>Total Registrations</th>
                 <th>Slots Generated</th>
+                <th>Slot Count</th>
                 <th>Status</th>
                 <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>
@@ -288,6 +312,23 @@ export function EventSchedulerTab({ authHeaders }) {
                   </td>
                   <td>
                     <strong>{ev.slots_count}</strong> slots
+                  </td>
+                  <td>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <select
+                        aria-label={`Slot count for ${ev.name}`}
+                        value={slotCounts[ev.id] ?? ev.slot_count ?? 1}
+                        onChange={(e) => setSlotCounts((previous) => ({ ...previous, [ev.id]: Number(e.target.value) }))}
+                        disabled={configuringEvent !== null}
+                      >
+                        <option value={1}>1 slot — all members</option>
+                        <option value={2}>2 slots — split members</option>
+                      </select>
+                      <button type="button" className="button button-secondary button-small"
+                        disabled={configuringEvent !== null} onClick={() => applySlotCount(ev)}>
+                        {configuringEvent === ev.id ? 'Applying...' : 'Apply'}
+                      </button>
+                    </div>
                   </td>
                   <td>
                     <span className={`status-pill ${ev.slots_count > 0 ? 'status-pill--ready' : 'status-pill--pending'}`}>
@@ -364,7 +405,7 @@ export function EventSchedulerTab({ authHeaders }) {
 
             <details className="unassigned-group">
               <summary>
-                <strong>Unassigned due to full slots ({assignmentSummary.unassigned_full?.length ?? 0})</strong>
+                <strong>Unassigned due to full or missing slots ({assignmentSummary.unassigned_full?.length ?? 0})</strong>
               </summary>
               {!assignmentSummary.unassigned_full || assignmentSummary.unassigned_full.length === 0 ? (
                 <p className="admin-empty-sub">No members unassigned due to full capacity.</p>
@@ -509,7 +550,7 @@ export function EventSchedulerTab({ authHeaders }) {
               <label className="field">
                 <span>Window</span>
                 <select value={slotForm.window} onChange={(e) => setSlotForm({ ...slotForm, window: e.target.value })}>
-                  <option value="morning">Morning (09:00 - 12:30)</option>
+                  <option value="morning">Morning (from 10:00)</option>
                   <option value="afternoon">Afternoon (13:00 - 17:00)</option>
                 </select>
               </label>
@@ -522,7 +563,7 @@ export function EventSchedulerTab({ authHeaders }) {
                     required
                     value={slotForm.start_time}
                     onChange={(e) => setSlotForm({ ...slotForm, start_time: e.target.value })}
-                    placeholder="09:00"
+                    placeholder="10:00"
                   />
                 </label>
                 <label className="field">
@@ -532,7 +573,7 @@ export function EventSchedulerTab({ authHeaders }) {
                     required
                     value={slotForm.end_time}
                     onChange={(e) => setSlotForm({ ...slotForm, end_time: e.target.value })}
-                    placeholder="10:30"
+                    placeholder="11:30"
                   />
                 </label>
               </div>
@@ -603,7 +644,7 @@ export function EventSchedulerTab({ authHeaders }) {
                     required
                     value={slotForm.start_time}
                     onChange={(e) => setSlotForm({ ...slotForm, start_time: e.target.value })}
-                    placeholder="09:00"
+                    placeholder="10:00"
                   />
                 </label>
                 <label className="field">
@@ -613,7 +654,7 @@ export function EventSchedulerTab({ authHeaders }) {
                     required
                     value={slotForm.end_time}
                     onChange={(e) => setSlotForm({ ...slotForm, end_time: e.target.value })}
-                    placeholder="10:30"
+                    placeholder="11:30"
                   />
                 </label>
               </div>

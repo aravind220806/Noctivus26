@@ -31,7 +31,7 @@ from app.services.registration_service import (
     trash_registrations,
     update_registration,
 )
-from app.services.scheduler_service import assignMembersToSlots, create_custom_slot, delete_slot, generate_all_event_slots, get_scheduler_dashboard_data, load_all_slots, slotsConflict, update_slot
+from app.services.scheduler_service import assignMembersToSlots, configure_event_slots, create_custom_slot, delete_slot, generate_all_event_slots, get_scheduler_dashboard_data, load_all_slots, slotsConflict, update_slot
 from app.db.memory_store import memory_registrations
 from app.db.sqlite_db import sqlite_db
 
@@ -149,6 +149,20 @@ async def scheduler_generate_slots(request: Request, admin=Depends(require_admin
         "all_events",
         {"regenerate": regenerate, "timestamp": datetime.now(timezone.utc).isoformat()},
     )
+    return result
+
+
+@router.put("/scheduler/events/{event_id}/slot-count")
+@limiter.limit("20/minute")
+async def scheduler_set_slot_count(event_id: str, request: Request, admin=Depends(require_admin_tab("Event Scheduler"))):
+    body = await request.json()
+    try:
+        result = await configure_event_slots(event_id, body.get("slot_count"), admin["email"])
+    except ValueError as err:
+        raise HTTPException(status_code=400, detail=str(err)) from err
+    _trigger_sheets_sync()
+    await record_admin_action(admin["email"], "scheduler.set_slot_count", event_id,
+                              {"slot_count": body.get("slot_count"), "timestamp": datetime.now(timezone.utc).isoformat()})
     return result
 
 
@@ -1002,7 +1016,7 @@ async def invitations_preview(request: Request, _admin=Depends(require_admin_tab
                 "feeSnapshot": 150,
                 "venue": "Main Auditorium",
                 "date": "26 SEP 2026",
-                "time": "09:00 AM",
+                "time": "10:00 AM",
             }],
             "expectedAmount": 150,
         }
@@ -1019,11 +1033,11 @@ async def invitations_preview(request: Request, _admin=Depends(require_admin_tab
         "eventName": str(event_entry.get("eventName") or event_rec.get("name") or "Noctivus '26"),
         "venue": str(event_rec.get("venue") or event_entry.get("venue") or "Velammal Engineering College"),
         "date": str(event_rec.get("date") or event_entry.get("date") or "26 SEP 2026"),
-        "time": str(event_entry.get("batchTime") or event_rec.get("time") or event_entry.get("time") or "09:00 AM"),
+        "time": str(event_entry.get("batchTime") or event_rec.get("time") or event_entry.get("time") or "10:00 AM"),
         "gate": str(event_rec.get("gate") or "VEC Gate 1"),
         "terminal": str(event_rec.get("terminal") or "Main Hall"),
         "seatType": str(event_rec.get("seatType") or "VIP"),
-        "slotTiming": str(event_entry.get("slotTiming") or (f"{event_rec.get('time', '09:00 AM')} - 01:00 PM" if "AM" in str(event_rec.get("time", "")) else "02:00 PM - 05:00 PM")),
+        "slotTiming": str(event_entry.get("slotTiming") or (f"{event_rec.get('time', '10:00 AM')} - 01:00 PM" if "AM" in str(event_rec.get("time", "")) else "02:00 PM - 05:00 PM")),
         "seatNumber": f"S-{str(registration.get('registrationId', '001'))[-4:]}",
     }
 

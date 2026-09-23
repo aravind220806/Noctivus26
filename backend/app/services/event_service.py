@@ -107,12 +107,14 @@ async def get_event(event_id: str) -> dict | None:
 
 
 async def update_event(event_id: str, changes: dict, updated_by: str) -> dict | None:
-    allowed = {"status", "fee", "autoCloseAt", "venue", "date", "time", "gate", "terminal", "seatType", "passActive", "duration_minutes", "category"}
+    allowed = {"status", "fee", "autoCloseAt", "venue", "date", "time", "gate", "terminal", "seatType", "passActive", "duration_minutes", "category", "slot_count"}
     update = {key: value for key, value in changes.items() if key in allowed}
     if update.get("status") not in VALID_STATUSES and "status" in update:
         raise ValueError("Invalid event status.")
     if "fee" in update and (not isinstance(update["fee"], int) or update["fee"] < 0):
         raise ValueError("Fee must be a non-negative integer.")
+    if "slot_count" in update and (type(update["slot_count"]) is not int or update["slot_count"] not in (1, 2)):
+        raise ValueError("Choose one or two slots.")
     if "duration_minutes" in update:
         try:
             update["duration_minutes"] = max(15, int(update["duration_minutes"]))
@@ -130,8 +132,12 @@ async def update_event(event_id: str, changes: dict, updated_by: str) -> dict | 
     if sqlite_db.ready():
         await sqlite_db.upsert("events", event_id, merged)
     else:
-        current.clear()
-        current.update(merged)
+        for index, event in enumerate(memory_events):
+            if event.get("id") == event_id:
+                memory_events[index] = merged
+                break
+        else:
+            memory_events.append(merged)
     return serialize_event(merged)
 
 
