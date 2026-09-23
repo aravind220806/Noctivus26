@@ -5,6 +5,7 @@ from app.db.memory_store import memory_event_slots
 from app.events import EVENT_ALIASES
 from app.db.sqlite_db import sqlite_db
 from app.services.event_service import list_events, update_event
+from app.services.assignment_reason_service import record_assignment_reasons
 from app.services.registration_service import load_registrations, update_registration
 
 _last_assignment_summary: dict | None = None
@@ -361,7 +362,7 @@ async def repair_event_schedule() -> dict:
         entries = [{key: value for key, value in entry.items() if key not in {"batchTime", "slotTiming"}}
                    for entry in reg.get("eventRegistrations") or []]
         await update_registration(reg.get("registrationId") or reg.get("member_id"),
-                                  {"assigned_slots": [], "eventRegistrations": entries})
+                                  {"assigned_slots": [], "eventRegistrations": entries, "slot_assignment_reasons": {}})
     for slot in await load_all_slots():
         await _remove_slot(slot["id"])
     for slot in planned:
@@ -397,6 +398,7 @@ async def assignMembersToSlots(auto_generate: bool = True) -> dict:
         return _last_assignment_summary
 
     registrations = await load_registrations({"status": "confirmed"})
+    event_names = {event["id"]: event["name"] for event in await list_events()}
     by_id = {slot["id"]: slot for slot in slots}
     by_event: dict[str, list[dict]] = {}
     for slot in slots:
@@ -466,7 +468,9 @@ async def assignMembersToSlots(auto_generate: bool = True) -> dict:
             matched = next((slot for slot in selected if slot["event_id"] == EVENT_ALIASES.get(entry.get("eventId"), entry.get("eventId"))), None)
             event_entries.append({**entry, **({"batchTime": matched["start_time"],
                                                "slotTiming": f"{matched['start_time']} - {matched['end_time']}"} if matched else {})})
-        await update_registration(member_id, {"assigned_slots": assigned, "eventRegistrations": event_entries})
+        reasons = record_assignment_reasons(selected, slots, current, member_id, event_names, slotsConflict)
+        await update_registration(member_id, {"assigned_slots": assigned, "eventRegistrations": event_entries,
+                                               "slot_assignment_reasons": reasons})
         for sid in set(current + assigned):
             slot = by_id[sid]
             members = [mid for mid in slot.get("assigned_member_ids", []) if mid != member_id]

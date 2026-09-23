@@ -344,3 +344,26 @@ async def test_supplied_csv_event_distribution_assigns_all_205_members(store):
     workshop = next(s for s in slots if s['event_id'] == 'playground-of-hackers')
     assert (workshop['start_time'], workshop['end_time']) == ('10:00', '16:00')
     assert len(workshop['assigned_member_ids']) == 12
+
+
+@pytest.mark.asyncio
+async def test_excel_exports_saved_reason_for_each_event(store):
+    from io import BytesIO
+    from openpyxl import load_workbook
+    from app.services.export_service import export_scheduler_to_excel
+    store['member'] = registration('member', ['ignite', 'tune-trap'])
+    await scheduler.repair_event_schedule()
+    slots = await scheduler.load_all_slots()
+    reg = store['member']
+    assert set(reg['slot_assignment_reasons']) == set(reg['assigned_slots'])
+    workbook = load_workbook(BytesIO(export_scheduler_to_excel(await event_service.list_events(), slots, [reg])))
+    sheet = workbook['Event Member Schedule']
+    headers = [cell.value for cell in sheet[1]]
+    reason_column = headers.index('Why This Batch')
+    rows = list(sheet.iter_rows(min_row=2, values_only=True))
+    assert len(rows) == 2
+    assert all(row[reason_column] for row in rows)
+    tune = next(row for row in rows if row[1] == 'Tune Trap')
+    assert 'overlaps IGNITE (10:00–13:00)' in tune[reason_column]
+    assert workbook['Member Allocations'].cell(1, 11).value == 'Batch Assignment Reasons'
+    assert 'Tune Trap:' in workbook['Member Allocations'].cell(2, 11).value

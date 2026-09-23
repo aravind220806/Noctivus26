@@ -1,6 +1,7 @@
 import csv
 import io
 import re
+from app.services.assignment_reason_service import assignment_reason_text
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
@@ -141,6 +142,7 @@ def export_scheduler_to_excel(events: list[dict], slots: list[dict], registratio
         "Food Preference",
         "Abstract / Topic",
         "Gate Check-In",
+        "Why This Batch",
     ]
     ws1.append(headers1)
 
@@ -184,6 +186,7 @@ def export_scheduler_to_excel(events: list[dict], slots: list[dict], registratio
                 is_checked_in = "Yes" if reg.get("checkedIn") else "No"
                 team_members = (ev_item.get("teamMembers") if ev_item else []) or []
 
+                batch_reason = assignment_reason_text(reg, slot, slots)
                 leader_role = "Team Leader" if team_members else "Participant"
                 s_no += 1
                 leader_row = [
@@ -202,6 +205,7 @@ def export_scheduler_to_excel(events: list[dict], slots: list[dict], registratio
                     participant.get("foodPreference", ""),
                     abstract_val,
                     is_checked_in,
+                    batch_reason,
                 ]
                 _append_safe_row(ws1, leader_row)
                 for col_idx in range(1, len(leader_row) + 1):
@@ -236,6 +240,7 @@ def export_scheduler_to_excel(events: list[dict], slots: list[dict], registratio
                         participant.get("foodPreference", ""),
                         abstract_val,
                         is_checked_in,
+                        "Shares the team leader’s batch. " + batch_reason,
                     ]
                     _append_safe_row(ws1, tm_row)
                     for col_idx in range(1, len(tm_row) + 1):
@@ -264,6 +269,7 @@ def export_scheduler_to_excel(events: list[dict], slots: list[dict], registratio
                     "",
                     "",
                     "No",
+                    "Registration record unavailable; assignment reason cannot be verified.",
                 ]
                 _append_safe_row(ws1, fallback_row)
                 for col_idx in range(1, len(fallback_row) + 1):
@@ -416,6 +422,7 @@ def export_scheduler_to_excel(events: list[dict], slots: list[dict], registratio
         "Abstract / Topic",
         "Assigned Slot IDs",
         "Slot Details (Window & Timing)",
+        "Batch Assignment Reasons",
     ]
     ws4.append(headers4)
     for col_num in range(1, len(headers4) + 1):
@@ -452,6 +459,11 @@ def export_scheduler_to_excel(events: list[dict], slots: list[dict], registratio
             _get_abstract(reg),
             ", ".join(assigned_slot_ids) if assigned_slot_ids else "Unassigned",
             "; ".join(slot_descriptions) if slot_descriptions else "Unassigned",
+            "\n".join(
+                f"{events_map.get(slots_map[sid]['event_id'], {}).get('name', slots_map[sid]['event_id'])}: "
+                + assignment_reason_text(reg, slots_map[sid], slots)
+                for sid in assigned_slot_ids if sid in slots_map
+            ) or "Unassigned; no batch selection has been made.",
         ]
         _append_safe_row(ws4, row_data)
         for col_idx in range(1, len(row_data) + 1):
@@ -466,6 +478,14 @@ def export_scheduler_to_excel(events: list[dict], slots: list[dict], registratio
             max_len = max(len(str(cell.value or "")) for cell in col)
             col_letter = get_column_letter(col[0].column)
             sheet.column_dimensions[col_letter].width = max(max_len + 4, 12)
+
+    # Keep long explanations readable without stretching the whole workbook.
+    for sheet, column in ((ws1, 16), (ws4, 11)):
+        sheet.column_dimensions[get_column_letter(column)].width = 90
+        for row in sheet.iter_rows(min_row=2):
+            row[column - 1].alignment = Alignment(wrap_text=True, vertical="top")
+        sheet.freeze_panes = "A2"
+        sheet.auto_filter.ref = sheet.dimensions
 
     output = io.BytesIO()
     wb.save(output)
