@@ -121,11 +121,164 @@ def export_scheduler_to_excel(events: list[dict], slots: list[dict], registratio
         for r in registrations
     }
 
-    # ================= SHEET 1: Master Slot Schedule =================
+    # ================= SHEET 1: Event-Wise Member Schedule =================
     ws1 = wb.active
-    ws1.title = "Master Event Slots"
+    ws1.title = "Event Member Schedule"
 
     headers1 = [
+        "S.No",
+        "Event Name",
+        "Category",
+        "Window",
+        "Slot Timing",
+        "Registration ID",
+        "Member Name",
+        "Role",
+        "Roll No / College ID",
+        "College",
+        "Email",
+        "Phone",
+        "Food Preference",
+        "Abstract / Topic",
+        "Gate Check-In",
+    ]
+    ws1.append(headers1)
+
+    for col_num, header in enumerate(headers1, 1):
+        cell = ws1.cell(row=1, column=col_num)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+    events_map = {e["id"]: e for e in events}
+    slots_map = {s["id"]: s for s in slots}
+
+    # Sort slots: by event name, then window (morning first), then start_time
+    sorted_slots = sorted(
+        slots,
+        key=lambda s: (
+            events_map.get(s.get("event_id"), {}).get("name", s.get("event_id", "")),
+            0 if str(s.get("window")).lower() == "morning" else 1,
+            s.get("start_time", ""),
+        ),
+    )
+
+    s_no = 0
+    curr_row_ws1 = 2
+
+    for slot in sorted_slots:
+        ev = events_map.get(slot.get("event_id"), {})
+        event_name = ev.get("name", slot.get("event_id"))
+        category = ev.get("category", "tech")
+        window_label = "Morning" if str(slot.get("window")).lower() == "morning" else "Afternoon"
+        slot_timing = f"{slot.get('start_time', '')} - {slot.get('end_time', '')}"
+        assigned_ids = slot.get("assigned_member_ids") or []
+
+        for mid in assigned_ids:
+            reg = reg_by_id.get(mid)
+            if reg:
+                participant = reg.get("participant") or {}
+                event_regs = reg.get("eventRegistrations") or []
+                ev_item = next((e for e in event_regs if e.get("eventId") == slot.get("event_id")), None)
+                abstract_val = (ev_item.get("abstract") if ev_item else "") or _get_abstract(reg, slot.get("event_id"))
+                is_checked_in = "Yes" if reg.get("checkedIn") else "No"
+                team_members = (ev_item.get("teamMembers") if ev_item else []) or []
+
+                leader_role = "Team Leader" if team_members else "Participant"
+                s_no += 1
+                leader_row = [
+                    s_no,
+                    event_name,
+                    category,
+                    window_label,
+                    slot_timing,
+                    mid,
+                    participant.get("name", ""),
+                    leader_role,
+                    participant.get("rollNo") or participant.get("collegeId") or "",
+                    participant.get("college", ""),
+                    participant.get("email", ""),
+                    participant.get("phone", ""),
+                    participant.get("foodPreference", ""),
+                    abstract_val,
+                    is_checked_in,
+                ]
+                _append_safe_row(ws1, leader_row)
+                for col_idx in range(1, len(leader_row) + 1):
+                    cell = ws1.cell(row=curr_row_ws1, column=col_idx)
+                    cell.border = thin_border
+                    if col_idx in (1, 3, 4, 5, 6, 8, 13, 15):
+                        cell.alignment = Alignment(horizontal="center")
+                    if col_idx == 4:
+                        cell.fill = morning_fill if window_label == "Morning" else afternoon_fill
+                curr_row_ws1 += 1
+
+                for tm in team_members:
+                    if not isinstance(tm, dict):
+                        continue
+                    tm_name = tm.get("name")
+                    if not tm_name:
+                        continue
+                    s_no += 1
+                    tm_row = [
+                        s_no,
+                        event_name,
+                        category,
+                        window_label,
+                        slot_timing,
+                        mid,
+                        tm_name,
+                        "Team Member",
+                        tm.get("rollNo") or "",
+                        participant.get("college", ""),
+                        tm.get("email") or participant.get("email", ""),
+                        tm.get("phone") or participant.get("phone", ""),
+                        participant.get("foodPreference", ""),
+                        abstract_val,
+                        is_checked_in,
+                    ]
+                    _append_safe_row(ws1, tm_row)
+                    for col_idx in range(1, len(tm_row) + 1):
+                        cell = ws1.cell(row=curr_row_ws1, column=col_idx)
+                        cell.border = thin_border
+                        if col_idx in (1, 3, 4, 5, 6, 8, 13, 15):
+                            cell.alignment = Alignment(horizontal="center")
+                        if col_idx == 4:
+                            cell.fill = morning_fill if window_label == "Morning" else afternoon_fill
+                    curr_row_ws1 += 1
+            else:
+                s_no += 1
+                fallback_row = [
+                    s_no,
+                    event_name,
+                    category,
+                    window_label,
+                    slot_timing,
+                    mid,
+                    mid,
+                    "Participant",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "No",
+                ]
+                _append_safe_row(ws1, fallback_row)
+                for col_idx in range(1, len(fallback_row) + 1):
+                    cell = ws1.cell(row=curr_row_ws1, column=col_idx)
+                    cell.border = thin_border
+                    if col_idx in (1, 3, 4, 5, 6, 8, 13, 15):
+                        cell.alignment = Alignment(horizontal="center")
+                    if col_idx == 4:
+                        cell.fill = morning_fill if window_label == "Morning" else afternoon_fill
+                curr_row_ws1 += 1
+
+    # ================= SHEET 2: Master Event Slots =================
+    ws2 = wb.create_sheet(title="Master Event Slots")
+
+    headers2 = [
         "Event Name",
         "Category",
         "Window",
@@ -139,25 +292,13 @@ def export_scheduler_to_excel(events: list[dict], slots: list[dict], registratio
         "Assigned Member IDs",
         "Assigned Member Names",
     ]
-    ws1.append(headers1)
+    ws2.append(headers2)
 
-    for col_num, header in enumerate(headers1, 1):
-        cell = ws1.cell(row=1, column=col_num)
+    for col_num, header in enumerate(headers2, 1):
+        cell = ws2.cell(row=1, column=col_num)
         cell.fill = header_fill
         cell.font = header_font
         cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-
-    events_map = {e["id"]: e for e in events}
-    
-    # Sort slots: by event name, then window (morning first), then start_time
-    sorted_slots = sorted(
-        slots,
-        key=lambda s: (
-            events_map.get(s.get("event_id"), {}).get("name", s.get("event_id", "")),
-            0 if str(s.get("window")).lower() == "morning" else 1,
-            s.get("start_time", ""),
-        ),
-    )
 
     for row_idx, slot in enumerate(sorted_slots, 2):
         ev = events_map.get(slot.get("event_id"), {})
@@ -192,11 +333,11 @@ def export_scheduler_to_excel(events: list[dict], slots: list[dict], registratio
             ", ".join(assigned_ids) if assigned_ids else "None",
             "; ".join(member_names) if member_names else "None",
         ]
-        _append_safe_row(ws1, row_data)
+        _append_safe_row(ws2, row_data)
 
         # Apply cell borders and subtle window colors
         for col_idx in range(1, len(row_data) + 1):
-            cell = ws1.cell(row=row_idx, column=col_idx)
+            cell = ws2.cell(row=row_idx, column=col_idx)
             cell.border = thin_border
             if col_idx == 3: # Window column
                 cell.fill = morning_fill if window_label == "Morning" else afternoon_fill
@@ -204,9 +345,9 @@ def export_scheduler_to_excel(events: list[dict], slots: list[dict], registratio
             elif col_idx in (4, 5, 6, 7, 8, 9, 10):
                 cell.alignment = Alignment(horizontal="center")
 
-    # ================= SHEET 2: Event Summary =================
-    ws2 = wb.create_sheet(title="Event Summary")
-    headers2 = [
+    # ================= SHEET 3: Event Summary =================
+    ws3 = wb.create_sheet(title="Event Summary")
+    headers3 = [
         "Event ID",
         "Event Name",
         "Category",
@@ -219,9 +360,9 @@ def export_scheduler_to_excel(events: list[dict], slots: list[dict], registratio
         "Total Assigned",
         "Utilization %",
     ]
-    ws2.append(headers2)
-    for col_num in range(1, len(headers2) + 1):
-        cell = ws2.cell(row=1, column=col_num)
+    ws3.append(headers3)
+    for col_num in range(1, len(headers3) + 1):
+        cell = ws3.cell(row=1, column=col_num)
         cell.fill = header_fill
         cell.font = header_font
         cell.alignment = Alignment(horizontal="center", vertical="center")
@@ -255,33 +396,33 @@ def export_scheduler_to_excel(events: list[dict], slots: list[dict], registratio
             total_assigned,
             utilization,
         ]
-        _append_safe_row(ws2, row_data)
+        _append_safe_row(ws3, row_data)
         for col_idx in range(1, len(row_data) + 1):
-            cell = ws2.cell(row=row_idx, column=col_idx)
+            cell = ws3.cell(row=row_idx, column=col_idx)
             cell.border = thin_border
             if col_idx in (4, 5, 6, 7, 8, 9, 10, 11):
                 cell.alignment = Alignment(horizontal="center")
 
-    # ================= SHEET 3: Member Allocations =================
-    ws3 = wb.create_sheet(title="Member Allocations")
-    headers3 = [
+    # ================= SHEET 4: Member Allocations =================
+    ws4 = wb.create_sheet(title="Member Allocations")
+    headers4 = [
         "Registration ID",
         "Member Name",
         "Email",
+        "Phone",
         "College",
+        "Food Preference",
         "Registered Events",
         "Abstract / Topic",
         "Assigned Slot IDs",
         "Slot Details (Window & Timing)",
     ]
-    ws3.append(headers3)
-    for col_num in range(1, len(headers3) + 1):
-        cell = ws3.cell(row=1, column=col_num)
+    ws4.append(headers4)
+    for col_num in range(1, len(headers4) + 1):
+        cell = ws4.cell(row=1, column=col_num)
         cell.fill = header_fill
         cell.font = header_font
         cell.alignment = Alignment(horizontal="center", vertical="center")
-
-    slots_map = {s["id"]: s for s in slots}
     
     confirmed_regs = [r for r in registrations if r.get("paymentStatus") == "confirmed"]
     for row_idx, reg in enumerate(confirmed_regs, 2):
@@ -304,19 +445,23 @@ def export_scheduler_to_excel(events: list[dict], slots: list[dict], registratio
             reg.get("registrationId") or reg.get("member_id"),
             participant.get("name", ""),
             participant.get("email", ""),
+            participant.get("phone", ""),
             participant.get("college", ""),
+            participant.get("foodPreference", ""),
             ", ".join(event_names),
             _get_abstract(reg),
             ", ".join(assigned_slot_ids) if assigned_slot_ids else "Unassigned",
             "; ".join(slot_descriptions) if slot_descriptions else "Unassigned",
         ]
-        _append_safe_row(ws3, row_data)
+        _append_safe_row(ws4, row_data)
         for col_idx in range(1, len(row_data) + 1):
-            cell = ws3.cell(row=row_idx, column=col_idx)
+            cell = ws4.cell(row=row_idx, column=col_idx)
             cell.border = thin_border
+            if col_idx in (1, 4, 6):
+                cell.alignment = Alignment(horizontal="center")
 
     # Auto-adjust column widths on all sheets
-    for sheet in (ws1, ws2, ws3):
+    for sheet in (ws1, ws2, ws3, ws4):
         for col in sheet.columns:
             max_len = max(len(str(cell.value or "")) for cell in col)
             col_letter = get_column_letter(col[0].column)

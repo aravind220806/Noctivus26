@@ -429,3 +429,122 @@ def test_certificate_master_sheets_cover_all_events_and_payment_states():
     assert all(row[1] != "PENDING" for row in workbook["Attendance - IGNITE"][1:])
     empty = GoogleSheetsService().build_live_workbook([], [])
     assert len(empty["E-Certificate Eligible"]) == len(empty["E-Certificate Non-Eligible"]) == 1
+
+
+def test_export_scheduler_to_excel_event_member_schedule():
+    events = [
+        {"id": "ctf", "name": "NULL CORE 2.0 CTF", "category": "tech"},
+        {"id": "tune-trap", "name": "Tune Trap", "category": "non-tech"},
+    ]
+    slots = [
+        {
+            "id": "slot_ctf_1",
+            "event_id": "ctf",
+            "window": "morning",
+            "start_time": "10:00",
+            "end_time": "12:00",
+            "assigned_member_ids": ["NOC26-CTF01"],
+            "capacity": 30,
+        },
+        {
+            "id": "slot_tune_1",
+            "event_id": "tune-trap",
+            "window": "afternoon",
+            "start_time": "13:00",
+            "end_time": "15:00",
+            "assigned_member_ids": ["NOC26-TUNE01"],
+            "capacity": 30,
+        },
+    ]
+    registrations = [
+        {
+            "registrationId": "NOC26-CTF01",
+            "paymentStatus": "confirmed",
+            "checkedIn": True,
+            "participant": {
+                "name": "Alex Leader",
+                "email": "alex@example.com",
+                "phone": "9876543210",
+                "college": "Tech College",
+                "rollNo": "TC001",
+                "foodPreference": "non-veg",
+            },
+            "eventRegistrations": [
+                {
+                    "eventId": "ctf",
+                    "eventName": "NULL CORE 2.0 CTF",
+                    "teamMembers": [
+                        {"name": "Bob Member", "rollNo": "TC002", "email": "bob@example.com", "phone": "9876543211"}
+                    ],
+                }
+            ],
+            "assigned_slots": ["slot_ctf_1"],
+        },
+        {
+            "registrationId": "NOC26-TUNE01",
+            "paymentStatus": "confirmed",
+            "checkedIn": False,
+            "participant": {
+                "name": "Charlie Solo",
+                "email": "charlie@example.com",
+                "phone": "9876543220",
+                "college": "Arts College",
+                "rollNo": "AC005",
+                "foodPreference": "veg",
+            },
+            "eventRegistrations": [
+                {
+                    "eventId": "tune-trap",
+                    "eventName": "Tune Trap",
+                    "teamMembers": [],
+                }
+            ],
+            "assigned_slots": ["slot_tune_1"],
+        },
+    ]
+
+    excel_bytes = export_scheduler_to_excel(events, slots, registrations)
+    wb = load_workbook(io.BytesIO(excel_bytes), data_only=True)
+
+    assert wb.sheetnames == ["Event Member Schedule", "Master Event Slots", "Event Summary", "Member Allocations"]
+
+    ws1 = wb["Event Member Schedule"]
+    rows = list(ws1.iter_rows(values_only=True))
+    assert rows[0][:8] == (
+        "S.No",
+        "Event Name",
+        "Category",
+        "Window",
+        "Slot Timing",
+        "Registration ID",
+        "Member Name",
+        "Role",
+    )
+
+    # Alex Leader (CTF Team Leader)
+    assert rows[1][1] == "NULL CORE 2.0 CTF"
+    assert rows[1][3] == "Morning"
+    assert rows[1][4] == "10:00 - 12:00"
+    assert rows[1][5] == "NOC26-CTF01"
+    assert rows[1][6] == "Alex Leader"
+    assert rows[1][7] == "Team Leader"
+    assert rows[1][8] == "TC001"
+    assert rows[1][14] == "Yes"
+
+    # Bob Member (CTF Team Member)
+    assert rows[2][1] == "NULL CORE 2.0 CTF"
+    assert rows[2][5] == "NOC26-CTF01"
+    assert rows[2][6] == "Bob Member"
+    assert rows[2][7] == "Team Member"
+    assert rows[2][8] == "TC002"
+    assert rows[2][14] == "Yes"
+
+    # Charlie Solo (Tune Trap Solo Participant)
+    assert rows[3][1] == "Tune Trap"
+    assert rows[3][3] == "Afternoon"
+    assert rows[3][4] == "13:00 - 15:00"
+    assert rows[3][5] == "NOC26-TUNE01"
+    assert rows[3][6] == "Charlie Solo"
+    assert rows[3][7] == "Participant"
+    assert rows[3][8] == "AC005"
+    assert rows[3][14] == "No"
