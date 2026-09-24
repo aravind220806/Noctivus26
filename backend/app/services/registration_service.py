@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 
 from app.core.config import settings
 from app.db.memory_store import memory_registrations
+from app.events import EVENT_ALIASES
 from app.db.sqlite_db import sqlite_db
 from app.services.event_service import list_events, public_event, _is_closed
 from app.services.validation_service import normalize_digits, validate_registration
@@ -45,7 +46,7 @@ async def registration_status() -> dict:
     registration_open = settings.registration_open and all(event.get("detailsComplete", True) for event in configured_events)
     return {
         "registrationOpen": registration_open,
-        "events": [{**public_event(event), "status": "open" if registration_open and not _is_closed(event) else "opening-soon"} for event in configured_events],
+        "events": [{**public_event(event), "status": "closed" if _is_closed(event) else "open" if registration_open and event.get("status") == "open" else "opening-soon"} for event in configured_events],
     }
 
 
@@ -76,6 +77,20 @@ async def create_registration(payload: dict | None, idempotency_key: str | None 
     configured_events = await list_events()
     if not settings.registration_open or any(not event.get("detailsComplete", True) for event in configured_events):
         return 403, {"message": "Registration is not open yet."}
+
+    submitted_events = (payload or {}).get("events", [])
+    selected_ids = set()
+    for item in submitted_events if isinstance(submitted_events, list) else []:
+        event_id = item.get("eventId") if isinstance(item, dict) else item
+        if isinstance(event_id, str):
+            selected_ids.add(EVENT_ALIASES.get(event_id, event_id))
+    closed_events = [event for event in configured_events if event["id"] in selected_ids and _is_closed(event)]
+    if closed_events:
+        return 403, {
+            "code": "EVENT_CLOSED",
+            "eventIds": [event["id"] for event in closed_events],
+            "message": "Event closed due to high registration. Please contact the event coordinator.",
+        }
 
     result = validate_registration(payload, configured_events)
     if not result["valid"]:

@@ -140,6 +140,8 @@ async def update_event(event_id: str, changes: dict, updated_by: str) -> dict | 
                 break
         else:
             memory_events.append(merged)
+    from app.services.cache_service import events_cache
+    events_cache.clear()
     return serialize_event(merged)
 
 

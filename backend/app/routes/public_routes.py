@@ -65,20 +65,17 @@ async def health():
 
 @router.get("/events")
 async def events(request: Request, response: Response):
-    data = events_cache.get("events_catalog")
-    if data is None:
-        data = await registration_status()
-        events_cache.set("events_catalog", data, ttl_seconds=30.0)
+    data = await registration_status()
 
     body_bytes = json.dumps(data, sort_keys=True, separators=(",", ":")).encode("utf-8")
     etag = f'W/"{hashlib.sha256(body_bytes).hexdigest()[:16]}"'
 
     client_etag = request.headers.get("if-none-match")
     if client_etag and client_etag.strip() == etag:
-        return Response(status_code=304, headers={"ETag": etag, "Cache-Control": "public, max-age=30, stale-while-revalidate=120"})
+        return Response(status_code=304, headers={"ETag": etag, "Cache-Control": "no-store"})
 
     response.headers["ETag"] = etag
-    response.headers["Cache-Control"] = "public, max-age=30, stale-while-revalidate=120"
+    response.headers["Cache-Control"] = "no-store"
     return data
 
 

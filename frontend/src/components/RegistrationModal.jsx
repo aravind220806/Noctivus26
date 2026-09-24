@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { getApiBase } from '../lib/api';
 import { NotchedButton } from './ui/NotchedButton/NotchedButton';
 import { HudCorners } from './ui/HudCorners/HudCorners';
@@ -37,6 +38,44 @@ const isCategoryWorkshop = (cat) => {
 
 export default function RegistrationModal({ events, registrationOpen, initialEventId, onClose }) {
   const closeButtonRef = useRef(null);
+  const warningRef = useRef(null);
+  const [closedEvent, setClosedEvent] = useState(null);
+
+  const checkAvailability = async (ids) => {
+    try {
+      const response = await fetch(`${getApiBase()}/api/events`, { cache: 'no-store' });
+      if (!response.ok) throw new Error();
+      const data = await response.json();
+      const unavailable = data.events.find((event) => ids.includes(event.id) && event.status !== 'open');
+      if (unavailable?.status === 'closed') {
+        setClosedEvent(events.find((event) => event.id === unavailable.id) || unavailable);
+        setWorkshopEventId((id) => id === unavailable.id ? '' : id);
+        setTechnicalEventId((id) => id === unavailable.id ? '' : id);
+        setNonTechnicalEventId((id) => id === unavailable.id ? '' : id);
+        setStep((current) => current > 2 ? 2 : current);
+        return false;
+      }
+      if (!data.registrationOpen || unavailable) {
+        setError('Registration for this event is not open yet.');
+        return false;
+      }
+      return true;
+    } catch {
+      setError('Unable to check event availability. Please try again.');
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    if (initialEventId) void checkAvailability([initialEventId]);
+  }, [initialEventId]);
+
+  useEffect(() => {
+    if (!closedEvent) return;
+    const previousFocus = document.activeElement;
+    warningRef.current?.showModal();
+    return () => previousFocus?.focus({ preventScroll: true });
+  }, [closedEvent]);
   const [step, setStep] = useState(1);
   const [form, setForm] = useState(emptyForm);
   const initialEvent = events.find((event) => event.id === initialEventId);
@@ -128,7 +167,7 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
   useEffect(() => {
     document.body.classList.add('modal-open');
     closeButtonRef.current?.focus({ preventScroll: true });
-    const onKeyDown = (event) => event.key === 'Escape' && onClose();
+    const onKeyDown = (event) => event.key === 'Escape' && !event.defaultPrevented && onClose();
     window.addEventListener('keydown', onKeyDown);
     return () => {
       document.body.classList.remove('modal-open');
@@ -207,7 +246,8 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
     setStep(2);
   };
 
-  const continueToReview = () => {
+  const continueToReview = async () => {
+    if (!await checkAvailability(selectedEvents.map((event) => event.id))) return;
     if (!selectedEvents.length) return setError('Choose at least one event, or choose Nil only if you are not registering for events.');
     if (technicalEventId === 'ignite' && !igniteAbstract.trim()) {
       return setError('Please enter your project idea or abstract for Ignite Ideathon (up to 200 characters).');
@@ -219,7 +259,8 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
     setStep(3);
   };
 
-  const continueToPayment = () => {
+  const continueToPayment = async () => {
+    if (!await checkAvailability(selectedEvents.map((event) => event.id))) return;
     setError('');
     setStep(4);
   };
@@ -261,6 +302,11 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
         }),
       });
       const data = await response.json().catch(() => ({}));
+      if (data.code === 'EVENT_CLOSED') {
+        setClosedEvent(events.find((event) => data.eventIds?.includes(event.id)) || { name: 'Selected event' });
+        setStep(2);
+        return;
+      }
       if (!response.ok) throw new Error(data.message || 'Registration could not be submitted.');
       setReceipt(data);
     } catch (submissionError) {
@@ -271,6 +317,25 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
   };
 
   return (
+    <>
+      {closedEvent && createPortal(
+        <dialog ref={warningRef} className="reg-closed-dialog" aria-labelledby="closed-event-title" aria-describedby="closed-event-message"
+          onCancel={(event) => { event.preventDefault(); setClosedEvent(null); }}>
+          <span className="reg-kicker">REGISTRATION UPDATE</span>
+          <h2 id="closed-event-title">Event closed</h2>
+          <strong className="reg-closed-event-name">{closedEvent.name}</strong>
+          <p id="closed-event-message">Event closed due to high registration. Please contact the event coordinator.</p>
+          <div className="reg-closed-contacts">
+            {(closedEvent.coordinators || []).map((coordinator) => (
+              <a key={coordinator.name} href={`tel:${String(coordinator.phone).replace(/[^+0-9]/g, '')}`}>
+                <span>{coordinator.name}</span><span>{coordinator.phone}</span>
+              </a>
+            ))}
+            {!closedEvent.coordinators?.length && <a href="/coordinators">Contact event coordinators</a>}
+          </div>
+          <button type="button" className="reg-closed-dismiss" autoFocus onClick={() => setClosedEvent(null)}>Choose another event</button>
+        </dialog>, document.body
+      )}
     <div className="reg-modal-shell" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
       <HudCorners accent="cyan">
         <section className="reg-modal-panel panel" role="dialog" aria-modal="true" aria-labelledby="registration-title">
@@ -395,8 +460,9 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
                   <select
                     className="reg-input"
                     value={workshopEventId}
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const val = e.target.value;
+                      if (val && !await checkAvailability([val])) return;
                       setWorkshopEventId(val);
                       if (val) {
                         setTechnicalEventId('');
@@ -427,8 +493,9 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
                     className="reg-input"
                     value={workshopSelected ? '' : technicalEventId}
                     disabled={workshopSelected}
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const val = e.target.value;
+                      if (val && !await checkAvailability([val])) return;
                       setTechnicalEventId(val);
                       if (val) setWorkshopEventId('');
                       if (val === 'ctf' || val === 'cyber-heist-ctf') setNonTechnicalEventId('');
@@ -449,8 +516,9 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
                     className="reg-input"
                     value={workshopSelected || ctfSelected ? '' : nonTechnicalEventId}
                     disabled={workshopSelected || ctfSelected}
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const val = e.target.value;
+                      if (val && !await checkAvailability([val])) return;
                       setNonTechnicalEventId(val);
                       if (val) setWorkshopEventId('');
                       setError('');
@@ -755,5 +823,6 @@ export default function RegistrationModal({ events, registrationOpen, initialEve
         </section>
       </HudCorners>
     </div>
+    </>
   );
 }
