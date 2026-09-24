@@ -7,6 +7,8 @@ export function ExportTab({ overview, authHeaders, eventId, setEventId, status, 
   const [sheetsStatus, setSheetsStatus] = useState(null);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [syncingSheets, setSyncingSheets] = useState(false);
+  const [downloadingMembers, setDownloadingMembers] = useState(false);
+  const [memberExportError, setMemberExportError] = useState('');
   const [downloadingExcel, setDownloadingExcel] = useState(false);
   const [downloadingAttExcel, setDownloadingAttExcel] = useState(false);
   const [syncMessage, setSyncMessage] = useState(null);
@@ -92,6 +94,31 @@ export function ExportTab({ overview, authHeaders, eventId, setEventId, status, 
       alert('Failed to download Attendance Excel: ' + err.message);
     } finally {
       setDownloadingAttExcel(false);
+    }
+  };
+
+  const downloadMembersExcel = async () => {
+    setDownloadingMembers(true);
+    setMemberExportError('');
+    try {
+      const filters = new URLSearchParams({ ...(eventId && { eventId }), ...(status && { status }) });
+      const response = await adminFetch(apiPath(`/api/admin/export/members-excel?${filters}`), { headers: authHeaders });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.detail || 'Unable to download members Excel. Please try again.');
+      }
+      const url = URL.createObjectURL(await response.blob());
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'noctivus-members-events.xlsx';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) {
+      setMemberExportError(error.message || 'Unable to download members Excel.');
+    } finally {
+      setDownloadingMembers(false);
     }
   };
 
@@ -399,16 +426,20 @@ export function ExportTab({ overview, authHeaders, eventId, setEventId, status, 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span style={{ fontSize: '24px' }}>📁</span>
           <div>
-            <h3 style={{ margin: 0, fontSize: '18px', color: '#F8FAFC' }}>Filtered CSV Export</h3>
+            <h3 style={{ margin: 0, fontSize: '18px', color: '#F8FAFC' }}>Member Event Exports</h3>
             <p style={{ margin: '2px 0 0 0', fontSize: '13px', color: '#94A3B8' }}>
-              Filter by specific event or payment verification status and download as CSV.
+              Download members with separate Event 1 and Event 2 columns. Event and payment filters apply; both registered event names remain in each row.
             </p>
           </div>
         </div>
 
         <Filters overview={overview} eventId={eventId} setEventId={setEventId} status={status} setStatus={setStatus} />
 
-        <div>
+        {memberExportError && <p className="form-error" role="alert">{memberExportError}</p>}
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <button type="button" className="button button-primary" onClick={downloadMembersExcel} disabled={downloadingMembers}>
+            {downloadingMembers ? 'Preparing Excel...' : 'Download Members Excel (.xlsx)'}
+          </button>
           <button className="button button-secondary" onClick={downloadCsv} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             Export Filtered CSV <Icon name="external" />
           </button>

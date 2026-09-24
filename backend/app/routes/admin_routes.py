@@ -19,7 +19,7 @@ from app.services.browser_renderer import renderer_available
 from app.services.invitation_job_service import create_job, get_job, public_job, automation_status, member_delivery_statuses
 from app.services.email_service import normalize_pass_template, send_confirmation, send_invitation, send_member_pass, sendPaymentConfirmationEmail, sendPaymentIssueEmail
 from app.services.event_service import admin_events, get_event, list_events, update_event
-from app.services.export_service import export_attendance_to_excel, export_full_live_backup_excel, export_scheduler_to_excel, registrations_to_csv
+from app.services.export_service import export_members_to_excel, export_attendance_to_excel, export_full_live_backup_excel, export_scheduler_to_excel, registrations_to_csv
 from app.services.audit_service import list_admin_actions, record_admin_action
 from app.services.google_auth_service import verify_google_credential
 from app.services.google_sheets_service import google_sheets_service
@@ -984,6 +984,15 @@ async def invitations_preview(request: Request, _admin=Depends(require_admin_tab
 
     preview_token = create_pass_token()[0]
     return Response(content=await render_pass_artwork_bytes(registration, pass_data, preview_token), media_type="image/png")
+
+
+@router.get("/export/members-excel")
+async def export_members_excel(eventId: str | None = None, status: str | None = None, admin=Depends(require_admin_tab("Export"))):
+    registrations = await load_registrations({"eventId": eventId, "status": status})
+    artwork = export_members_to_excel(registrations, await list_events())
+    await record_admin_action(admin['email'], 'export.members_excel', eventId or 'all', {'status': status or 'all', 'count': len(registrations)})
+    return Response(content=artwork, media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    headers={'Content-Disposition': 'attachment; filename="noctivus-members-events.xlsx"', 'Cache-Control': 'no-store'})
 
 
 @router.get("/export")

@@ -102,6 +102,38 @@ def registrations_to_csv(registrations: list[dict], sponsor_safe: bool = False, 
     return output.getvalue()
 
 
+def export_members_to_excel(registrations: list[dict], events: list[dict]) -> bytes:
+    event_names = {event['id']: event.get('name') or event['id'] for event in events}
+    event_count = max(2, max((len(r.get('eventRegistrations') or []) for r in registrations), default=0))
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = 'Members and Events'
+    headers = ['Registration ID', 'Member Name', 'Email', 'Phone', 'College']
+    headers += [f'Event {index + 1}' for index in range(event_count)]
+    headers += ['Payment Status']
+    sheet.append(headers)
+    for registration in registrations:
+        participant = registration.get('participant') or {}
+        names = [str(event.get('eventName') or event_names.get(event.get('eventId')) or event.get('eventId') or '')
+                 for event in registration.get('eventRegistrations') or []]
+        _append_safe_row(sheet, [registration.get('registrationId'), participant.get('name'),
+                                participant.get('email'), participant.get('phone'), participant.get('college'),
+                                *names, *([''] * (event_count - len(names))), registration.get('paymentStatus')])
+    for cell in sheet[1]:
+        cell.font = Font(bold=True, color='FFFFFF')
+        cell.fill = PatternFill('solid', fgColor='0A2540')
+    for row in sheet.iter_rows(min_row=2):
+        for cell in row:
+            cell.alignment = Alignment(vertical='top', wrap_text=True)
+    for index, header in enumerate(headers, 1):
+        sheet.column_dimensions[get_column_letter(index)].width = 36 if header.startswith('Event ') or header in ('College', 'Email') else 24
+    sheet.freeze_panes = 'A2'
+    sheet.auto_filter.ref = sheet.dimensions
+    output = io.BytesIO()
+    workbook.save(output)
+    return output.getvalue()
+
+
 def export_scheduler_to_excel(events: list[dict], slots: list[dict], registrations: list[dict]) -> bytes:
     wb = Workbook()
     
