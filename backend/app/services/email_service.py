@@ -212,7 +212,7 @@ def build_confirmation_html(full_name: str, event_names_str: str, cid: str | Non
     </div>
     <p style="font-size: 16px; line-height: 1.6; margin: 0 0 16px;">Hi <strong>{html.escape(full_name)}</strong>,</p>
     <p style="font-size: 16px; line-height: 1.6; margin: 0 0 16px;">Welcome to <strong>Noctivus '26</strong>! We have verified your registration fee payment for <strong>{html.escape(event_names_str)}</strong>.</p>
-    
+
     <div style="background: rgba(0, 200, 224, 0.08); border-left: 4px solid #00c8e0; border-radius: 6px; padding: 14px 16px; margin: 20px 0;">
       <strong style="color: #67e8f9; display: block; font-size: 14px; margin-bottom: 4px;">📅 Next Steps &amp; Event Pass:</strong>
       <span style="font-size: 13px; color: #cbd5e1; line-height: 1.5;">Your official <strong>Symposium Event Pass</strong> with check-in QR code will be dispatched in a separate email once scheduling is finalized.</span>
@@ -714,7 +714,6 @@ def invitation_html(registration: dict, pass_data: dict, event_names: str, artwo
     reg_id = html.escape(str(registration.get("registrationId") or ""))
     event_esc = html.escape(str(event_names or "Noctivus '26 Events"))
     date_esc = html.escape(str(pass_data.get("date") or "26 September 2026"))
-    time_esc = html.escape(str(pass_data.get("time") or "10:00 AM"))
     venue_esc = html.escape(str(pass_data.get("venue") or "Velammal Engineering College, Chennai"))
     title_esc = html.escape(str(pass_data.get("title") or "Noctivus '26 Official Event Pass"))
 
@@ -739,7 +738,7 @@ def invitation_html(registration: dict, pass_data: dict, event_names: str, artwo
     <tr>
       <td align="center">
         <table role="presentation" width="100%" style="max-width:600px;margin:0 auto;background:#0f172a;border:1px solid #1e293b;border-radius:14px;padding:32px;box-shadow:0 12px 36px rgba(0,0,0,0.6);">
-          
+
           <!-- Header Banner -->
           <tr>
             <td style="padding:0 0 20px;border-bottom:1px solid #1e293b;text-align:left;">
@@ -777,7 +776,7 @@ def invitation_html(registration: dict, pass_data: dict, event_names: str, artwo
                 <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#67e8f9;text-transform:uppercase;letter-spacing:1px;">Symposium Details & Reporting Time</p>
                 <table role="presentation" width="100%" style="font-size:13px;color:#cbd5e1;line-height:1.6;">
                   <tr><td style="width:110px;color:#94a3b8;padding:3px 0;">📅 Date:</td><td><strong>{date_esc}</strong></td></tr>
-                  <tr><td style="color:#94a3b8;padding:3px 0;">⏰ Reporting:</td><td><strong>08:30 AM</strong> (Inauguration at 09:00 AM)</td></tr>
+                  <tr><td style="color:#94a3b8;padding:3px 0;">⏰ Check-in:</td><td><strong>08:00 AM IST</strong> (Inauguration at 09:00 AM)</td></tr>
                   <tr><td style="color:#94a3b8;padding:3px 0;">📍 Venue:</td><td>{venue_esc}</td></tr>
                   <tr><td style="color:#94a3b8;padding:3px 0;">🎯 Events:</td><td><strong>{event_esc}</strong></td></tr>
                 </table>

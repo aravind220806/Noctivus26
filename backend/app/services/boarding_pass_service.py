@@ -17,6 +17,7 @@ from app.core.config import settings
 
 PASS_WIDTH = 1800
 PASS_HEIGHT = 580
+CHECK_IN_TIME = "08:00 AM"
 DESTINATION_COLLEGE = "Velammal Engineering College"
 DESTINATION_CITY = "Chennai, Tamil Nadu"
 FALLBACK_LOGO_DATA_URI = (
@@ -129,12 +130,11 @@ def pass_values(registration: dict, pass_data: dict) -> dict[str, str]:
         "PASSENGER_NAME": str(participant.get("name") or "").upper(),
         "EVENT_1": event_1_name.upper(),
         "EVENT_DATE": str(pass_data.get("date") or (events[0].get("date") if events else None) or "26 SEP 2026").upper(),
-        "TIME_1": time_1.upper(),
+        "CHECK_IN_TIME": CHECK_IN_TIME,
         "EVENT_GATE": str(pass_data.get("gate") or (events[0].get("gate") if events else None) or "VEC Gate 1").upper(),
         "VENUE": str(pass_data.get("venue") or (events[0].get("venue") if events else None) or "Main Auditorium").upper(),
         "TERMINAL": str(pass_data.get("terminal") or (events[0].get("terminal") if events else None) or "MAIN HALL").upper(),
         "EVENT_2": event_2_name.upper(),
-        "TIME_2": time_2.upper(),
         "FOOD_PREFERENCE": str(participant.get("foodPreference") or "N/A").upper(),
         "EMAIL_ID": str(participant.get("email") or "").lower(),
         "FROM_COLLEGE": str(participant.get("college") or "").upper(),
@@ -174,7 +174,7 @@ body {{ margin: 0; width: {PASS_WIDTH}px; height: {PASS_HEIGHT}px; background: #
 .row1 {{ grid-template-columns: 37% 43% 20%; border-bottom: 1px solid #D7DEE8; }}
 .row2 {{ grid-template-columns: 18% 18% 38% 26%; border-bottom: 1px solid #D7DEE8; }}
 .row2 .field {{ padding-left: 16px; padding-right: 16px; }}
-.row3 {{ grid-template-columns: 28% 18% 22% 32%; border-bottom: 1px solid #D7DEE8; }}
+.row3 {{ grid-template-columns: 36% 26% 38%; border-bottom: 1px solid #D7DEE8; }}
 .field {{ min-width: 0; min-height: 42px; padding: 0 16px; border-left: 1px solid #AAB6C8; }}
 .field:first-child {{ border-left: 0; padding-left: 0; }}
 .label {{ display:block; color:#194FD1; font:700 14px/1.2 Arial,sans-serif; letter-spacing:.45px; text-transform:uppercase; margin-bottom:8px; }}
@@ -207,16 +207,16 @@ body {{ margin: 0; width: {PASS_WIDTH}px; height: {PASS_HEIGHT}px; background: #
   <main class="main">
     <header class="header"><img class="logo" src="{logo}" alt=""><div class="brand"><h1>NOCTIVUS <span>'26</span></h1><p>COLLEGE SYMPOSIUM</p></div><div class="pass-title">BOARDING PASS <span class="plane">✈</span></div></header>
     <section class="row row1"><div class="field"><span class="label">Passenger Name</span><span class="value main-value two-line-field">{values['PASSENGER_NAME']}</span></div><div class="field"><span class="label">Event 1</span><span class="value main-value two-line-field">{values['EVENT_1']}</span></div><div class="field"><span class="label">Date</span><span class="value main-value">{values['EVENT_DATE']}</span></div><div class="qr-cell"><img src="{qr}" alt=""></div></section>
-    <section class="row row2"><div class="field"><span class="label">Time 1</span><span class="value small-value">{values['TIME_1']}</span></div><div class="field"><span class="label">Gate</span><span class="value small-value two-line-field">{values['EVENT_GATE']}</span></div><div class="field"><span class="label">Venue</span><span class="value small-value two-line-field">{values['VENUE']}</span></div><div class="field"><span class="label">Terminal</span><span class="value small-value two-line-field">{values['TERMINAL']}</span></div></section>
-    <section class="row row3"><div class="field"><span class="label">Event 2</span><span class="value small-value two-line-field">{values['EVENT_2']}</span></div><div class="field"><span class="label">Time 2</span><span class="value small-value">{values['TIME_2']}</span></div><div class="field"><span class="label">Food Preference</span><span class="value email-value two-line-field">{values['FOOD_PREFERENCE']}</span></div><div class="field"><span class="label">Email ID</span><span class="value email-value two-line-field">{values['EMAIL_ID']}</span></div></section>
+    <section class="row row2"><div class="field"><span class="label">Check-in Time</span><span class="value small-value">{values['CHECK_IN_TIME']}</span></div><div class="field"><span class="label">Gate</span><span class="value small-value two-line-field">{values['EVENT_GATE']}</span></div><div class="field"><span class="label">Venue</span><span class="value small-value two-line-field">{values['VENUE']}</span></div><div class="field"><span class="label">Terminal</span><span class="value small-value two-line-field">{values['TERMINAL']}</span></div></section>
+    <section class="row row3"><div class="field"><span class="label">Event 2</span><span class="value small-value two-line-field">{values['EVENT_2']}</span></div><div class="field"><span class="label">Food Preference</span><span class="value email-value two-line-field">{values['FOOD_PREFERENCE']}</span></div><div class="field"><span class="label">Email ID</span><span class="value email-value two-line-field">{values['EMAIL_ID']}</span></div></section>
     <section class="route-wrap"><div class="route-box"><div><div class="route-label">From College</div><div class="value college-line two-line-field">{values['FROM_COLLEGE']}</div><span class="hint">(USER COLLEGE)</span></div><div class="route-center"><div class="dotted"><span>✈</span></div></div><div class="to-block"><div class="route-label">To</div><div class="value college-line two-line-field">{values['TO_COLLEGE']}</div><span class="hint">{values['TO_CITY']}</span></div></div></section>
     <div class="footer"><span>IGNITE</span><b>•</b><span>INNOVATE</span><b>•</b><span>INSPIRE</span></div>
   </main>
   <aside class="stub"><div class="stub-head">BOARDING PASS</div><div class="stub-body">
     <div class="stub-field"><span class="label">Passenger Name</span><span class="value two-line-field">{values['PASSENGER_NAME']}</span></div>
     <div class="stub-field"><span class="label">Event 1</span><span class="value two-line-field">{values['EVENT_1']}</span></div>
-    <div class="stub-grid2"><div class="stub-field"><span class="label">Date</span><span class="value">{values['EVENT_DATE']}</span></div><div class="stub-field"><span class="label">Time 1</span><span class="value">{values['TIME_1']}</span></div></div>
-    <div class="stub-grid2"><div class="stub-field"><span class="label">Event 2</span><span class="value two-line-field">{values['EVENT_2']}</span></div><div class="stub-field"><span class="label">Time 2</span><span class="value">{values['TIME_2']}</span></div></div>
+    <div class="stub-grid2"><div class="stub-field"><span class="label">Date</span><span class="value">{values['EVENT_DATE']}</span></div><div class="stub-field"><span class="label">Check-in Time</span><span class="value">{values['CHECK_IN_TIME']}</span></div></div>
+    <div class="stub-field"><span class="label">Event 2</span><span class="value two-line-field">{values['EVENT_2']}</span></div>
     <div class="stub-grid2"><div class="stub-field"><span class="label">Gate</span><span class="value two-line-field">{values['EVENT_GATE']}</span></div><div class="stub-field"><span class="label">Terminal</span><span class="value two-line-field">{values['TERMINAL']}</span></div></div>
     <div class="stub-field stub-college"><span class="label">From College</span><span class="value two-line-field">{values['FROM_COLLEGE']}</span></div>
     <div class="stub-field stub-to"><span class="label">To</span><span class="value two-line-field">{values['TO_COLLEGE']}<br>{values['TO_CITY']}</span></div>

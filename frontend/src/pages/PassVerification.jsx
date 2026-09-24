@@ -137,6 +137,11 @@ export default function PassVerification() {
               </div>
             </div>
 
+            <div style={{ ...styles.infoBox, marginBottom: 20 }}>
+              <span style={styles.label}>CHECK-IN TIME</span>
+              <strong style={styles.valText}>{data.checkInTime || '08:00 AM'} IST</strong>
+            </div>
+
             {/* Registered Events */}
             <div style={styles.eventsSection}>
               <span style={styles.label}>REGISTERED EVENTS ({data.events?.length || 0})</span>
@@ -148,7 +153,6 @@ export default function PassVerification() {
                       <span style={styles.eventCategory}>{ev.category}</span>
                     </div>
                     <div style={styles.eventMeta}>
-                      <span>⏰ {ev.time || '10:00 AM'}</span>
                       <span>📍 {ev.venue || 'Main Auditorium'}</span>
                       {ev.gate && <span>🚪 {ev.gate}</span>}
                     </div>

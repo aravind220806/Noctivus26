@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException, Request, Response
 from app.core.rate_limit import limiter
 from app.core.config import settings
 from app.services.event_service import list_events
+from app.services.boarding_pass_service import CHECK_IN_TIME
 from app.services.cache_service import qr_lookup_cache, events_cache
 from app.services.registration_service import (
     check_utr_availability,
@@ -138,6 +139,7 @@ async def get_pass_details(request: Request, token_or_id: str):
     participant = reg.get("participant") or {}
     return {
         "valid": True,
+        "checkInTime": CHECK_IN_TIME,
         "registrationId": reg.get("registrationId"),
         "passengerName": participant.get("name") or "Participant",
         "college": participant.get("college") or "Velammal Engineering College",
