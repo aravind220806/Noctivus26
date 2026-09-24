@@ -172,9 +172,9 @@ body {{ margin: 0; width: {PASS_WIDTH}px; height: {PASS_HEIGHT}px; background: #
 .row {{ min-width: 0; display: grid; align-items: start; column-gap: 0; padding: 17px 46px 0 108px; overflow: hidden; }}
 .row1,.row2 {{ padding-right: 276px; }}
 .row1 {{ grid-template-columns: 37% 43% 20%; border-bottom: 1px solid #D7DEE8; }}
-.row2 {{ grid-template-columns: 18% 18% 38% 26%; border-bottom: 1px solid #D7DEE8; }}
+.row2 {{ grid-template-columns: 18% 18% 32% 32%; border-bottom: 1px solid #D7DEE8; }}
 .row2 .field {{ padding-left: 16px; padding-right: 16px; }}
-.row3 {{ grid-template-columns: 36% 26% 38%; border-bottom: 1px solid #D7DEE8; }}
+.row3 {{ grid-template-columns: 36% 22% 42%; border-bottom: 1px solid #D7DEE8; }}
 .field {{ min-width: 0; min-height: 42px; padding: 0 16px; border-left: 1px solid #AAB6C8; }}
 .field:first-child {{ border-left: 0; padding-left: 0; }}
 .label {{ display:block; color:#194FD1; font:700 14px/1.2 Arial,sans-serif; letter-spacing:.45px; text-transform:uppercase; margin-bottom:8px; }}
