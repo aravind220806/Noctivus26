@@ -11,6 +11,15 @@ export function InvitationsTab({ authHeaders, onSent }) {
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
   const [resending, setResending] = useState(false);
+  const [jobId, setJobId] = useState(() => sessionStorage.getItem('invitationJobId') || '');
+  const batchActive = sending || resending || Boolean(jobId);
+
+  const trackJob = (data) => {
+    if (!data.jobId) throw new Error('Batch response is missing its tracking ID. Refresh the page after the server update.');
+    setLastBatchResult(data);
+    sessionStorage.setItem('invitationJobId', data.jobId);
+    setJobId(data.jobId);
+  };
 
   const fetchStats = useCallback(async () => {
     try {
@@ -27,6 +36,43 @@ export function InvitationsTab({ authHeaders, onSent }) {
   useEffect(() => {
     fetchStats();
   }, [fetchStats]);
+
+  useEffect(() => {
+    if (!jobId) return;
+    let cancelled = false;
+    let timer;
+    const poll = async () => {
+      try {
+        const response = await adminFetch(apiPath(`/api/admin/invitations/jobs/${encodeURIComponent(jobId)}`), { headers: authHeaders });
+        const data = await response.json().catch(() => ({}));
+        if (cancelled) return;
+        if (response.status === 404) {
+          sessionStorage.removeItem('invitationJobId');
+          setJobId('');
+          setError('This batch is no longer available. Refresh the counts before starting another batch.');
+          await fetchStats();
+          return;
+        }
+        if (!response.ok) throw new Error(data.detail || `Unable to read batch progress (${response.status}).`);
+        setLastBatchResult(data);
+        setError('');
+        if (data.status === 'completed' || data.status === 'interrupted') {
+          sessionStorage.removeItem('invitationJobId');
+          setJobId('');
+          if (data.message) setError(data.message);
+          if (onSent) onSent(data.succeeded || 0);
+          await fetchStats();
+          return;
+        }
+      } catch (err) {
+        if (cancelled) return;
+        setError(`${err.message} Sending may still be in progress; reconnecting automatically.`);
+      }
+      if (!cancelled) timer = setTimeout(poll, 2000);
+    };
+    poll();
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [jobId, authHeaders, onSent, fetchStats]);
 
   const [previewRetryCount, setPreviewRetryCount] = useState(0);
 
@@ -71,8 +117,9 @@ export function InvitationsTab({ authHeaders, onSent }) {
   }, [authHeaders, previewRetryCount]);
 
   const handleSendBatch = async () => {
-    const count = parseInt(batchCount, 10);
-    if (!count || count <= 0) {
+    if (batchActive) return;
+    const count = Number(batchCount);
+    if (!Number.isInteger(count) || count <= 0) {
       setError('Please enter a valid number of passes to send today (at least 1).');
       return;
     }
@@ -86,23 +133,21 @@ export function InvitationsTab({ authHeaders, onSent }) {
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
-        setLastBatchResult(data);
-        if (onSent) onSent(data.succeeded || 0);
-        await fetchStats();
+        trackJob(data);
         setBatchCount('');
       } else {
-        setError(data.detail || data.message || 'Failed to execute batch send.');
+        setError(data.detail || data.message || data.error || `Unable to start batch (HTTP ${res.status}). Check batch progress before retrying.`);
       }
     } catch (err) {
       const isNetErr = String(err?.message || '').toLowerCase().includes('network') || String(err?.message || '').toLowerCase().includes('failed to fetch');
-      setError(isNetErr ? 'Unable to reach backend server. Please verify backend is running on port 4000.' : (err?.message || 'Unable to connect to the pass dispatch service.'));
+      setError(isNetErr ? 'Connection lost. Sending may still be in progress; reconnect before retrying.' : (err?.message || 'Unable to connect to the pass dispatch service.'));
     } finally {
       setSending(false);
     }
   };
 
   const handleResendFailed = async () => {
-    if (!lastBatchResult || !lastBatchResult.failedList || lastBatchResult.failedList.length === 0) return;
+    if (batchActive || !lastBatchResult || !lastBatchResult.failedList || lastBatchResult.failedList.length === 0) return;
     const regIds = lastBatchResult.failedList.map((item) => item.registrationId);
     setResending(true);
     setError('');
@@ -114,26 +159,13 @@ export function InvitationsTab({ authHeaders, onSent }) {
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
-        setLastBatchResult((prev) => {
-          if (!prev) return data;
-          const updatedSuccessful = [...prev.successful, ...(data.successful || [])];
-          const updatedFailedList = data.failedList || [];
-          return {
-            attempted: prev.attempted,
-            succeeded: updatedSuccessful.length,
-            failed: updatedFailedList.length,
-            successful: updatedSuccessful,
-            failedList: updatedFailedList,
-          };
-        });
-        if (onSent) onSent(data.succeeded || 0);
-        await fetchStats();
+        trackJob(data);
       } else {
         setError(data.detail || data.message || 'Failed to resend passes.');
       }
     } catch (err) {
       const isNetErr = String(err?.message || '').toLowerCase().includes('network') || String(err?.message || '').toLowerCase().includes('failed to fetch');
-      setError(isNetErr ? 'Unable to reach backend server. Please verify backend is running on port 4000.' : (err?.message || 'Unable to connect to the pass dispatch service.'));
+      setError(isNetErr ? 'Connection lost. Sending may still be in progress; reconnect before retrying.' : (err?.message || 'Unable to connect to the pass dispatch service.'));
     } finally {
       setResending(false);
     }
@@ -186,15 +218,15 @@ export function InvitationsTab({ authHeaders, onSent }) {
                 placeholder="e.g. 10"
                 value={batchCount}
                 onChange={(e) => setBatchCount(e.target.value)}
-                disabled={sending || stats.unsentCount === 0}
+                disabled={batchActive || stats.unsentCount === 0}
               />
               <button
                 type="button"
                 className="button button-primary batch-send-btn"
-                disabled={!batchCount || parseInt(batchCount, 10) <= 0 || sending || stats.unsentCount === 0}
+                disabled={!batchCount || parseInt(batchCount, 10) <= 0 || batchActive || stats.unsentCount === 0}
                 onClick={handleSendBatch}
               >
-                {sending ? 'Sending Batch...' : 'Send Batch'} <Icon name="mail" />
+                {batchActive ? 'Sending Batch...' : 'Send Batch'} <Icon name="mail" />
               </button>
             </div>
           </label>
@@ -206,7 +238,7 @@ export function InvitationsTab({ authHeaders, onSent }) {
           <div className="batch-results-panel">
             <div className="batch-results-header">
               <h3>Batch Send Results</h3>
-              <small>Attempted: {lastBatchResult.attempted}</small>
+              <small role="status">{lastBatchResult.status === 'queued' ? 'Queued • ' : ''}Processed: {(lastBatchResult.succeeded || 0) + (lastBatchResult.failed || 0)} / {lastBatchResult.attempted}{lastBatchResult.status === 'completed' ? ' • Complete' : ''}</small>
             </div>
 
             <div className="batch-counts-row">
@@ -256,7 +288,7 @@ export function InvitationsTab({ authHeaders, onSent }) {
                   <button
                     type="button"
                     className="button-resend-failed"
-                    disabled={resending || (lastBatchResult.failedList || []).length === 0}
+                    disabled={batchActive || (lastBatchResult.failedList || []).length === 0}
                     onClick={handleResendFailed}
                   >
                     {resending ? 'Resending...' : 'Resend Failed'} <Icon name="refresh" />

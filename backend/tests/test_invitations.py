@@ -45,6 +45,9 @@ def test_invitations_send_batch():
     with patch("app.middleware.admin_auth.resolve_admin_access", new=AsyncMock(return_value={"tabs": ["Invitations"], "owner": True})), \
          patch("app.middleware.admin_auth.session_exists", new=AsyncMock(return_value=True)), \
          patch("app.routes.admin_routes.renderer_available", new=AsyncMock(return_value=True)), \
+         patch("app.routes.admin_routes.sqlite_db.ready", return_value=True), \
+         patch("app.routes.admin_routes.load_registrations", new=AsyncMock(return_value=[])), \
+         patch("app.routes.admin_routes.create_job", new=AsyncMock(return_value={"jobId": "test-job", "status": "queued", "attempted": 0, "succeeded": 0, "failed": 0, "successful": [], "failedList": []})), \
          patch("app.routes.admin_routes.send_member_pass", new_callable=AsyncMock) as mock_send:
         mock_send.return_value = {
             "success": True,
@@ -61,8 +64,11 @@ def test_invitations_send_batch():
                 "Origin": "http://localhost:5173",
             },
         )
-        assert resp.status_code == 200
+        assert resp.status_code == 202
+        mock_send.assert_not_awaited()
         data = resp.json()
+        assert data["status"] == "queued"
+        assert data["jobId"] == "test-job"
         assert "attempted" in data
         assert "succeeded" in data
         assert "failed" in data
@@ -77,6 +83,9 @@ def test_invitations_resend_failed():
     with patch("app.middleware.admin_auth.resolve_admin_access", new=AsyncMock(return_value={"tabs": ["Invitations"], "owner": True})), \
          patch("app.middleware.admin_auth.session_exists", new=AsyncMock(return_value=True)), \
          patch("app.routes.admin_routes.renderer_available", new=AsyncMock(return_value=True)), \
+         patch("app.routes.admin_routes.sqlite_db.ready", return_value=True), \
+         patch("app.routes.admin_routes.load_registrations", new=AsyncMock(return_value=[])), \
+         patch("app.routes.admin_routes.create_job", new=AsyncMock(return_value={"jobId": "test-job", "status": "queued", "attempted": 0, "succeeded": 0, "failed": 0, "successful": [], "failedList": []})), \
          patch("app.routes.admin_routes.send_member_pass", new_callable=AsyncMock) as mock_send:
         mock_send.return_value = {
             "success": True,
@@ -93,7 +102,10 @@ def test_invitations_resend_failed():
                 "Origin": "http://localhost:5173",
             },
         )
-        assert resp.status_code == 200
+        assert resp.status_code == 202
+        mock_send.assert_not_awaited()
         data = resp.json()
+        assert data["status"] == "queued"
+        assert data["jobId"] == "test-job"
         assert "attempted" in data
         assert "succeeded" in data

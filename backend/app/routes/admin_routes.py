@@ -16,6 +16,7 @@ from app.services.admin_session_service import create_session, delete_all_sessio
 from app.services.analysis_service import build_overview
 from app.services.boarding_pass_service import create_pass_token, render_pass_artwork_bytes
 from app.services.browser_renderer import renderer_available
+from app.services.invitation_job_service import create_job, get_job, public_job
 from app.services.email_service import normalize_pass_template, send_confirmation, send_invitation, send_member_pass, sendPaymentConfirmationEmail, sendPaymentIssueEmail
 from app.services.event_service import admin_events, get_event, list_events, update_event
 from app.services.export_service import export_attendance_to_excel, export_full_live_backup_excel, export_scheduler_to_excel, registrations_to_csv
@@ -889,47 +890,18 @@ async def invitations_send_batch(request: Request, admin=Depends(require_admin_t
     eligible = [r for r in all_confirmed if (r.get("pass_status") or "not_sent") != "sent"]
     batch = eligible[:batch_size]
 
-    sem = asyncio.Semaphore(settings.invitation_send_concurrency)
+    if not sqlite_db.ready():
+        raise HTTPException(status_code=503, detail="Batch storage is unavailable. Please retry once the database is connected.")
+    job = await create_job(batch, admin["email"])
+    return Response(content=json.dumps(public_job(job)), status_code=202, media_type="application/json")
 
-    async def _send_one(registration):
-        async with sem:
-            return await send_member_pass(registration, admin["email"])
 
-    results = await asyncio.gather(*[_send_one(r) for r in batch])
-
-    successful = []
-    failed_list = []
-
-    for result in results:
-        if result["success"]:
-            successful.append({
-                "registrationId": result["registrationId"],
-                "name": result["name"],
-                "email": result["email"],
-            })
-        else:
-            failed_list.append({
-                "registrationId": result["registrationId"],
-                "name": result["name"],
-                "email": result["email"],
-                "reason": result.get("reason") or "Send failed",
-            })
-
-    await record_admin_action(
-        admin["email"],
-        "invitation.batch_send",
-        f"batch_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}",
-        {"attempted": len(batch), "succeeded": len(successful), "failed": len(failed_list)},
-    )
-
-    return {
-        "attempted": len(batch),
-        "succeeded": len(successful),
-        "failed": len(failed_list),
-        "concurrency": settings.invitation_send_concurrency,
-        "successful": successful,
-        "failedList": failed_list,
-    }
+@router.get("/invitations/jobs/{job_id}")
+async def invitation_job_status(job_id: str, _admin=Depends(require_admin_tab("Invitations"))):
+    job = await get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Batch not found.")
+    return Response(content=json.dumps(public_job(job)), media_type="application/json", headers={"Cache-Control": "no-store"})
 
 
 @router.post("/invitations/resend-failed")
@@ -945,47 +917,11 @@ async def invitations_resend_failed(request: Request, admin=Depends(require_admi
     all_confirmed = await load_registrations({"status": "confirmed"})
     targets = [r for r in all_confirmed if r.get("registrationId") in reg_ids]
 
-    sem = asyncio.Semaphore(settings.invitation_send_concurrency)
-
-    async def _send_one(registration):
-        async with sem:
-            return await send_member_pass(registration, admin["email"])
-
-    results = await asyncio.gather(*[_send_one(r) for r in targets])
-
-    successful = []
-    failed_list = []
-
-    for result in results:
-        if result["success"]:
-            successful.append({
-                "registrationId": result["registrationId"],
-                "name": result["name"],
-                "email": result["email"],
-            })
-        else:
-            failed_list.append({
-                "registrationId": result["registrationId"],
-                "name": result["name"],
-                "email": result["email"],
-                "reason": result.get("reason") or "Resend failed",
-            })
-
-    await record_admin_action(
-        admin["email"],
-        "invitation.resend_failed",
-        f"resend_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}",
-        {"attempted": len(targets), "succeeded": len(successful), "failed": len(failed_list)},
-    )
-
-    return {
-        "attempted": len(targets),
-        "succeeded": len(successful),
-        "failed": len(failed_list),
-        "concurrency": settings.invitation_send_concurrency,
-        "successful": successful,
-        "failedList": failed_list,
-    }
+    targets = [r for r in targets if r.get("pass_status") == "failed"]
+    if not sqlite_db.ready():
+        raise HTTPException(status_code=503, detail="Batch storage is unavailable.")
+    job = await create_job(targets, admin["email"])
+    return Response(content=json.dumps(public_job(job)), status_code=202, media_type="application/json")
 
 
 @router.api_route("/invitations/preview", methods=["GET", "POST"])

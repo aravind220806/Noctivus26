@@ -47,11 +47,15 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 async def lifespan(_app: FastAPI):
     await sqlite_db.init()
 
+    from app.services.invitation_job_service import invitation_worker
+    invitation_task = asyncio.create_task(invitation_worker())
     email_stop = asyncio.Event()
     email_task = asyncio.create_task(email_worker(email_stop))
     try:
         yield
     finally:
+        invitation_task.cancel()
+        await asyncio.gather(invitation_task, return_exceptions=True)
         email_stop.set()
         email_task.cancel()
         try:

@@ -44,6 +44,7 @@ _TABLES = [
     "admin_access",
     "admin_sessions",
     "event_slots",
+    "invitation_jobs",
 ]
 
 
