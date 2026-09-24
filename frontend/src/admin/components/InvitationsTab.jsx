@@ -4,6 +4,9 @@ import { adminFetch, apiPath } from '../adminUtils';
 
 export function InvitationsTab({ authHeaders, onSent }) {
   const [stats, setStats] = useState({ totalEligible: 0, sentCount: 0, failedCount: 0, unsentCount: 0 });
+  const [memberSearch, setMemberSearch] = useState('');
+  const [memberStatus, setMemberStatus] = useState('all');
+  const [memberPage, setMemberPage] = useState(0);
   const [batchCount, setBatchCount] = useState('');
   const [lastBatchResult, setLastBatchResult] = useState(null);
   const [passPreviewUrl, setPassPreviewUrl] = useState('');
@@ -27,6 +30,12 @@ export function InvitationsTab({ authHeaders, onSent }) {
       if (res.ok) {
         const data = await res.json();
         setStats(data);
+        const latest = data.automation?.latestJob;
+        if (latest && ['queued', 'running'].includes(latest.status)) {
+          setJobId((current) => current || latest.jobId);
+          sessionStorage.setItem('invitationJobId', latest.jobId);
+        }
+        if (latest) setLastBatchResult((current) => current || latest);
       }
     } catch {
       // stats error fallback
@@ -35,6 +44,8 @@ export function InvitationsTab({ authHeaders, onSent }) {
 
   useEffect(() => {
     fetchStats();
+    const timer = setInterval(fetchStats, 5000);
+    return () => clearInterval(timer);
   }, [fetchStats]);
 
   useEffect(() => {
@@ -171,14 +182,30 @@ export function InvitationsTab({ authHeaders, onSent }) {
     }
   };
 
+  const statusLabels = { awaiting_payment: 'Awaiting payment', waiting: 'Waiting', queued: 'Queued', sending: 'Sending', done: 'Done', failed: 'Failed', interrupted: 'Interrupted' };
+  const filteredMembers = (stats.members || []).filter((member) =>
+    (memberStatus === 'all' || member.status === memberStatus) &&
+    `${member.name} ${member.email} ${member.registrationId}`.toLowerCase().includes(memberSearch.toLowerCase())
+  );
+  const pageCount = Math.max(1, Math.ceil(filteredMembers.length / 50));
+  const currentPage = Math.min(memberPage, pageCount - 1);
+  const visibleMembers = filteredMembers.slice(currentPage * 50, (currentPage + 1) * 50);
+  const displayTime = (value) => value ? new Date(value).toLocaleString() : '—';
+
   return (
     <div className="admin-grid admin-grid--wide invitation-automation">
       <section className="admin-panel pass-builder">
-        <h2>Send Boarding Passes</h2>
+        <h2>Automatic Boarding Pass Delivery</h2>
         <p className="admin-help">
-          Batch send personalized symposium boarding passes to confirmed members who have not received their pass yet.
+          {stats.automation?.enabled
+            ? `Verified payments automatically enter the pass queue. Deliveries start ${stats.automation.intervalSeconds || 1} second(s) apart, including previously verified participants who have not received a pass.`
+            : 'Automatic delivery is paused. You can send a batch manually below.'}
         </p>
 
+        {stats.automation?.enabled && !stats.automation.emailConfigured && (
+          <p className="form-error">Automatic delivery is waiting for the email service to be configured.</p>
+        )}
+        <p className="admin-help">Failed or interrupted deliveries require review before retrying. You can monitor progress here; this page does not need to stay open.</p>
         <div className="batch-stats-summary">
           <div className="batch-stat-box stat-registered">
             <span>Total Registered</span>
@@ -202,6 +229,47 @@ export function InvitationsTab({ authHeaders, onSent }) {
           </div>
         </div>
 
+        <section aria-label="Member pass delivery status" style={{ margin: '24px 0' }}>
+          <h3>All Members — Pass Status</h3>
+          <p className="admin-help">Waiting → Queued → Sending → Done. Status refreshes every five seconds. Done means the email service accepted the pass.</p>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
+            <label className="field">
+              <span>Search members</span>
+              <input value={memberSearch} onChange={(event) => { setMemberSearch(event.target.value); setMemberPage(0); }} placeholder="Name, email or registration ID" />
+            </label>
+            <label className="field">
+              <span>Delivery status</span>
+              <select value={memberStatus} onChange={(event) => { setMemberStatus(event.target.value); setMemberPage(0); }}>
+                <option value="all">All statuses</option>
+                {Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+              </select>
+            </label>
+          </div>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+              <thead><tr>{['Member', 'Email', 'Status', 'Started', 'Completed', 'Details'].map((label) => <th key={label} scope="col" style={{ padding: 10 }}>{label}</th>)}</tr></thead>
+              <tbody>
+                {visibleMembers.map((member) => (
+                  <tr key={member.registrationId} style={{ borderTop: '1px solid rgba(148,163,184,.2)' }}>
+                    <td style={{ padding: 10 }}><strong>{member.name}</strong><br /><small>{member.registrationId}</small></td>
+                    <td style={{ padding: 10, overflowWrap: 'anywhere' }}>{member.email || '—'}</td>
+                    <td style={{ padding: 10, whiteSpace: 'nowrap', color: member.status === 'done' ? '#4ade80' : ['failed', 'interrupted'].includes(member.status) ? '#fca5a5' : '#93c5fd' }}>{statusLabels[member.status] || member.status}</td>
+                    <td style={{ padding: 10 }}>{displayTime(member.startedAt)}</td>
+                    <td style={{ padding: 10 }}>{displayTime(member.completedAt)}</td>
+                    <td style={{ padding: 10 }}>{member.reason || '—'}</td>
+                  </tr>
+                ))}
+                {!visibleMembers.length && <tr><td colSpan={6} style={{ padding: 16 }}>No members match this filter.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 12 }}>
+            <button type="button" className="button" disabled={currentPage === 0} onClick={() => setMemberPage(currentPage - 1)}>Previous</button>
+            <span>Page {currentPage + 1} of {pageCount} · {filteredMembers.length} members</span>
+            <button type="button" className="button" disabled={currentPage + 1 >= pageCount} onClick={() => setMemberPage(currentPage + 1)}>Next</button>
+          </div>
+        </section>
+
         {stats.totalEligible === 0 && (stats.totalRegistered || 0) > 0 && (
           <div style={{ marginTop: '12px', padding: '10px 14px', borderRadius: '8px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.25)', color: '#fbbf24', fontSize: '13px' }}>
             💡 <strong>Note:</strong> You have {stats.totalRegistered} registered participant(s) awaiting payment confirmation. Go to <strong>Verify Members</strong> to verify and confirm their payment before boarding passes can be generated.
@@ -210,7 +278,7 @@ export function InvitationsTab({ authHeaders, onSent }) {
 
         <div className="batch-send-form">
           <label className="field">
-            <span>Number of passes to send today</span>
+            <span>Send a manual batch (optional)</span>
             <div className="batch-input-row">
               <input
                 type="number"

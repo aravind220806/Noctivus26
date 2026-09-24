@@ -29,6 +29,8 @@ class Settings:
     enable_unprefixed_routes = env("ENABLE_UNPREFIXED_ROUTES", "false").lower() == "true"
     public_self_checkin_enabled = env("PUBLIC_SELF_CHECKIN_ENABLED", "false").lower() == "true"
     invitation_send_concurrency = min(4, max(1, int(env("INVITATION_SEND_CONCURRENCY", "4"))))
+    invitation_auto_send_enabled = env("INVITATION_AUTO_SEND_ENABLED", "true").lower() == "true"
+    invitation_send_interval_seconds = max(0.1, float(env("INVITATION_SEND_INTERVAL_SECONDS", "1")))
     event_capacities = {
         item.split(":", 1)[0].strip(): int(item.split(":", 1)[1])
         for item in csv_env("EVENT_CAPACITIES")

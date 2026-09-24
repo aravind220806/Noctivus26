@@ -16,7 +16,7 @@ from app.services.admin_session_service import create_session, delete_all_sessio
 from app.services.analysis_service import build_overview
 from app.services.boarding_pass_service import create_pass_token, render_pass_artwork_bytes
 from app.services.browser_renderer import renderer_available
-from app.services.invitation_job_service import create_job, get_job, public_job
+from app.services.invitation_job_service import create_job, get_job, public_job, automation_status, member_delivery_statuses
 from app.services.email_service import normalize_pass_template, send_confirmation, send_invitation, send_member_pass, sendPaymentConfirmationEmail, sendPaymentIssueEmail
 from app.services.event_service import admin_events, get_event, list_events, update_event
 from app.services.export_service import export_attendance_to_excel, export_full_live_backup_excel, export_scheduler_to_excel, registrations_to_csv
@@ -865,6 +865,8 @@ async def invitations_stats(_admin=Depends(require_admin_tab("Invitations"))):
     failed_count = sum(1 for r in rows if r.get("pass_status") == "failed")
     unsent_count = sum(1 for r in rows if (r.get("pass_status") or "not_sent") != "sent")
     return {
+        "automation": await automation_status(),
+        "members": await member_delivery_statuses(all_rows),
         "totalRegistered": total_registered,
         "totalEligible": total_eligible,
         "sentCount": sent_count,

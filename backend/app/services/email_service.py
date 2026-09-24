@@ -215,7 +215,7 @@ def build_confirmation_html(full_name: str, event_names_str: str, cid: str | Non
 
     <div style="background: rgba(0, 200, 224, 0.08); border-left: 4px solid #00c8e0; border-radius: 6px; padding: 14px 16px; margin: 20px 0;">
       <strong style="color: #67e8f9; display: block; font-size: 14px; margin-bottom: 4px;">📅 Next Steps &amp; Event Pass:</strong>
-      <span style="font-size: 13px; color: #cbd5e1; line-height: 1.5;">Your official <strong>Symposium Event Pass</strong> with check-in QR code will be dispatched in a separate email once scheduling is finalized.</span>
+      <span style="font-size: 13px; color: #cbd5e1; line-height: 1.5;">Your official <strong>Symposium Event Pass</strong> with check-in QR code will be dispatched in a separate email automatically after payment verification.</span>
     </div>
 
     <!-- Add to Calendar buttons -->
